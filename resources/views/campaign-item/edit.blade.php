@@ -16,7 +16,7 @@
                         <span class="card-title">Update Campaign Item</span>
                     </div>
                     <div class="card-body">
-                        <form method="POST" action="{{ route('campaign-items.update', $campaignItem->id) }}"  role="form" enctype="multipart/form-data">
+                        <form method="POST" id="my_form" action="{{ route('campaign-items.update', $campaignItem->id) }}"  role="form" enctype="multipart/form-data">
                             {{ method_field('PATCH') }}
                             @csrf
 

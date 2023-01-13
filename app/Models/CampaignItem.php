@@ -45,6 +45,14 @@ class CampaignItem extends Model
     {
         return $this->hasOne('App\Models\Campaign', 'id', 'campaign_id');
     }
+
+
+    public function text()
+    {
+        // dd($this->text);
+        return '<div>'.str_replace('\n','<div></div>',$this->text).'</div>';   
+    }
+
     
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasOne

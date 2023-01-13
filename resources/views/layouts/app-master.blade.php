@@ -30,6 +30,7 @@
     
     <!-- Custom styles for this template -->
     <link href="{!! url('assets/css/app.css') !!}" rel="stylesheet">
+    <link href="{!! url('assets/css/app.css') !!}" rel="stylesheet">
 </head>
 <body>
     
@@ -38,9 +39,10 @@
     <main class="container">
         @yield('content')
     </main>
-
-    <script src="{!! url('assets/bootstrap/js/bootstrap.bundle.min.js') !!}"></script>
-   <script src="https://code.jquery.com/jquery-3.6.3.min.js" integrity="sha256-pvPw+upLPUjgMXY0G+8O0xUf+/Im1MZjXxxgOcBQBXU=" crossorigin="anonymous"></script>   
-  </body>
+    <script src="https://code.jquery.com/jquery-3.6.3.min.js" integrity="sha256-pvPw+upLPUjgMXY0G+8O0xUf+/Im1MZjXxxgOcBQBXU=" crossorigin="anonymous"></script>   
+  
+    <script src="{{ url('assets/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+   
    @yield('js')
+   </body>
 </html>

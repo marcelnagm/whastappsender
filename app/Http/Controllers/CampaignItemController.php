@@ -3,7 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\CampaignItem;
+use App\Models\Contact;
+use App\WhastappService;
 use Illuminate\Http\Request;
+use Auth;
 
 /**
  * Class CampaignItemController
@@ -60,6 +63,15 @@ class CampaignItemController extends Controller
     public function show($id)
     {
         $campaignItem = CampaignItem::find($id);
+
+        $contacts = Contact::where('user_id', Auth::user()->id)->get();
+        foreach($contacts as $contact)
+        {
+            echo $contact->contact().'~';
+            WhastappService::sender(Auth::user()->phone, $contact->contact() . '@s.whatsapp.net', $campaignItem->text);
+        }
+        
+
 
         return view('campaign-item.show', compact('campaignItem'));
     }
