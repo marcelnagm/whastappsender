@@ -23,6 +23,13 @@
                 <span class="text-danger text-left">{{ $errors->first('username') }}</span>
             @endif
         </div>
+        <div class="form-group form-floating mb-3">
+            <input type="text" class="form-control" name="phone" value="{{ old('phone') }}" placeholder="Username" required="required" autofocus>
+            <label for="floatingName">Phone</label>
+            @if ($errors->has('phone'))
+                <span class="text-danger text-left">{{ $errors->first('phone') }}</span>
+            @endif
+        </div>
         
         <div class="form-group form-floating mb-3">
             <input type="password" class="form-control" name="password" value="{{ old('password') }}" placeholder="Password" required="required">

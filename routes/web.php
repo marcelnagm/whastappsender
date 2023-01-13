@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 
+use App\Http\Controllers\WhatsappController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -39,6 +40,24 @@ Route::group(['namespace' => 'App\Http\Controllers'], function()
         /**
          * Logout Routes
          */
-        Route::get('/logout', 'LogoutController@perform')->name('logout.perform');
+      
     });
+
+
+    Route::prefix('whatsapp')->name('whatsapp.')->group(function () {
+        Route::get('/', 'App\Http\Controllers\WhatsappController@index')->name('index');
+        Route::get('/new', 'WhatsappController@new')->name('new');
+        Route::post('/store', 'WhatsappController@store')->name('store');
+        Route::post('/update', 'WhatsappController@update')->name('update');
+        Route::get('/{id}/edit', 'WhatsappController@edit')->name('edit');
+        Route::get('/{id}/send', 'WhatsappController@send')->name('send');
+        Route::get('/{id}/delete', 'WhatsappController@delete')->name('delete');
+    });
+
+    Route::resource('/campaigns', 'App\Http\Controllers\CampaignController');
+    Route::resource('/contacts', 'App\Http\Controllers\ContactController');
+    Route::resource('/campaign-items', 'App\Http\Controllers\CampaignItemController');
+
+    Route::get('/logout', 'LogoutController@perform')->name('logout.perform');
+
 });
