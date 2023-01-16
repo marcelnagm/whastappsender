@@ -35,7 +35,7 @@ class CampaignItem extends Model
      *
      * @var array
      */
-    protected $fillable = ['name','text','user_id','campaign_id'];
+    protected $fillable = ['name','text','image','user_id','campaign_id'];
 
 
     /**
@@ -47,11 +47,6 @@ class CampaignItem extends Model
     }
 
 
-    public function text()
-    {
-        // dd($this->text);
-        return '<div>'.str_replace('\n','<div></div>',$this->text).'</div>';   
-    }
 
     
     /**
@@ -61,6 +56,42 @@ class CampaignItem extends Model
     {
         return $this->hasOne('App\Models\User', 'id', 'user_id');
     }
+    public function generate( $client_phone)
+    {
+        $image = $this->image;
+        $client_phone .= '@s.whatsapp.net';
+        if(isset($image)){
+          
+            if(getimagesize($image)!= false)    
+            $data = array(
+                "type" => "number",
+                'jid' => $client_phone, // NUMERO A SER ENVIADO EM FORMATO WHATSAPP            
+                'message' => [
+                    'image' => ['url' => env('APP_URL').'/'.$image, ]
+                        ,'caption' =>$this->text
+                ]// MENSAGEM PARA SER ENVIADA   
+                    );
+                    else
+                    $data = array(
+                        "type" => "number",
+                        'jid' => $client_phone, // NUMERO A SER ENVIADO EM FORMATO WHATSAPP            
+                        'message' => [
+                            'video' => ['url' => env('APP_URL').'/'.$image, ]
+                                ,'caption' =>$this->text
+                        ]// MENSAGEM PARA SER ENVIADA   
+                            );
+        }else
+            $data = array(
+                    "type" => "number",
+                    'jid' => $client_phone, // NUMERO A SER ENVIADO EM FORMATO WHATSAPP            
+                    'message' => ['text' =>$this->text]// MENSAGEM PARA SER ENVIADA   
+                        )
+                ;
+
+        return $data;
+    }
     
+
+
 
 }

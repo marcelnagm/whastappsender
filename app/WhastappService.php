@@ -126,7 +126,7 @@ class WhastappService {
         }
     }
 
-    public static function sender($name, $client_phone, $message) {
+    public static function sender($name, $client_phone, $message,$image = null) {
         $protocol = env("WHATSAPP_PROTOCOL", "somedefaultvalue");
         $hostname = env("WHATSAPP_URL", "somedefaultvalue");
         $port = env("WHATSAPP_PORT", "somedefaultvalue");
@@ -134,12 +134,79 @@ class WhastappService {
 # Setup request to send json via POST.
 //                dd($client_phone);
 //                dd($result) ;
-        $payload = json_encode(array(
+// dd(getimagesize($image) );
+if(isset($image)){
+          
+    if(getimagesize($image)!= false)    
+    $data = array(
+        "type" => "number",
+        'jid' => $client_phone, // NUMERO A SER ENVIADO EM FORMATO WHATSAPP            
+        'message' => [
+            'image' => ['url' => env('APP_URL').'/'.$image, ]
+                ,'caption' => $message
+        ]// MENSAGEM PARA SER ENVIADA   
+            );
+            else
+            $data = array(
+                "type" => "number",
+                'jid' => $client_phone, // NUMERO A SER ENVIADO EM FORMATO WHATSAPP            
+                'message' => [
+                    'video' => ['url' => env('APP_URL').'/'.$image, ]
+                        ,'caption' => $message
+                ]// MENSAGEM PARA SER ENVIADA   
+                    );
+}else
+    $data = array(
             "type" => "number",
             'jid' => $client_phone, // NUMERO A SER ENVIADO EM FORMATO WHATSAPP            
             'message' => ['text' => $message]// MENSAGEM PARA SER ENVIADA   
                 )
+        ;
+
+        $payload = json_encode($data);
+//dd($message);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 0);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 15); //timeout in seconds
+
+        curl_setopt($ch, CURLOPT_POST, 1);
+        curl_setopt($ch, CURLOPT_FAILONERROR, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+            'Content-Type: application/json',
+            'Content-Length: ' . strlen($payload))
         );
+//# Return response instead of printing.
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 0);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 10); //timeout in seconds
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+//# Send request.
+
+        $result = curl_exec($ch);
+
+        if (curl_errno($ch)) {
+            $error_msg = curl_error($ch);
+        }
+
+        curl_close($ch);
+//# Print response.
+        return true;
+    }
+
+
+    public static function senderBulk($name, $data) {
+        $protocol = env("WHATSAPP_PROTOCOL", "somedefaultvalue");
+        $hostname = env("WHATSAPP_URL", "somedefaultvalue");
+        $port = env("WHATSAPP_PORT", "somedefaultvalue");
+        $ch = curl_init($protocol . '://' . $hostname . ':' . $port . '/' . $name . '/messages/send/bulk');
+# Setup request to send json via POST.
+//                dd($client_phone);
+//                dd($result) ;
+        // dd(json_encode($data));
+
+
+        // $payload = json_encode($data);
+        $payload = json_encode($data);
 //dd($message);
         curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);

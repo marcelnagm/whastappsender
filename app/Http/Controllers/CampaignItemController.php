@@ -7,6 +7,9 @@ use App\Models\Contact;
 use App\WhastappService;
 use Illuminate\Http\Request;
 use Auth;
+use Storage;
+use Image;
+
 
 /**
  * Class CampaignItemController
@@ -48,7 +51,24 @@ class CampaignItemController extends Controller
     {
         request()->validate(CampaignItem::$rules);
 
-        $campaignItem = CampaignItem::create($request->all());
+        $data = $request->all();
+      
+        $data['remove_imagem'] = $request->input('remove_imagem') == 1 ? 1 : 0;
+      
+        if( $request->remove_imagem){
+            $data['image'] = '';
+         
+        }else if($request->hasFile('image') && $request->file('image')->isValid())
+        {
+            $request->file('image')->store('public/ads');
+            $data['image'] =  'image/'.$request->file('image')->hashName();
+         
+            $path = storage_path("app/public/ads/{$data['image']}");
+
+            
+        }
+
+        $campaignItem = CampaignItem::create($data);
 
         return redirect()->route('campaign-items.index')
             ->with('success', 'CampaignItem created successfully.');
@@ -65,13 +85,14 @@ class CampaignItemController extends Controller
         $campaignItem = CampaignItem::find($id);
 
         $contacts = Contact::where('user_id', Auth::user()->id)->get();
+        $bulk = [];
         foreach($contacts as $contact)
         {
             echo $contact->contact().'~';
-            WhastappService::sender(Auth::user()->phone, $contact->contact() . '@s.whatsapp.net', $campaignItem->text);
+            $bulk[] =  $campaignItem ->generate( $contact->contact());
         }
-        
 
+        WhastappService::senderBulk(Auth::user()->phone,$bulk);
 
         return view('campaign-item.show', compact('campaignItem'));
     }
