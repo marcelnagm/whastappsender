@@ -57,6 +57,8 @@ Route::group(['namespace' => 'App\Http\Controllers'], function()
     Route::resource('/campaigns', 'App\Http\Controllers\CampaignController');
     Route::resource('/contacts', 'App\Http\Controllers\ContactController');
     Route::resource('/campaign-items', 'App\Http\Controllers\CampaignItemController');
+    Route::post('/contact/import', 'App\Http\Controllers\ContactController@import')->name('contacts.import');
+    Route::get('/contact/clean', 'App\Http\Controllers\ContactController@clean')->name('contacts.clear');
 
     Route::get('/logout', 'LogoutController@perform')->name('logout.perform');
 

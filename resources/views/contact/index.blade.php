@@ -15,11 +15,19 @@
                             <span id="card_title">
                                 {{ __('Contact') }}
                             </span>
+                            <form method="POST" action="{{ route('contacts.import') }}"  role="form" enctype="multipart/form-data">
+                          
+                            @csrf
 
+                            <input type="checkbox" name="renover" value="1">Remover Todos e importar
+                            <input type="file" name="importer" value="">
+                            <input type="submit"  value="Importar">
+                        </form>
                              <div class="float-right">
                                 <a href="{{ route('contacts.create') }}" class="btn btn-primary btn-sm float-right"  data-placement="left">
                                   {{ __('Create New') }}
                                 </a>
+                                <a href="{{ route('contacts.clear') }}" class="btn btn-danger btn-sm float-right" onclick="return confirm('Você tem certeza?')">Remove Todos</a>
                               </div>
                         </div>
                     </div>
@@ -38,7 +46,8 @@
                                         
 										<th>Name</th>
 										<th>Contact</th>
-										<th>User Id</th>
+										<th>Email</th>
+										
 
                                         <th></th>
                                     </tr>
@@ -50,7 +59,7 @@
                                             
 											<td>{{ $contact->name }}</td>
 											<td>{{ $contact->contact }}</td>
-											<td>{{ $contact->user_id }}</td>
+											<td>{{ $contact->email }}</td>
 
                                             <td>
                                                 <form action="{{ route('contacts.destroy',$contact->id) }}" method="POST">

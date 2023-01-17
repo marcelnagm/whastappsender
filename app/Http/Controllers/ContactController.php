@@ -2,10 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Imports\ContactsImport;
 use App\Models\Contact;
 use Illuminate\Http\Request;
+use Maatwebsite\Excel\Facades\Excel;
+use Auth;
 
 /**
+   use Illuminate\Support\Facades\Auth;
  * Class ContactController
  * @package App\Http\Controllers
  */
@@ -18,7 +22,7 @@ class ContactController extends Controller
      */
     public function index()
     {
-        $contacts = Contact::paginate();
+        $contacts = Contact::where('user_id',Auth::user()->id)->paginate();
 
         return view('contact.index', compact('contacts'))
             ->with('i', (request()->input('page', 1) - 1) * $contacts->perPage());
@@ -106,4 +110,24 @@ class ContactController extends Controller
         return redirect()->route('contacts.index')
             ->with('success', 'Contact deleted successfully');
     }
+
+
+    public function import(Request $request) 
+    {
+        if($request->input('renover'))
+        Contact::where('user_id', Auth::user()->id)->delete();
+        Excel::import(new ContactsImport,$request->file('importer'));
+        
+        return redirect()->route('contacts.index')
+            ->with('success', 'Contact imported');
+    }
+    public function clean(Request $request) 
+    {
+        
+        Contact::where('user_id', Auth::user()->id)->delete();
+        
+        return redirect()->route('contacts.index')
+            ->with('success', 'Contacts Cleared');
+    }
 }
+
