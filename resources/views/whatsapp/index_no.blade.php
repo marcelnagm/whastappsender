@@ -52,7 +52,7 @@
         var urlStatus = '{{$protocol}}://{{$hostname}}:{{$port}}/status';
         var qrcod_lido = false;
 
-        var session = "{{auth()->user()->phone}}";
+        var session = "{{auth()->user()->contact()}}";
 
 
         $(document).ready(function ($) {

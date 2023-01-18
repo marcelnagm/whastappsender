@@ -39,10 +39,10 @@ class WhatsappController extends Controller {
 
         // dd(Auth::User());
 ////            dd($result);
-            if (WhatsappService::isConnected(Auth::User()->phone)) {
+            if (WhatsappService::isConnected(Auth::User()->contact())) {
 //                          
             return view('whatsapp.index', [               
-                'device' => ['session' =>Auth::User()->phone]
+                'device' => ['session' =>Auth::User()->contact()]
 //                'device' => WhatsappService::getMobileInfo(auth()->user()->restorant->phone)
             ]);
             }else{

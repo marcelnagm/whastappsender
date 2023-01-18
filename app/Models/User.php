@@ -61,4 +61,10 @@ class User extends Authenticatable
     {
         $this->attributes['password'] = bcrypt($value);
     }
+
+    public function contact()
+    {
+return str_ireplace(['-','+',' '],'',$this->phone);
+    }
+
 }
