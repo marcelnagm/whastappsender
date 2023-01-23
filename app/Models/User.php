@@ -64,7 +64,7 @@ class User extends Authenticatable
 
     public function contact()
     {
-return str_ireplace(['-','+',' '],'',$this->phone);
+return str_ireplace(['-','+',' ','(',')'],'',$this->phone);
     }
 
 }

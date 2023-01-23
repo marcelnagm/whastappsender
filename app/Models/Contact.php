@@ -39,9 +39,11 @@ class Contact extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasOne
      */
-    public function contact()
+    public function contactFormat()
     {
+        
 return str_ireplace(['-','+',' '],'',$this->contact);
+
     }
 
     public function user()

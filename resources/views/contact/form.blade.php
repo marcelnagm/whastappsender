@@ -8,7 +8,7 @@
         </div>
         <div class="form-group">
             {{ Form::label('contact') }}
-            {{ Form::text('contact', $contact->contact, ['class' => 'form-control' . ($errors->has('contact') ? ' is-invalid' : ''), 'placeholder' => 'Contact']) }}
+            {{ Form::text('contact', $contact->contactFormat(), ['class' => 'form-control' . ($errors->has('contact') ? ' is-invalid' : ''), 'placeholder' => 'Contact']) }}
             {!! $errors->first('contact', '<div class="invalid-feedback">:message</div>') !!}
         </div>
         <div class="form-group">

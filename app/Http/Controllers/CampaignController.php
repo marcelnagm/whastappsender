@@ -18,7 +18,7 @@ class CampaignController extends Controller
      */
     public function index()
     {
-        $campaigns = Campaign::paginate();
+        $campaigns = Campaign::where('user_id',Auth::user()->id)->paginate();
 
         return view('campaign.index', compact('campaigns'))
             ->with('i', (request()->input('page', 1) - 1) * $campaigns->perPage());

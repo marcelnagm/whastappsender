@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use URL;
 
 /**
  * Class CampaignItem
@@ -58,7 +59,10 @@ class CampaignItem extends Model
     }
     public function generate( $client_phone)
     {
-        $image = $this->image;
+
+        if(!URL::isValidUrl($this->image))
+        $image =  env('APP_URL').'/'.$this->image;
+        else $image =$this->image;
         $client_phone .= '@s.whatsapp.net';
         if(isset($image)){
           
@@ -67,7 +71,7 @@ class CampaignItem extends Model
                 "type" => "number",
                 'jid' => $client_phone, // NUMERO A SER ENVIADO EM FORMATO WHATSAPP            
                 'message' => [
-                    'image' => ['url' => env('APP_URL').'/'.$image, ]
+                    'image' => ['url' => $image, ]
                         ,'caption' =>$this->text
                 ]// MENSAGEM PARA SER ENVIADA   
                     );
@@ -76,7 +80,7 @@ class CampaignItem extends Model
                         "type" => "number",
                         'jid' => $client_phone, // NUMERO A SER ENVIADO EM FORMATO WHATSAPP            
                         'message' => [
-                            'video' => ['url' => env('APP_URL').'/'.$image, ]
+                            'video' => ['url' => $image, ]
                                 ,'caption' =>$this->text
                         ]// MENSAGEM PARA SER ENVIADA   
                             );
@@ -88,6 +92,7 @@ class CampaignItem extends Model
                         )
                 ;
 
+        //dd($data);
         return $data;
     }
     

@@ -24,7 +24,19 @@ class CampaignItemController extends Controller
      */
     public function index()
     {
-        $campaignItems = CampaignItem::paginate();
+        
+        $campaignItems = CampaignItem::where('user_id',Auth::user()->id)->paginate();
+
+
+        return view('campaign-item.index', compact('campaignItems'))
+            ->with('i', (request()->input('page', 1) - 1) * $campaignItems->perPage());
+    }
+
+
+    public function index_campaign($campaign)
+    {
+        $campaignItems = CampaignItem::where('user_id',Auth::user()->id)
+        ->where('campaign_id',$campaign)->paginate();
 
         return view('campaign-item.index', compact('campaignItems'))
             ->with('i', (request()->input('page', 1) - 1) * $campaignItems->perPage());
@@ -63,11 +75,14 @@ class CampaignItemController extends Controller
             $request->file('image')->store('public/ads');
             $data['image'] =  'image/'.$request->file('image')->hashName();
          
+            
             $path = storage_path("app/public/ads/{$data['image']}");
 
             
+        }if($request->exists('url')){
+            $data['image'] = $data['url'];
         }
-
+        
         $campaignItem = CampaignItem::create($data);
 
         return redirect()->route('campaign-items.index')
@@ -88,11 +103,11 @@ class CampaignItemController extends Controller
         $bulk = [];
         foreach($contacts as $contact)
         {
-            echo $contact->contact().'~';
-            $bulk[] =  $campaignItem ->generate( $contact->contact());
+            echo $contact->contactFormat().'~';
+            $bulk[] =  $campaignItem ->generate( $contact->contactFormat());
         }
 
-        WhastappService::senderBulk(Auth::user()->phone,$bulk);
+        WhastappService::senderBulk(Auth::user()->contact(),$bulk);
 
         return view('campaign-item.show', compact('campaignItem'));
     }

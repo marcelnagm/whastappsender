@@ -69,7 +69,7 @@ class WhastappService {
 //# Send request.
         $result = curl_exec($ch);
         $result = json_decode($result, true);
-    //    dd($result);
+       // dd($result);
 
         if(isset($result['message'] ) && $result['message'] == 'Session found') return true;
         else return false;
