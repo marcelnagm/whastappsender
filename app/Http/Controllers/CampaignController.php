@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Campaign;
 use Illuminate\Http\Request;
-
+use Auth;
 /**
  * Class CampaignController
  * @package App\Http\Controllers
