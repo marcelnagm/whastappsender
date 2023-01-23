@@ -38,7 +38,7 @@ class WhatsappController extends Controller {
     public function index() {
 
         // dd(Auth::User());
-////            dd($result);
+        //    dd($result);
             if (WhatsappService::isConnected(Auth::User()->contact())) {
 //                          
             return view('whatsapp.index', [               
@@ -46,15 +46,25 @@ class WhatsappController extends Controller {
 //                'device' => WhatsappService::getMobileInfo(auth()->user()->restorant->phone)
             ]);
             }else{
-                return view('whatsapp.index_no');
+                return view('whatsapp.index_no',[
+                    'res' => WhatsappService::qr(Auth::User()->contact())
+                ]);
             }
        
     }
 
     
+    public function delete() {
+   if (WhatsappService::isConnected(Auth::User()->contact())) {
+    WhatsappService::delete(Auth::User()->contact());
+   }
+   return redirect()->route('whatsapp.index')->withStatus(__('Mengem removida com sucesso'));
+
+   }
+
     public function send($id) {
-   if (WhatsappService::isConnected(Auth::User()->phone)) {
-       WhatsappService::sender(Auth::User()->phone,$id,'Teste de ssitema');
+   if (WhatsappService::isConnected(Auth::User()->contact())) {
+       WhatsappService::sender(Auth::User()->contact(),$id,'Teste de ssitema');
     }
 return redirect()->route('whatsapp.index')->withStatus(__('Mengem removida com sucesso'));
     }

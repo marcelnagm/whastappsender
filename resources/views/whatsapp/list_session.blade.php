@@ -23,7 +23,7 @@
             <!--{-{$device['respond']}}-->
         </td>
         <td class="table-web">
-            <button type="button" class="btn btn-danger" value="x" onclick="remove_session()">X</button>            
+            <a type="button" href="{{ route('whatsapp.delete') }}" class="btn btn-danger" value="x" onclick="">X</a>            
         </td>
     </tr>
     

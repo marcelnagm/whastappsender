@@ -51,7 +51,7 @@ Route::group(['namespace' => 'App\Http\Controllers'], function()
         Route::post('/update', 'WhatsappController@update')->name('update');
         Route::get('/{id}/edit', 'WhatsappController@edit')->name('edit');
         Route::get('/{id}/send', 'WhatsappController@send')->name('send');
-        Route::get('/{id}/delete', 'WhatsappController@delete')->name('delete');
+        Route::get('/delete', 'WhatsappController@delete')->name('delete');
     });
 
     Route::resource('/campaigns', 'App\Http\Controllers\CampaignController');

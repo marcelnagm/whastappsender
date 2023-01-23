@@ -3,7 +3,8 @@
 {{ config('settings.url_route')." ".__('Management')}}
 @endsection
 @section('content')
-<div class="header bg-gradient-primary pb-8 pt-5 pt-md-8">
+
+<div class="header bg-gradient-primary pb-8 pt-5 pt-mtsd-8">
 </div>
 <div class="container-fluid mt--7">
     <div class="row">
@@ -28,7 +29,7 @@
                         para que este recurso funcione.</p>
 
                     <div id="qr" >
-
+                        <img src="{{$res['base64'];}}">
                     </div>
 
                 </div>
