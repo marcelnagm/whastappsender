@@ -31,7 +31,7 @@ Route::group(['namespace' => 'App\Http\Controllers'], function()
         /**
          * Login Routes
          */
-        Route::get('/login', 'LoginController@show')->name('login.show');
+        Route::get('/login', 'LoginController@show')->name('login');
         Route::post('/login', 'LoginController@login')->name('login.perform');
 
     });
@@ -44,7 +44,7 @@ Route::group(['namespace' => 'App\Http\Controllers'], function()
     });
 
 
-    Route::prefix('whatsapp')->name('whatsapp.')->group(function () {
+    Route::prefix('whatsapp')->middleware(['auth'])->name('whatsapp.')->group(function () {
         Route::get('/', 'App\Http\Controllers\WhatsappController@index')->name('index');
         Route::get('/new', 'WhatsappController@new')->name('new');
         Route::post('/store', 'WhatsappController@store')->name('store');
@@ -54,11 +54,11 @@ Route::group(['namespace' => 'App\Http\Controllers'], function()
         Route::get('/delete', 'WhatsappController@delete')->name('delete');
     });
 
-    Route::resource('/campaigns', 'App\Http\Controllers\CampaignController');
-    Route::resource('/contacts', 'App\Http\Controllers\ContactController');
-    Route::resource('/campaign-items', 'App\Http\Controllers\CampaignItemController');
-    Route::post('/contact/import', 'App\Http\Controllers\ContactController@import')->name('contacts.import');
-    Route::get('/contact/clean', 'App\Http\Controllers\ContactController@clean')->name('contacts.clear');
+    Route::resource('/campaigns', 'App\Http\Controllers\CampaignController')->middleware(['auth']);
+    Route::resource('/contacts', 'App\Http\Controllers\ContactController')->middleware(['auth']);
+    Route::resource('/campaign-items', 'App\Http\Controllers\CampaignItemController')->middleware(['auth']);;
+    Route::post('/contact/import', 'App\Http\Controllers\ContactController@import')->name('contacts.import')->middleware(['auth']);;
+    Route::get('/contact/clean', 'App\Http\Controllers\ContactController@clean')->name('contacts.clear')->middleware(['auth']);;
 
     Route::get('/logout', 'LogoutController@perform')->name('logout.perform');
 
