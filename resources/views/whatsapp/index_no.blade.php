@@ -29,7 +29,8 @@
                         para que este recurso funcione.</p>
 
                     <div id="qr" >
-                        <img src="{{$res['base64'];}}">
+                    {{!is_array($res) ? 'Não foi possivel conectar ao serviço' : ''; }}
+                        <img src="{{is_array($res) ? $res['base64'] : ''; }} ">
                     </div>
 
                 </div>

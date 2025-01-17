@@ -13,6 +13,7 @@ use App\Models\MyModel;
 use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Exception\ClientException;
+use GuzzleHttp\Exception\ConnectException;
 
 class WhastappService
 {
@@ -75,6 +76,8 @@ class WhastappService
             $res = json_decode($res->getBody(), true);
         } catch (ClientException $ex) {
             return true;
+        }catch( ConnectException $ex){
+            return false;
         }
     }
 
@@ -95,6 +98,8 @@ class WhastappService
             $res = json_decode($res->getBody(), true);
         } catch (ClientException $ex) {
             return true;
+        }catch( ConnectException $ex){
+            return false;
         }
         return false;
     }
@@ -166,6 +171,8 @@ class WhastappService
             $res = json_decode($res->getBody(), true);
         } catch (ClientException $ex) {
             return true;
+        }catch( ConnectException $ex){
+            return false;
         }
         return false;
     }
@@ -178,7 +185,7 @@ class WhastappService
         $port = env("WHATSAPP_PORT", "somedefaultvalue");
         $apikey = env("WHATSAPP_APIKEY", "somedefaultvalue");
 
-
+        try{
         $client = new Client();
         $headers = [
             'apikey' => $apikey
@@ -188,5 +195,9 @@ class WhastappService
         $res = json_decode($res->getBody(), true);
 
         return $res;
+    }catch( ConnectException $ex){
+        return false;
+    }
+
     }
 }
