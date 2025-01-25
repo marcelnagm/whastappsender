@@ -15,6 +15,7 @@ use URL;
  * @property $campaign_id
  * @property $created_at
  * @property $updated_at
+ * @property $image
  *
  * @property Campaign $campaign
  * @property User $user
@@ -23,10 +24,10 @@ use URL;
  */
 class CampaignItem extends Model
 {
-    protected $table= 'campaign_item';
+    protected $table = 'campaign_item';
     static $rules = [
-		'name' => 'required',
-		'text' => 'required',
+        'name' => 'required',
+        'text' => 'required',
     ];
 
     protected $perPage = 20;
@@ -36,7 +37,7 @@ class CampaignItem extends Model
      *
      * @var array
      */
-    protected $fillable = ['name','text','image','user_id','campaign_id'];
+    protected $fillable = ['name', 'text', 'image', 'user_id', 'campaign_id'];
 
 
     /**
@@ -49,7 +50,7 @@ class CampaignItem extends Model
 
 
 
-    
+
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasOne
      */
@@ -57,46 +58,35 @@ class CampaignItem extends Model
     {
         return $this->hasOne('App\Models\User', 'id', 'user_id');
     }
-    public function generate( $client_phone)
+    public function generate($client_phone)
     {
 
-        if(!URL::isValidUrl($this->image))
-        $image =  env('APP_URL').'/'.$this->image;
-        else $image =$this->image;
+        $image = $this->image;
         $client_phone .= '@s.whatsapp.net';
-        if(isset($image)){
-          
-            if(getimagesize($image)!= false)    
+
+        if (isset($this->image) && !URL::isValidUrl($this->image)) {
             $data = array(
                 "type" => "number",
-                'jid' => $client_phone, // NUMERO A SER ENVIADO EM FORMATO WHATSAPP            
-                'message' => [
-                    'image' => ['url' => $image, ]
-                        ,'caption' =>$this->text
-                ]// MENSAGEM PARA SER ENVIADA   
-                    );
-                    else
-                    $data = array(
-                        "type" => "number",
-                        'jid' => $client_phone, // NUMERO A SER ENVIADO EM FORMATO WHATSAPP            
-                        'message' => [
-                            'video' => ['url' => $image, ]
-                                ,'caption' =>$this->text
-                        ]// MENSAGEM PARA SER ENVIADA   
-                            );
-        }else
+                "options" => array(
+                    "externalAttributes" => "<any> - optional",
+                    "delay" => 1200,
+                    "presence" => "composing"
+                ),
+                'number' => $client_phone, // NUMERO A SER ENVIADO EM FORMATO WHATSAPP            
+                'mediaMessage' => [
+                    "mediatype" => "image",
+                    'media'  => $image,
+                    'caption' => $this->text
+                ] // MENSAGEM PARA SER ENVIADA   
+            );
+        } else
             $data = array(
-                    "type" => "number",
-                    'jid' => $client_phone, // NUMERO A SER ENVIADO EM FORMATO WHATSAPP            
-                    'message' => ['text' =>$this->text]// MENSAGEM PARA SER ENVIADA   
-                        )
-                ;
+                "type" => "number",
+                'number' => $client_phone, // NUMERO A SER ENVIADO EM FORMATO WHATSAPP            
+                'textMessage' => ['text' => $this->text] // MENSAGEM PARA SER ENVIADA   
+            );
 
         //dd($data);
         return $data;
     }
-    
-
-
-
 }

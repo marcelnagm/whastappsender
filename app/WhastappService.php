@@ -118,17 +118,7 @@ class WhastappService
                 'Content-Type' => 'application/json',
                 'apikey' => $apikey
             ];
-            $body = array(
-                "number" => $client_phone,
-                "options" => array(
-                    "externalAttributes" => "<any> - optional",
-                    "delay" => 1200,
-                    "presence" => "composing"
-                ),
-                "textMessage" => array(
-                    "text" => $message,
-                )
-            );
+            $body = $message;
             $body = json_encode($body);
             $request = new Request('POST', $hostname . ':' . $port . '/message/sendText/' . $name, $headers, $body);
             $res = $client->sendAsync($request)->wait();
@@ -146,7 +136,7 @@ class WhastappService
     public static function senderBulk($name, $data)
     {
         foreach ($data as $item) {
-            self::sender($name, $item['phone'], $item['message']);
+            self::sender($name, $item['number'], $item);
         }
     }
 
