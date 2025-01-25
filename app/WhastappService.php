@@ -105,7 +105,7 @@ class WhastappService
     }
 
 
-    public static function sender($name, $client_phone, $message, $image = null)
+    public static function sender($name, $client_phone, $message, $operation )
     {
 
 
@@ -120,7 +120,7 @@ class WhastappService
             ];
             $body = $message;
             $body = json_encode($body);
-            $request = new Request('POST', $hostname . ':' . $port . '/message/sendText/' . $name, $headers, $body);
+            $request = new Request('POST', $hostname . ':' . $port . '/message/'.$operation.'/' . $name, $headers, $body);
             $res = $client->sendAsync($request)->wait();
             return true;
         } catch (ClientException $ex) {
@@ -133,10 +133,10 @@ class WhastappService
      * Send bulk messages
      * NOT TESTED YET
      */
-    public static function senderBulk($name, $data)
+    public static function senderBulk($name, $data,$operation)
     {
         foreach ($data as $item) {
-            self::sender($name, $item['number'], $item);
+            self::sender($name, $item['number'], $item,$operation);
         }
     }
 

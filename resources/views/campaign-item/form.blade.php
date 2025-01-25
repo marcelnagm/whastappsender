@@ -13,12 +13,8 @@
             {!! $errors->first('text', '<div class="invalid-feedback">:message</div>') !!}
         </div>
         <div class="form-group">
-            {{ Form::label('image') }}
-            @if(!URL::isValidUrl( $campaignItem->image))
-            {{ Form::file('image', $campaignItem->image, ['class' => 'form-control' . ($errors->has('text') ? ' is-invalid' : ''),'id' => 'message', 'placeholder' => 'image']) }}
-            @else
-            {{ Form::text('url', $campaignItem->image, ['class' => 'form-control' . ($errors->has('url') ? ' is-invalid' : ''), 'placeholder' => 'Url da imagem']) }}          
-            @endif
+            {{ Form::label('image') }}            
+            {{ Form::text('image', $campaignItem->image, ['class' => 'form-control' . ($errors->has('text') ? ' is-invalid' : ''),'id' => 'message', 'placeholder' => 'image']) }}
             {!! $errors->first('text', '<div class="invalid-feedback">:message</div>') !!}
         </div>
         <div class="form-group">

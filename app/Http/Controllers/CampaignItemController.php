@@ -64,24 +64,7 @@ class CampaignItemController extends Controller
         request()->validate(CampaignItem::$rules);
 
         $data = $request->all();
-      
-        $data['remove_imagem'] = $request->input('remove_imagem') == 1 ? 1 : 0;
-      
-        if( $request->remove_imagem){
-            $data['image'] = '';
-         
-        }else if($request->hasFile('image') && $request->file('image')->isValid())
-        {
-            $request->file('image')->store('public/ads');
-            $data['image'] =  'image/'.$request->file('image')->hashName();
-         
-            
-            $path = storage_path("app/public/ads/{$data['image']}");
-
-            
-        }if($request->exists('url')){
-            $data['image'] = $data['url'];
-        }
+        
         
         $campaignItem = CampaignItem::create($data);
 
@@ -106,8 +89,7 @@ class CampaignItemController extends Controller
             echo $contact->contactFormat().'~';
             $bulk[] =  $campaignItem ->generate( $contact->contactFormat());
         }
-
-        WhastappService::senderBulk(Auth::user()->contact(),$bulk);
+        WhastappService::senderBulk(Auth::user()->contact(),$bulk,$campaignItem->getOperation());
 
         return view('campaign-item.show', compact('campaignItem'));
     }
@@ -135,7 +117,7 @@ class CampaignItemController extends Controller
     public function update(Request $request, CampaignItem $campaignItem)
     {
         request()->validate(CampaignItem::$rules);
-
+        
         $campaignItem->update($request->all());
 
         return redirect()->route('campaign-items.index')

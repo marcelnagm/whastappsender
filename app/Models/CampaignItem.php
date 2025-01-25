@@ -30,6 +30,12 @@ class CampaignItem extends Model
         'text' => 'required',
     ];
 
+
+ const OPERATION = [ 'text' => 'sendText',
+ 'image' => 'sendMedia',
+ 'video' => 'sendMedia'
+ ];
+
     protected $perPage = 20;
 
     /**
@@ -64,7 +70,8 @@ class CampaignItem extends Model
         $image = $this->image;
         $client_phone .= '@s.whatsapp.net';
 
-        if (isset($this->image) && !URL::isValidUrl($this->image)) {
+        if (isset($this->image) && URL::isValidUrl($this->image)) {  
+                      
             $data = array(
                 "type" => "number",
                 "options" => array(
@@ -74,7 +81,7 @@ class CampaignItem extends Model
                 ),
                 'number' => $client_phone, // NUMERO A SER ENVIADO EM FORMATO WHATSAPP            
                 'mediaMessage' => [
-                    "mediatype" => "image",
+                    "mediatype" => $this->imageType(),
                     'media'  => $image,
                     'caption' => $this->text
                 ] // MENSAGEM PARA SER ENVIADA   
@@ -86,7 +93,30 @@ class CampaignItem extends Model
                 'textMessage' => ['text' => $this->text] // MENSAGEM PARA SER ENVIADA   
             );
 
-        //dd($data);
+        // dd($data);
         return $data;
     }
+
+    
+    public function imageType()
+    {
+        if (isset($this->image) && URL::isValidUrl($this->image)) {            
+            $ext = substr(strrchr($this->image, '.'), 1);
+            if (in_array($ext, ['jpg', 'jpeg', 'png', 'gif'])) {
+                return 'image';
+            } else if (in_array($ext, ['mp4', 'webm', 'ogg'])) {
+                return 'video';
+            }
+        }
+        return 'text';
+    }
+
+    
+    public function getOperation()
+    {
+        return self::OPERATION[$this->imageType()];
+    }
+
+
+    
 }
