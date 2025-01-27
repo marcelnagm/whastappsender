@@ -53,5 +53,11 @@ class Campaign extends Model
         return $this->hasOne('App\Models\User', 'id', 'user_id');
     }
     
+    
+    public function __toString()
+    {
+        return "Campaign ({$this->id}) {$this->name}";
+    }
+    
 
 }

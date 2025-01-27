@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\CampaignItem;
 use App\Models\Contact;
+use App\Models\Campaign;
 use App\WhastappService;
 use Illuminate\Http\Request;
 use Auth;
@@ -47,21 +48,20 @@ class CampaignItemController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function create()
-    {
-        $campaignItem = new CampaignItem();
-        return view('campaign-item.create', compact('campaignItem'));
-    }
 
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request $request
-     * @return \Illuminate\Http\Response
-     */
+     public function create()
+     {
+         $campaignItem = new CampaignItem();
+         $campaigns = Campaign::where('user_id',Auth::user()->id)->pluck('name','id')->toArray();
+         return view('campaign-item.create', compact('campaignItem','campaigns'));
+     }
+ 
+
     public function store(Request $request)
     {
+        $campaignItem = new CampaignItem();
         request()->validate(CampaignItem::$rules);
+
         
         $data = $request->all();
         $data['user_id'] = Auth::user()->id;
@@ -114,8 +114,9 @@ class CampaignItemController extends Controller
     public function edit($id)
     {
         $campaignItem = CampaignItem::find($id);
+        $campaigns = Campaign::where('user_id',Auth::user()->id)->pluck('name','id')->toArray();
 
-        return view('campaign-item.edit', compact('campaignItem'));
+        return view('campaign-item.edit', compact('campaignItem','campaigns'));
     }
 
     /**
@@ -128,6 +129,7 @@ class CampaignItemController extends Controller
     public function update(Request $request, CampaignItem $campaignItem)
     {
         request()->validate(CampaignItem::$rules);
+        
 
         $campaignItem->update($request->all());
 

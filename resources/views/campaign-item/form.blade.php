@@ -19,7 +19,7 @@
         </div>
         <div class="form-group">
             {{ Form::label('campaign_id') }}
-            {{ Form::text('campaign_id', $campaignItem->campaign_id, ['class' => 'form-control' . ($errors->has('campaign_id') ? ' is-invalid' : ''), 'placeholder' => 'Campaign Id']) }}
+            {{ Form::select('campaign_id', $campaigns, $campaignItem->campaign_id, ['class' => 'form-control' . ($errors->has('campaign_id') ? ' is-invalid' : ''), 'placeholder' => 'Campaign Id']) }}
             {!! $errors->first('campaign_id', '<div class="invalid-feedback">:message</div>') !!}
         </div>
 
