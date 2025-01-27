@@ -52,7 +52,7 @@
 											<td>{{ $campaignItem->name }}</td>
 											<td>{{ $campaignItem->text }}</td>
 											<td>{{ $campaignItem->ImageType() }}</td>
-											<td>{{ $campaignItem->campaign_id }}</td>
+											<td>{{ $campaignItem->campaign()->first() }}</td>
 
                                             <td>
                                                 <form action="{{ route('campaign-items.destroy',$campaignItem->id) }}" method="POST">
