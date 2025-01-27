@@ -38,6 +38,8 @@ class LoginController extends Controller
         endif;
 
         $user = Auth::getProvider()->retrieveByCredentials($credentials);
+        if(!$user->isActive())return redirect()->to('login')
+        ->withErrors('Usuario desativado');
 
         Auth::login($user, $request->get('remember'));
 
