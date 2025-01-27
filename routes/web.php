@@ -59,6 +59,7 @@ Route::group(['namespace' => 'App\Http\Controllers'], function()
     Route::resource('/campaign-items', 'App\Http\Controllers\CampaignItemController')->middleware(['auth']);;
     Route::post('/contact/import', 'App\Http\Controllers\ContactController@import')->name('contacts.import')->middleware(['auth']);;
     Route::get('/contact/clean', 'App\Http\Controllers\ContactController@clean')->name('contacts.clear')->middleware(['auth']);;
+    Route::get('/campaign-items/{id}/sned', 'CampaignItemController@send')->name('campaign-items.send');
 
     Route::get('/logout', 'LogoutController@perform')->name('logout.perform');
 

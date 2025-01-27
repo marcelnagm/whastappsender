@@ -62,9 +62,9 @@ class CampaignItemController extends Controller
     public function store(Request $request)
     {
         request()->validate(CampaignItem::$rules);
-
-        $data = $request->all();
         
+        $data = $request->all();
+        $data['user_id'] = Auth::user()->id;
         
         $campaignItem = CampaignItem::create($data);
 
@@ -78,8 +78,9 @@ class CampaignItemController extends Controller
      * @param  int $id
      * @return \Illuminate\Http\Response
      */
-    public function show($id)
+    public function send($id)
     {
+    
         $campaignItem = CampaignItem::find($id);
 
         $contacts = Contact::where('user_id', Auth::user()->id)->get();
@@ -90,6 +91,11 @@ class CampaignItemController extends Controller
             $bulk[] =  $campaignItem ->generate( $contact->contactFormat());
         }
         WhastappService::senderBulk(Auth::user()->contact(),$bulk,$campaignItem->getOperation());
+
+    }
+    public function show($id)
+    {
+        $campaignItem = CampaignItem::find($id);
 
         return view('campaign-item.show', compact('campaignItem'));
     }
@@ -117,7 +123,7 @@ class CampaignItemController extends Controller
     public function update(Request $request, CampaignItem $campaignItem)
     {
         request()->validate(CampaignItem::$rules);
-        
+
         $campaignItem->update($request->all());
 
         return redirect()->route('campaign-items.index')

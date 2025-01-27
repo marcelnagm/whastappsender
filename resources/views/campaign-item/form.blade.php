@@ -1,6 +1,6 @@
 <div class="box box-info padding-1">
     <div class="box-body">
-        
+
         <div class="form-group">
             {{ Form::label('name') }}
             {{ Form::text('name', $campaignItem->name, ['class' => 'form-control' . ($errors->has('name') ? ' is-invalid' : ''), 'placeholder' => 'Name']) }}
@@ -9,18 +9,13 @@
         <div class="form-group">
             {{ Form::label('text') }}
             {{ Form::textarea('text', $campaignItem->text, ['class' => 'form-control' . ($errors->has('text') ? ' is-invalid' : ''),'id' => 'message', 'placeholder' => 'Text']) }}
-          
+
             {!! $errors->first('text', '<div class="invalid-feedback">:message</div>') !!}
         </div>
         <div class="form-group">
-            {{ Form::label('image') }}            
+            {{ Form::label('image') }}
             {{ Form::text('image', $campaignItem->image, ['class' => 'form-control' . ($errors->has('text') ? ' is-invalid' : ''),'id' => 'message', 'placeholder' => 'image']) }}
             {!! $errors->first('text', '<div class="invalid-feedback">:message</div>') !!}
-        </div>
-        <div class="form-group">
-            {{ Form::label('user_id') }}
-            {{ Form::text('user_id', $campaignItem->user_id, ['class' => 'form-control' . ($errors->has('user_id') ? ' is-invalid' : ''), 'placeholder' => 'User Id']) }}
-            {!! $errors->first('user_id', '<div class="invalid-feedback">:message</div>') !!}
         </div>
         <div class="form-group">
             {{ Form::label('campaign_id') }}
@@ -33,5 +28,3 @@
         <button onclick="sendForm()" type="submit" class="btn btn-primary">Submit</button>
     </div>
 </div>
-
-

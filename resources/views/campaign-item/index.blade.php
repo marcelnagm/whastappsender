@@ -56,6 +56,7 @@
 
                                             <td>
                                                 <form action="{{ route('campaign-items.destroy',$campaignItem->id) }}" method="POST">
+                                                    <a class="btn btn-sm btn-primary " href="{{ route('campaign-items.send',$campaignItem->id) }}"><i class="fa fa-fw fa-eye"></i> Send</a>
                                                     <a class="btn btn-sm btn-primary " href="{{ route('campaign-items.show',$campaignItem->id) }}"><i class="fa fa-fw fa-eye"></i> Show</a>
                                                     <a class="btn btn-sm btn-success" href="{{ route('campaign-items.edit',$campaignItem->id) }}"><i class="fa fa-fw fa-edit"></i> Edit</a>
                                                     @csrf

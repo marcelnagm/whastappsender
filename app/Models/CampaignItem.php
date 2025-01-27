@@ -102,7 +102,7 @@ class CampaignItem extends Model
     {
         if (isset($this->image) && URL::isValidUrl($this->image)) {            
             $ext = substr(strrchr($this->image, '.'), 1);
-            if (in_array($ext, ['jpg', 'jpeg', 'png', 'gif'])) {
+            if (in_array($ext, ['jpg', 'jpeg', 'png', 'gif','webp'])) {
                 return 'image';
             } else if (in_array($ext, ['mp4', 'webm', 'ogg'])) {
                 return 'video';

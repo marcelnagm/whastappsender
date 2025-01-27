@@ -28,6 +28,19 @@
                             <strong>Text:</strong>
                             {{ $campaignItem->text }}
                         </div>
+                        @if($campaignItem->image != null)
+                        <div class="form-group">
+                            <strong>Image:</strong>
+                            @if($campaignItem->imageType() == 'image')
+                            <img src="{{ $campaignItem->image }}"> 
+                            @endif
+                            @if($campaignItem->imageType() == 'video')
+                            <video controls src="{{ $campaignItem->image }}"> 
+                            @endif
+
+                            {{ $campaignItem->image }}
+                        </div>
+                        @endif
                         <div class="form-group">
                             <strong>User Id:</strong>
                             {{ $campaignItem->user_id }}
