@@ -131,13 +131,16 @@ class WhastappService
 
     /**
      * Send bulk messages
-     * NOT TESTED YET
      */
     public static function senderBulk($name, $data,$operation)
     {
+
+        $worked = 0;
         foreach ($data as $item) {
-            self::sender($name, $item['number'], $item,$operation);
+            self::sender($name, $item['number'], $item,$operation)
+              == true?  $worked++ : null;
         }
+    return $worked;
     }
 
     public static function hasInstance($name)

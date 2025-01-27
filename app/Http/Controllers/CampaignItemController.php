@@ -90,7 +90,12 @@ class CampaignItemController extends Controller
             echo $contact->contactFormat().'~';
             $bulk[] =  $campaignItem ->generate( $contact->contactFormat());
         }
-        WhastappService::senderBulk(Auth::user()->contact(),$bulk,$campaignItem->getOperation());
+        $success = WhastappService::senderBulk(Auth::user()->contact(),$bulk,$campaignItem->getOperation());
+
+
+        $mnsagem = ( $success ).'/'.(count($contacts)).' Mensagens enviadsa com sucesso ' ;
+        return redirect()->route('campaign-items.index')
+        ->with('success', $mnsagem);
 
     }
     public function show($id)
