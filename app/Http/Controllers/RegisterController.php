@@ -29,8 +29,8 @@ class RegisterController extends Controller
     {
         $user = User::create($request->validated());
 
-        auth()->login($user);
+        // auth()->login($user);
 
-        return redirect('/')->with('success', "Account successfully registered.");
+        return redirect('/')->with('success', "Conta Criada, entre em contato 5595981110695 para ativa-la.");
     }
 }
