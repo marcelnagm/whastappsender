@@ -45,8 +45,10 @@ class CampaignController extends Controller
     public function store(Request $request)
     {
         request()->validate(Campaign::$rules);
+        $data = $request->all();
+        $data['user_id'] = Auth::user()->id;
 
-        $campaign = Campaign::create($request->all());
+        $campaign = Campaign::create($data);
 
         return redirect()->route('campaigns.index')
             ->with('success', 'Campaign created successfully.');
