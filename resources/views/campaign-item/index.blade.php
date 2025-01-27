@@ -38,7 +38,7 @@
                                         
 										<th>Name</th>
 										<th>Text</th>
-										<th>User Id</th>
+										<th>Image?</th>
 										<th>Campaign Id</th>
 
                                         <th></th>
@@ -51,7 +51,7 @@
                                             
 											<td>{{ $campaignItem->name }}</td>
 											<td>{{ $campaignItem->text }}</td>
-											<td>{{ $campaignItem->user_id }}</td>
+											<td>{{ $campaignItem->ImageType() }}</td>
 											<td>{{ $campaignItem->campaign_id }}</td>
 
                                             <td>
