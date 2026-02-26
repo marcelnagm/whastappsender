@@ -74,8 +74,8 @@ class CampaignItem extends Model
 
         if (isset($this->image) && URL::isValidUrl($this->image)) {
 
-            $data  = [                 
-                'number' => $client_phone,               
+            $data  = [
+                'number' => $client_phone,
                 "mediatype" => $this->imageType(),
                 "mimetype"  => "image/png",     // Garanta que corresponde à extensão do arquivo
                 "caption"   => $this->text,
@@ -94,14 +94,33 @@ class CampaignItem extends Model
 
     public function imageType()
     {
-        if (isset($this->image) && URL::isValidUrl($this->image)) {
-            $ext = substr(strrchr($this->image, '.'), 1);
-            if (in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp'])) {
-                return 'image';
-            } else if (in_array($ext, ['mp4', 'webm', 'ogg'])) {
-                return 'video';
+        // 1. Validação básica: existe imagem e é uma URL válida?
+        if (!isset($this->image) || !filter_var($this->image, FILTER_VALIDATE_URL)) {
+            return 'text';
+        }
+
+        // 2. Extrair apenas o PATH da URL (remove ?width=1280, etc.)
+        $path = parse_url($this->image, PHP_URL_PATH);
+        if (!$path) {
+            return 'text';
+        }
+
+        // 3. Pegar a extensão de forma limpa e converter para minúsculo
+        $extension = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+
+        // 4. Mapeamento de tipos permitidos
+        $formats = [
+            'image' => ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'],
+            'video' => ['mp4', 'webm', 'ogg', 'mov', 'avi'],
+        ];
+
+        foreach ($formats as $type => $extensions) {
+            if (in_array($extension, $extensions)) {
+                return $type;
             }
         }
+
+        // Se não for imagem nem vídeo reconhecido, trata como texto ou erro
         return 'text';
     }
 
