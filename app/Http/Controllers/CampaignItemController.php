@@ -5,11 +5,13 @@ namespace App\Http\Controllers;
 use App\Models\CampaignItem;
 use App\Models\Contact;
 use App\Models\Campaign;
+use App\Models\WhatsappJob;
 use App\WhastappService;
 use Illuminate\Http\Request;
 use Auth;
 use Storage;
 use Image;
+
 
 
 /**
@@ -102,6 +104,19 @@ class CampaignItemController extends Controller
     {
         $campaignItem = CampaignItem::find($id);
 
+        return view('campaign-item.show', compact('campaignItem'));
+    }
+
+    public function generate($id)
+    {
+        
+        $campaignItem = CampaignItem::find($id);
+        // dd($campaignItem->generate('5595981110695'));
+        $cont= Contact::where('id',1)->get()->first();
+        $job = new WhatsappJob();
+        $job->endpoint = env('WHATSAPP_PROTOCOL','http').'://'.env('WHATSAPP_URL','localhost').':'.env('WHATSAPP_PORT','8080').$campaignItem->getOperation();
+        $job->payload= $campaignItem->generate('5595981110695');
+        $job->save();
         return view('campaign-item.show', compact('campaignItem'));
     }
 

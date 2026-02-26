@@ -1,15 +1,34 @@
-version: '3'
- 
+version: '3.8'
+
 services:
+  # Serviço do Banco de Dados
+  db:
+    image: mysql:8.0
+    container_name: mysql_db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: sender
+    ports:
+      - "3306:3306"
+    volumes:
+      - dbdata:/var/lib/mysql
+
+  # Serviço do phpMyAdmin
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
     container_name: pma
-    environment:
-      PMA_HOST: localhost
-      PMA_PORT: 3306
-      PMA_ARBITRARY: 1
     restart: always
+    depends_on:
+      - db
+    environment:
+      # Usamos o nome do serviço 'db' em vez de localhost 
+      # para os containers se conversarem
+      PMA_HOST: db
+      PMA_PORT: 3306
+      MYSQL_ROOT_PASSWORD: root
     ports:
-      - 8081:80
+      - "8081:80"
+
 volumes:
   dbdata:
