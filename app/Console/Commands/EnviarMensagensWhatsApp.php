@@ -8,66 +8,78 @@ use Illuminate\Support\Facades\Http;
 
 class EnviarMensagensWhatsApp extends Command
 {
-    // O nome que você usará no terminal para rodar o comando
     protected $signature = 'whatsapp:disparar';
-    protected $description = 'Envia as mensagens pendentes na fila do WhatsApp Job';
+    protected $description = 'Dispara mensagens com controle de tentativas (Max 3)';
 
     public function handle()
     {
-        // 1. Busca os registros pendentes (limitando para evitar sobrecarga)
-        $jobs = WhatsappJob::where('status', 'pendente')->limit(50)->get();
+        // Busca pendentes ou erros que ainda não atingiram o limite de 3 tentativas
+        $jobs = WhatsappJob::whereIn('status', ['pendente', 'erro'])
+            ->where('tentativas', '<', 3)
+            ->limit(50)
+            ->get();
 
         if ($jobs->isEmpty()) {
-            $this->info('Nenhuma mensagem pendente encontrada.');
+            $this->info('Nada para processar.');
             return;
         }
 
         foreach ($jobs as $job) {
-            $this->info("Enviando para: {$job->contato}");
+            $this->info("Tentativa " . ($job->tentativas + 1) . " para: {$job->contato}");
             
             try {
-                // 2. Faz o disparo via Guzzle (HTTP Client do Laravel)
-                
-                $this->info("{$job->endpoint}".env('WHATSAPP_INSTANCIA'));
-                $this->info(json_encode($job->payload));
-                
-                $response = Http::withHeaders([
-                    'apikey' => env('WHATSAPP_APIKEY'), // Substitua pelo seu Token da Evolution
-                    'Content-Type' => 'application/json'
-                ])->post("{$job->endpoint}".env('WHATSAPP_INSTANCIA'), $job->payload);
+                $instance = env('WHATSAPP_INSTANCIA');
+                $apikey = env('WHATSAPP_APIKEY');
+                $baseUrl = parse_url($job->endpoint, PHP_URL_SCHEME) . '://' . parse_url($job->endpoint, PHP_URL_HOST);
+                if($port = parse_url($job->endpoint, PHP_URL_PORT)) $baseUrl .= ":{$port}";
 
-                // 3. Verifica se a Evolution API aceitou o comando
+                // Humanização: Digitando...
+                Http::withHeaders(['apikey' => $apikey])
+                    ->post("{$baseUrl}/chat/sendPresence/{$instance}", [
+                        "number" => $job->contato,
+                        "presence" => "composing"
+                    ]);
+
+                sleep(rand(3, 6));
+
+                // Disparo
+                $response = Http::withHeaders([
+                    'apikey' => $apikey,
+                    'Content-Type' => 'application/json'
+                ])->post("{$job->endpoint}{$instance}", $job->payload);
+
                 if ($response->successful()) {
                     $job->update([
                         'status' => 'processado',
-                        'resposta' => $response->json()
+                        'resposta' => $response->json(),
+                        'erro_mensagem' => null
                     ]);
                     $this->info("Sucesso: {$job->contato}");
                 } else {
-                    $job->update([
-                        'status' => 'erro',
-                        'resposta' => $response->json(),
-                        'erro_mensagem' => 'Erro na API Evolution: ' . $response->status()
-                    ]);
-                    $this->error("Falha na API: {$job->contato}");
+                    $this->registrarErro($job, $response->body());
                 }
 
             } catch (\Exception $e) {
-                // 4. Captura erros de rede ou conexão
-                $job->update([
-                    'status' => 'erro',
-                    'erro_mensagem' => $e->getMessage()
-                ]);
-                $this->error("Erro de conexão: {$job->contato}");
+                $this->registrarErro($job, $e->getMessage());
             }
 
-            // O PULO DO GATO: Simular comportamento humano (Anti-Ban)
-            // Aguarda entre 5 a 15 segundos entre cada mensagem
-            $delay = rand(5, 15);
-            $this->comment("Aguardando {$delay} segundos...");
-            sleep($delay);
+            $pause = rand(15, 30);
+            $this->comment("Aguardando {$pause}s...");
+            sleep($pause);
         }
+    }
 
-        $this->info('Processamento concluído.');
+    private function registrarErro($job, $mensagem)
+    {
+        $novaTentativa = $job->tentativas + 1;
+        $novoStatus = ($novaTentativa >= 3) ? 'falha_critica' : 'erro';
+
+        $job->update([
+            'status' => $novoStatus,
+            'tentativas' => $novaTentativa,
+            'erro_mensagem' => $mensagem
+        ]);
+
+        $this->error("Falha ({$novaTentativa}/3): {$job->contato}");
     }
 }

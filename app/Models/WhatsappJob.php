@@ -25,6 +25,7 @@ class WhatsappJob extends Model
         'payload',
         'resposta',
         'erro_mensagem',
+        'tentativas'
     ];
 
     /**
