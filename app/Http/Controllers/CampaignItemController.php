@@ -27,8 +27,8 @@ class CampaignItemController extends Controller
      */
     public function index()
     {
-        
-        $campaignItems = CampaignItem::where('user_id',Auth::user()->id)->paginate();
+
+        $campaignItems = CampaignItem::where('user_id', Auth::user()->id)->paginate();
 
 
         return view('campaign-item.index', compact('campaignItems'))
@@ -38,8 +38,8 @@ class CampaignItemController extends Controller
 
     public function index_campaign($campaign)
     {
-        $campaignItems = CampaignItem::where('user_id',Auth::user()->id)
-        ->where('campaign_id',$campaign)->paginate();
+        $campaignItems = CampaignItem::where('user_id', Auth::user()->id)
+            ->where('campaign_id', $campaign)->paginate();
 
         return view('campaign-item.index', compact('campaignItems'))
             ->with('i', (request()->input('page', 1) - 1) * $campaignItems->perPage());
@@ -51,23 +51,23 @@ class CampaignItemController extends Controller
      * @return \Illuminate\Http\Response
      */
 
-     public function create()
-     {
-         $campaignItem = new CampaignItem();
-         $campaigns = Campaign::where('user_id',Auth::user()->id)->pluck('name','id')->toArray();
-         return view('campaign-item.create', compact('campaignItem','campaigns'));
-     }
- 
+    public function create()
+    {
+        $campaignItem = new CampaignItem();
+        $campaigns = Campaign::where('user_id', Auth::user()->id)->pluck('name', 'id')->toArray();
+        return view('campaign-item.create', compact('campaignItem', 'campaigns'));
+    }
+
 
     public function store(Request $request)
     {
         $campaignItem = new CampaignItem();
         request()->validate(CampaignItem::$rules);
 
-        
+
         $data = $request->all();
         $data['user_id'] = Auth::user()->id;
-        
+
         $campaignItem = CampaignItem::create($data);
 
         return redirect()->route('campaign-items.index')
@@ -82,23 +82,21 @@ class CampaignItemController extends Controller
      */
     public function send($id)
     {
-    
+
         $campaignItem = CampaignItem::find($id);
 
         $contacts = Contact::where('user_id', Auth::user()->id)->get();
         $bulk = [];
-        foreach($contacts as $contact)
-        {
-            echo $contact->contactFormat().'~';
-            $bulk[] =  $campaignItem ->generate( $contact->contactFormat());
+        foreach ($contacts as $contact) {
+            echo $contact->contactFormat() . '~';
+            $bulk[] =  $campaignItem->generate($contact->contactFormat());
         }
-        $success = WhastappService::senderBulk(Auth::user()->contact(),$bulk,$campaignItem->getOperation());
+        $success = WhastappService::senderBulk(Auth::user()->contact(), $bulk, $campaignItem->getOperation());
 
 
-        $mnsagem = ( $success ).'/'.(count($contacts)).' Mensagens enviadsa com sucesso ' ;
+        $mnsagem = ($success) . '/' . (count($contacts)) . ' Mensagens enviadsa com sucesso ';
         return redirect()->route('campaign-items.index')
-        ->with('success', $mnsagem);
-
+            ->with('success', $mnsagem);
     }
     public function show($id)
     {
@@ -107,15 +105,32 @@ class CampaignItemController extends Controller
         return view('campaign-item.show', compact('campaignItem'));
     }
 
+    public function generateAll($id)
+    {
+
+        $campaignItem = CampaignItem::find($id);
+
+        $cont = Contact::where('user_id', $campaignItem->user_id)->pluck('contact')->toArray();
+        foreach ($cont as $c) {
+            $job = new WhatsappJob();
+            $job->endpoint = env('WHATSAPP_PROTOCOL', 'http') . '://' . env('WHATSAPP_URL', 'localhost') . ':' . env('WHATSAPP_PORT', '8080') . $campaignItem->getOperation();
+            $job->payload = $campaignItem->generate($c);
+            $job->user_id =  $campaignItem->user_id;
+            $job->save();
+        }
+        return redirect()->route('campaign-items.index')
+            ->with('success', 'Generated '.(count($cont))." jobs" );
+    }
+    
     public function generate($id)
     {
-        
+
         $campaignItem = CampaignItem::find($id);
         // dd($campaignItem->generate('5595981110695'));
-        $cont= Contact::where('id',1)->get()->first();
+        $cont = Contact::where('id', 1)->get()->first();
         $job = new WhatsappJob();
-        $job->endpoint = env('WHATSAPP_PROTOCOL','http').'://'.env('WHATSAPP_URL','localhost').':'.env('WHATSAPP_PORT','8080').$campaignItem->getOperation();
-        $job->payload= $campaignItem->generate('5595981110695');
+        $job->endpoint = env('WHATSAPP_PROTOCOL', 'http') . '://' . env('WHATSAPP_URL', 'localhost') . ':' . env('WHATSAPP_PORT', '8080') . $campaignItem->getOperation();
+        $job->payload = $campaignItem->generate('5595981110695');
         $job->save();
         return view('campaign-item.show', compact('campaignItem'));
     }
@@ -129,9 +144,9 @@ class CampaignItemController extends Controller
     public function edit($id)
     {
         $campaignItem = CampaignItem::find($id);
-        $campaigns = Campaign::where('user_id',Auth::user()->id)->pluck('name','id')->toArray();
+        $campaigns = Campaign::where('user_id', Auth::user()->id)->pluck('name', 'id')->toArray();
 
-        return view('campaign-item.edit', compact('campaignItem','campaigns'));
+        return view('campaign-item.edit', compact('campaignItem', 'campaigns'));
     }
 
     /**
@@ -144,7 +159,7 @@ class CampaignItemController extends Controller
     public function update(Request $request, CampaignItem $campaignItem)
     {
         request()->validate(CampaignItem::$rules);
-        
+
 
         $campaignItem->update($request->all());
 
