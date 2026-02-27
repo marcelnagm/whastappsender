@@ -24,8 +24,11 @@ class WhatsappJob extends Model
         'status',
         'payload',
         'resposta',
+        'message_id',       // NOVO
+        'evolution_status', // NOVO
         'erro_mensagem',
         'tentativas'
+        
     ];
 
     /**

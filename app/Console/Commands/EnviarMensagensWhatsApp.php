@@ -9,28 +9,27 @@ use Illuminate\Support\Facades\Http;
 class EnviarMensagensWhatsApp extends Command
 {
     protected $signature = 'whatsapp:disparar';
-    protected $description = 'Dispara mensagens ignorando quem atingiu o limite de 3 erros';
+    protected $description = 'Dispara mensagens capturando message_id para controle de Webhook';
 
     public function handle()
     {
-        // 1. Mudança Estratégica na Query:
-        // Buscamos apenas quem é pendente/erro E tem menos de 3 tentativas.
+        // 1. Busca jobs elegíveis (Pendente/Erro com menos de 3 tentativas)
         $jobs = WhatsappJob::whereIn('status', ['pendente', 'erro'])
             ->where('tentativas', '<', 3)
             ->limit(50)
             ->get();
 
-        // 2. Verbosity: Informar quantos foram encontrados e se há descartados na fila
+        // Contagem de ignorados para feedback no terminal
         $descartadosCount = WhatsappJob::where('tentativas', '>=', 3)
             ->where('status', '!=', 'processado')
             ->count();
 
         if ($descartadosCount > 0) {
-            $this->warn("Aviso: Existem {$descartadosCount} registros ignorados por excederem 3 erros.");
+            $this->warn("Aviso: Existem {$descartadosCount} registros ignorados (limite de 3 erros excedido).");
         }
 
         if ($jobs->isEmpty()) {
-            $this->info('Nenhuma mensagem elegível para envio no momento.');
+            $this->info('Nenhuma mensagem elegível para envio.');
             return;
         }
 
@@ -42,34 +41,45 @@ class EnviarMensagensWhatsApp extends Command
                 $instance = env('WHATSAPP_INSTANCIA');
                 $apikey = env('WHATSAPP_APIKEY');
                 
-                // Extração da Base URL para o Presence
-                $baseUrl = parse_url($job->endpoint, PHP_URL_SCHEME) . '://' . parse_url($job->endpoint, PHP_URL_HOST);
-                if($port = parse_url($job->endpoint, PHP_URL_PORT)) $baseUrl .= ":{$port}";
+                // Extração da Base URL de forma dinâmica
+                $parsedUrl = parse_url($job->endpoint);
+                $baseUrl = $parsedUrl['scheme'] . '://' . $parsedUrl['host'];
+                if(isset($parsedUrl['port'])) $baseUrl .= ":{$parsedUrl['port']}";
 
-                // Passo 1: Humanização
-                $this->info("Simulando digitação...");
+                // PASSO 1: Humanização (Presença)
+                $this->info("Simulando digitação (presence)...");
                 Http::withHeaders(['apikey' => $apikey])
                     ->post("{$baseUrl}/chat/sendPresence/{$instance}", [
                         "number" => $job->contato,
                         "presence" => "composing"
                     ]);
 
+                // Delay humano para simular tempo de digitação/anexo
                 sleep(rand(3, 6));
 
-                // Passo 2: Envio Real
-                $this->info("Enviando mídia...");
+                // PASSO 2: Envio Real para a Evolution
+                $this->info("Enviando payload...");
                 $response = Http::withHeaders([
                     'apikey' => $apikey,
                     'Content-Type' => 'application/json'
                 ])->post("{$job->endpoint}{$instance}", $job->payload);
 
                 if ($response->successful()) {
+                    $dados = $response->json();
+                    
+                    // PASSO 3: Captura do ID Único da Mensagem (Essencial para o Webhook)
+                    // A Evolution pode retornar em diferentes níveis dependendo do tipo de mensagem
+                    $remoteId = $dados['key']['id'] ?? ($dados['message']['key']['id'] ?? null);
+
                     $job->update([
                         'status' => 'processado',
-                        'resposta' => $response->json(),
+                        'message_id' => $remoteId, // Coluna indexada que você criou
+                        'evolution_status' => 'sent', // Status inicial na rede
+                        'resposta' => $dados,
                         'erro_mensagem' => null
                     ]);
-                    $this->info("SUCESSO: {$job->contato}");
+
+                    $this->info("SUCESSO: Mensagem aceita pela API. ID: {$remoteId}");
                 } else {
                     $this->registrarFalha($job, $response->body());
                 }
@@ -78,31 +88,30 @@ class EnviarMensagensWhatsApp extends Command
                 $this->registrarFalha($job, $e->getMessage());
             }
 
-            // Intervalo Anti-Ban
-            $pause = rand(15, 30);
-            $this->comment("Aguardando {$pause}s para o próximo...");
+            // Intervalo Anti-Ban (Aleatoriedade é vida)
+            $pause = rand(15, 35);
+            $this->comment("Aguardando {$pause}s para o próximo contato...");
             sleep($pause);
         }
+
+        $this->info('Fim do processamento.');
     }
 
-    /**
-     * Registra a falha e incrementa o contador.
-     */
     private function registrarFalha($job, $mensagem)
     {
         $novaTentativa = $job->tentativas + 1;
         
-        // Se chegar em 3, o status permanece 'erro', mas o comando vai ignorar na próxima query
         $job->update([
             'status' => 'erro',
             'tentativas' => $novaTentativa,
-            'erro_mensagem' => substr($mensagem, 0, 255) // Evita erro de truncamento no banco
+            // Limita a mensagem para evitar erro de truncamento de banco
+            'erro_mensagem' => substr($mensagem, 0, 255) 
         ]);
 
         if ($novaTentativa >= 3) {
-            $this->error("LIMITE ATINGIDO: {$job->contato} foi movido para a lista de ignorados.");
+            $this->error("LIMITE DE TENTATIVAS: {$job->contato} ignorado.");
         } else {
-            $this->warn("FALHA: {$job->contato} terá nova tentativa ({$novaTentativa}/3).");
+            $this->warn("FALHA REGISTRADA: {$job->contato} ({$novaTentativa}/3).");
         }
     }
 }
