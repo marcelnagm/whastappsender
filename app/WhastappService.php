@@ -76,7 +76,7 @@ class WhastappService
             $res = json_decode($res->getBody(), true);
         } catch (ClientException $ex) {
             return true;
-        }catch( ConnectException $ex){
+        } catch (ConnectException $ex) {
             return false;
         }
     }
@@ -84,28 +84,45 @@ class WhastappService
     public static function isConnected($name, $status = false)
     {
 
-
-        $hostname = env("WHATSAPP_URL", "somedefaultvalue");
-        $port = env("WHATSAPP_PORT", "somedefaultvalue");
+        // dd($name);
+        $hostname = env("WHATSAPP_URL", "localhost");
+        $port = env("WHATSAPP_PORT", "8000");
         $apikey = env("WHATSAPP_APIKEY", "somedefaultvalue");
+
         try {
             $client = new Client();
             $headers = [
                 'apikey' => $apikey
             ];
-            $request = new Request('GET', $hostname . ':' . $port . '/instance/connect/' . $name, $headers);
+            $request = new Request('GET', $hostname . ':' . $port . '/instance/connectionState/' . $name, $headers);
             $res = $client->sendAsync($request)->wait();
             $res = json_decode($res->getBody(), true);
         } catch (ClientException $ex) {
-            return true;
-        }catch( ConnectException $ex){
+            if ($ex->getCode() == 404)
+
+                $body = ['instanceName' => $name, "qrcode" => true, "integration" => "WHATSAPP-BAILEYS"];
+            try {
+                $client = new Client();
+                $headers = [
+                    'Content-Type' => 'application/json',
+                    'apikey' => $apikey
+                ];
+                $request = new Request('POST', $hostname . ':' . $port . '/instance/create/', $headers, json_encode($body));
+                $res = $client->sendAsync($request)->wait();
+                $res = json_decode($res->getBody(), true);
+            } catch (ConnectException $ex) {
+                return false;
+            }
+
+            return false;
+        } catch (ConnectException $ex) {
             return false;
         }
         return false;
     }
 
 
-    public static function sender($name, $client_phone, $message, $operation )
+    public static function sender($name, $client_phone, $message, $operation)
     {
 
 
@@ -120,7 +137,7 @@ class WhastappService
             ];
             $body = $message;
             $body = json_encode($body);
-            $request = new Request('POST', $hostname . ':' . $port . '/message/'.$operation.'/' . $name, $headers, $body);
+            $request = new Request('POST', $hostname . ':' . $port . '/message/' . $operation . '/' . $name, $headers, $body);
             $res = $client->sendAsync($request)->wait();
             return true;
         } catch (ClientException $ex) {
@@ -132,15 +149,15 @@ class WhastappService
     /**
      * Send bulk messages
      */
-    public static function senderBulk($name, $data,$operation)
+    public static function senderBulk($name, $data, $operation)
     {
 
         $worked = 0;
         foreach ($data as $item) {
-            self::sender($name, $item['number'], $item,$operation)
-              == true?  $worked++ : null;
+            self::sender($name, $item['number'], $item, $operation)
+                == true ?  $worked++ : null;
         }
-    return $worked;
+        return $worked;
     }
 
     public static function hasInstance($name)
@@ -164,7 +181,7 @@ class WhastappService
             $res = json_decode($res->getBody(), true);
         } catch (ClientException $ex) {
             return true;
-        }catch( ConnectException $ex){
+        } catch (ConnectException $ex) {
             return false;
         }
         return false;
@@ -178,19 +195,18 @@ class WhastappService
         $port = env("WHATSAPP_PORT", "somedefaultvalue");
         $apikey = env("WHATSAPP_APIKEY", "somedefaultvalue");
 
-        try{
-        $client = new Client();
-        $headers = [
-            'apikey' => $apikey
-        ];
-        $request = new Request('GET', $hostname . ':' . $port . '/instance/connect/' . $name, $headers);
-        $res = $client->sendAsync($request)->wait();
-        $res = json_decode($res->getBody(), true);
+        try {
+            $client = new Client();
+            $headers = [
+                'apikey' => $apikey
+            ];
+            $request = new Request('GET', $hostname . ':' . $port . '/instance/connect/' . $name, $headers);
+            $res = $client->sendAsync($request)->wait();
+            $res = json_decode($res->getBody(), true);
 
-        return $res;
-    }catch( ConnectException $ex){
-        return false;
-    }
-
+            return $res;
+        } catch (ConnectException $ex) {
+            return false;
+        }
     }
 }
