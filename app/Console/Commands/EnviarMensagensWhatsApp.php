@@ -38,7 +38,8 @@ class EnviarMensagensWhatsApp extends Command
             $this->info("Processando: {$job->contato} (Tentativa " . ($job->tentativas + 1) . "/3)");
             
             try {
-                $instance = env('WHATSAPP_INSTANCIA');
+                
+                $instance = $job->user()->first()->phone;
                 $apikey = env('WHATSAPP_APIKEY');
                 
                 // Extração da Base URL de forma dinâmica

@@ -27,7 +27,8 @@ class WhatsappJob extends Model
         'message_id',       // NOVO
         'evolution_status', // NOVO
         'erro_mensagem',
-        'tentativas'
+        'tentativas',
+        'user_id'
         
     ];
 
@@ -40,6 +41,15 @@ class WhatsappJob extends Model
         'resposta' => 'array',
         'status' => 'string', // Garante consistência com o ENUM
     ];
+
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasOne
+     */
+    public function user()
+    {
+        return $this->hasOne('App\Models\User', 'id', 'user_id');
+    }
 
     /**
      * Escopo para facilitar a busca no Comando de envio.
