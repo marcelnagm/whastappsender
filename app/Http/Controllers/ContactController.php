@@ -48,8 +48,9 @@ class ContactController extends Controller
     public function store(Request $request)
     {
         request()->validate(Contact::$rules);
-
-        $contact = Contact::create($request->all());
+        $data = $request->all();
+        $data['user_id']= Auth::user()->id;
+        $contact = Contact::create($data);
 
         return redirect()->route('contacts.index')
             ->with('success', 'Contact created successfully.');
