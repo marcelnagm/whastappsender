@@ -129,6 +129,7 @@
                                                     <li><a class="dropdown-item py-2 text-success fw-bold" href="{{ route('campaign-items.send',$campaignItem->id) }}">Iniciar Disparo</a></li>
                                                 </ul>
                                                 <a class="btn btn-sm btn-light border-start" href="{{ route('campaign-items.edit',$campaignItem->id) }}"><i class="bi bi-pencil"></i></a>
+                                                <a class="btn btn-sm btn-light border-start" href="{{ route('campaign-items.logs',$campaignItem->id) }}"><i class="bi bi-journal-text"></i></a>
                                             </div>
                                         </td>
                                     </tr>

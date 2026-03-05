@@ -83,7 +83,7 @@
 
                                                 <a class="btn btn-sm btn-light" href="{{ route('campaign-items.show',$campaignItem->id) }}" title="Visualizar"><i class="bi bi-eye"></i></a>
                                                 <a class="btn btn-sm btn-light text-success" href="{{ route('campaign-items.edit',$campaignItem->id) }}" title="Editar"><i class="bi bi-pencil"></i></a>
-                                                
+                                                <a class="btn btn-sm btn-light border-start" href="{{ route('campaign-items.logs',$campaignItem->id) }}" title="Logs"><i class="bi bi-journal-text"></i></a>
                                                 <form action="{{ route('campaign-items.destroy',$campaignItem->id) }}" method="POST" style="display:inline">
                                                     @csrf
                                                     @method('DELETE')
