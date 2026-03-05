@@ -97,6 +97,10 @@ class WhastappService
             $request = new Request('GET', $hostname . ':' . $port . '/instance/connectionState/' . $name, $headers);
             $res = $client->sendAsync($request)->wait();
             $res = json_decode($res->getBody(), true);
+            // dd($res);
+            if ($res['instance']['state'] == 'open')
+                return true;
+            else return false;
         } catch (ClientException $ex) {
             if ($ex->getCode() == 404)
 

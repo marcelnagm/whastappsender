@@ -1,147 +1,186 @@
 @extends('layouts.app-master')
+
 @section('admin_title')
 {{ config('settings.url_route')." ".__('Management')}}
 @endsection
+
 @section('content')
-
-<div class="header bg-gradient-primary pb-8 pt-5 pt-mtsd-8">
+<div class="header bg-gradient-primary pb-8 pt-5 pt-md-8">
 </div>
+
 <div class="container-fluid mt--7">
-    <div class="row">
-        <br />
-        <div class="card bg-secondary shadow col-lg-12">
-            <div class="card-header bg-white border-0">
-                <div class="row align-items-center">
-                    <div class="col-8">
-                        <h3 class="mb-0">Whatsapp</h3>
+    <div class="row justify-content-center">
+        <div class="col-lg-11 col-xl-10">
+            <div class="card shadow border-0 overflow-hidden">
+                <div class="card-body p-0">
+                    <div class="row g-0">
+                        <div class="col-md-7 p-4 p-lg-5 bg-white">
+                            <div class="d-flex align-items-center mb-4">
+                                <div class="icon icon-shape bg-success text-white rounded-circle shadow me-3">
+                                    <i class="fab fa-whatsapp"></i>
+                                </div>
+                                <h2 class="mb-0 fw-bold">Conectar WhatsApp</h2>
+                            </div>
+                            
+                            <h4 class="text-muted mb-4">Siga as etapas para parear seu dispositivo:</h4>
+                            
+                            <ul class="list-unstyled mb-5">
+                                <li class="mb-4 d-flex align-items-start">
+                                    <span class="badge badge-primary rounded-circle me-3 d-flex align-items-center justify-content-center" style="width:28px; height:28px;">1</span>
+                                    <div class="text-dark">Abra o <strong>WhatsApp</strong> no seu celular.</div>
+                                </li>
+                                <li class="mb-4 d-flex align-items-start">
+                                    <span class="badge badge-primary rounded-circle me-3 d-flex align-items-center justify-content-center" style="width:28px; height:28px;">2</span>
+                                    <div>
+                                        Toque em <strong>Mais opções</strong> ( <i class="fas fa-ellipsis-v small"></i> ) ou 
+                                        <strong>Configurações</strong> ( <i class="fas fa-cog small"></i> ).
+                                    </div>
+                                </li>
+                                <li class="mb-4 d-flex align-items-start">
+                                    <span class="badge badge-primary rounded-circle me-3 d-flex align-items-center justify-content-center" style="width:28px; height:28px;">3</span>
+                                    <div>Selecione <strong>Aparelhos conectados</strong> e toque em <strong>Conectar um aparelho</strong>.</div>
+                                </li>
+                                <li class="d-flex align-items-start">
+                                    <span class="badge badge-primary rounded-circle me-3 d-flex align-items-center justify-content-center" style="width:28px; height:28px;">4</span>
+                                    <div>Aponte a câmera para esta tela para capturar o <strong>QR Code</strong>.</div>
+                                </li>
+                            </ul>
+
+                            <div class="alert alert-secondary border-0 shadow-none rounded-3">
+                                <div class="d-flex align-items-center text-dark small">
+                                    <i class="fas fa-info-circle text-info me-2 fs-4"></i>
+                                    <span><strong>Importante:</strong> Mantenha o aparelho conectado à internet para que os mineradores e disparadores funcionem em tempo real.</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-5 bg-light d-flex align-items-center justify-content-center border-start py-5">
+                            <div id="qr_section" class="text-center px-4">
+                                <div class="mb-4 bg-white shadow-sm d-inline-block p-3 rounded-lg border position-relative" style="border-radius: 15px;">
+                                    <div id="qr" class="d-flex align-items-center justify-content-center" style="min-height: 260px; min-width: 260px;">
+                                        @if(is_array($res) && isset($res['base64']))
+                                            <img src="{{ $res['base64'] }}" class="img-fluid" alt="QR Code" id="current_qr_img">
+                                        @else
+                                            <div class="text-center text-muted py-5" id="qr_placeholder">
+                                                <i class="fas fa-sync fa-spin fa-3x mb-3 text-lighter"></i>
+                                                <p class="small fw-bold">Iniciando sessão...</p>
+                                            </div>
+                                        @endif
+                                    </div>
+                                </div>
+
+                                <div class="d-grid">
+                                    <button type="button" onclick="getQR();" class="btn btn-primary btn-lg shadow-sm">
+                                        <i class="fas fa-sync-alt me-2"></i> Atualizar QR Code
+                                    </button>
+                                </div>
+                                <p class="text-muted mt-3 x-small"><i class="fas fa-lock me-1"></i> Conexão criptografada ponta a ponta.</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="card-body bg-white border-0">
-                <div class="_29lv_">
-                    <div class="landing-title _24CXv">Para usar o WhatsApp no nosso sistema:</div>
-                    <ol class="_2yDOs">
-                        <li class="ZJ0wv">Abra o WhatsApp no seu celular</li>
-                        <li class="ZJ0wv"><span dir="ltr" class="_3-8er">Toque em <strong><span dir="ltr" class="_3-8er">Mais opções <span class="_2zr6K"><svg height="24px" viewBox="0 0 24 24" width="24px">
-                                                <rect fill="#f2f2f2" height="24" rx="3" width="24"></rect>
-                                                <path d="m12 15.5c.825 0 1.5.675 1.5 1.5s-.675 1.5-1.5 1.5-1.5-.675-1.5-1.5.675-1.5 1.5-1.5zm0-2c-.825 0-1.5-.675-1.5-1.5s.675-1.5 1.5-1.5 1.5.675 1.5 1.5-.675 1.5-1.5 1.5zm0-5c-.825 0-1.5-.675-1.5-1.5s.675-1.5 1.5-1.5 1.5.675 1.5 1.5-.675 1.5-1.5 1.5z" fill="#818b90"></path>
-                                            </svg></span></span></strong> ou <strong><span dir="ltr" class="_3-8er">Configurações <span class="_2zr6K"><svg width="24" height="24" viewBox="0 0 24 24">
-                                                <rect fill="#F2F2F2" width="24" height="24" rx="3"></rect>
-                                                <path d="M12 18.69c-1.08 0-2.1-.25-2.99-.71L11.43 14c.24.06.4.08.56.08.92 0 1.67-.59 1.99-1.59h4.62c-.26 3.49-3.05 6.2-6.6 6.2zm-1.04-6.67c0-.57.48-1.02 1.03-1.02.57 0 1.05.45 1.05 1.02 0 .57-.47 1.03-1.05 1.03-.54.01-1.03-.46-1.03-1.03zM5.4 12c0-2.29 1.08-4.28 2.78-5.49l2.39 4.08c-.42.42-.64.91-.64 1.44 0 .52.21 1 .65 1.44l-2.44 4C6.47 16.26 5.4 14.27 5.4 12zm8.57-.49c-.33-.97-1.08-1.54-1.99-1.54-.16 0-.32.02-.57.08L9.04 5.99c.89-.44 1.89-.69 2.96-.69 3.56 0 6.36 2.72 6.59 6.21h-4.62zM12 19.8c.22 0 .42-.02.65-.04l.44.84c.08.18.25.27.47.24.21-.03.33-.17.36-.38l.14-.93c.41-.11.82-.27 1.21-.44l.69.61c.15.15.33.17.54.07.17-.1.24-.27.2-.48l-.2-.92c.35-.24.69-.52.99-.82l.86.36c.2.08.37.05.53-.14.14-.15.15-.34.03-.52l-.5-.8c.25-.35.45-.73.63-1.12l.95.05c.21.01.37-.09.44-.29.07-.2.01-.38-.16-.51l-.73-.58c.1-.4.19-.83.22-1.27l.89-.28c.2-.07.31-.22.31-.43s-.11-.35-.31-.42l-.89-.28c-.03-.44-.12-.86-.22-1.27l.73-.59c.16-.12.22-.29.16-.5-.07-.2-.23-.31-.44-.29l-.95.04c-.18-.4-.39-.77-.63-1.12l.5-.8c.12-.17.1-.36-.03-.51-.16-.18-.33-.22-.53-.14l-.86.35c-.31-.3-.65-.58-.99-.82l.2-.91c.03-.22-.03-.4-.2-.49-.18-.1-.34-.09-.48.01l-.74.66c-.39-.18-.8-.32-1.21-.43l-.14-.93a.426.426 0 00-.36-.39c-.22-.03-.39.05-.47.22l-.44.84-.43-.02h-.22c-.22 0-.42.01-.65.03l-.44-.84c-.08-.17-.25-.25-.48-.22-.2.03-.33.17-.36.39l-.13.88c-.42.12-.83.26-1.22.44l-.69-.61c-.15-.15-.33-.17-.53-.06-.18.09-.24.26-.2.49l.2.91c-.36.24-.7.52-1 .82l-.86-.35c-.19-.09-.37-.05-.52.13-.14.15-.16.34-.04.51l.5.8c-.25.35-.45.72-.64 1.12l-.94-.04c-.21-.01-.37.1-.44.3-.07.2-.02.38.16.5l.73.59c-.1.41-.19.83-.22 1.27l-.89.29c-.21.07-.31.21-.31.42 0 .22.1.36.31.43l.89.28c.03.44.1.87.22 1.27l-.73.58c-.17.12-.22.31-.16.51.07.2.23.31.44.29l.94-.05c.18.39.39.77.63 1.12l-.5.8c-.12.18-.1.37.04.52.16.18.33.22.52.14l.86-.36c.3.31.64.58.99.82l-.2.92c-.04.22.03.39.2.49.2.1.38.08.54-.07l.69-.61c.39.17.8.33 1.21.44l.13.93c.03.21.16.35.37.39.22.03.39-.06.47-.24l.44-.84c.23.02.44.04.66.04z" fill="#818b90"></path>
-                                            </svg></span></span></strong> e selecione <strong>WhatsApp Web</strong></span></li>
-                        <li class="ZJ0wv">Aponte seu celular para essa tela para capturar o código</li>
-                    </ol>
-                </div>
-                <div id='qr_section'>
-                    <input type="button" onclick="getQR();" class="btn btn-primary" value="Atualizar QR">
-                    <p>Ao habilitar este recurso o sistema irá enviar notificações ao cliente
-                        em relação ao pedido, mantenha este dispositivo ligado e conectado
-                        para que este recurso funcione.</p>
-
-                    <div id="qr">
-                        {{!is_array($res) ? 'Não foi possivel conectar ao serviço' : ''; }}
-                        <img src="{{is_array($res) ? $res['base64'] : ''; }} ">
-                    </div>
-
-                </div>
-            </div>
-
-
         </div>
-
     </div>
-    @endsection
+</div>
 
-    @section('js')
-    <?php
-    $protocol = env("WHATSAPP_PROTOCOL", "somedefaultvalue");
-    $hostname = env("WHATSAPP_URL", "somedefaultvalue");
-    $port = env("WHATSAPP_PORT", "somedefaultvalue");
-    ?>
+<style>
+    .x-small { font-size: 0.75rem; }
+    .text-lighter { color: #e9ecef; }
+    #qr img { max-width: 260px; height: auto; display: block; }
+    .badge-primary { background-color: #5e72e4 !important; }
+    @media (max-width: 768px) {
+        .border-start { border-left: none !important; border-top: 1px solid #dee2e6 !important; }
+    }
+</style>
+@endsection
 
-    <script>
-        var urlStatus = '{{$protocol}}://{{$hostname}}:{{$port}}/status';
-        var qrcod_lido = false;
+@section('js')
+<script>
+    /**
+     * Variáveis de Ambiente injetadas via Blade
+     */
+    const protocol = "{{ env('WHATSAPP_PROTOCOL', 'http') }}";
+    const hostname = "{{ env('WHATSAPP_URL', 'localhost') }}";
+    const port     = "{{ env('WHATSAPP_PORT', '8080') }}";
+    const apiKey   = "{{ env('WHATSAPP_APIKEY') }}";
+    const session  = "{{ auth()->user()->contact() }}"; // Identificador da instância
 
-        var session = "{{auth()->user()->contact()}}";
+    const baseUrl = `${protocol}://${hostname}:${port}`;
+    let qrcod_lido = false;
 
+    $(document).ready(function() {
+        // 1. Checa se a sessão já está conectada ao carregar a página
+        checkSessionStatus();
+    });
 
-        $(document).ready(function($) {
-            $.ajax({
-                type: 'get',
-                url: '{{$protocol}}://{{$hostname}}:{{$port}}/sessions/' + session + '/status',
-                //                        dataType: 'json',null,
-                success: function(response) {
-                    console.log(response);
-                    document.location.reload(true);
-
-                },
-                error: function(response) {
-                    //alert(response.responseJSON.errMsg);
-                    qrcod_lido = false;
-                    getQR();
-                    // setInterval("atualizar_qrode()", 1000);
-                }
-            });
-        });
-
-        var urlStartSession = '{{$protocol}}://{{$hostname}}:{{$port}}/instance/connect/';
-        // Definindo intervalo que a função será chamada
-        function atualizar_qrode() {
-            $.ajax({
-                type: 'get',
-                url: '{{$protocol}}://{{$hostname}}:{{$port}}/instance/connectionState/' + session + '',
-                //                        dataType: 'json',null,
-                headers: {
-                    "apikey": "{{env('WHATSAPP_APIKEY')}}"
-                },
-                success: function(response) {
-                    console.log(response);
-                    qrcod_lido = true;
-                    //                   document.location.reload(true);
-
-                },
-                error: function(response) {
-                    qrcod_lido = false;
-                }
-            });
-            if (!qrcod_lido) {
+    /**
+     * Verifica o status da sessão na API
+     */
+    function checkSessionStatus() {
+        $.ajax({
+            type: 'GET',
+            url: `${baseUrl}/sessions/${session}/status`,
+            success: function(response) {
+                console.log("Sessão Ativa:", response);
+                // Se estiver conectado, podemos recarregar para mostrar o status de sucesso
+                // ou redirecionar. Aqui mantemos sua lógica original de reload.
+                location.reload(true);
+            },
+            error: function() {
+                console.log("Sessão inativa ou inexistente. Gerando QR...");
+                qrcod_lido = false;
                 getQR();
             }
+        });
+    }
+
+    /**
+     * Solicita um novo QR Code para a instância
+     */
+    function getQR() {
+        const qrContainer = $("#qr");
+        
+        // Feedback visual de carregamento
+        if (!qrContainer.find('.fa-spin').length) {
+            qrContainer.html('<div class="text-center text-muted"><i class="fas fa-sync fa-spin fa-2x mb-2"></i><p class="small">Gerando...</p></div>');
         }
 
-
-        function getQR() {
-            //     remove_session();
-            //            $("#qr").attr("src", '');
-            $.ajax({
-                url: urlStartSession + session,
-                type: 'GET',
-                headers: {
-                    "apikey": "{{env('WHATSAPP_APIKEY')}}" // Garanta que esta variável chegue à View
-                },
-                contentType: 'application/json',
-                success: function(data) {
-                    var image = new Image();
-                    console.log(data.base64);
-                    image.src = data.base64;
-                    $("#qr").html(image);
+        $.ajax({
+            url: `${baseUrl}/instance/connect/${session}`,
+            type: 'GET',
+            headers: { "apikey": apiKey },
+            contentType: 'application/json',
+            success: function(data) {
+                if (data && data.base64) {
+                    const img = new Image();
+                    img.src = data.base64;
+                    img.className = "img-fluid animate__animated animate__fadeIn";
+                    qrContainer.html(img);
+                } else {
+                    qrContainer.html('<p class="text-danger small">Erro ao gerar código. Tente novamente.</p>');
                 }
-            });
+            },
+            error: function(err) {
+                console.error("Erro na API:", err);
+                qrContainer.html('<p class="text-danger small">Serviço Indisponível</p>');
+            }
+        });
+    }
 
-        }
+    /**
+     * Remove a sessão (Logout da instância)
+     */
+    function remove_session() {
+        if (!confirm("Deseja realmente desconectar este WhatsApp?")) return;
 
-
-        var urlRemove = '{{$protocol}}://{{$hostname}}:{{$port}}/sessions/' + session;
-
-        function remove_session() {
-            $.ajax(urlRemove, {
-                type: 'DELETE',
-                success: function(data) {
-                    //                    document.location.reload(true);
-                }
-            });
-        }
-    </script>
-
-    @endsection
+        $.ajax({
+            url: `${baseUrl}/sessions/${session}`,
+            type: 'DELETE',
+            success: function(data) {
+                location.reload(true);
+            }
+        });
+    }
+</script>
+@endsection
