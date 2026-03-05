@@ -46,9 +46,10 @@
                                         <td style="min-width: 200px;">
                                             <div class="d-flex justify-content-between mb-1 small">
                                                 <span>Taxa de Sucesso</span>
-                                                <span class="fw-bold">75%</span> </div>
+                                                @php $rate = $campaign->getSuccessRate(); @endphp
+                                                <span class="fw-bold">{{ $rate }}%</span> </div>
                                             <div class="progress" style="height: 6px;">
-                                                <div class="progress-bar bg-success" role="progressbar" style="width: 75%"></div>
+                                                <div class="progress-bar bg-success" role="progressbar" style="width: {{ $rate }}%"></div>
                                             </div>
                                         </td>
                                         <td>

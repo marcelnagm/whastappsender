@@ -59,5 +59,23 @@ class Campaign extends Model
         return "Campaign ({$this->id}) {$this->name}";
     }
     
+    public function getSuccessRate()
+{
+    $stats = \App\Models\WhatsappJob::where('campaign_id', $this->id)
+        ->selectRaw('
+            COUNT(*) as total,
+            SUM(CASE WHEN status = "processado" THEN 1 ELSE 0 END) as sucessos,
+            SUM(CASE WHEN status = "erro" THEN 1 ELSE 0 END) as erros
+        ')
+        ->first();
+
+    if (!$stats || $stats->total == 0) {
+        return 0;
+    }
+
+    // Cálculo real: (Sucessos / Total) * 100
+    return round(($stats->sucessos / $stats->total) * 100, 2);
+}
+
 
 }

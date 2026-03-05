@@ -7,7 +7,7 @@
     <div class="row">
         <div class="col-sm-12">
             <div class="d-flex justify-content-between align-items-center mb-4">
-                <h1 class="h3 mb-0 text-gray-800"><i class="bi bi-list-check text-primary"></i> Itens de Campanha</h1>
+                <h1 class="h3 mb-0 text-gray-800 fw-bold"><i class="bi bi-list-check text-primary"></i> Itens de Campanha</h1>
                 <a href="{{ route('campaign-items.create') }}" class="btn btn-primary shadow-sm">
                     <i class="bi bi-plus-lg"></i> Novo Item
                 </a>
@@ -17,45 +17,58 @@
 
             <div class="card border-0 shadow-sm">
                 <div class="card-body p-0">
-                    <div class="table-responsive">
+                    <div class="table-responsive" style="overflow: visible !important;">
                         <table class="table table-hover align-middle mb-0">
-                            <thead class="table-light">
+                            <thead class="table-light text-muted small text-uppercase">
                                 <tr>
-                                    <th class="ps-4">#</th>
-                                    <th>Nome</th>
+                                    <th class="ps-4">Item / Campanha</th>
                                     <th>Mensagem (Prévia)</th>
-                                    <th>Mídia</th>
-                                    <th>Campanha</th>
+                                    <th class="text-center">Mídia</th>
+                                    <th>Taxa de Entrega (ACK)</th>
                                     <th class="text-center">Ações</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach ($campaignItems as $campaignItem)
+                                    @php $rate = $campaignItem->getDeliveryRate(); @endphp
                                     <tr>
-                                        <td class="ps-4 text-muted">{{ ++$i }}</td>
-                                        <td class="fw-bold">{{ $campaignItem->name }}</td>
-                                        <td class="text-truncate" style="max-width: 250px;">
-                                            {{ Str::limit($campaignItem->text, 50) }}
-                                        </td>
-                                        <td>
-                                            @if($campaignItem->image)
-                                                <span class="badge bg-info text-dark preview-image" 
-                                                      style="cursor: help;"
-                                                      data-bs-toggle="popover" 
-                                                      data-bs-trigger="hover focus"
-                                                      data-bs-html="true"
-                                                      data-bs-content="<img src='{{ $campaignItem->image }}' class='img-fluid rounded' style='max-width:200px;'>">
-                                                    <i class="bi bi-image"></i> Ver Imagem
-                                                </span>
-                                            @else
-                                                <span class="badge bg-light text-muted border">Apenas Texto</span>
-                                            @endif
-                                        </td>
-                                        <td>
-                                            <span class="badge bg-secondary opacity-75">
+                                        <td class="ps-4">
+                                            <div class="fw-bold text-dark">{{ $campaignItem->name }}</div>
+                                            <span class="badge bg-secondary opacity-75 x-small">
                                                 {{ $campaignItem->campaign->name ?? 'N/A' }}
                                             </span>
                                         </td>
+                                        
+                                        <td class="text-truncate" style="max-width: 250px;">
+                                            {{ Str::limit($campaignItem->text, 50) }}
+                                        </td>
+
+                                        <td class="text-center">
+                                            @if($campaignItem->image)
+                                                <div class="media-tooltip-container">
+                                                    <i class="bi bi-image text-info fs-5"></i>
+                                                    <div class="media-tooltip-content">
+                                                        <img src="{{ $campaignItem->image }}" alt="Preview">
+                                                        <div class="p-1 text-center small text-white bg-dark">Visualização</div>
+                                                    </div>
+                                                </div>
+                                            @else
+                                                <span class="text-muted small">Texto</span>
+                                            @endif
+                                        </td>
+
+                                        <td style="min-width: 180px;">
+                                            <div class="d-flex align-items-center">
+                                                <div class="progress flex-grow-1" style="height: 8px; border-radius: 5px; background-color: #eee;">
+                                                    <div class="progress-bar {{ $rate >= 80 ? 'bg-success' : ($rate >= 50 ? 'bg-warning' : 'bg-danger') }}" 
+                                                         style="width: {{ $rate }}%"></div>
+                                                </div>
+                                                <span class="ms-2 fw-bold small text-{{ $rate >= 80 ? 'success' : ($rate >= 50 ? 'warning' : 'danger') }}">
+                                                    {{ $rate }}%
+                                                </span>
+                                            </div>
+                                        </td>
+
                                         <td class="text-center pe-4">
                                             <div class="btn-group shadow-sm">
                                                 <button type="button" class="btn btn-sm btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
@@ -95,21 +108,19 @@
 </div>
 
 <style>
-    /* Customização do Popover para a Imagem */
-    .popover { border: none; box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.2); }
-    .popover-body { padding: 5px; }
-    .table-hover tbody tr:hover { background-color: #f1f5f9; }
+    /* Estilo do Tooltip CSS */
+    .media-tooltip-container { position: relative; display: inline-block; cursor: pointer; }
+    .media-tooltip-content {
+        visibility: hidden; position: absolute; z-index: 10000;
+        bottom: 125%; left: 50%; transform: translateX(-50%);
+        width: 180px; background: #fff; border-radius: 8px;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.2); opacity: 0;
+        transition: opacity 0.2s; border: 1px solid #ddd;
+    }
+    .media-tooltip-content img { width: 100%; height: auto; display: block; border-radius: 8px 8px 0 0; }
+    .media-tooltip-container:hover .media-tooltip-content { visibility: visible; opacity: 1; }
+    
+    .x-small { font-size: 0.7rem; }
+    .table-hover tbody tr:hover { background-color: #f8fafc; }
 </style>
-@endsection
-
-@section('js')
-<script>
-    $(document).ready(function() {
-        // Inicializa todos os popovers da página
-        var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'))
-        var popoverList = popoverTriggerList.map(function (popoverTriggerEl) {
-            return new bootstrap.Popover(popoverTriggerEl)
-        })
-    });
-</script>
 @endsection

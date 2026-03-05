@@ -62,9 +62,10 @@ class CampaignController extends Controller
      */
     public function show($id)
     {
-        $campaign = Campaign::find($id);
+        $campaign = Campaign::with('campaignItems')->find($id);
+        $campaignItems = $campaign->campaignItems()->paginate(10);
 
-        return view('campaign.show', compact('campaign'));
+        return view('campaign.show', compact('campaign','campaignItems'));
     }
 
     /**
