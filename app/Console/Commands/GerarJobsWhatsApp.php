@@ -27,7 +27,7 @@ class GerarJobsWhatsApp extends Command
         $this->info("Você escolheu este id = " . $id);
         $this->info("Texto: " . $campaignItem->text);
         $this->info("Imagem: " . $campaignItem->image);
-        
+
         // 2. Confirmação (Uso do confirm nativo para evitar erros de tipagem)
         if (!$this->confirm("Você confirma a geração dos jobs?", true)) {
             $this->warn("Operação cancelada.");
@@ -50,16 +50,17 @@ class GerarJobsWhatsApp extends Command
         DB::transaction(function () use ($contatos, $campaignItem) {
             foreach ($contatos as $c) {
                 $job = new WhatsappJob();
-                
+
                 // Mantendo sua estrutura de URL completa por sua conta e risco
-                $job->endpoint = env('WHATSAPP_PROTOCOL', 'http') . '://' . 
-                                 env('WHATSAPP_URL', 'localhost') . ':' . 
-                                 env('WHATSAPP_PORT', '8080') . 
-                                 $campaignItem->getOperation();
-                
+                $job->endpoint = env('WHATSAPP_PROTOCOL', 'http') . '://' .
+                    env('WHATSAPP_URL', 'localhost') . ':' .
+                    env('WHATSAPP_PORT', '8080') .
+                    $campaignItem->getOperation();
+
                 // O Model WhatsappJob PRECISA ter protected $casts = ['payload' => 'array']
                 $job->payload = $campaignItem->generate($c);
-                
+                $job->campaign_id = $campaignItem->campaign_id;
+                $job->campaign_item_id = $campaignItem->id;
                 $job->user_id = $campaignItem->user_id;
                 $job->status  = 'pendente';
                 $job->save();

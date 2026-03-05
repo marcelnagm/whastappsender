@@ -11,7 +11,7 @@ use Illuminate\Http\Request;
 use Auth;
 use Storage;
 use Image;
-
+use Illuminate\Support\Facades\Artisan;
 
 
 /**
@@ -83,20 +83,10 @@ class CampaignItemController extends Controller
     public function send($id)
     {
 
-        $campaignItem = CampaignItem::find($id);
-
-        $contacts = Contact::where('user_id', Auth::user()->id)->get();
-        $bulk = [];
-        foreach ($contacts as $contact) {
-            echo $contact->contactFormat() . '~';
-            $bulk[] =  $campaignItem->generate($contact->contactFormat());
-        }
-        $success = WhastappService::senderBulk(Auth::user()->contact(), $bulk, $campaignItem->getOperation());
-
-
-        $mnsagem = ($success) . '/' . (count($contacts)) . ' Mensagens enviadsa com sucesso ';
+        Artisan::queue('whatsapp:disparar');
         return redirect()->route('campaign-items.index')
-            ->with('success', $mnsagem);
+
+            ->with('success', 'Enviado com sucesso para o disparo, aguarde no seu whatsapp');
     }
     public function show($id)
     {
@@ -115,22 +105,25 @@ class CampaignItemController extends Controller
             $job = new WhatsappJob();
             $job->endpoint = env('WHATSAPP_PROTOCOL', 'http') . '://' . env('WHATSAPP_URL', 'localhost') . ':' . env('WHATSAPP_PORT', '8080') . $campaignItem->getOperation();
             $job->payload = $campaignItem->generate($c);
+            $job->campaign_id = $campaignItem->campaign_id;
+            $job->campaign_item_id = $campaignItem->id;
             $job->user_id =  $campaignItem->user_id;
             $job->save();
         }
         return redirect()->route('campaign-items.index')
-            ->with('success', 'Generated '.(count($cont))." jobs" );
+            ->with('success', 'Generated ' . (count($cont)) . " jobs");
     }
-    
+
     public function generate($id)
     {
 
         $campaignItem = CampaignItem::find($id);
-        // dd($campaignItem->generate('5595981110695'));
-        $cont = Contact::where('id', 1)->get()->first();
         $job = new WhatsappJob();
         $job->endpoint = env('WHATSAPP_PROTOCOL', 'http') . '://' . env('WHATSAPP_URL', 'localhost') . ':' . env('WHATSAPP_PORT', '8080') . $campaignItem->getOperation();
-        $job->payload = $campaignItem->generate('5595981110695');
+        $job->payload = $campaignItem->generate(env('WHATSAPP_CONTACT_TEST'));
+        $job->campaign_id = $campaignItem->campaign_id;
+        $job->campaign_item_id = $campaignItem->id;
+        $job->user_id = Auth::user()->id;
         $job->save();
         return view('campaign-item.show', compact('campaignItem'));
     }

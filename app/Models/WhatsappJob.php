@@ -24,8 +24,10 @@ class WhatsappJob extends Model
         'status',
         'payload',
         'resposta',
-        'message_id',       // NOVO
-        'evolution_status', // NOVO
+        'message_id',
+        'campaign_id',
+        'campaign_item_id',
+        'evolution_status', 
         'erro_mensagem',
         'tentativas',
         'user_id'
@@ -58,5 +60,22 @@ class WhatsappJob extends Model
     public function scopePendentes($query)
     {
         return $query->where('status', 'pendente');
+    }
+
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasOne
+     */
+    public function campaign()
+    {
+        return $this->hasOne('App\Models\Campaign', 'id', 'campaign_id');
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasOne
+     */
+    public function campaignItem()
+    {
+        return $this->hasOne('App\Models\CampaignItem', 'id', 'campaign_item_id');
     }
 }

@@ -62,8 +62,8 @@
                                                     <i class="bi bi-play-fill"></i> Executar
                                                 </button>
                                                 <ul class="dropdown-menu shadow border-0">
-                                                    <li><a class="dropdown-item" href="{{ route('campaign-items.generateAll',$campaignItem->id) }}"><i class="bi bi-layers me-2"></i> Generate ALL</a></li>
-                                                    <li><a class="dropdown-item" href="{{ route('campaign-items.generate',$campaignItem->id) }}"><i class="bi bi-lightning me-2"></i> Quick Generate</a></li>
+                                                    <li><a class="dropdown-item" href="{{ route('campaign-items.generateAll',$campaignItem->id) }}"><i class="bi bi-layers me-2"></i> Gerar - TODOS Contatos</a></li>
+                                                    <li><a class="dropdown-item" href="{{ route('campaign-items.generate',$campaignItem->id) }}"><i class="bi bi-lightning me-2"></i> Gerar - TESTE</a></li>
                                                     <li><hr class="dropdown-divider"></li>
                                                     <li><a class="dropdown-item text-success fw-bold" href="{{ route('campaign-items.send',$campaignItem->id) }}"><i class="bi bi-send-check me-2"></i> Iniciar Disparo</a></li>
                                                 </ul>
