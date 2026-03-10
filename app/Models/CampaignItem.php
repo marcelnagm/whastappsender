@@ -134,7 +134,7 @@ class CampaignItem extends Model
         $stats = \App\Models\WhatsappJob::where('campaign_item_id', $this->id)
             ->selectRaw('
                 COUNT(*) as total,
-                SUM(CASE WHEN evolution_status IN ("DELIVERED", "READ", "PLAYED", "delivered", "read", "played") THEN 1 ELSE 0 END) as entregues
+                SUM(CASE WHEN evolution_status IN ("DELIVERED", "READ", "PLAYED", "delivered","delivery_ack", "read", "played") THEN 1 ELSE 0 END) as entregues
             ')
             ->first();
 

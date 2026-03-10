@@ -8,12 +8,14 @@ use App\Models\WhatsappJob;
 class WhatsappJobController extends Controller
 {
     //
-    public function index(Request $request)
+    public function index(Request $request,$id)
 {
     $query = WhatsappJob::query();
-
+    $query->where('campaign_item_id', $id);
+    // dd($request);
+// 
     if ($request->has('campaign_item_id')) {
-        $query->where('campaign_item_id', $request->campaign_item_id);
+        
     }
 
     $jobs = $query->with('campaignItem')->orderBy('created_at', 'desc')->paginate(50);
