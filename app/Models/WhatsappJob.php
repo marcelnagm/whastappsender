@@ -78,4 +78,30 @@ class WhatsappJob extends Model
     {
         return $this->hasOne('App\Models\CampaignItem', 'id', 'campaign_item_id');
     }
+
+    public static function getDeliveryRate($user_id)
+    {
+        $stats = \App\Models\WhatsappJob::where('user_id', $user_id)
+            ->selectRaw('
+                COUNT(*) as total,
+                SUM(CASE WHEN evolution_status IN ("DELIVERED", "READ", "PLAYED", "delivered", "read", "played") THEN 1 ELSE 0 END) as entregues
+            ')
+            ->first();
+
+        if (!$stats || $stats->total == 0) return 0;
+
+        return round(($stats->entregues / $stats->total) * 100, 1);
+    }
+
+    public static function getErrorRate($user_id)
+    {
+        $stats = \App\Models\WhatsappJob::where('user_id', $user_id)
+            ->where('status','erro')
+            ->first();
+
+        if (!$stats || $stats->total == 0) return 0;
+
+        return round(($stats->entregues / $stats->total) * 100, 1);
+    }
+    
 }

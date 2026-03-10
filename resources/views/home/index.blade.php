@@ -27,7 +27,7 @@
                             </div>
                             <div class="flex-grow-1 ms-3">
                                 <h6 class="text-muted mb-0">Total Minerado</h6>
-                                <h3 class="fw-bold mb-0">5.953</h3> </div>
+                                <h3 class="fw-bold mb-0">{{$contact}}</h3> </div>
                         </div>
                     </div>
                 </div>
@@ -41,7 +41,7 @@
                             </div>
                             <div class="flex-grow-1 ms-3">
                                 <h6 class="text-muted mb-0">Instâncias Ativas</h6>
-                                <h3 class="fw-bold mb-0">10</h3>
+                                <h3 class="fw-bold mb-0">1</h3>
                             </div>
                         </div>
                     </div>
@@ -56,7 +56,7 @@
                             </div>
                             <div class="flex-grow-1 ms-3">
                                 <h6 class="text-muted mb-0">Lidos (Hoje)</h6>
-                                <h3 class="fw-bold mb-0">842</h3>
+                                <h3 class="fw-bold mb-0">{{$read}}</h3>
                             </div>
                         </div>
                     </div>
@@ -71,7 +71,7 @@
                             </div>
                             <div class="flex-grow-1 ms-3">
                                 <h6 class="text-muted mb-0">Falhas Criticas</h6>
-                                <h3 class="fw-bold mb-0">12</h3>
+                                <h3 class="fw-bold mb-0">{{$error}}</h3>
                             </div>
                         </div>
                     </div>
