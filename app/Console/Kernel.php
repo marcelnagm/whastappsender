@@ -16,6 +16,12 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule)
     {
         // $schedule->command('inspire')->hourly();
+        $schedule->command('whatsapp:disparar')
+             ->everyMinute()
+             ->withoutOverlapping();
+
+    // Higiene do Banco: Move ou deleta registros antigos às 03:00 da manhã
+    // $schedule->command('whatsapp:db:limpar')->dailyAt('03:00');
     }
 
     /**

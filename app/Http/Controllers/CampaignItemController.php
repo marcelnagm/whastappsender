@@ -9,9 +9,11 @@ use App\Models\WhatsappJob;
 use App\WhastappService;
 use Illuminate\Http\Request;
 use Auth;
-use Storage;
+use Illuminate\Support\Facades\Storage;
 use Image;
 use Illuminate\Support\Facades\Artisan;
+use League\Flysystem\UnixVisibility\PortableVisibilityConverter;
+
 
 
 /**
@@ -61,17 +63,35 @@ class CampaignItemController extends Controller
 
     public function store(Request $request)
     {
-        $campaignItem = new CampaignItem();
-        request()->validate(CampaignItem::$rules);
-
+        $request->validate(array_merge(CampaignItem::$rules, [
+            'file_upload' => 'nullable|image|max:5120', // Máx 5MB
+        ]));
 
         $data = $request->all();
-        $data['user_id'] = Auth::user()->id;
+        $data['user_id'] = Auth::id();
 
+        // Define a URL inicial caso tenha vindo via campo image_url
+        $data['image'] = $request->input('image_url');
+
+        // 1. Cria primeiro para obter o ID
         $campaignItem = CampaignItem::create($data);
 
-        return redirect()->route('campaign-items.index')
-            ->with('success', 'CampaignItem created successfully.');
+        // 2. Processa Upload se existir
+        if ($request->hasFile('file_upload')) {
+            $file = $request->file('file_upload');
+            $extension = $file->getClientOriginalExtension();
+
+            // Estrutura: ads/{id-campanha}/{id-item}.extensao
+            $path = "ads/{$campaignItem->campaign_id}/{$campaignItem->id}.{$extension}";
+
+            // Upload para o MinIO (disco 's3' ou o nome que você deu ao MinIO no filesystems.php)
+            Storage::disk('s3')->put($path, file_get_contents($file));
+
+            // Atualiza o registro com a URL do MinIO ou o path relativo
+            $campaignItem->update(['image' => Storage::disk('s3')->url($path)]);
+        }
+
+        return redirect()->route('campaign-items.index')->with('success', 'Item criado com sucesso.');
     }
 
     /**
@@ -151,13 +171,36 @@ class CampaignItemController extends Controller
      */
     public function update(Request $request, CampaignItem $campaignItem)
     {
-        request()->validate(CampaignItem::$rules);
+        $request->validate(array_merge(CampaignItem::$rules, [
+            'file_upload' => 'nullable|image|max:5120',
+        ]));
 
+        $data = $request->all();
 
-        $campaignItem->update($request->all());
+        if ($request->hasFile('file_upload')) {
+            // 1. Remover arquivo antigo do MinIO se existir
+            if ($campaignItem->image && !filter_var($campaignItem->image, FILTER_VALIDATE_URL)) {
+                // Extrai o path do arquivo da URL salva (ou usa o padrão se você salvar o path)
+                $oldPath = parse_url($campaignItem->image, PHP_URL_PATH);
+                $oldPath = ltrim($oldPath, '/ads/'); // Ajuste dependendo de como o MinIO retorna a URL
+                Storage::disk('s3')->delete("ads/{$campaignItem->campaign_id}/" . basename($campaignItem->image));
+            }
 
-        return redirect()->route('campaign-items.index')
-            ->with('success', 'CampaignItem updated successfully');
+            // 2. Novo Upload
+            $file = $request->file('file_upload');
+            $extension = $file->getClientOriginalExtension();
+            $path = "ads/{$campaignItem->campaign_id}/{$campaignItem->id}.{$extension}";
+
+            Storage::disk('s3')->put($path, file_get_contents($file));
+            $data['image'] = Storage::disk('s3')->url($path);
+        } else {
+            // Se não subiu arquivo, usa o que está no campo URL
+            $data['image'] = $request->input('image_url') ?? $campaignItem->image;
+        }
+
+        $campaignItem->update($data);
+
+        return redirect()->route('campaign-items.index')->with('success', 'Item atualizado com sucesso');
     }
 
     /**
@@ -165,11 +208,19 @@ class CampaignItemController extends Controller
      * @return \Illuminate\Http\RedirectResponse
      * @throws \Exception
      */
+
     public function destroy($id)
     {
-        $campaignItem = CampaignItem::find($id)->delete();
+        $campaignItem = CampaignItem::findOrFail($id);
 
-        return redirect()->route('campaign-items.index')
-            ->with('success', 'CampaignItem deleted successfully');
+        try {
+            $campaignItem->delete();
+
+            return redirect()->route('campaign-items.index')
+                ->with('success', 'Item removido com sucesso.');
+        } catch (\Exception $e) {
+            return redirect()->route('campaign-items.index')
+                ->with('error', 'Erro ao deletar: ' . $e->getMessage());
+        }
     }
 }

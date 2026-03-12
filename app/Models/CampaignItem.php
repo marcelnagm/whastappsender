@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use URL;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * Class CampaignItem
@@ -56,7 +58,34 @@ class CampaignItem extends Model
     }
 
 
+    public function delete()
+    {
+        $fullUrl = $this->image;
 
+        if ($fullUrl) {
+            // 1. Pegamos apenas o caminho após o domínio e porta
+            // De: http://s3.meusistema.local:9000/ads/ads/1/15.jpeg
+            // Para: /ads/ads/1/15.jpeg
+            $path = parse_url($fullUrl, PHP_URL_PATH);
+
+            // 2. Removemos a primeira ocorrência do nome do bucket ('ads') 
+            // e qualquer barra sobrando no início.
+            // O Laravel 's3' já entra no bucket automaticamente, então o path
+            // não pode começar com o nome do bucket.
+
+            // Transformamos '/ads/ads/1/15.jpeg' em 'ads/1/15.jpeg'
+            $relativePath = preg_replace('/^\/?ads\//', '', $path);
+
+            // 3. Execução da deleção
+            if (Storage::disk('s3')->exists($relativePath)) {
+                Storage::disk('s3')->delete($relativePath);
+            } else {
+                // Log de segurança caso o path ainda esteja desalinhado
+                \Log::warning("Tentativa de delete falhou: arquivo não encontrado em {$relativePath}");
+            }
+        }
+        return parent::delete();
+    }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasOne
@@ -142,5 +171,4 @@ class CampaignItem extends Model
 
         return round(($stats->entregues / $stats->total) * 100, 1);
     }
-    
 }

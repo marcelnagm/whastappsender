@@ -66,11 +66,35 @@ Editar Item: {{ $campaignItem->name }}
                                     {{ Form::select('campaign_id', $campaigns, $campaignItem->campaign_id, ['class' => 'form-select', 'required']) }}
                                 </div>
 
+                                {{-- Substitua o bloco da URL da Imagem por este --}}
                                 <div class="mb-4">
-                                    {{ Form::label('image', 'URL da Imagem/Mídia', ['class' => 'form-label fw-bold']) }}
-                                    <div class="input-group">
-                                        <span class="input-group-text"><i class="bi bi-link-45deg"></i></span>
-                                        {{ Form::text('image', $campaignItem->image, ['class' => 'form-control', 'id' => 'image_url', 'placeholder' => 'https://...']) }}
+                                    <label class="form-label fw-bold d-flex justify-content-between">
+                                        Origem da Mídia
+                                        <div class="form-check form-switch ms-3">
+                                            <input class="form-check-input" type="checkbox" id="toggle_upload" name="use_upload" value="1" {{ $campaignItem->image && !filter_var($campaignItem->image, FILTER_VALIDATE_URL) ? 'checked' : '' }}>
+                                            <label class="form-check-label text-muted" style="font-size: 0.8rem;" for="toggle_upload">Fazer Upload (S3)</label>
+                                        </div>
+                                    </label>
+
+                                    {{-- Opção 1: URL Externa --}}
+                                    <div id="url_container" class="{{ $campaignItem->image && !filter_var($campaignItem->image, FILTER_VALIDATE_URL) ? 'd-none' : '' }}">
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="bi bi-link-45deg"></i></span>
+                                            {{ Form::text('image_url', filter_var($campaignItem->image, FILTER_VALIDATE_URL) ? $campaignItem->image : '', ['class' => 'form-control', 'id' => 'image_url', 'placeholder' => 'https://...']) }}
+                                        </div>
+                                    </div>
+
+                                    {{-- Opção 2: Upload de Arquivo --}}
+                                    <div id="upload_container" class="{{ $campaignItem->image && !filter_var($campaignItem->image, FILTER_VALIDATE_URL) ? '' : 'd-none' }}">
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="bi bi-file-earmark-image"></i></span>
+                                            <input type="file" name="file_upload" id="file_upload" class="form-control" accept="image/*">
+                                        </div>
+                                        @if($campaignItem->image && !filter_var($campaignItem->image, FILTER_VALIDATE_URL))
+                                        <div class="mt-2 small text-success">
+                                            <i class="bi bi-check-circle"></i> Arquivo atual: <code>{{ basename($campaignItem->image) }}</code>
+                                        </div>
+                                        @endif
                                     </div>
                                 </div>
 
@@ -176,5 +200,17 @@ Editar Item: {{ $campaignItem->name }}
         $imgInput.on('input propertychange', updatePreview);
         updatePreview();
     });
+    $('#toggle_upload').on('change', function() {
+        if ($(this).is(':checked')) {
+            $('#url_container').addClass('d-none');
+            $('#upload_container').removeClass('d-none');
+            $('#image_url').val(''); // Limpa a URL para priorizar o upload
+        } else {
+            $('#url_container').removeClass('d-none');
+            $('#upload_container').addClass('d-none');
+            $('#file_upload').val('');
+        }
+    });
 </script>
+
 @endsection

@@ -77,5 +77,14 @@ class Campaign extends Model
     return round(($stats->sucessos / $stats->total) * 100, 2);
 }
 
+    public function delete()
+    {
+        foreach ($this->campaignItems()->get() as $item) {
+            $item->delete();
+        }
+
+        return parent::delete();
+    }
+
 
 }

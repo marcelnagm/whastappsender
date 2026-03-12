@@ -6,6 +6,7 @@ use App\Models\Campaign;
 use Illuminate\Http\Request;
 use Auth;
 use Illuminate\Support\Facades\Storage;
+
 /**
  * Class CampaignController
  * @package App\Http\Controllers
@@ -19,7 +20,7 @@ class CampaignController extends Controller
      */
     public function index()
     {
-        $campaigns = Campaign::where('user_id',Auth::user()->id)->paginate();
+        $campaigns = Campaign::where('user_id', Auth::user()->id)->paginate();
 
         return view('campaign.index', compact('campaigns'))
             ->with('i', (request()->input('page', 1) - 1) * $campaigns->perPage());
@@ -65,7 +66,7 @@ class CampaignController extends Controller
         $campaign = Campaign::with('campaignItems')->find($id);
         $campaignItems = $campaign->campaignItems()->paginate(10);
 
-        return view('campaign.show', compact('campaign','campaignItems'));
+        return view('campaign.show', compact('campaign', 'campaignItems'));
     }
 
     /**
@@ -105,9 +106,17 @@ class CampaignController extends Controller
      */
     public function destroy($id)
     {
-        $campaign = Campaign::find($id)->delete();
+        // 1. Localiza a campanha ou falha
+        $campaign = Campaign::with('campaignItems')->findOrFail($id);
 
-        return redirect()->route('campaigns.index')
-            ->with('success', 'Campaign deleted successfully');
+        try {
+            $campaign->delete();
+
+            return redirect()->route('campaigns.index')
+                ->with('success', 'Campanha e todas as mídias associadas foram excluídas.');
+        } catch (\Exception $e) {
+            return redirect()->route('campaigns.index')
+                ->with('error', 'Falha na exclusão: ' . $e->getMessage());
+        }
     }
 }
