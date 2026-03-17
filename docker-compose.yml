@@ -1,34 +1,75 @@
 version: '3.8'
 
 services:
-  # Serviço do Banco de Dados
-  db:
-    image: mysql:8.0
-    container_name: mysql_db
+  postgres:
+    image: postgres:15-alpine
+    container_name: evolution_db
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: sender
-    ports:
-      - "3306:3306"
+      POSTGRES_DB: evolution
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password123
     volumes:
-      - dbdata:/var/lib/mysql
+      - ./data/postgres:/var/lib/postgresql/data
+    networks:
+      - evolution_network
 
-  # Serviço do phpMyAdmin
-  phpmyadmin:
-    image: phpmyadmin/phpmyadmin
-    container_name: pma
+  evolution-api:
+    image: atendai/evolution-api:latest
+    container_name: evolution_api
     restart: always
-    depends_on:
-      - db
-    environment:
-      # Usamos o nome do serviço 'db' em vez de localhost 
-      # para os containers se conversarem
-      PMA_HOST: db
-      PMA_PORT: 3306
-      MYSQL_ROOT_PASSWORD: root
     ports:
-      - "8081:80"
+      - "8080:8080"
+    depends_on:
+      - postgres
+    env_file:
+      - .env.docker
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1  
+    volumes:
+      - ./data/evolution_instances:/evolution/instances
+    networks:
+      - evolution_network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  minio:
+    image: minio/minio:latest
+    container_name: minio_storage
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - ./data/minio:/data
+    environment:
+      MINIO_ROOT_USER: "admin"
+      MINIO_ROOT_PASSWORD: "sua_senha_forte_123"
+    command: server /data --console-address ":9001"
+    restart: always
+    networks:
+      evolution_network:
+        aliases:
+          - s3.meusistema.local
+
+  minio-setup:
+    image: minio/mc:latest
+    depends_on:
+      - minio
+    networks:
+      - evolution_network
+    entrypoint: >
+      /bin/sh -c "
+      sleep 10;
+      /usr/bin/mc alias set myminio http://minio_storage:9000 admin sua_senha_forte_123;
+      /usr/bin/mc mb myminio/ads || true;
+      /usr/bin/mc anonymous set download myminio/ads;
+      exit 0;
+      "
+networks:
+  evolution_network:
+    driver: bridge
 
 volumes:
-  dbdata:
+  n8n_data:
+  minio_data:
