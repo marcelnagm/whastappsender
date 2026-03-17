@@ -8,18 +8,50 @@ use App\Models\WhatsappJob;
 class WhatsappJobController extends Controller
 {
     //
-    public function index(Request $request,$id)
-{
-    $query = WhatsappJob::query();
-    $query->where('campaign_item_id', $id);
-    // dd($request);
-// 
-    if ($request->has('campaign_item_id')) {
-        
+    public function index(Request $request, $id)
+    {
+        // 1. TENTATIVA FLEXÍVEL: Busca por campanha OU por item se o ID for ambíguo
+        $query = WhatsappJob::where(function ($q) use ($id) {
+            $q->where('campaign_id', $id)
+                ->orWhere('campaign_item_id', $id);
+        });
+
+        // 2. FILTROS DINÂMICOS (Só entram se o usuário preencher no formulário)
+        if ($request->filled('campaign_item_id')) {
+            $query->where('campaign_item_id', $request->campaign_item_id);
+        }
+
+        if ($request->filled('contact')) {
+            $query->where('payload', 'like', '%' . $request->contact . '%');
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->filled('evolution_status')) {
+            $query->where('evolution_status', $request->evolution_status);
+        }
+
+        // 3. DASHBOARD (Calculado antes da paginação para não perder dados)
+        // Usamos um clone limpo da query filtrada
+        $dashboardQuery = clone $query;
+
+        $statsStatus = $dashboardQuery->selectRaw('status, count(*) as total')
+            ->groupBy('status')
+            ->pluck('total', 'status');
+
+        $statsEvolution = (clone $query)->whereNotNull('evolution_status')
+            ->selectRaw('evolution_status, count(*) as total')
+            ->groupBy('evolution_status')
+            ->pluck('total', 'evolution_status');
+
+        // 4. EXECUÇÃO FINAL
+        $jobs = $query->orderBy('id', 'desc')->paginate(50)->withQueryString();
+
+        // DEBUG INTERNO (Se os dados sumirem, descomente a linha abaixo para ver o SQL)
+        // dd($query->toSql(), $query->getBindings());
+
+        return view('whatsapp-jobs.index', compact('jobs', 'id', 'statsStatus', 'statsEvolution'));
     }
-
-    $jobs = $query->with('campaignItem')->orderBy('created_at', 'desc')->paginate(50);
-
-    return view('whatsapp-jobs.index', compact('jobs'));
-}
 }

@@ -63,6 +63,7 @@ Route::group(['namespace' => 'App\Http\Controllers'], function()
     Route::get('/campaign-items/{id}/generate', 'CampaignItemController@generate')->name('campaign-items.generate');
     Route::get('/campaign-items/{id}/generateAll', 'CampaignItemController@generateAll')->name('campaign-items.generateAll');
     Route::get('/campaign-items/{id}/logs', 'WhatsappJobController@index')->name('campaign-items.logs');
+    Route::get('/campaign-items/{id}/logs', 'WhatsappJobController@index')->name('whatsapp-jobs.index');
 
     Route::get('/logout', 'LogoutController@perform')->name('logout.perform');
 
