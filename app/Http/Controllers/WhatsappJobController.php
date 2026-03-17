@@ -12,8 +12,7 @@ class WhatsappJobController extends Controller
     {
         // 1. TENTATIVA FLEXÍVEL: Busca por campanha OU por item se o ID for ambíguo
         $query = WhatsappJob::where(function ($q) use ($id) {
-            $q->where('campaign_id', $id)
-                ->orWhere('campaign_item_id', $id);
+            $q->where('campaign_item_id', $id);
         });
 
         // 2. FILTROS DINÂMICOS (Só entram se o usuário preencher no formulário)

@@ -97,10 +97,12 @@
                     </div>
                 </div>
             </div>
-            <div class="py-3">
-                {!! $campaignItems->links() !!}
+            <div class="py-4 d-flex justify-content-center">
+                {{ $campaignItems->appends(request()->query())->links('pagination::bootstrap-4') }}
             </div>
+
         </div>
+
     </div>
 </div>
 

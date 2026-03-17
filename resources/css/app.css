@@ -1,0 +1,26 @@
+
+    /* CORREÇÃO DO PAGINATE GIGANTE */
+    nav[role="navigation"] svg {
+        width: 20px;
+        height: 20px;
+    }
+
+    .pagination {
+        margin-bottom: 0;
+        display: flex;
+        gap: 2px;
+    }
+
+    .page-item.active .page-link {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+    }
+
+    .x-small {
+        font-size: 0.7rem;
+    }
+
+    .btn-xs {
+        padding: 0.2rem 0.4rem;
+        font-size: 0.72rem;
+    }
