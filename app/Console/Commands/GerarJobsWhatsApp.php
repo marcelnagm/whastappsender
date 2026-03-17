@@ -7,67 +7,55 @@ use App\Models\Contact;
 use App\Models\CampaignItem;
 use App\Models\WhatsappJob;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class GerarJobsWhatsApp extends Command
 {
-    protected $signature = 'whatsapp:gerar {item_id?}';
-    protected $description = 'Gera a fila de disparos com URL completa no endpoint';
+    protected $signature = 'whatsapp:gerar {item_id}';
+    protected $description = 'Gera a fila de disparos otimizada';
 
     public function handle()
     {
-        // 1. Captura do ID
-        $id = $this->argument('item_id') ?? $this->ask("Qual id do item?");
-        $campaignItem = CampaignItem::find($id);
+        $id = $this->argument('item_id');
+        $campaignItem = CampaignItem::with('campaign')->find($id);
 
         if (!$campaignItem) {
-            $this->error("Item não encontrado!");
-            return Command::FAILURE;
+            $this->error("Item da campanha não encontrado!");
+            return self::FAILURE;
         }
 
-        $this->info("Você escolheu este id = " . $id);
-        $this->info("Texto: " . $campaignItem->text);
-        $this->info("Imagem: " . $campaignItem->image);
+        // 1. Chunking para não estourar a RAM
+        // Buscamos apenas contatos válidos (já minerados/validados)
+        Contact::where('user_id', $campaignItem->user_id)
+            ->whereNull('ignore_me') // Regra: só gera para quem foi minerado          
+            ->chunkById(1000, function ($contatos) use ($campaignItem) {
 
-        // 2. Confirmação (Uso do confirm nativo para evitar erros de tipagem)
-        if (!$this->confirm("Você confirma a geração dos jobs?", true)) {
-            $this->warn("Operação cancelada.");
-            return Command::SUCCESS;
-        }
+                $jobs = [];
+                $now = now();
 
-        // 3. Busca de contatos
-        $contatos = Contact::where('user_id', $campaignItem->user_id)
-            ->whereNotNull('contact')
-            ->pluck('contact');
+                foreach ($contatos as $contato) {
+                    $jobs[] = [
+                        'user_id'          => $campaignItem->user_id,
+                        'campaign_id'      => $campaignItem->campaign_id,
+                        'campaign_item_id' => $campaignItem->id,
+                        'contact_id'       => $contato->id, // A âncora que definimos
+                        'status'           => 'pendente',
+                        'endpoint'  => 
+                            $campaignItem->getOperation(),
+                        // O payload agora é gerado e guardado como JSON puro
+                        'payload'          => json_encode($campaignItem->generate($contato->id)),
+                        'created_at'       => $now,
+                        'updated_at'       => $now,
+                    ];
+                }
 
-        if ($contatos->isEmpty()) {
-            $this->error("Nenhum contato encontrado para este usuário.");
-            return Command::FAILURE;
-        }
+                // 2. Insert de alta performance (1 query por 1000 registros)
+                WhatsappJob::insert($jobs);
 
-        $this->info("Gerando " . $contatos->count() . " registros...");
+                $this->info("Lote de 1000 jobs inserido...");
+            });
 
-        // 4. Loop de Inserção
-        DB::transaction(function () use ($contatos, $campaignItem) {
-            foreach ($contatos as $c) {
-                $job = new WhatsappJob();
-
-                // Mantendo sua estrutura de URL completa por sua conta e risco
-                $job->endpoint = env('WHATSAPP_PROTOCOL', 'http') . '://' .
-                    env('WHATSAPP_URL', 'localhost') . ':' .
-                    env('WHATSAPP_PORT', '8080') .
-                    $campaignItem->getOperation();
-
-                // O Model WhatsappJob PRECISA ter protected $casts = ['payload' => 'array']
-                $job->payload = $campaignItem->generate($c);
-                $job->campaign_id = $campaignItem->campaign_id;
-                $job->campaign_item_id = $campaignItem->id;
-                $job->user_id = $campaignItem->user_id;
-                $job->status  = 'pendente';
-                $job->save();
-            }
-        });
-
-        $this->info("Sucesso! Tudo pronto para o disparo.");
-        return Command::SUCCESS;
+        $this->info("Sucesso! Fila de disparos gerada com performance.");
+        return self::SUCCESS;
     }
 }

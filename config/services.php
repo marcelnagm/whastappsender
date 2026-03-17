@@ -30,5 +30,11 @@ return [
         'secret' => env('AWS_SECRET_ACCESS_KEY'),
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
+    'whatsapp' => [
+        'protocol' => env('WHATSAPP_PROTOCOL', 'http'),
+        'url'      => env('WHATSAPP_URL', 'localhost'),
+        'port'     => env('WHATSAPP_PORT', '8080'),
+        'apikey'   => env('WHATSAPP_APIKEY'),
+    ],
 
 ];

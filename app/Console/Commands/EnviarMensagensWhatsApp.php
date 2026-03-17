@@ -13,6 +13,18 @@ class EnviarMensagensWhatsApp extends Command
 
     public function handle()
     {
+
+        // 1. Configurações de Infra (Centralizadas para evitar erro de 'scheme')
+        $protocol = config('services.whatsapp.protocol');
+        $host     = config('services.whatsapp.url');
+        $port     = config('services.whatsapp.port');
+        $apikey   = config('services.whatsapp.apikey');
+
+        if (!$host || !$apikey) {
+            throw new \Exception("Configurações de API (URL/Key) não encontradas no config/services.php");
+        }
+
+        $baseUrl = "{$protocol}://{$host}:{$port}";
         // 1. Busca jobs elegíveis (Pendente/Erro com menos de 3 tentativas)
         $jobs = WhatsappJob::whereIn('status', ['pendente', 'erro'])
             ->where('tentativas', '<', 3)
@@ -36,16 +48,14 @@ class EnviarMensagensWhatsApp extends Command
         foreach ($jobs as $job) {
             $this->info("------------------------------------------------");
             $this->info("Processando: {$job->contato} (Tentativa " . ($job->tentativas + 1) . "/3)");
-            
+
             try {
-                
+
                 $instance = $job->user()->first()->phone;
                 $apikey = env('WHATSAPP_APIKEY');
-                
+
                 // Extração da Base URL de forma dinâmica
-                $parsedUrl = parse_url($job->endpoint);
-                $baseUrl = $parsedUrl['scheme'] . '://' . $parsedUrl['host'];
-                if(isset($parsedUrl['port'])) $baseUrl .= ":{$parsedUrl['port']}";
+
 
                 // PASSO 1: Humanização (Presença)
                 $this->info("Simulando digitação (presence)...");
@@ -60,14 +70,15 @@ class EnviarMensagensWhatsApp extends Command
 
                 // PASSO 2: Envio Real para a Evolution
                 $this->info("Enviando payload...");
+                $this->info("{$baseUrl}{$job->endpoint}{$instance}");
                 $response = Http::withHeaders([
                     'apikey' => $apikey,
                     'Content-Type' => 'application/json'
-                ])->post("{$job->endpoint}{$instance}", $job->payload);
+                ])->post("{$baseUrl}{$job->endpoint}{$instance}", $job->payload);
 
                 if ($response->successful()) {
                     $dados = $response->json();
-                    
+
                     // PASSO 3: Captura do ID Único da Mensagem (Essencial para o Webhook)
                     // A Evolution pode retornar em diferentes níveis dependendo do tipo de mensagem
                     $remoteId = $dados['key']['id'] ?? ($dados['message']['key']['id'] ?? null);
@@ -84,7 +95,6 @@ class EnviarMensagensWhatsApp extends Command
                 } else {
                     $this->registrarFalha($job, $response->body());
                 }
-
             } catch (\Exception $e) {
                 $this->registrarFalha($job, $e->getMessage());
             }
@@ -101,12 +111,12 @@ class EnviarMensagensWhatsApp extends Command
     private function registrarFalha($job, $mensagem)
     {
         $novaTentativa = $job->tentativas + 1;
-        
+
         $job->update([
             'status' => 'erro',
             'tentativas' => $novaTentativa,
             // Limita a mensagem para evitar erro de truncamento de banco
-            'erro_mensagem' => substr($mensagem, 0, 255) 
+            'erro_mensagem' => substr($mensagem, 0, 255)
         ]);
 
         if ($novaTentativa >= 3) {

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Contact;
 
 class WhatsappJob extends Model
 {
@@ -30,7 +31,8 @@ class WhatsappJob extends Model
         'evolution_status', 
         'erro_mensagem',
         'tentativas',
-        'user_id'
+        'user_id',
+        'contact_id'
         
     ];
 
@@ -69,6 +71,14 @@ class WhatsappJob extends Model
     public function campaign()
     {
         return $this->hasOne('App\Models\Campaign', 'id', 'campaign_id');
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasOne
+     */
+    public function contact()
+    {
+        return $this->hasOne('App\Models\Contact', 'id', 'contact_id');
     }
 
     /**

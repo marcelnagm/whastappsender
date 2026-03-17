@@ -117,21 +117,23 @@ class CampaignItemController extends Controller
 
     public function generateAll($id)
     {
+        $campaignItem = CampaignItem::select('id', 'user_id')->findOrFail($id);
 
-        $campaignItem = CampaignItem::find($id);
+        // 1. Conte direto no banco. Muito mais rápido que pluck()->count()
+        $totalContatos = Contact::where('user_id', $campaignItem->user_id)
+            ->whereNull('ignore_me') // Regra: só gera para quem foi minerado
+            ->count();
 
-        $cont = Contact::where('user_id', $campaignItem->user_id)->pluck('contact')->toArray();
-        foreach ($cont as $c) {
-            $job = new WhatsappJob();
-            $job->endpoint = env('WHATSAPP_PROTOCOL', 'http') . '://' . env('WHATSAPP_URL', 'localhost') . ':' . env('WHATSAPP_PORT', '8080') . $campaignItem->getOperation();
-            $job->payload = $campaignItem->generate($c);
-            $job->campaign_id = $campaignItem->campaign_id;
-            $job->campaign_item_id = $campaignItem->id;
-            $job->user_id =  $campaignItem->user_id;
-            $job->save();
+        if ($totalContatos === 0) {
+            return redirect()->back()->with('error', 'Nenhum contato validado encontrado para este usuário.');
         }
+
+        // 2. Despacha o comando para a fila (background)
+        // Certifique-se de que o comando NÃO seja interativo (sem $this->confirm)
+        Artisan::queue('whatsapp:gerar', ['item_id' => $id]);
+
         return redirect()->route('campaign-items.index')
-            ->with('success', 'Generated ' . (count($cont)) . " jobs");
+            ->with('success', "Iniciada a geração de {$totalContatos} disparos em segundo plano.");
     }
 
     public function generate($id)

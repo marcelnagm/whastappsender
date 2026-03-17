@@ -95,8 +95,11 @@ class CampaignItem extends Model
         return $this->hasOne('App\Models\User', 'id', 'user_id');
     }
 
-    public function generate($client_phone)
+
+    public function generate($contact_id)
     {
+
+        $contact = Contact::find($contact_id);
 
         $image = $this->image;
         // $client_phone .= '@s.whatsapp.net';
@@ -104,7 +107,7 @@ class CampaignItem extends Model
         if (isset($this->image) && URL::isValidUrl($this->image)) {
 
             $data  = [
-                'number' => $client_phone,
+                'number' => $contact->contact,
                 "mediatype" => $this->imageType(),
                 "mimetype"  => "image/png",     // Garanta que corresponde à extensão do arquivo
                 "caption"   => $this->text,
