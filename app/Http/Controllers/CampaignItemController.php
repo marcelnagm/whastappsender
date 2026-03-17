@@ -103,7 +103,7 @@ class CampaignItemController extends Controller
     public function send($id)
     {
 
-        Artisan::queue('whatsapp:disparar');
+        Artisan::queue('whatsapp:queue');
         return redirect()->route('campaign-items.index')
 
             ->with('success', 'Enviado com sucesso para o disparo, aguarde no seu whatsapp');

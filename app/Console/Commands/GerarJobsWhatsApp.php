@@ -6,6 +6,7 @@ use Illuminate\Console\Command;
 use App\Models\Contact;
 use App\Models\CampaignItem;
 use App\Models\WhatsappJob;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
