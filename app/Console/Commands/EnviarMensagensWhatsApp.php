@@ -5,124 +5,134 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 use App\Models\WhatsappJob;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class EnviarMensagensWhatsApp extends Command
 {
     protected $signature = 'whatsapp:disparar';
-    protected $description = 'Dispara mensagens capturando message_id para controle de Webhook';
+    protected $description = 'Disparador profissional com humanização e proteção anti-ban';
 
     public function handle()
     {
+        // 1. Configurações de Infra (Carregamento único fora do loop)
+        $config = config('services.whatsapp');
+        $baseUrl = "{$config['protocol']}://{$config['url']}:{$config['port']}";
+        $globalApiKey = $config['apikey'];
 
-        // 1. Configurações de Infra (Centralizadas para evitar erro de 'scheme')
-        $protocol = config('services.whatsapp.protocol');
-        $host     = config('services.whatsapp.url');
-        $port     = config('services.whatsapp.port');
-        $apikey   = config('services.whatsapp.apikey');
-
-        if (!$host || !$apikey) {
-            throw new \Exception("Configurações de API (URL/Key) não encontradas no config/services.php");
+        if (!$config['url'] || !$globalApiKey) {
+            $this->error("Erro Crítico: Configurações de API ausentes.");
+            return self::FAILURE;
         }
 
-        $baseUrl = "{$protocol}://{$host}:{$port}";
-        // 1. Busca jobs elegíveis (Pendente/Erro com menos de 3 tentativas)
+        // 2. Busca Lote Maior (Aumentamos para 100 para dar vazão)
         $jobs = WhatsappJob::whereIn('status', ['pendente', 'erro'])
             ->where('tentativas', '<', 3)
-            ->limit(50)
+            ->orderBy('id', 'asc') // Primeiro os mais antigos
+            ->limit(100) 
             ->get();
 
-        // Contagem de ignorados para feedback no terminal
-        $descartadosCount = WhatsappJob::where('tentativas', '>=', 3)
-            ->where('status', '!=', 'processado')
-            ->count();
-
-        if ($descartadosCount > 0) {
-            $this->warn("Aviso: Existem {$descartadosCount} registros ignorados (limite de 3 erros excedido).");
-        }
-
         if ($jobs->isEmpty()) {
-            $this->info('Nenhuma mensagem elegível para envio.');
-            return;
+            return self::SUCCESS;
         }
 
-        foreach ($jobs as $job) {
-            $this->info("------------------------------------------------");
-            $this->info("Processando: {$job->contato} (Tentativa " . ($job->tentativas + 1) . "/3)");
+        $this->info("Iniciando lote de " . $jobs->count() . " mensagens.");
+
+        foreach ($jobs as $index => $job) {
+            // A cada 10 mensagens, fazemos uma pausa maior (Respiro do lote)
+            if ($index > 0 && $index % 10 == 0) {
+                $lotePause = rand(40, 70);
+                $this->warn("Pausa de Lote: Aguardando {$lotePause}s para resfriar a instância...");
+                sleep($lotePause);
+            }
 
             try {
+                // Instância do usuário (Telefone)
+                $user = $job->user()->first();
+                if (!$user || !$user->phone) {
+                    $this->registrarFalha($job, "Usuário sem instância/phone configurado.");
+                    continue;
+                }
 
-                $instance = $job->user()->first()->phone;
-                $apikey = env('WHATSAPP_APIKEY');
+                $instance = $user->phone;
+                $payload = is_string($job->payload) ? json_decode($job->payload, true) : $job->payload;
+                $numeroDestino = $payload['number'] ?? null;
 
-                // Extração da Base URL de forma dinâmica
+                if (!$numeroDestino) {
+                    $this->registrarFalha($job, "Número de destino ausente no payload.");
+                    continue;
+                }
 
+                $this->info("[ID:{$job->id}] Enviando para: {$numeroDestino}");
 
-                // PASSO 1: Humanização (Presença)
-                $this->info("Simulando digitação (presence)...");
-                Http::withHeaders(['apikey' => $apikey])
+                // --- PASSO 1: HUMANIZAÇÃO (Simulação de Comportamento) ---
+                // Aleatoriedade entre digitar ou apenas visualizar
+                $presenceType = (rand(0, 10) > 3) ? 'composing' : 'recording';
+                
+                Http::withHeaders(['apikey' => $globalApiKey])
                     ->post("{$baseUrl}/chat/sendPresence/{$instance}", [
-                        "number" => $job->contato,
-                        "presence" => "composing"
+                        "number" => $numeroDestino,
+                        "presence" => $presenceType,
+                        "delay" => rand(1500, 3000) // Delay interno da Evolution
                     ]);
 
-                // Delay humano para simular tempo de digitação/anexo
-                sleep(rand(3, 6));
+                // Tempo que o "usuário" leva para enviar após começar a digitar
+                sleep(rand(4, 8));
 
-                // PASSO 2: Envio Real para a Evolution
-                $this->info("Enviando payload...");
-                $this->info("{$baseUrl}{$job->endpoint}{$instance}");
+                // --- PASSO 2: ENVIO REAL ---
+                $endpoint = ltrim($job->endpoint, '/'); // Remove barra duplicada se existir
+                $urlFinal = "{$baseUrl}/{$endpoint}{$instance}";
+
                 $response = Http::withHeaders([
-                    'apikey' => $apikey,
+                    'apikey' => $globalApiKey,
                     'Content-Type' => 'application/json'
-                ])->post("{$baseUrl}{$job->endpoint}{$instance}", $job->payload);
+                ])->timeout(30)->post($urlFinal, $payload);
 
                 if ($response->successful()) {
                     $dados = $response->json();
-
-                    // PASSO 3: Captura do ID Único da Mensagem (Essencial para o Webhook)
-                    // A Evolution pode retornar em diferentes níveis dependendo do tipo de mensagem
-                    $remoteId = $dados['key']['id'] ?? ($dados['message']['key']['id'] ?? null);
+                    
+                    // Captura o ID da mensagem para o Webhook futuro
+                    $remoteId = $dados['key']['id'] ?? ($dados['message']['key']['id'] ?? ($dados['response']['key']['id'] ?? null));
 
                     $job->update([
                         'status' => 'processado',
-                        'message_id' => $remoteId, // Coluna indexada que você criou
-                        'evolution_status' => 'sent', // Status inicial na rede
+                        'message_id' => $remoteId,
+                        'evolution_status' => 'sent',
                         'resposta' => $dados,
-                        'erro_mensagem' => null
+                        'erro_mensagem' => null,
+                        'tentativas' => $job->tentativas + 1
                     ]);
 
-                    $this->info("SUCESSO: Mensagem aceita pela API. ID: {$remoteId}");
+                    $this->info("SUCESSO: ID {$remoteId}");
                 } else {
-                    $this->registrarFalha($job, $response->body());
+                    $this->registrarFalha($job, "API Erro: " . $response->status() . " - " . $response->body());
                 }
+
             } catch (\Exception $e) {
-                $this->registrarFalha($job, $e->getMessage());
+                $this->registrarFalha($job, "Exception: " . $e->getMessage());
+                Log::error("Erro no disparo Job {$job->id}: " . $e->getMessage());
             }
 
-            // Intervalo Anti-Ban (Aleatoriedade é vida)
-            $pause = rand(15, 35);
-            $this->comment("Aguardando {$pause}s para o próximo contato...");
+            // --- PASSO 3: INTERVALO ENTRE REQUESTS (Anti-Ban) ---
+            // Aumentamos a média para segurança total
+            $pause = rand(20, 45);
+            $this->comment("Aguardando {$pause}s...");
             sleep($pause);
         }
 
-        $this->info('Fim do processamento.');
+        $this->info('Lote finalizado.');
+        return self::SUCCESS;
     }
 
     private function registrarFalha($job, $mensagem)
     {
         $novaTentativa = $job->tentativas + 1;
-
+        
         $job->update([
             'status' => 'erro',
             'tentativas' => $novaTentativa,
-            // Limita a mensagem para evitar erro de truncamento de banco
             'erro_mensagem' => substr($mensagem, 0, 255)
         ]);
 
-        if ($novaTentativa >= 3) {
-            $this->error("LIMITE DE TENTATIVAS: {$job->contato} ignorado.");
-        } else {
-            $this->warn("FALHA REGISTRADA: {$job->contato} ({$novaTentativa}/3).");
-        }
+        $this->error("FALHA: {$job->id} - Tentativa {$novaTentativa}/3");
     }
 }
