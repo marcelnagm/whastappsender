@@ -20,9 +20,20 @@ class ContactController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
-        $contacts = Contact::where('user_id',Auth::user()->id)->paginate();
+        $search = $request->input('search');
+
+        $contacts = Contact::where('user_id', auth()->id())
+            ->when($search, function ($query, $search) {
+                return $query->where(function ($q) use ($search) {
+                    $q->where('name', 'LIKE', "%{$search}%")
+                        ->orWhere('contact', 'LIKE', "%{$search}%")
+                        ->orWhere('email', 'LIKE', "%{$search}%");
+                });
+            })
+            ->orderBy('name', 'asc')
+            ->paginate(20); // Defini 20 para melhorar a usabilidade
 
         return view('contact.index', compact('contacts'))
             ->with('i', (request()->input('page', 1) - 1) * $contacts->perPage());
@@ -49,7 +60,7 @@ class ContactController extends Controller
     {
         request()->validate(Contact::$rules);
         $data = $request->all();
-        $data['user_id']= Auth::user()->id;
+        $data['user_id'] = Auth::user()->id;
         $contact = Contact::create($data);
 
         return redirect()->route('contacts.index')
@@ -113,22 +124,21 @@ class ContactController extends Controller
     }
 
 
-    public function import(Request $request) 
+    public function import(Request $request)
     {
-        if($request->input('renover'))
-        Contact::where('user_id', Auth::user()->id)->delete();
-        Excel::import(new ContactsImport,$request->file('importer'));
-        
+        if ($request->input('renover'))
+            Contact::where('user_id', Auth::user()->id)->delete();
+        Excel::import(new ContactsImport, $request->file('importer'));
+
         return redirect()->route('contacts.index')
             ->with('success', 'Contact imported');
     }
-    public function clean(Request $request) 
+    public function clean(Request $request)
     {
-        
+
         Contact::where('user_id', Auth::user()->id)->delete();
-        
+
         return redirect()->route('contacts.index')
             ->with('success', 'Contacts Cleared');
     }
 }
-
