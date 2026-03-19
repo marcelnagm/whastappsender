@@ -13,7 +13,7 @@ class WebhookController extends Controller
         try {
             $payload = $request->all();
             $event = $payload['event'] ?? null;
-            Log::info("Job {$messageId} atualizado para: {$statusName}");
+            
             if ($event === 'messages.update') {
                 $data = $payload['data'] ?? [];
                 
