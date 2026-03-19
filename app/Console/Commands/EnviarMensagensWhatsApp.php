@@ -85,7 +85,7 @@ class EnviarMensagensWhatsApp extends Command
                 $response = Http::withHeaders([
                     'apikey' => $globalApiKey,
                     'Content-Type' => 'application/json'
-                ])->timeout(30)->post($urlFinal, $payload);
+                ])->timeout(60)->post($urlFinal, $payload);
 
                 if ($response->successful()) {
                     $dados = $response->json();

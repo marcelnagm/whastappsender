@@ -43,8 +43,7 @@ class envioQueue extends Command
     $this->info("Encontrados " . $jobs->count() . " jobs. Despachando...");
 
     foreach ($jobs as $job) {
-        $job->update(['status' => 'fila']);
-        Log::info('ENTROU CAARALHOHOHO');
+        $job->update(['status' => 'fila']);        
         \App\Jobs\EnviarMensagemJob::dispatch($job)->onQueue('disparos');
     }
 }

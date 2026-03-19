@@ -13,10 +13,10 @@ class WebhookController extends Controller
         try {
             $payload = $request->all();
             $event = $payload['event'] ?? null;
-
-            if ($event === 'messages.update') {
+            Log::info("Evento:  {$event} ");
+            if ($event = 'messages.update') {
                 $data = $payload['data'] ?? [];
-                
+
                 // Baseado no seu log real: o ID está em 'messageId' e o status em 'status'
                 $messageId = $data['keyId'] ?? null;
                 $statusRaw = $data['status'] ?? null;
@@ -40,7 +40,6 @@ class WebhookController extends Controller
             }
 
             return response()->json(['status' => 'success'], 200);
-
         } catch (\Exception $e) {
             Log::error("Erro no processamento do Webhook: " . $e->getMessage());
             return response()->json(['status' => 'error_logged'], 200);
