@@ -116,7 +116,7 @@ class CampaignItem extends Model
             ];
         } else
             $data = array(
-                'number' => $client_phone,
+                'number' => $contact->contact,
                 'text' => $this->text
             );
 
