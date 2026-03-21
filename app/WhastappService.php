@@ -104,8 +104,21 @@ class WhastappService
         } catch (ClientException $ex) {
             if ($ex->getCode() == 404)
 
-                $body = ['instanceName' => $name, "qrcode" => true, "integration" => "WHATSAPP-BAILEYS"];
+              
             try {
+                $body = [
+                    'instanceName' => $name,
+                    "qrcode" => true,
+                    "integration" => "WHATSAPP-BAILEYS",
+                    'syncFullHistory' => true,
+                    'readStatus' => true,
+                    'webhook_by_events' => false,
+                    'webhook_events'    => [
+                        'MESSAGES_UPSERT', // Recebe novas mensagens
+                        'MESSAGES_UPDATE', // RECEBE O STATUS DE LEITURA (ACK)
+                        'SEND_MESSAGE'     // Confirmação de envio
+                    ]
+                ];
                 $client = new Client();
                 $headers = [
                     'Content-Type' => 'application/json',

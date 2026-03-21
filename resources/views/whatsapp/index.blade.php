@@ -39,7 +39,8 @@
         });
 <?php
 $protocol = env("WHATSAPP_PROTOCOL", "somedefaultvalue");
-$hostname = env("WHATSAPP_URL", "somedefaultvalue");
+$hostname = env("MIX_WHATSAPP_PUBLIC_URL");
+const WHATSAPP_API_KEY = "{{ env('WHATSAPP_APIKEY') }}";
 $port = env("WHATSAPP_PORT", "somedefaultvalue");
 ?>
         var session = "{{$device['session']}}";
