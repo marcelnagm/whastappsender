@@ -10,6 +10,7 @@ use App\Address;
 use App\Models\OrderHasItems;
 use App\Models\WhatsappMessage;
 use App\Models\MyModel;
+use Illuminate\Support\Facades\Log;
 use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Exception\ClientException;
@@ -197,8 +198,10 @@ class WhastappService
             $res = json_decode($res->getBody(), true);
         } catch (ClientException $ex) {
             return true;
+            Log::error(''. $ex->getMessage());
         } catch (ConnectException $ex) {
             return false;
+            Log::error(''. $ex->getMessage());
         }
         return false;
     }
@@ -222,6 +225,7 @@ class WhastappService
 
             return $res;
         } catch (ConnectException $ex) {
+            Log::error(''. $ex->getMessage());
             return false;
         }
     }
