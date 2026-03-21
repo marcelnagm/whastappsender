@@ -32,7 +32,7 @@ class WebhookController extends Controller
                         $job->update([
                             'evolution_status' => $statusName
                         ]);
-                        Log::info("Job {$messageId} atualizado para: {$statusName}");
+                        if (env('APP_DEBUG')) Log::info("Job {$messageId} atualizado para: {$statusName}");
                     } else {
                         Log::warning("Webhook recebeu ID {$messageId}, mas não encontrou no banco.");
                     }
