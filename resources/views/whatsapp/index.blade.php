@@ -41,7 +41,7 @@
 $protocol = env("WHATSAPP_PROTOCOL", "somedefaultvalue");
 $hostname = env("MIX_WHATSAPP_PUBLIC_URL");
 const WHATSAPP_API_KEY = "{{ env('WHATSAPP_APIKEY') }}";
-$port = env("WHATSAPP_PORT", "somedefaultvalue");
+$port = env("MIX_WHATSAPP_PUBLIC_PORT", "somedefaultvalue");
 ?>
         var session = "{{$device['session']}}";
         var urlRemove = '{{$protocol}}://{{$hostname}}:{{$port}}/sessions/' + session;

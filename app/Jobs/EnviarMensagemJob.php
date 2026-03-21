@@ -32,7 +32,7 @@ class EnviarMensagemJob implements ShouldQueue
     {
         // 1. Configurações de Infra
         $config = config('services.whatsapp');
-        $baseUrl = "{$config['protocol']}://{$config['url']}:{$config['port']}";
+        $baseUrl = "http://{$config['url']}:{$config['port']}";
         $globalApiKey = $config['apikey'];
 
         $job = $this->jobModel;

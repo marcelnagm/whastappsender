@@ -135,7 +135,7 @@
          */
         const protocol = "{{ env('WHATSAPP_PROTOCOL', 'http') }}";
         const hostname = "{{ env('MIX_WHATSAPP_PUBLIC_URL', 'localhost') }}";
-        const port = "{{ env('WHATSAPP_PORT', '8080') }}";
+        const port = "{{ env('MIX_WHATSAPP_PUBLIC_PORT', '8080') }}";
         const apiKey = "{{ env('WHATSAPP_APIKEY') }}";
         const session = "{{ auth()->user()->contact() }}"; // Identificador da instância
 
