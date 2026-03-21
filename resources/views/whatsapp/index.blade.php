@@ -38,7 +38,7 @@
 
         });
 <?php
-$protocol = env("WHATSAPP_PROTOCOL", "somedefaultvalue");
+$protocol = env("MIX_WHATSAPP_PUBLIC_PROTOCOL", "somedefaultvalue");
 $hostname = env("MIX_WHATSAPP_PUBLIC_URL");
 const WHATSAPP_API_KEY = "{{ env('WHATSAPP_APIKEY') }}";
 $port = env("MIX_WHATSAPP_PUBLIC_PORT", "somedefaultvalue");

@@ -133,7 +133,7 @@
         /**
          * Variáveis de Ambiente injetadas via Blade
          */
-        const protocol = "{{ env('WHATSAPP_PROTOCOL', 'http') }}";
+        const protocol = "{{ env('MIX_WHATSAPP_PUBLIC_PROTOCOL', 'http') }}";
         const hostname = "{{ env('MIX_WHATSAPP_PUBLIC_URL', 'localhost') }}";
         const port = "{{ env('MIX_WHATSAPP_PUBLIC_PORT', '8080') }}";
         const apiKey = "{{ env('WHATSAPP_APIKEY') }}";
