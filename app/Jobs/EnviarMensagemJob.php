@@ -16,10 +16,10 @@ class EnviarMensagemJob implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     protected $jobModel;
-    
+
     // Tentativas automáticas do Laravel se o Job falhar (Ex: timeout da API)
     public $tries = 3;
-    
+
     // Tempo de espera entre tentativas automáticas
     public $backoff = 60;
 
@@ -46,6 +46,8 @@ class EnviarMensagemJob implements ShouldQueue
             }
 
             $instance = $user->phone;
+            if (env('APP_DEBUG'))
+                Log::info("iNSTANCIA: {$instance}");
             $payload = is_string($job->payload) ? json_decode($job->payload, true) : $job->payload;
             $numeroDestino = $payload['number'] ?? null;
 
@@ -56,7 +58,7 @@ class EnviarMensagemJob implements ShouldQueue
 
             // --- PASSO 1: HUMANIZAÇÃO (Presence) ---
             $presenceType = (rand(0, 10) > 3) ? 'composing' : 'recording';
-            
+
             Http::withHeaders(['apikey' => $globalApiKey])
                 ->post("{$baseUrl}/chat/sendPresence/{$instance}", [
                     "number" => $numeroDestino,
@@ -67,10 +69,12 @@ class EnviarMensagemJob implements ShouldQueue
             // Delay de "digitação" (4 a 9 segundos)
             sleep(rand(4, 9));
 
+
             // --- PASSO 2: ENVIO REAL ---
             $endpoint = ltrim($job->endpoint, '/');
             $urlFinal = "{$baseUrl}/{$endpoint}{$instance}";
-
+            if (env('APP_DEBUG'))
+                Log::info("URL FINAL: {$urlFinal}");
             $response = Http::withHeaders([
                 'apikey' => $globalApiKey,
                 'Content-Type' => 'application/json'
@@ -78,7 +82,7 @@ class EnviarMensagemJob implements ShouldQueue
 
             if ($response->successful()) {
                 $dados = $response->json();
-                
+
                 // Captura IDs em diferentes níveis de retorno da Evolution
                 $remoteId = $dados['key']['id'] ?? ($dados['message']['key']['id'] ?? ($dados['response']['key']['id'] ?? null));
 
@@ -102,7 +106,7 @@ class EnviarMensagemJob implements ShouldQueue
         } catch (\Exception $e) {
             $this->registrarErro("Exception: " . $e->getMessage());
             // Lança a exceção para o Laravel Queue saber que deve tentar novamente (retry)
-            throw $e; 
+            throw $e;
         }
     }
 
@@ -113,7 +117,7 @@ class EnviarMensagemJob implements ShouldQueue
             'tentativas' => $this->jobModel->tentativas + 1,
             'erro_mensagem' => substr($mensagem, 0, 255)
         ]);
-        
+
         Log::error("Falha no Job ID {$this->jobModel->id}: {$mensagem}");
     }
 }
