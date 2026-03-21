@@ -1,1 +1,1 @@
- sudo truncate -s 0 ./app/storage/logs/*.log
+ sudo truncate -s 0 ./storage/logs/*.log
