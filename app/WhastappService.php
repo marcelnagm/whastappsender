@@ -104,7 +104,6 @@ class WhastappService
         } catch (ClientException $ex) {
             if ($ex->getCode() == 404)
 
-              
             try {
                 $body = [
                     'instanceName' => $name,
