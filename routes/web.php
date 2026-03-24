@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\UserController;
 
 use App\Http\Controllers\WhatsappController;
 /*
@@ -14,14 +15,13 @@ use App\Http\Controllers\WhatsappController;
 |
 */
 
-Route::group(['namespace' => 'App\Http\Controllers'], function()
-{   
+Route::group(['namespace' => 'App\Http\Controllers'], function () {
     /**
      * Home Routes
      */
     Route::get('/', 'HomeController@index')->name('home.index');
 
-    Route::group(['middleware' => ['guest']], function() {
+    Route::group(['middleware' => ['guest']], function () {
         /**
          * Register Routes
          */
@@ -33,14 +33,12 @@ Route::group(['namespace' => 'App\Http\Controllers'], function()
          */
         Route::get('/login', 'LoginController@show')->name('login');
         Route::post('/login', 'LoginController@login')->name('login.perform');
-
     });
 
-    Route::group(['middleware' => ['auth']], function() {
+    Route::group(['middleware' => ['auth']], function () {
         /**
          * Logout Routes
          */
-      
     });
 
 
@@ -63,8 +61,19 @@ Route::group(['namespace' => 'App\Http\Controllers'], function()
     Route::get('/campaign-items/{id}/generate', 'CampaignItemController@generate')->name('campaign-items.generate');
     Route::get('/campaign-items/{id}/generateAll', 'CampaignItemController@generateAll')->name('campaign-items.generateAll');
     Route::get('/campaign-items/{id}/logs', 'WhatsappJobController@index')->name('campaign-items.logs');
-    Route::get('/campaign-items/{id}/logs', 'WhatsappJobController@index')->name('whatsapp-jobs.index');
-
+    Route::get('/campaign-items/{id}/logs', 'WhatsappJobController@index')->name('whatsapp-jobs.index');    
     Route::get('/logout', 'LogoutController@perform')->name('logout.perform');
 
+    Route::group(['middleware' => ['auth', 'admin'], 'prefix' => 'admin'], function () {
+
+        // Listagem e CRUD básico
+        Route::get('/users', 'App\Http\Controllers\UserController@index')->name('users.index');
+        Route::get('/users/{user}/edit', 'App\Http\Controllers\UserController@edit')->name('users.edit');
+        Route::post('/users/{user}/update', 'App\Http\Controllers\UserController@update')->name('users.update');
+        Route::delete('/users/{user}/delete', 'App\Http\Controllers\UserController@destroy')->name('users.destroy');
+
+        // Ações de Controle de Status (As convenientes para sua VPS)
+        Route::patch('/users/{user}/toggle-active', 'UserController@toggleActive')->name('users.toggleActive');
+        Route::patch('/users/{user}/toggle-admin', 'UserController@toggleAdmin')->name('users.toggleAdmin');
+    });
 });
