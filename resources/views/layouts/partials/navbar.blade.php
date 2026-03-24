@@ -18,7 +18,7 @@
           </a>
         </li>
         <li class="nav-item">
-          <a href="/whatsapp" class="nav-link text-white"><i class="bi bi-whatsapp me-1"></i> Whatsapp</a>
+          <a href="/instances" class="nav-link text-white"><i class="bi bi-whatsapp me-1"></i> Whatsapp</a>
         </li>
         <li class="nav-item">
           <a href="/campaigns" class="nav-link text-white"><i class="bi bi-megaphone me-1"></i> Campaign</a>

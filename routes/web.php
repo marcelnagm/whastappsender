@@ -2,8 +2,11 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
-
+use App\Http\Controllers\InstanceController;
+use Illuminate\Support\Facades\Mail;
 use App\Http\Controllers\WhatsappController;
+use Illuminate\Support\Facades\Auth;
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -43,12 +46,7 @@ Route::group(['namespace' => 'App\Http\Controllers'], function () {
 
 
     Route::prefix('whatsapp')->middleware(['auth'])->name('whatsapp.')->group(function () {
-        Route::get('/', 'App\Http\Controllers\WhatsappController@index')->name('index');
-        Route::get('/new', 'WhatsappController@new')->name('new');
-        Route::post('/store', 'WhatsappController@store')->name('store');
-        Route::post('/update', 'WhatsappController@update')->name('update');
-        Route::get('/{id}/edit', 'WhatsappController@edit')->name('edit');
-        Route::get('/{id}/send', 'WhatsappController@send')->name('send');
+        Route::get('/{id}', 'App\Http\Controllers\WhatsappController@index')->name('index');
         Route::get('/delete', 'WhatsappController@delete')->name('delete');
     });
 
@@ -76,4 +74,45 @@ Route::group(['namespace' => 'App\Http\Controllers'], function () {
         Route::patch('/users/{user}/toggle-active', 'UserController@toggleActive')->name('users.toggleActive');
         Route::patch('/users/{user}/toggle-admin', 'UserController@toggleAdmin')->name('users.toggleAdmin');
     });
+
+    Route::prefix('instances')->group(function () {
+        // Listagem de instâncias
+        Route::get('/', [InstanceController::class, 'index'])->name('instances.index');
+        
+        // Tela de criação
+        Route::get('/create', [InstanceController::class, 'create'])->name('instances.create');
+        
+        // Processar criação
+        Route::post('/store', [InstanceController::class, 'store'])->name('instances.store');
+        
+        // Ver detalhes / Escanear QR Code
+        Route::get('/{instance}', [InstanceController::class, 'show'])->name('instances.show');
+        
+        // Deletar instância
+        Route::delete('/{instance}', [InstanceController::class, 'destroy'])->name('instances.destroy');
+        
+        /**
+         * Rota Estratégica: Atualizar Status via API
+         * (Para quando o usuário clicar em "Atualizar" na tela de listagem)
+         */
+        Route::get('/{instance}/sync', [InstanceController::class, 'syncStatus'])->name('instances.sync');
+    });
+    
+
+Route::get('/test-email', function () {
+    $data = ['name' => 'Teste do Sistema', 'body' => 'O SMTP está funcionando corretamente!'];
+    
+    try {
+        
+        // Usamos send() aqui (e não queue) para ver o erro na tela imediatamente se falhar
+        Mail::raw('Este é um e-mail de teste do seu sistema de WhatsApp.', function ($message) {
+            $message->to(Auth::user()->email) // COLOQUE SEU E-MAIL AQUI
+                    ->subject('Teste de Conexão SMTP');
+        });
+
+        return "E-mail enviado com sucesso! Verifique sua caixa de entrada (e o Spam).";
+    } catch (\Exception $e) {
+        return "Erro ao enviar e-mail: " . $e->getMessage();
+    }
+});
 });

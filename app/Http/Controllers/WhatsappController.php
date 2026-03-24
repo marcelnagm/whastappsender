@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-
+use App\Models\Instance;
 use App\User;
 use App\Status;
 use App\Models\WhatsappMessage;
@@ -23,9 +23,10 @@ use Maatwebsite\Excel\Facades\Excel;
 use Spatie\Permission\Models\Role;
 use Spatie\Geocoder\Geocoder;
 
-class WhatsappController extends Controller {
+class WhatsappController extends Controller
+{
 
-   
+
 
     private $parameters = [''];
 
@@ -35,39 +36,30 @@ class WhatsappController extends Controller {
      *
      * @return \Illuminate\Http\Response
      */
-    public function index() {
-
-        // dd(Auth::User());
+    public function index($id)
+    {
+        
+        $ins = Instance::findOrFail($id);
+        
         //    dd($result);
-            if (WhatsappService::isConnected(Auth::User()->contact())) {
-//                          
-            return view('whatsapp.index', [               
-                'device' => ['session' =>Auth::User()->contact()]
-//                'device' => WhatsappService::getMobileInfo(auth()->user()->restorant->phone)
+        if (WhatsappService::isConnected($ins->instance_name)) {
+            //                          
+            return redirect()->route('instances.index')
+            ->with('success', 'Whatsapp conectado com sucesso.');
+        } else {
+            
+            return view('whatsapp.index_no', [
+                'res' => WhatsappService::qr($ins->instance_name),
+                'instance' => $ins->instance_name
             ]);
-            }else{
-                return view('whatsapp.index_no',[
-                    'res' => WhatsappService::qr(Auth::User()->contact())
-                ]);
-            }
-       
+        }
     }
 
-    
-    public function delete() {
-   if (WhatsappService::isConnected(Auth::User()->contact())) {
-    WhatsappService::delete(Auth::User()->contact());
-   }
-   return redirect()->route('whatsapp.index')->withStatus(__('Mengem removida com sucesso'));
-
-   }
-
-    public function send($id) {
-   if (WhatsappService::isConnected(Auth::User()->contact())) {
-       WhatsappService::sender(Auth::User()->contact(),$id,'Teste de ssitema');
+    public function send($id)
+    {
+        if (WhatsappService::isConnected(Auth::User()->contact())) {
+            WhatsappService::sender(Auth::User()->contact(), $id, 'Teste de ssitema');
+        }
+        return redirect()->route('whatsapp.index')->withStatus(__('Mengem removida com sucesso'));
     }
-return redirect()->route('whatsapp.index')->withStatus(__('Mengem removida com sucesso'));
-    }
-    
-   }
-
+}

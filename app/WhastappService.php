@@ -72,7 +72,7 @@ class WhastappService
             $headers = [
                 'apikey' => $apikey
             ];
-            $request = new Request('DELETE', $hostname . ':' . $port . '/instance/logout/' . $name, $headers);
+            $request = new Request('DELETE', $hostname . ':' . $port . '/instance/delete/' . $name, $headers);
             $res = $client->sendAsync($request)->wait();
             $res = json_decode($res->getBody(), true);
         } catch (ClientException $ex) {
@@ -105,31 +105,33 @@ class WhastappService
         } catch (ClientException $ex) {
             if ($ex->getCode() == 404)
 
-            try {
-                $body = [
-                    'instanceName' => $name,
-                    "qrcode" => true,
-                    "integration" => "WHATSAPP-BAILEYS",
-                    'syncFullHistory' => true,
-                    'readStatus' => true,
-                    'webhook_by_events' => false,
-                    'webhook_events'    => [
-                        'MESSAGES_UPSERT', // Recebe novas mensagens
-                        'MESSAGES_UPDATE', // RECEBE O STATUS DE LEITURA (ACK)
-                        'SEND_MESSAGE'     // Confirmação de envio
-                    ]
-                ];
-                $client = new Client();
-                $headers = [
-                    'Content-Type' => 'application/json',
-                    'apikey' => $apikey
-                ];
-                $request = new Request('POST', $hostname . ':' . $port . '/instance/create/', $headers, json_encode($body));
-                $res = $client->sendAsync($request)->wait();
-                $res = json_decode($res->getBody(), true);
-            } catch (ConnectException $ex) {
-                return false;
-            }
+                try {
+                    $body = [
+                        'instanceName' => $name,
+                        "qrcode" => true,
+                        "integration" => "WHATSAPP-BAILEYS",
+                        'syncFullHistory' => true,
+                        'readStatus' => true,
+                        'webhook_by_events' => false,
+                        'webhook_events'    => [
+                            'MESSAGES_UPSERT', // Recebe novas mensagens
+                            'MESSAGES_UPDATE', // RECEBE O STATUS DE LEITURA (ACK)
+                            'SEND_MESSAGE'     // Confirmação de envio
+                        ]
+                    ];
+                    $client = new Client();
+                    $headers = [
+                        'Content-Type' => 'application/json',
+                        'apikey' => $apikey
+                    ];
+                    $request = new Request('POST', $hostname . ':' . $port . '/instance/create/', $headers, json_encode($body));
+                    $res = $client->sendAsync($request)->wait();
+                    $res = json_decode($res->getBody(), true);
+                } catch (ConnectException $ex) {
+                    return false;
+                } catch (ClientException $ex) {
+                    return false;
+                }
 
             return false;
         } catch (ConnectException $ex) {
@@ -198,10 +200,10 @@ class WhastappService
             $res = json_decode($res->getBody(), true);
         } catch (ClientException $ex) {
             return true;
-            Log::error(''. $ex->getMessage());
+            Log::error('' . $ex->getMessage());
         } catch (ConnectException $ex) {
             return false;
-            Log::error(''. $ex->getMessage());
+            Log::error('' . $ex->getMessage());
         }
         return false;
     }
@@ -225,7 +227,10 @@ class WhastappService
 
             return $res;
         } catch (ConnectException $ex) {
-            Log::error(''. $ex->getMessage());
+            Log::error('' . $ex->getMessage());
+            return false;
+        } catch (ClientException $ex) {
+            Log::error('' . $ex->getMessage());
             return false;
         }
     }

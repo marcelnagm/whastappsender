@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Instance;
 use Illuminate\Http\Request;
 use App\Models\WhatsappJob;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class WebhookController extends Controller
 {
@@ -13,37 +15,69 @@ class WebhookController extends Controller
         try {
             $payload = $request->all();
             $event = $payload['event'] ?? null;
-            
-            if ($event === 'messages.update') {
-                $data = $payload['data'] ?? [];
-                
-                // Baseado no seu log real: o ID está em 'messageId' e o status em 'status'
-                $messageId = $data['keyId'] ?? null;
-                $statusRaw = $data['status'] ?? null;
+            $instanceName = $payload['instance'] ?? null;
 
-                if ($messageId) {
-                    // Converter status para minúsculo para manter padrão no banco (READ -> read)
-                    $statusName = strtolower($statusRaw);
 
-                    // Busca o registro pelo message_id salvo no disparo
-                    $job = WhatsappJob::where('message_id', $messageId)->first();
-
-                    if ($job) {
-                        $job->update([
-                            'evolution_status' => $statusName
-                        ]);
-                        if (env('APP_DEBUG')) Log::info("Job {$messageId} atualizado para: {$statusName}");
-                    } else {
-                        Log::warning("Webhook recebeu ID {$messageId}, mas não encontrou no banco.");
+            switch ($event) {
+                // EVENTO 1: Atualização de Status da Instância (O que você pediu)
+                case 'connection.update':
+                    if (!$instanceName) {
+                        return response()->json(['status' => 'no_instance_provided'], 200);
                     }
-                }
+        
+                    $state = $payload['data']['state'] ?? null; // "open", "close", "connecting"
+
+                    $instance = Instance::where('instance_name', $instanceName)->first();
+
+                    if ($instance) {
+                        $oldStatus = $instance->status;
+                        // Mapeia o status da Evolution para o seu banco
+                        $newStatus = ($state === 'open') ? 'connected' : 'disconnected';
+
+                        if ($oldStatus !== $newStatus) {
+                            $instance->update(['status' => $newStatus]);
+
+                            // REGRA: Notificar transição Conectado -> Desconectado
+                            if ($oldStatus === 'connected' && $newStatus === 'disconnected') {
+                                $this->sendDisconnectedEmail($instance);
+                            }
+                        }
+                    }
+                    break;
+
+                // EVENTO 2: Atualização de Status da Mensagem (Seu código original)
+                case 'messages.update':
+                    $data = $payload['data'] ?? [];
+                    $messageId = $data['keyId'] ?? null;
+                    $statusName = strtolower($data['status'] ?? '');
+
+                    if ($messageId) {
+                        $job = WhatsappJob::where('message_id', $messageId)->first();
+                        if ($job) {
+                            $job->update(['evolution_status' => $statusName]);
+                        }
+                    }
+                    break;
             }
 
             return response()->json(['status' => 'success'], 200);
-
         } catch (\Exception $e) {
-            Log::error("Erro no processamento do Webhook: " . $e->getMessage());
+            Log::error("Erro Webhook Evolution [{$instanceName}]: " . $e->getMessage());
             return response()->json(['status' => 'error_logged'], 200);
+        }
+    }
+
+    /**
+     * Método auxiliar para envio de e-mail (Centralize aqui para não poluir o receive)
+     */
+    private function sendDisconnectedEmail($instance)
+    {
+        try {
+            // Use queue() para não travar o Webhook
+            Mail::to($instance->user->email)->queue(new \App\Mail\InstanceDisconnectedMail($instance));
+            Log::info("E-mail de desconexão enviado para o usuário da instância: {$instance->instance_name}");
+        } catch (\Exception $e) {
+            Log::error("Falha ao disparar e-mail de desconexão: " . $e->getMessage());
         }
     }
 }

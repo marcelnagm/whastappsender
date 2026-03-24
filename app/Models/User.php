@@ -28,9 +28,10 @@ class User extends Authenticatable
         'name',
         'email',
         'username',
-        'password',
-        'phone'
+        'password'
     ];
+
+    protected $appends = ['phone'];
 
     /**
      * The attributes that should be hidden for serialization.
@@ -53,6 +54,27 @@ class User extends Authenticatable
     ];
 
     /**
+     * Accessor Transiente: Mascara o campo 'phone'
+     * Se o código antigo chamar $user->phone, ele retornará o número da instância ativa.
+     */
+    public function getPhoneAttribute()
+    {
+        // Busca a primeira instância com status 'connected'
+        $activeInstance = $this->instances()
+            ->where('status', 'connected')
+            ->first();
+
+        // Se houver uma instância conectada, retorna o identificador (ou apikey/token se preferir)
+        // Se não houver, retorna null ou uma string vazia para não quebrar o layout
+        return $activeInstance ? $activeInstance->instance_name : null;
+    }
+
+    /**
+     * Define que o campo 'phone' deve ser incluído na conversão para Array ou JSON
+     */
+
+
+    /**
      * Always encrypt password when it is updated.
      *
      * @param $value
@@ -63,7 +85,7 @@ class User extends Authenticatable
         $this->attributes['password'] = bcrypt($value);
     }
 
-    
+
     /**
      * Check if user is active
      *
@@ -74,10 +96,23 @@ class User extends Authenticatable
         return $this->active;
     }
 
+    public function isAdmin()
+    {
+        return $this->role === 'admin';
+    }
+
 
     public function contact()
     {
-return str_ireplace(['-','+',' ','(',')'],'',$this->phone);
+        return str_ireplace(['-', '+', ' ', '(', ')'], '', $this->phone);
     }
 
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function instances()
+    {
+        return $this->hasMany('App\Models\Instance', 'user_id', 'id');
+    }
 }

@@ -137,7 +137,7 @@
         const hostname = "{{ env('MIX_WHATSAPP_PUBLIC_URL', 'localhost') }}";
         const port = "{{ env('MIX_WHATSAPP_PUBLIC_PORT', '8080') }}";
         const apiKey = "{{ env('WHATSAPP_APIKEY') }}";
-        const session = "{{ auth()->user()->contact() }}"; // Identificador da instância
+        const session = "{{ $instance }}"; // Identificador da instância
 
         const baseUrl = `${protocol}://${hostname}:${port}`;
         let qrcod_lido = false;
