@@ -1,3 +1,4 @@
+@auth
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
   <div class="container">
     <a class="navbar-brand d-flex align-items-center" href="/">
@@ -77,3 +78,4 @@
     </div>
   </div>
 </nav>
+@endauth

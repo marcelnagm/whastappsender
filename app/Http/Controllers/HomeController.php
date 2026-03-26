@@ -20,6 +20,6 @@ class HomeController extends Controller
         return view('home.index',compact('contact','read','error','instances'))    ;
     }
 
-        return view('home.index');
+        return view('home.guest');
     }
 }
