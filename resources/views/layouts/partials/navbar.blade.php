@@ -2,7 +2,7 @@
   <div class="container">
     <a class="navbar-brand d-flex align-items-center" href="/">
       <i class="bi bi-radar me-2" style="font-size: 1.5rem; color: #ffc107;"></i>
-      <span class="fw-bold">{{ env('APP_NAME') }}</span>
+      <span class="fw-bold">{{ config('app.name', 'Sender') }}</span>
     </a>
 
     <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navMain" aria-controls="navMain" aria-expanded="false" aria-label="Toggle navigation">
@@ -42,7 +42,9 @@
               </a>
             </li>
             <li><a class="dropdown-item" href="#"><i class="bi bi-hdd-network me-2"></i>Instâncias Globais</a></li>
-            <li><hr class="dropdown-divider bg-secondary"></li>
+            <li>
+              <hr class="dropdown-divider bg-secondary">
+            </li>
             <li><a class="dropdown-item text-warning" href="#"><i class="bi bi-graph-up-arrow me-2"></i>Logs</a></li>
           </ul>
         </li>
@@ -50,6 +52,12 @@
       </ul>
 
       <div class="d-flex align-items-center border-top border-secondary pt-3 pt-lg-0 border-lg-0">
+
+        {{-- INJEÇÃO DO PARTIAL DE NOTIFICAÇÕES --}}
+        <div class="me-3">
+          @include('layouts.partials.notifications')
+        </div>
+
         <span class="text-white-50 me-3 d-none d-lg-inline small">
           {{ auth()->user()->name }}
         </span>

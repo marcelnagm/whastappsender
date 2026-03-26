@@ -59,7 +59,7 @@ Route::group(['namespace' => 'App\Http\Controllers'], function () {
     Route::get('/campaign-items/{id}/generate', 'CampaignItemController@generate')->name('campaign-items.generate');
     Route::get('/campaign-items/{id}/generateAll', 'CampaignItemController@generateAll')->name('campaign-items.generateAll');
     Route::get('/campaign-items/{id}/logs', 'WhatsappJobController@index')->name('campaign-items.logs');
-    Route::get('/campaign-items/{id}/logs', 'WhatsappJobController@index')->name('whatsapp-jobs.index');    
+    Route::get('/campaign-items/{id}/logs', 'WhatsappJobController@index')->name('whatsapp-jobs.index');
     Route::get('/logout', 'LogoutController@perform')->name('logout.perform');
 
     Route::group(['middleware' => ['auth', 'admin'], 'prefix' => 'admin'], function () {
@@ -75,44 +75,49 @@ Route::group(['namespace' => 'App\Http\Controllers'], function () {
         Route::patch('/users/{user}/toggle-admin', 'UserController@toggleAdmin')->name('users.toggleAdmin');
     });
 
+    Route::post('/notifications/clear', function() {
+        auth()->user()->unreadNotifications->markAsRead();
+        return back();
+    })->name('notifications.clear')->middleware('auth');
+    
     Route::prefix('instances')->group(function () {
         // Listagem de instâncias
         Route::get('/', [InstanceController::class, 'index'])->name('instances.index');
-        
+
         // Tela de criação
         Route::get('/create', [InstanceController::class, 'create'])->name('instances.create');
-        
+
         // Processar criação
         Route::post('/store', [InstanceController::class, 'store'])->name('instances.store');
-        
+
         // Ver detalhes / Escanear QR Code
         Route::get('/{instance}', [InstanceController::class, 'show'])->name('instances.show');
-        
+
         // Deletar instância
         Route::delete('/{instance}', [InstanceController::class, 'destroy'])->name('instances.destroy');
-        
+
         /**
          * Rota Estratégica: Atualizar Status via API
          * (Para quando o usuário clicar em "Atualizar" na tela de listagem)
          */
-        Route::get('/{instance}/sync', [InstanceController::class, 'syncStatus'])->name('instances.sync');
+        Route::get('/{instance}/sync', [InstanceController::class, 'sync'])->name('instances.sync');
     });
-    
 
-Route::get('/test-email', function () {
-    $data = ['name' => 'Teste do Sistema', 'body' => 'O SMTP está funcionando corretamente!'];
-    
-    try {
-        
-        // Usamos send() aqui (e não queue) para ver o erro na tela imediatamente se falhar
-        Mail::raw('Este é um e-mail de teste do seu sistema de WhatsApp.', function ($message) {
-            $message->to(Auth::user()->email) // COLOQUE SEU E-MAIL AQUI
+
+    Route::get('/test-email', function () {
+        $data = ['name' => 'Teste do Sistema', 'body' => 'O SMTP está funcionando corretamente!'];
+
+        try {
+
+            // Usamos send() aqui (e não queue) para ver o erro na tela imediatamente se falhar
+            Mail::raw('Este é um e-mail de teste do seu sistema de WhatsApp.', function ($message) {
+                $message->to(Auth::user()->email) // COLOQUE SEU E-MAIL AQUI
                     ->subject('Teste de Conexão SMTP');
-        });
+            });
 
-        return "E-mail enviado com sucesso! Verifique sua caixa de entrada (e o Spam).";
-    } catch (\Exception $e) {
-        return "Erro ao enviar e-mail: " . $e->getMessage();
-    }
-});
+            return "E-mail enviado com sucesso! Verifique sua caixa de entrada (e o Spam).";
+        } catch (\Exception $e) {
+            return "Erro ao enviar e-mail: " . $e->getMessage();
+        }
+    });
 });

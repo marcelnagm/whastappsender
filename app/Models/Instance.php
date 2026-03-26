@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 
 class Instance extends Model
@@ -59,5 +60,10 @@ class Instance extends Model
     public function isConnected(): bool
     {
         return $this->status === 'connected';
+    }
+
+    public function isMine()
+    {
+        return $this->user_id === Auth::user()->id;
     }
 }

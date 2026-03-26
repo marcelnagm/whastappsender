@@ -67,4 +67,17 @@ class InstanceController extends Controller
             abort(403, 'Acesso negado a esta instância.');
         }
     }
+
+    public function sync($id)
+    {
+        // 1. Validação básica: Verifique se o usuário é dono desta instância (se você tiver essa tabela)
+        $ins = Instance::findOrFail($id);
+
+        // 2. Despacha o Job passando o Nome da Instância e o ID do Usuário
+        if ($ins->isMine())
+            \App\Jobs\SyncContactsJob::dispatch(auth()->id(), $ins->instance_name);
+        else redirect()->route('instances.index')
+            ->with('error', 'Instância não pertence a vc.');
+        return back()->with('success', "Sincronização da instância {$id} iniciada.");
+    }
 }
