@@ -41,7 +41,7 @@
                             </div>
                             <div class="flex-grow-1 ms-3">
                                 <h6 class="text-muted mb-0">Instâncias Ativas</h6>
-                                <h3 class="fw-bold mb-0">1</h3>
+                                <h3 class="fw-bold mb-0">{{$instances}}</h3>
                             </div>
                         </div>
                     </div>
@@ -80,27 +80,7 @@
         </div>
 
         <div class="row">
-            <div class="col-md-8">
-                <div class="card border-0 shadow-sm rounded-3 mb-4">
-                    <div class="card-header bg-white py-3">
-                        <h5 class="card-title mb-0 fw-bold">Atividade de Mineração (Lotes)</h5>
-                    </div>
-                    <div class="card-body">
-                        <p class="text-muted small">Monitoramento em tempo real dos seus 10 processos paralelos.</p>
-                        @for($i=1; $i<=3; $i++)
-                        <div class="mb-3">
-                            <div class="d-flex justify-content-between mb-1">
-                                <span class="small fw-semibold">Processo #{{$i}} (Lote 00{{$i}})</span>
-                                <span class="small text-muted">75%</span>
-                            </div>
-                            <div class="progress" style="height: 8px;">
-                                <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 75%"></div>
-                            </div>
-                        </div>
-                        @endfor
-                    </div>
-                </div>
-            </div>
+
             <div class="col-md-4">
                 <div class="card border-0 shadow-sm rounded-3 mb-4">
                     <div class="card-header bg-white py-3 text-center">
@@ -109,7 +89,7 @@
                     <div class="card-body text-center py-4">
                         <i class="bi bi-headset fs-1 text-primary mb-3"></i>
                         <p>Dúvidas ou Upgrade de Licença?</p>
-                        <a href="https://wa.me/5595981110695" target="_blank" class="btn btn-success w-100">
+                        <a href="https://wa.me/{{env('WHATSAPP_CONTACT_TEST')}}" target="_blank" class="btn btn-success w-100">
                             <i class="bi bi-whatsapp"></i> Chamar Suporte
                         </a>
                     </div>

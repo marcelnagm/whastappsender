@@ -6,7 +6,7 @@
         <form method="post" action="{{ route('register.perform') }}">
             <input type="hidden" name="_token" value="{{ csrf_token() }}" />
             
-            <img class="mb-4" src="{!! url('images/bootstrap-logo.svg') !!}" alt="Logo" width="72" height="57">
+               <img style="background-color: #dbc5c8; border-radius: 100%;;" src="{{ asset('images/logo-no-bg.png') }}" alt="Logo" width="100%" height="100%" class="me-2 d-inline-block align-text-top">
             
             <h1 class="h3 mb-1 fw-bold text-dark">Registrar</h1>
             <p class="text-muted small mb-4">Crie sua conta para começar</p>
@@ -27,15 +27,6 @@
             </div>
             @if ($errors->has('username'))
                 <div class="text-danger text-start small mb-2 ps-1">{{ $errors->first('username') }}</div>
-            @endif
-
-            <div class="form-floating mb-2">
-                <input type="text" class="form-control {{ $errors->has('phone') ? 'is-invalid' : '' }}" 
-                       name="phone" value="{{ old('phone') }}" placeholder="Phone" required>
-                <label>Telefone (WhatsApp)</label>
-            </div>
-            @if ($errors->has('phone'))
-                <div class="text-danger text-start small mb-2 ps-1">{{ $errors->first('phone') }}</div>
             @endif
             
             <div class="form-floating mb-2">

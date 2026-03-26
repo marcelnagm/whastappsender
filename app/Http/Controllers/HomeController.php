@@ -16,7 +16,8 @@ class HomeController extends Controller
         $contact = Contact::where('user_id',Auth::user()->id)->count();
         $read =  \App\Models\WhatsappJob::getDeliveryRate('user_id',Auth::user()->id);
         $error =  \App\Models\WhatsappJob::getErrorRate('user_id',Auth::user()->id);
-        return view('home.index',compact('contact','read','error'))    ;
+        $instances =  \App\Models\Instance::where('user_id',Auth::user()->id)->where('status','connected')->count();
+        return view('home.index',compact('contact','read','error','instances'))    ;
     }
 
         return view('home.index');

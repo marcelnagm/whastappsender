@@ -1,7 +1,8 @@
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
   <div class="container">
     <a class="navbar-brand d-flex align-items-center" href="/">
-      <i class="bi bi-radar me-2" style="font-size: 1.5rem; color: #ffc107;"></i>
+      {{-- LOGO DA EMPRESA --}}
+      <img src="{{ asset('images/logo.jpg') }}" alt="Logo" width="55" height="55" class="me-2 d-inline-block align-text-top">
       <span class="fw-bold">{{ config('app.name', 'Sender') }}</span>
     </a>
 
