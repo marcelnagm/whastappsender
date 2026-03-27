@@ -51,7 +51,7 @@ class EnviarMensagemJob implements ShouldQueue
                 return;
             }
 
-            $instance = '5595981110695';
+            $instance = $user->phone;
             if (env('APP_DEBUG'))
                 Log::info("iNSTANCIA: {$instance}");
             $payload = is_string($job->payload) ? json_decode($job->payload, true) : $job->payload;
