@@ -62,7 +62,6 @@ class User extends Authenticatable
         // Busca a primeira instância com status 'connected'
         $activeInstance = $this->instances()
             ->where('status', 'connected')
-            ->inRandomOrder()
             ->first();
 
         // Se houver uma instância conectada, retorna o identificador (ou apikey/token se preferir)

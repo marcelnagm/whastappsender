@@ -40,12 +40,18 @@ class EnviarMensagemJob implements ShouldQueue
         try {
             // 2. Validação de Instância
             $user = $job->user()->first();
+
+            if (env('APP_DEBUG'))
+                Log::info("user: {$user}");
+            if (env('APP_DEBUG'))
+                Log::info("iNSTANCIA: {$user->phone}");
             if (!$user || !$user->phone) {
+                if (env('APP_DEBUG')) Log::error($user);
                 $this->registrarErro("Usuário ou Phone (Instância) não configurado.");
                 return;
             }
 
-            $instance = $user->phone;
+            $instance = '5595981110695';
             if (env('APP_DEBUG'))
                 Log::info("iNSTANCIA: {$instance}");
             $payload = is_string($job->payload) ? json_decode($job->payload, true) : $job->payload;
@@ -102,7 +108,6 @@ class EnviarMensagemJob implements ShouldQueue
             // Como o Worker processa um por um, este sleep garante a cadência do chip
             $pause = rand(25, 50);
             sleep($pause);
-
         } catch (\Exception $e) {
             $this->registrarErro("Exception: " . $e->getMessage());
             // Lança a exceção para o Laravel Queue saber que deve tentar novamente (retry)

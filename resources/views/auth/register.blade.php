@@ -1,54 +1,82 @@
 @extends('layouts.auth-master')
 
 @section('content')
-<div class="card shadow-lg border-0 rounded-4 overflow-hidden">
-    <div class="card-body p-4 p-md-5">
+<div class="auth-card shadow-lg border-0 rounded-4 overflow-hidden">
+    <div class="card-body p-4 p-md-5 text-center">
         <form method="post" action="{{ route('register.perform') }}">
             <input type="hidden" name="_token" value="{{ csrf_token() }}" />
             
-               <img style="background-color: #dbc5c8; border-radius: 100%;;" src="{{ asset('images/logo-no-bg.png') }}" alt="Logo" width="100%" height="100%" class="me-2 d-inline-block align-text-top">
-            
-            <h1 class="h3 mb-1 fw-bold text-dark">Registrar</h1>
-            <p class="text-muted small mb-4">Crie sua conta para começar</p>
-
-            <div class="form-floating mb-2">
-                <input type="email" class="form-control {{ $errors->has('email') ? 'is-invalid' : '' }}" 
-                       name="email" value="{{ old('email') }}" placeholder="name@example.com" required autofocus>
-                <label>E-mail</label>
+            <div class="logo-wrapper mb-4 text-center">
+                <img style="background-color: #dbc5c8; border-radius: 100%;" 
+                     src="{{ asset('images/logo-no-bg.png') }}" 
+                     alt="Logo" width="100" height="100" 
+                     class="mx-auto d-block shadow-sm">
             </div>
-            @if ($errors->has('email'))
-                <div class="text-danger text-start small mb-2 ps-1">{{ $errors->first('email') }}</div>
-            @endif
+            
+            <h1 class="h2 mb-1 fw-bold text-white">Criar Conta</h1>
+            <p class="text-white-50 mb-4">Cadastre-se para solicitar seu acesso profissional</p>
 
-            <div class="form-floating mb-2">
-                <input type="text" class="form-control {{ $errors->has('username') ? 'is-invalid' : '' }}" 
+            <div class="form-floating mb-3 text-start">
+                <input type="text" class="form-control form-control-lg {{ $errors->has('name') ? 'is-invalid' : '' }}" 
+                       name="name" value="{{ old('name') }}" placeholder="Nome Completo" required autofocus>
+                <label class="ps-3">Nome Completo</label>
+                @if ($errors->has('name'))
+                    <div class="invalid-feedback ps-1">{{ $errors->first('name') }}</div>
+                @endif
+            </div>
+
+            <div class="form-floating mb-3 text-start">
+                <input type="email" class="form-control form-control-lg {{ $errors->has('email') ? 'is-invalid' : '' }}" 
+                       name="email" value="{{ old('email') }}" placeholder="name@example.com" required>
+                <label class="ps-3">E-mail Corporativo</label>
+                @if ($errors->has('email'))
+                    <div class="invalid-feedback ps-1">{{ $errors->first('email') }}</div>
+                @endif
+            </div>
+
+            <div class="form-floating mb-3 text-start">
+                <input type="text" class="form-control form-control-lg {{ $errors->has('phone') ? 'is-invalid' : '' }}" 
+                       name="phone" value="{{ old('phone') }}" placeholder="55959..." required>
+                <label class="ps-3">WhatsApp (DDI + DDD + Número)</label>
+                <div class="form-text text-white-50 ms-2" style="font-size: 0.7rem;">Exemplo: 5595981115965</div>
+                @if ($errors->has('phone'))
+                    <div class="invalid-feedback ps-1">{{ $errors->first('phone') }}</div>
+                @endif
+            </div>
+
+            <div class="form-floating mb-3 text-start">
+                <input type="text" class="form-control form-control-lg {{ $errors->has('username') ? 'is-invalid' : '' }}" 
                        name="username" value="{{ old('username') }}" placeholder="Username" required>
-                <label>Usuário</label>
+                <label class="ps-3">Nome de Usuário (Login)</label>
+                @if ($errors->has('username'))
+                    <div class="invalid-feedback ps-1">{{ $errors->first('username') }}</div>
+                @endif
             </div>
-            @if ($errors->has('username'))
-                <div class="text-danger text-start small mb-2 ps-1">{{ $errors->first('username') }}</div>
-            @endif
             
-            <div class="form-floating mb-2">
-                <input type="password" class="form-control {{ $errors->has('password') ? 'is-invalid' : '' }}" 
+            <div class="form-floating mb-3 text-start">
+                <input type="password" class="form-control form-control-lg {{ $errors->has('password') ? 'is-invalid' : '' }}" 
                        name="password" placeholder="Password" required>
-                <label>Senha</label>
+                <label class="ps-3">Senha de Acesso</label>
+                @if ($errors->has('password'))
+                    <div class="invalid-feedback ps-1">{{ $errors->first('password') }}</div>
+                @endif
             </div>
-            @if ($errors->has('password'))
-                <div class="text-danger text-start small mb-2 ps-1">{{ $errors->first('password') }}</div>
-            @endif
 
-            <div class="form-floating mb-4">
-                <input type="password" class="form-control" 
+            <div class="form-floating mb-4 text-start">
+                <input type="password" class="form-control form-control-lg" 
                        name="password_confirmation" placeholder="Confirm Password" required>
-                <label>Confirmar Senha</label>
+                <label class="ps-3">Confirmar Senha</label>
             </div>
 
-            <button class="w-100 btn btn-lg btn-primary rounded-3 shadow py-3 fw-bold" type="submit">
-                CADASTRAR
+            <button class="w-100 btn btn-lg btn-warning rounded-3 shadow py-3 fw-bold text-dark fs-5" type="submit">
+                CADASTRAR E SOLICITAR ATIVAÇÃO
             </button>
             
-            <div class="mt-4">
+            <div class="mt-4 text-white-50">
+                Já é parceiro? <a href="{{ route('login.perform') }}" class="text-warning text-decoration-none fw-bold">Entrar agora</a>
+            </div>
+
+            <div class="mt-4 opacity-50">
                 @include('auth.partials.copy')
             </div>
         </form>
@@ -56,32 +84,55 @@
 </div>
 
 <style>
-    /* Sobrescrevendo o limite do signin.css para o Registro ser mais largo e elegante */
-    .form-signin {
-        max-width: 450px !important; /* Aumenta a largura para não esmagar os campos */
-        padding: 15px;
-    }
-    
-    .card {
-        background-color: #ffffff;
+    body {
+        background-color: #121212 !important;
+        background: radial-gradient(circle at top right, #1e1e1e, #121212) !important;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
     }
 
-    .form-control {
-        border: 1px solid #dee2e6;
+    .auth-card {
+        background-color: #1e1e1e !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        max-width: 550px;
+        margin: 40px auto;
     }
 
-    .form-control:focus {
-        border-color: #0d6efd;
-        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
+    .form-control-lg {
+        height: 65px !important;
+        font-size: 1.1rem !important;
+        background-color: #ffffff !important;
+        border: 2px solid #ced4da !important;
+        color: #212529 !important;
+        border-radius: 12px !important;
     }
 
     .form-floating > label {
-        color: #6c757d;
+        padding-left: 1rem !important;
+        color: #6c757d !important;
     }
 
-    /* Ajuste para erros não deslocarem o layout bruscamente */
-    .text-danger.small {
-        font-size: 0.75rem;
+    .form-floating > .form-control:focus ~ label,
+    .form-floating > .form-control:not(:placeholder-shown) ~ label {
+        color: #ffc107 !important;
+        font-weight: bold;
+        transform: scale(0.85) translateY(-0.75rem) translateX(0.15rem) !important;
+    }
+
+    .form-control:focus {
+        border-color: #ffc107 !important;
+        box-shadow: 0 0 0 0.3rem rgba(255, 193, 7, 0.2) !important;
+    }
+
+    .btn-warning {
+        transition: all 0.3s ease;
+        letter-spacing: 0.5px;
+    }
+
+    .btn-warning:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px rgba(255, 193, 7, 0.4);
     }
 </style>
 @endsection
