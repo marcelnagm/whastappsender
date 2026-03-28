@@ -6,6 +6,7 @@ use App\Http\Controllers\InstanceController;
 use Illuminate\Support\Facades\Mail;
 use App\Http\Controllers\WhatsappController;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\WhatsappJobController;
 
 /*
 |--------------------------------------------------------------------------
