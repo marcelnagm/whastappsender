@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\EnviarMensagemJob;
 use Illuminate\Http\Request;
 use App\Models\WhatsappJob;
+
 
 class WhatsappJobController extends Controller
 {
