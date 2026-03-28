@@ -46,15 +46,17 @@ class EnviarMensagemJob implements ShouldQueue
             if (env('APP_DEBUG'))
                 Log::info("iNSTANCIA: {$user->phone}");
             if (!$user || !$user->phone) {
-                if (env('APP_DEBUG')) Log::error($user);
+                if (env('APP_DEBUG'))
+                    Log::error($user);
                 $this->registrarErro("Usuário ou Phone (Instância) não configurado.");
                 return;
             }
 
             $instance = $user->phone;
+            $item = $job->campaignItem()->first();
             if (env('APP_DEBUG'))
                 Log::info("iNSTANCIA: {$instance}");
-            $payload = is_string($job->payload) ? json_decode($job->payload, true) : $job->payload;
+            $payload = json_encode($item->generate($job->contact_id));
             $numeroDestino = $payload['number'] ?? null;
 
             if (!$numeroDestino) {

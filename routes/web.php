@@ -52,15 +52,23 @@ Route::group(['namespace' => 'App\Http\Controllers'], function () {
 
     Route::resource('/campaigns', 'App\Http\Controllers\CampaignController')->middleware(['auth']);
     Route::resource('/contacts', 'App\Http\Controllers\ContactController')->middleware(['auth']);
-    Route::resource('/campaign-items', 'App\Http\Controllers\CampaignItemController')->middleware(['auth']);;
-    Route::post('/contact/import', 'App\Http\Controllers\ContactController@import')->name('contacts.import')->middleware(['auth']);;
-    Route::get('/contact/clean', 'App\Http\Controllers\ContactController@clean')->name('contacts.clear')->middleware(['auth']);;
+    Route::resource('/campaign-items', 'App\Http\Controllers\CampaignItemController')->middleware(['auth']);
+    ;
+    Route::post('/contact/import', 'App\Http\Controllers\ContactController@import')->name('contacts.import')->middleware(['auth']);
+    ;
+    Route::get('/contact/clean', 'App\Http\Controllers\ContactController@clean')->name('contacts.clear')->middleware(['auth']);
+    ;
     Route::get('/campaign-items/{id}/send', 'CampaignItemController@send')->name('campaign-items.send');
     Route::get('/campaign-items/{id}/generate', 'CampaignItemController@generate')->name('campaign-items.generate');
     Route::get('/campaign-items/{id}/generateAll', 'CampaignItemController@generateAll')->name('campaign-items.generateAll');
     Route::get('/campaign-items/{id}/logs', 'WhatsappJobController@index')->name('campaign-items.logs');
     Route::get('/campaign-items/{id}/logs', 'WhatsappJobController@index')->name('whatsapp-jobs.index');
     Route::get('/logout', 'LogoutController@perform')->name('logout.perform');
+
+
+    Route::post('/whatsapp-jobs/{id}/retry', [WhatsappJobController::class, 'retry'])
+        ->name('whatsapp-jobs.retry')
+        ->middleware(['auth']); // Garanta que apenas usuários logados acessem
 
     Route::group(['middleware' => ['auth', 'admin'], 'prefix' => 'admin'], function () {
 
@@ -75,11 +83,11 @@ Route::group(['namespace' => 'App\Http\Controllers'], function () {
         Route::patch('/users/{user}/toggle-admin', 'UserController@toggleAdmin')->name('users.toggleAdmin');
     });
 
-    Route::post('/notifications/clear', function() {
+    Route::post('/notifications/clear', function () {
         auth()->user()->unreadNotifications->markAsRead();
         return back();
     })->name('notifications.clear')->middleware('auth');
-    
+
     Route::prefix('instances')->group(function () {
         // Listagem de instâncias
         Route::get('/', [InstanceController::class, 'index'])->name('instances.index');
