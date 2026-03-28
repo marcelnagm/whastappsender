@@ -59,8 +59,8 @@ class WhatsappJobController extends Controller
         try {
             // 1. Localiza o Job (Garante que só tente re-enviar o que realmente deu erro)
             $job = WhatsappJob::where('id', $id)
-                              ->where('status', 'erro')
-                              ->firstOrFail();
+                ->where('status', 'erro')
+                ->firstOrFail();
 
             // 2. Limpeza de rastro e Reset de Estado
             $job->update([
@@ -79,4 +79,5 @@ class WhatsappJobController extends Controller
             // Se o Job não for encontrado ou não for status 'erro'
             return redirect()->back()->with('error', "Não foi possível reprocessar este registro. Verifique se ele ainda está como 'erro'.");
         }
+    }
 }
