@@ -99,7 +99,7 @@
                         <td>
                             <div class="btn-group">
                                 <button type="button" class="btn btn-xs btn-outline-secondary js-copy" 
-                                        data-value="{{ json_encode($job->generate($job->contact_id)) }}" title="Ver JSON Dinâmico">
+                                        data-value="{{ json_encode($job->campaignItem()->firsrt()->generate($job->contact_id)) }}" title="Ver JSON Dinâmico">
                                     <i class="bi bi-code-slash"></i>
                                 </button>
                                 
