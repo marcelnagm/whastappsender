@@ -30,7 +30,7 @@ class CampaignItemController extends Controller
     public function index()
     {
 
-        $campaignItems = CampaignItem:::where('user_id', Auth::user()->id)->with(['user', 'campaign'])->paginate();
+        $campaignItems = CampaignItem::where('user_id', Auth::user()->id)->paginate();
 
 
         return view('campaign-item.index', compact('campaignItems'))
