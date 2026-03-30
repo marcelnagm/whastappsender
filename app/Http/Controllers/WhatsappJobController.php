@@ -13,7 +13,7 @@ class WhatsappJobController extends Controller
     public function index(Request $request, $id)
     {
         // 1. TENTATIVA FLEXÍVEL: Busca por campanha OU por item se o ID for ambíguo
-        $query = WhatsappJob::where(function ($q) use ($id) {
+        $query = WhatsappJob::with(['contact', 'campaignItem'])->where(function ($q) use ($id) {
             $q->where('campaign_item_id', $id);
         });
 
