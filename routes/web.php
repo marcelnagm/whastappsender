@@ -32,9 +32,9 @@ Route::group(['namespace' => 'App\Http\Controllers', 'middleware' => ['guest']],
     Route::get('/login', 'LoginController@show')->name('login');
     Route::post('/login', 'LoginController@login')->name('login.perform');
 
-    Route::get('/', 'HomeController@index')->name('home.index');
-});
+    });
 
+Route::get('/', 'App\Http\Controllers\HomeController@index')->name('home.index');
 
 
 Route::group(['namespace' => 'App\Http\Controllers', 'middleware' => ['auth']], function () {
