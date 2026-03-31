@@ -44,7 +44,6 @@ class GerarJobsWhatsApp extends Command
                         'endpoint'  => 
                             $campaignItem->getOperation(),
                         // O payload agora é gerado e guardado como JSON puro
-                        'payload'          => json_encode($campaignItem->generate($contato->id)),
                         'created_at'       => $now,
                         'updated_at'       => $now,
                     ];

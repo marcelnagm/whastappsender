@@ -19,26 +19,28 @@ use App\Http\Controllers\WhatsappJobController;
 |
 */
 
-Route::group(['namespace' => 'App\Http\Controllers'], function () {
+Route::group(['namespace' => 'App\Http\Controllers', 'middleware' => ['guest']], function () {
+    /**
+     * Register Routes
+     */
+    Route::get('/register', 'RegisterController@show')->name('register.show');
+    Route::post('/register', 'RegisterController@register')->name('register.perform');
+
+    /**
+     * Login Routes
+     */
+    Route::get('/login', 'LoginController@show')->name('login');
+    Route::post('/login', 'LoginController@login')->name('login.perform');
+
+    Route::get('/', 'HomeController@index')->name('home.index');
+});
+
+
+
+Route::group(['namespace' => 'App\Http\Controllers', 'middleware' => ['auth']], function () {
     /**
      * Home Routes
      */
-    Route::get('/', 'HomeController@index')->name('home.index');
-
-    Route::group(['middleware' => ['guest']], function () {
-        /**
-         * Register Routes
-         */
-        Route::get('/register', 'RegisterController@show')->name('register.show');
-        Route::post('/register', 'RegisterController@register')->name('register.perform');
-
-        /**
-         * Login Routes
-         */
-        Route::get('/login', 'LoginController@show')->name('login');
-        Route::post('/login', 'LoginController@login')->name('login.perform');
-    });
-
     Route::group(['middleware' => ['auth']], function () {
         /**
          * Logout Routes
@@ -53,12 +55,9 @@ Route::group(['namespace' => 'App\Http\Controllers'], function () {
 
     Route::resource('/campaigns', 'App\Http\Controllers\CampaignController')->middleware(['auth']);
     Route::resource('/contacts', 'App\Http\Controllers\ContactController')->middleware(['auth']);
-    Route::resource('/campaign-items', 'App\Http\Controllers\CampaignItemController')->middleware(['auth']);
-    ;
-    Route::post('/contact/import', 'App\Http\Controllers\ContactController@import')->name('contacts.import')->middleware(['auth']);
-    ;
-    Route::get('/contact/clean', 'App\Http\Controllers\ContactController@clean')->name('contacts.clear')->middleware(['auth']);
-    ;
+    Route::resource('/campaign-items', 'App\Http\Controllers\CampaignItemController')->middleware(['auth']);;
+    Route::post('/contact/import', 'App\Http\Controllers\ContactController@import')->name('contacts.import')->middleware(['auth']);;
+    Route::get('/contact/clean', 'App\Http\Controllers\ContactController@clean')->name('contacts.clear')->middleware(['auth']);;
     Route::get('/campaign-items/{id}/send', 'CampaignItemController@send')->name('campaign-items.send');
     Route::get('/campaign-items/{id}/generate', 'CampaignItemController@generate')->name('campaign-items.generate');
     Route::get('/campaign-items/{id}/generateAll', 'CampaignItemController@generateAll')->name('campaign-items.generateAll');
