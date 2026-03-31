@@ -49,6 +49,7 @@ Route::group(['namespace' => 'App\Http\Controllers', 'middleware' => ['auth']], 
     Route::resource('/campaign-items', 'App\Http\Controllers\CampaignItemController')->middleware(['auth']);;
     Route::post('/contact/import', 'App\Http\Controllers\ContactController@import')->name('contacts.import')->middleware(['auth']);;
     Route::get('/contact/clean', 'App\Http\Controllers\ContactController@clean')->name('contacts.clear')->middleware(['auth']);;
+    Route::get('/contact/photo/{id}', 'App\Http\Controllers\ContactController@photo')->name('contacts.photo')->middleware(['auth']);
     Route::post('/contact/bulk-delete', 'App\Http\Controllers\ContactController@bulkDelete')
         ->name('contacts.bulk-delete')
         ->middleware(['auth']); // Garanta que apenas usuários logados acessem

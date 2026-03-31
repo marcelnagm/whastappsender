@@ -140,6 +140,14 @@ class ContactController extends Controller
      * @param  int $id
      * @return \Illuminate\Http\Response
      */
+    public function photo($id)
+    {
+        $contact = Contact::findOrFail($id);
+        $contact->syncFromEvolution();
+        return $contact->profile_url; // Retorno bruto para o fetch
+    }
+
+
     public function show($id)
     {
         $contact = Contact::find($id);

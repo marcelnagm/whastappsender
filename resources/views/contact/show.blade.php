@@ -6,74 +6,91 @@
 
 @section('content')
 <div class="container-fluid py-4">
-    {{-- Header de Navegação --}}
     <div class="d-flex align-items-center justify-content-between mb-4">
         <div>
             <h1 class="h3 mb-0 text-gray-800 fw-bold">
-                <i class="bi bi-person-badge text-primary me-2"></i>Detalhes do Lead
+                <i class="bi bi-person-badge text-primary me-2"></i>Ficha do Lead
             </h1>
+            <p class="text-muted small mb-0">Gestão de perfil e rastreabilidade de envios.</p>
         </div>
         <div class="d-flex gap-2">
-            <a class="btn btn-outline-secondary btn-sm fw-bold shadow-sm" href="{{ route('contacts.index') }}">
+            <a class="btn btn-outline-secondary btn-sm fw-bold shadow-sm px-3" href="{{ route('contacts.index') }}">
                 <i class="bi bi-arrow-left me-1"></i> VOLTAR
             </a>
-            <a class="btn btn-primary btn-sm fw-bold shadow-sm" href="{{ route('contacts.edit', $contact->id) }}">
-                <i class="bi bi-pencil me-1"></i> EDITAR
+            {{-- Botão de Sincronização Manual --}}
+            <button class="btn btn-info btn-sm fw-bold shadow-sm px-3 text-white" onclick="syncProfile({{ $contact->id }})" id="btnSync">
+                <i class="bi bi-arrow-clockwise me-1" id="syncIcon"></i> SINCRONIZAR
+            </button>
+            <a class="btn btn-primary btn-sm fw-bold shadow-sm px-3" href="{{ route('contacts.edit', $contact->id) }}">
+                <i class="bi bi-pencil me-1"></i> EDITAR DADOS
             </a>
         </div>
     </div>
 
     <div class="row">
-        {{-- Card de Informações do Contato --}}
-        <div class="col-md-4">
-            <div class="card border-0 shadow-sm rounded-4 mb-4">
-                <div class="card-body p-4">
-                    <div class="text-center mb-4">
-                        <div class="bg-light d-inline-block p-4 rounded-circle mb-3">
-                            <i class="bi bi-person-fill fs-1 text-primary"></i>
+        <div class="col-lg-4 col-md-5">
+            <div class="card border-0 shadow-sm rounded-4 mb-4 overflow-hidden">
+                <div class="card-body p-4 text-center">
+                    {{-- Foto clicável para sincronizar --}}
+                    <div class="position-relative d-inline-block cursor-pointer" onclick="syncProfile({{ $contact->id }})" style="cursor: pointer;" title="Clique para atualizar foto">
+                        <div id="avatarContainer">
+                            @if($contact->profile_url)
+                                <img src="{{ $contact->profile_url }}" 
+                                     id="profileImage"
+                                     alt="{{ $contact->name }}" 
+                                     class="rounded-circle shadow border border-4 border-white" 
+                                     style="width: 120px; height: 120px; object-fit: cover;">
+                            @else
+                                <div class="bg-light d-flex align-items-center justify-content-center rounded-circle shadow-sm border border-4 border-white mx-auto" 
+                                     id="profilePlaceholder"
+                                     style="width: 120px; height: 120px;">
+                                    <i class="bi bi-person-fill fs-1 text-secondary"></i>
+                                </div>
+                            @endif
                         </div>
-                        <h4 class="fw-bold mb-1">{{ $contact->name }}</h4>
-                        <span class="badge bg-light text-primary border px-3">#{{ $contact->id }}</span>
+                        
+                        {{-- Overlay de carregamento --}}
+                        <div id="syncLoader" class="position-absolute top-50 start-50 translate-middle d-none">
+                            <div class="spinner-border text-primary" role="status"></div>
+                        </div>
+
+                        <span class="position-absolute bottom-0 end-0 border border-3 border-white badge rounded-pill p-2 {{ $contact->status === 'ativo' ? 'bg-success' : 'bg-danger' }}" 
+                              id="statusBadge"
+                              style="transform: translate(-10%, -10%);">
+                        </span>
                     </div>
 
-                    <div class="list-group list-group-flush border-top pt-3">
+                    <h4 class="fw-bold mt-3 mb-0 text-dark">{{ $contact->name }}</h4>
+                    <p class="text-muted small mb-3">ID Interno: #{{ $contact->id }}</p>
+                    
+                    <div class="d-flex justify-content-center gap-2">
+                        <span class="badge bg-primary-soft text-primary px-3 py-2 rounded-pill shadow-sm">
+                            <i class="bi bi-star-fill me-1"></i> SCORE: {{ $contact->score }}
+                        </span>
+                    </div>
+
+                    <div class="list-group list-group-flush border-top mt-4 pt-3 text-start">
                         <div class="list-group-item border-0 px-0 py-2">
-                            <label class="x-small fw-bold text-muted text-uppercase d-block">WhatsApp</label>
-                            <a href="https://wa.me/{{ preg_replace('/\D/', '', $contact->contact) }}" target="_blank" class="text-decoration-none fw-bold text-dark">
-                                <i class="bi bi-whatsapp text-success me-1"></i>{{ $contact->contact }}
+                            <label class="x-small fw-bold text-muted text-uppercase d-block mb-1">WhatsApp</label>
+                            <a href="https://wa.me/{{ preg_replace('/\D/', '', $contact->contact) }}" target="_blank" class="text-decoration-none fw-bold text-success">
+                                <i class="bi bi-whatsapp me-2"></i>{{ $contact->contact }}
                             </a>
                         </div>
                         <div class="list-group-item border-0 px-0 py-2">
-                            <label class="x-small fw-bold text-muted text-uppercase d-block">E-mail</label>
-                            <span class="text-dark small fw-medium">{{ $contact->email ?? 'N/A' }}</span>
-                        </div>
-                        <div class="list-group-item border-0 px-0 py-2 d-flex justify-content-between align-items-center">
-                            <div>
-                                <label class="x-small fw-bold text-muted text-uppercase d-block">LID / Origem</label>
-                                <span class="badge bg-info-subtle text-info">{{ $contact->lid ?? 'Orgânico' }}</span>
-                            </div>
-                            <div class="text-end">
-                                <label class="x-small fw-bold text-muted text-uppercase d-block">Score</label>
-                                <span class="fw-bold text-primary">{{ $contact->score }}</span>
-                            </div>
-                        </div>
-                        <div class="list-group-item border-0 px-0 py-2">
-                            <label class="x-small fw-bold text-muted text-uppercase d-block">Status</label>
-                            <span class="badge rounded-pill px-3 {{ $contact->status === 'ativo' ? 'bg-success' : 'bg-danger' }}">
-                                {{ strtoupper($contact->status) }}
-                            </span>
+                            <label class="x-small fw-bold text-muted text-uppercase d-block mb-1">E-mail</label>
+                            <span class="text-dark fw-medium small">{{ $contact->email ?? '---' }}</span>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        {{-- Lista de Jobs Relacionados --}}
-        <div class="col-md-8">
+        <div class="col-lg-8 col-md-7">
+            {{-- Tabela de Jobs (Mantida igual ao anterior) --}}
             <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
-                <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
-                    <h6 class="m-0 font-weight-bold text-dark text-uppercase x-small">
-                        <i class="bi bi-chat-left-dots-fill me-2 text-primary"></i>Histórico de Envios (Jobs)
+                <div class="card-header bg-white py-3 border-bottom">
+                    <h6 class="m-0 font-weight-bold text-dark text-uppercase small">
+                        <i class="bi bi-clock-history me-2 text-primary"></i>Log de Envios Recentes
                     </h6>
                 </div>
                 <div class="card-body p-0">
@@ -81,49 +98,33 @@
                         <table class="table table-hover align-middle mb-0">
                             <thead class="bg-light x-small text-muted text-uppercase fw-bold">
                                 <tr>
-                                    <th class="ps-4">ID Job</th>
-                                    <th>Status Interno</th>
-                                    <th>Status WA</th>
-                                    <th>Data</th>
-                                    <th class="text-center">Ações</th>
+                                    <th class="ps-4">Job ID</th>
+                                    <th>Status Operação</th>
+                                    <th>Status WhatsApp</th>
+                                    <th class="text-end pe-4">Ação</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                @php $jobs = $contact->whatsappjobs()->orderBy('created_at', 'desc')->get(); @endphp
-                                @forelse ($jobs as $job)
+                                @forelse ($contact->whatsappjobs()->orderBy('created_at', 'desc')->take(10)->get() as $job)
                                 <tr>
-                                    <td class="ps-4 small text-muted">#{{ $job->id }}</td>
+                                    <td class="ps-4 text-muted">#{{ $job->id }}</td>
                                     <td>
-                                        <span class="badge rounded-pill px-3 
-                                            {{ $job->status == 'processado' ? 'bg-success-soft text-success' : ($job->status == 'erro' ? 'bg-danger-soft text-danger' : 'bg-warning-soft text-warning') }}">
+                                        <span class="badge rounded-pill px-3 {{ $job->status == 'processado' ? 'bg-success-soft text-success' : 'bg-danger-soft text-danger' }}">
                                             {{ strtoupper($job->status) }}
                                         </span>
                                     </td>
-                                    <td class="small fw-bold text-primary">
-                                        {{ strtoupper($job->evolution_status ?? 'Pendente') }}
-                                    </td>
-                                    <td class="x-small text-muted">
-                                        {{ $job->created_at->format('d/m/Y H:i') }}
-                                    </td>
-                                    <td class="text-center">
+                                    <td class="small fw-bold">{{ $job->evolution_status ?? 'PENDENTE' }}</td>
+                                    <td class="text-end pe-4">
                                         @if($job->status == 'erro')
                                             <form action="{{ route('whatsapp-jobs.retry', $job->id) }}" method="POST">
                                                 @csrf
-                                                <button type="submit" class="btn btn-sm btn-outline-danger py-1 px-3 fw-bold" style="font-size: 0.65rem;">
-                                                    <i class="bi bi-arrow-repeat me-1"></i> RETENTAR
-                                                </button>
+                                                <button type="submit" class="btn btn-xs btn-outline-danger fw-bold rounded-pill">RE-ENVIAR</button>
                                             </form>
-                                        @else
-                                            <span class="text-muted opacity-50">---</span>
                                         @endif
                                     </td>
                                 </tr>
                                 @empty
-                                <tr>
-                                    <td colspan="5" class="text-center py-5 text-muted italic">
-                                        Nenhum Job de envio registrado para este contato.
-                                    </td>
-                                </tr>
+                                <tr><td colspan="4" class="text-center py-4 text-muted">Sem histórico.</td></tr>
                                 @endforelse
                             </tbody>
                         </table>
@@ -134,10 +135,59 @@
     </div>
 </div>
 
+<script>
+async function syncProfile(id) {
+    const btn = document.getElementById('btnSync');
+    const icon = document.getElementById('syncIcon');
+    const loader = document.getElementById('syncLoader');
+    const img = document.getElementById('profileImage');
+    const container = document.getElementById('avatarContainer');
+
+    // Estado de carregamento
+    btn.disabled = true;
+    icon.classList.add('bi-spin'); // Adicione uma animação de giro se tiver CSS
+    loader.classList.remove('d-none');
+    if(img) img.style.opacity = '0.3';
+
+    try {
+        const response = await fetch(`/contact/photo/${id}`);
+        const photoUrl = await response.text();
+
+        if (photoUrl && photoUrl !== '') {
+            // Atualiza a imagem na tela sem refresh
+            container.innerHTML = `<img src="${photoUrl}" id="profileImage" class="rounded-circle shadow border border-4 border-white" style="width: 120px; height: 120px; object-fit: cover;">`;
+            
+            // Atualiza o badge para ativo
+            const badge = document.getElementById('statusBadge');
+            badge.classList.remove('bg-danger');
+            badge.classList.add('bg-success');
+        } else {
+            alert('A API não retornou uma foto para este número ou o contato não existe no WhatsApp.');
+        }
+    } catch (error) {
+        console.error('Erro na sincronização:', error);
+        alert('Erro ao conectar com o servidor.');
+    } finally {
+        btn.disabled = false;
+        icon.classList.remove('bi-spin');
+        loader.classList.add('d-none');
+    }
+}
+</script>
+
 <style>
-    .x-small { font-size: 0.7rem; }
+    .x-small { font-size: 0.68rem; letter-spacing: 0.5px; }
     .bg-success-soft { background-color: #e8f5e9; color: #2e7d32; }
     .bg-danger-soft { background-color: #ffebee; color: #c62828; }
-    .bg-warning-soft { background-color: #fff8e1; color: #f57f17; }
+    .bg-primary-soft { background-color: #eef2ff; }
+    
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+    .bi-spin { 
+        display: inline-block;
+        animation: spin 1s linear infinite; 
+    }
 </style>
 @endsection

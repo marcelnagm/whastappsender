@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Http;
+
 
 /**
  * Class Contact
@@ -33,7 +35,7 @@ class Contact extends Model
      *
      * @var array
      */
-    protected $fillable = ['name', 'contact', 'email', 'user_id', 'ignore_me', 'lid', 'status', 'score'];
+    protected $fillable = ['name', 'contact', 'email', 'user_id', 'ignore_me', 'lid', 'status', 'score', 'profile_url'];
 
 
     /**
@@ -53,5 +55,55 @@ class Contact extends Model
     public function whatsappjobs() // Sugiro plural para hasMany
     {
         return $this->hasMany('App\Models\WhatsappJob', 'contact_id', 'id');
+    }
+
+
+    public function syncFromEvolution()
+    {
+        // Previne requisições desnecessárias se o número for inválido
+        if (empty($this->contact)) {
+            return false;
+        }
+
+        try {
+            $config = config('services.whatsapp');
+            $baseUrl = "{$config['protocol']}://{$config['url']}:{$config['port']}";
+            $apiKey = $config['apikey'];
+            $instance = $this->user()->first()->phone;
+            // dd($instance);
+            // Endpoint para buscar informações do número/perfil
+            $response = Http::withHeaders([
+                'apikey' => $apiKey,
+                'Content-Type' => 'application/json'
+            ])->post("{$baseUrl}/chat/fetchProfilePictureUrl/{$instance}", [
+                'number' => $this->contact
+            ]);
+
+            // Se retornar 200/201 e tiver a URL
+            if ($response->successful()) {
+                $data = $response->json();
+
+                // A Evolution v2.3 costuma retornar { "profilePictureUrl": "..." } ou { "url": "..." }
+                $url = $data['profilePictureUrl'] ?? $data['url'] ?? null;
+
+                if ($url && $this->profile_url !== $url) {
+                    $this->profile_url = $url;
+                    $this->status = 'ativo'; // Se tem foto, o número é válido
+                    $this->save();
+                    return true;
+                }
+            }
+
+            // Se o 404 persistir, significa que o WhatsApp não encontrou o JID
+            if ($response->status() === 404) {
+                $this->status = 'no-whatsapp';
+                $this->save();
+            }
+        } catch (\Exception $e) {
+            dd($e);
+            \Log::error("Falha ao sincronizar contato #{$this->id} com Evolution: " . $e->getMessage());
+        }
+
+        return false;
     }
 }
