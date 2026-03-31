@@ -77,9 +77,9 @@ class WhatsappJob extends Model
      * @return \Illuminate\Database\Eloquent\Relations\HasOne
      */
     public function contact()
-    {
-        return $this->hasOne('App\Models\Contact', 'id', 'contact_id');
-    }
+{
+    return $this->belongsTo(Contact::class, 'contact_id');
+}
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasOne

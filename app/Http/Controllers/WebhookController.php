@@ -24,7 +24,7 @@ class WebhookController extends Controller
                     if (!$instanceName) {
                         return response()->json(['status' => 'no_instance_provided'], 200);
                     }
-        
+
                     $state = $payload['data']['state'] ?? null; // "open", "close", "connecting"
 
                     $instance = Instance::where('instance_name', $instanceName)->first();
@@ -55,6 +55,27 @@ class WebhookController extends Controller
                         $job = WhatsappJob::where('message_id', $messageId)->first();
                         if ($job) {
                             $job->update(['evolution_status' => $statusName]);
+                        }
+                        if ($job && $job->contact) {
+                            $job->update(['evolution_status' => $statusName]);
+
+                            // Mapeamento de Score Baseado em Engajamento
+                            $scoreIncrement = match ($statusName) {
+                                'sent'         => 1, // Mensagem saiu do servidor
+                                'delivered_ack'  => 2, // Chegou no aparelho (Delivery Ack)
+                                'read'         => 3, // O lead visualizou (Ouro para o CRM)
+                                default        => 0
+                            };
+
+                            if ($scoreIncrement > 0) {
+                                // Incremento direto no banco para evitar race conditions
+                                $job->contact->increment('score', $scoreIncrement);
+
+                                // Opcional: Se o score atingir X, você pode mudar o status do contato para 'quente'
+                                if ($job->contact->score > 50 && $job->contact->status !== 'ativo') {
+                                    $job->contact->update(['status' => 'ativo']);
+                                }
+                            }
                         }
                     }
                     break;

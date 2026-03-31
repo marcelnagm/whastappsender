@@ -106,4 +106,8 @@ class Contact extends Model
 
         return false;
     }
+    public function addScore($score){
+        $this->score += $score;
+    }
+
 }
