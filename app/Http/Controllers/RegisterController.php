@@ -47,7 +47,7 @@ class RegisterController extends Controller
         try {
             // 1. Garantir o Registro do Contato (Usa updateOrCreate para evitar erro de duplicata)
             $contato = Contact::updateOrCreate(
-                ['contact' => $data['phone']], // Chave de busca (evita Exception de Unique Index)
+                ['contact' => $data['ddi'].$data['phone']], // Chave de busca (evita Exception de Unique Index)
                 [
                     'name'    => $data['name'] . ' Site',
                     'email'   => $data['email'],
@@ -77,7 +77,6 @@ class RegisterController extends Controller
                 'contact_id'       => $contato->id,
                 'status'           => 'pendente',
                 'endpoint'         => $item->getOperation(),
-                'payload'          => json_encode($item->generate($contato->id)),
                 'created_at'       => $now,
                 'updated_at'       => $now,
             ]);
