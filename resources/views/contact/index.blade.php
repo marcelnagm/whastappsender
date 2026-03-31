@@ -47,56 +47,16 @@
                         <button type="submit" class="btn btn-primary btn-sm">
                             <i class="bi bi-search"></i>
                         </button>
-                        @if(request('search'))
-                        <a href="{{ route('contacts.index') }}" class="btn btn-outline-secondary btn-sm border-0">
-                            <i class="bi bi-x-lg"></i>
-                        </a>
-                        @endif
                     </form>
-
-                    <a href="/modelo.xlsx" class="btn btn-outline-success btn-sm fw-bold">
-                        <i class="bi bi-file-earmark-spreadsheet"></i> Modelo
-                    </a>
-                    <button class="btn btn-outline-secondary btn-sm fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapseImport">
-                        <i class="bi bi-file-earmark-arrow-up"></i> Importar
-                    </button>
-                    <a href="{{ route('contacts.create') }}" class="btn btn-success btn-sm fw-bold px-3">
+                    <a href="{{ route('contacts.create') }}" class="btn btn-success btn-sm fw-bold px-3 shadow-sm">
                         <i class="bi bi-plus-lg"></i> NOVO
                     </a>
-                </div>
-            </div>
-
-            {{-- Collapse Importação --}}
-            <div class="collapse mb-4" id="collapseImport">
-                <div class="card card-body border-primary shadow-sm border-2">
-                    <h5 class="card-title fw-bold">Importação em Massa (CSV)</h5>
-                    <form method="POST" action="{{ route('contacts.import') }}" enctype="multipart/form-data" class="row g-3 align-items-center">
-                        @csrf
-                        <div class="col-auto">
-                            <input type="file" name="importer" class="form-control form-control-sm" required>
-                        </div>
-                        <div class="col-auto">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="renover" value="1" id="checkRemove">
-                                <label class="form-check-label text-danger small fw-bold" for="checkRemove">
-                                    LIMPAR BASE ATUAL
-                                </label>
-                            </div>
-                        </div>
-                        <div class="col-auto">
-                            <button type="submit" class="btn btn-primary btn-sm px-4 fw-bold">PROCESSAR CSV</button>
-                        </div>
-                    </form>
                 </div>
             </div>
 
             <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
                 <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-bottom">
                     <h6 class="m-0 font-weight-bold text-primary">Listagem de Leads ({{ $contacts->total() }})</h6>
-                    <a href="{{ route('contacts.clear') }}" class="btn btn-link text-danger btn-sm p-0 text-decoration-none fw-bold small"
-                        onclick="return confirm('ATENÇÃO: Isso apagará TODOS os seus contatos. Confirma?')">
-                        <i class="bi bi-trash3"></i> ESVAZIAR BASE
-                    </a>
                 </div>
 
                 @if ($message = Session::get('success'))
@@ -113,8 +73,8 @@
                                     <th class="ps-4" style="width: 40px;">
                                         <input type="checkbox" class="form-check-input shadow-none" id="selectAll" onclick="toggleSelectAll(this.checked)">
                                     </th>
-                                    <th>ID</th>
-                                    <th>Nome / LID</th>
+                                    <th style="width: 60px;">Foto</th>
+                                    <th>Nome / Info</th>
                                     <th>WhatsApp</th>
                                     <th class="text-center">Score</th>
                                     <th class="text-center">Status</th>
@@ -127,9 +87,24 @@
                                     <td class="ps-4">
                                         <input type="checkbox" class="form-check-input contact-checkbox shadow-none" value="{{ $contact->id }}" onclick="updateBulkBar()">
                                     </td>
-                                    <td class="text-muted small">#{{ $contact->id }}</td>
                                     <td>
-                                        <div class="fw-bold text-dark">{{ $contact->name }}</div>
+                                        {{-- Célula da Foto com Sync --}}
+                                        <div class="position-relative d-inline-block" style="cursor: pointer;" onclick="syncProfileRow({{ $contact->id }})" id="avatar-container-{{ $contact->id }}">
+                                            @if($contact->profile_url)
+                                                <img src="{{ $contact->profile_url }}" id="img-{{ $contact->id }}" class="rounded-circle shadow-sm border" style="width: 40px; height: 40px; object-fit: cover;">
+                                            @else
+                                                <div class="bg-light rounded-circle d-flex align-items-center justify-content-center border" style="width: 40px; height: 40px;" id="placeholder-{{ $contact->id }}">
+                                                    <i class="bi bi-person text-secondary" style="font-size: 1.2rem;"></i>
+                                                </div>
+                                            @endif
+                                            {{-- Loader discreto --}}
+                                            <div id="loader-{{ $contact->id }}" class="position-absolute top-50 start-50 translate-middle d-none">
+                                                <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="fw-bold text-dark d-block">{{ $contact->name }}</div>
                                         @if($contact->lid)
                                         <span class="badge bg-light text-primary border fw-normal" style="font-size: 0.65rem;">
                                             <i class="bi bi-tag-fill me-1"></i>{{ $contact->lid }}
@@ -138,10 +113,10 @@
                                     </td>
                                     <td>
                                         <div class="d-flex flex-column">
-                                            <a href="https://wa.me/{{ preg_replace('/\D/', '', $contact->contact) }}" target="_blank" class="text-decoration-none small fw-bold">
-                                                <i class="bi bi-whatsapp text-success me-1"></i>{{ $contact->contact }}
+                                            <a href="https://wa.me/{{ preg_replace('/\D/', '', $contact->contact) }}" target="_blank" class="text-decoration-none small fw-bold text-success">
+                                                <i class="bi bi-whatsapp me-1"></i>{{ $contact->contact }}
                                             </a>
-                                            <span class="text-muted" style="font-size: 0.75rem;">{{ $contact->email ?? '---' }}</span>
+                                            <span class="text-muted x-small">{{ $contact->email ?? '---' }}</span>
                                         </div>
                                     </td>
                                     <td class="text-center">
@@ -149,7 +124,7 @@
                                             {{ $contact->score }}
                                         </span>
                                     </td>
-                                    <td class="text-center">
+                                    <td class="text-center" id="status-cell-{{ $contact->id }}">
                                         @if($contact->status === 'ativo')
                                         <span class="badge bg-success-soft text-success rounded-pill px-3">Ativo</span>
                                         @elseif($contact->status === 'no-whatsapp')
@@ -171,12 +146,7 @@
                                     </td>
                                 </tr>
                                 @empty
-                                <tr>
-                                    <td colspan="100%" class="text-center py-5 text-muted">
-                                        <i class="bi bi-people fs-1 d-block mb-2 opacity-25"></i>
-                                        Nenhum contato encontrado.
-                                    </td>
-                                </tr>
+                                <tr><td colspan="7" class="text-center py-5 text-muted">Nenhum contato encontrado.</td></tr>
                                 @endforelse
                             </tbody>
                         </table>
@@ -191,44 +161,34 @@
     </div>
 </div>
 
-<style>
-    .x-small {
-        font-size: 0.72rem;
-    }
-
-    .bg-success-soft {
-        background-color: #e8f5e9;
-    }
-
-    .bg-danger-soft {
-        background-color: #ffebee;
-    }
-
-    .bg-secondary-soft {
-        background-color: #f5f5f5;
-    }
-
-    .btn-white {
-        background: white;
-        border: none;
-    }
-
-    .btn-white:hover {
-        background: #f8f9fa;
-    }
-
-    /* Paginação fix */
-    nav[role="navigation"] svg {
-        width: 20px;
-        height: 20px;
-    }
-
-    .pagination {
-        margin-bottom: 0;
-    }
-</style>
-
 <script>
+    // Sincronização individual na linha
+    async function syncProfileRow(id) {
+        const loader = document.getElementById(`loader-${id}`);
+        const container = document.getElementById(`avatar-container-${id}`);
+        const statusCell = document.getElementById(`status-cell-${id}`);
+        
+        loader.classList.remove('d-none');
+        container.style.opacity = '0.5';
+
+        try {
+            const response = await fetch(`/contact/photo/${id}`);
+            const photoUrl = await response.text();
+
+            if (photoUrl && photoUrl !== '') {
+                container.innerHTML = `<img src="${photoUrl}" class="rounded-circle shadow-sm border" style="width: 40px; height: 40px; object-fit: cover;">`;
+                statusCell.innerHTML = `<span class="badge bg-success-soft text-success rounded-pill px-3">Ativo</span>`;
+            } else {
+                statusCell.innerHTML = `<span class="badge bg-danger-soft text-danger rounded-pill px-3">No-WA</span>`;
+            }
+        } catch (error) {
+            console.error('Erro:', error);
+        } finally {
+            loader.classList.add('d-none');
+            container.style.opacity = '1';
+        }
+    }
+
     function toggleSelectAll(checked) {
         document.querySelectorAll('.contact-checkbox').forEach(cb => cb.checked = checked);
         document.getElementById('selectAll').checked = checked;
@@ -252,23 +212,29 @@
         const ids = Array.from(document.querySelectorAll('.contact-checkbox:checked')).map(cb => cb.value);
         if (ids.length === 0) return;
 
-        let confirmMsg = '';
-        let route = '';
-
-        if (action === 'delete') {
-            confirmMsg = `Deseja realmente REMOVER ${ids.length} contatos permanentemente?`;
-            route = "{{ route('contacts.bulk-delete') }}";
-        } else {
-            confirmMsg = `Deseja alterar o status de ${ids.length} contatos para '${action}'?`;
-            route = "{{ route('contacts.bulk-status') }}";
-        }
+        let confirmMsg = (action === 'delete') 
+            ? `REMOVER ${ids.length} contatos?` 
+            : `Mudar status de ${ids.length} contatos para '${action}'?`;
 
         if (!confirm(confirmMsg)) return;
 
-        document.getElementById('bulkActionForm').action = route;
+        document.getElementById('bulkActionForm').action = (action === 'delete') 
+            ? "{{ route('contacts.bulk-delete') }}" 
+            : "{{ route('contacts.bulk-status') }}";
+            
         document.getElementById('bulkIdsInput').value = JSON.stringify(ids);
         document.getElementById('bulkStatusInput').value = action;
         document.getElementById('bulkActionForm').submit();
     }
 </script>
+
+<style>
+    .x-small { font-size: 0.7rem; }
+    .bg-success-soft { background-color: #e8f5e9; color: #2e7d32; }
+    .bg-danger-soft { background-color: #ffebee; color: #c62828; }
+    .bg-secondary-soft { background-color: #f5f5f5; color: #757575; }
+    .btn-white { background: white; border: none; }
+    .btn-white:hover { background: #f8f9fa; }
+    .spinner-border-sm { width: 1rem; height: 1rem; border-width: 0.15em; }
+</style>
 @endsection
