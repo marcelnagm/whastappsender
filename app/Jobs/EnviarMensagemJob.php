@@ -42,6 +42,13 @@ class EnviarMensagemJob implements ShouldQueue
             $instance = $user->phone;
             $item = $job->campaignItem()->first();
             $contact = $job->contact()->first();
+            if($contact->status === "no-whatsapp"){
+                $this->jobModel->update([
+                    'status' => 'erro',
+                    'tentativas' => -3,
+                    'erro_mensagem' => 'Contato sem Whatsapp - ENCERRANDO'
+                ]);
+            }
 
             $payload = $item->generate($job->contact_id);
             $numeroDestino = $contact->contact;

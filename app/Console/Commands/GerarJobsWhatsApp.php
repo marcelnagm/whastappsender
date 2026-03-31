@@ -29,6 +29,7 @@ class GerarJobsWhatsApp extends Command
         // Buscamos apenas contatos válidos (já minerados/validados)
         Contact::where('user_id', $campaignItem->user_id)
             ->whereNull('ignore_me') // Regra: só gera para quem foi minerado          
+            ->where('status','ativo') // Regra: só gera para quem foi minerado          
             ->chunkById(1000, function ($contatos) use ($campaignItem) {
 
                 $jobs = [];
