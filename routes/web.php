@@ -38,14 +38,6 @@ Route::group(['namespace' => 'App\Http\Controllers', 'middleware' => ['guest']],
 
 
 Route::group(['namespace' => 'App\Http\Controllers', 'middleware' => ['auth']], function () {
-    /**
-     * Home Routes
-     */
-    Route::group(['middleware' => ['auth']], function () {
-        /**
-         * Logout Routes
-         */
-    });
 
 
     Route::prefix('whatsapp')->middleware(['auth'])->name('whatsapp.')->group(function () {
