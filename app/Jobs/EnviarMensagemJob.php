@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Models\WhatsappJob;
+use Exception;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -54,31 +55,39 @@ class EnviarMensagemJob implements ShouldQueue
 
             $instance = $user->phone;
             $item = $job->campaignItem()->first();
+            $contact = $job->contact()->first();
             if (env('APP_DEBUG'))
                 Log::info("iNSTANCIA: {$instance}");
-            $payload = json_encode($item->generate($job->contact_id));
-            $numeroDestino = $payload['number'] ?? null;
 
-            if (!$numeroDestino) {
-                $this->registrarErro("Número de destino ausente no payload.");
-                return;
-            }
+            $payload = $item->generate($job->contact_id);
+            $numeroDestino = $contact->contact;
+            if (env('APP_DEBUG'))
+                Log::error("numero destin {$numeroDestino}");
 
             // --- PASSO 1: HUMANIZAÇÃO (Presence) ---
             $presenceType = (rand(0, 10) > 3) ? 'composing' : 'recording';
-
+            try{
+                if (env('APP_DEBUG'))
+                Log::info('Passo 1');
             Http::withHeaders(['apikey' => $globalApiKey])
-                ->post("{$baseUrl}/chat/sendPresence/{$instance}", [
-                    "number" => $numeroDestino,
-                    "presence" => $presenceType,
-                    "delay" => rand(1500, 3000)
-                ]);
+            ->post("{$baseUrl}/chat/sendPresence/{$instance}", [
+                "number" => $numeroDestino,
+                "presence" => $presenceType,
+                "delay" => rand(1500, 3000)
+            ]);
 
+            }catch(Exception $ex){
+                Log::error('ERROR EM PRESENCE');
+                Log::error($ex);
+            }
             // Delay de "digitação" (4 a 9 segundos)
             sleep(rand(4, 9));
 
 
             // --- PASSO 2: ENVIO REAL ---
+
+            if (env('APP_DEBUG'))
+            Log::info('Passo 2');
             $endpoint = ltrim($job->endpoint, '/');
             $urlFinal = "{$baseUrl}/{$endpoint}{$instance}";
             if (env('APP_DEBUG'))
@@ -106,7 +115,9 @@ class EnviarMensagemJob implements ShouldQueue
                 $this->registrarErro("API Erro: " . $response->status() . " - " . $response->body());
             }
 
-            // --- PASSO 3: INTERVALO ANTI-BAN (Cooldown) ---
+            if (env('APP_DEBUG'))
+            Log::info('Passo 3');
+            // --- PASSO 3: IN  TERVALO ANTI-BAN (Cooldown) ---
             // Como o Worker processa um por um, este sleep garante a cadência do chip
             $pause = rand(25, 50);
             sleep($pause);

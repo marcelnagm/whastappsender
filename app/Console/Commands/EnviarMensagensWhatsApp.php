@@ -28,7 +28,7 @@ class EnviarMensagensWhatsApp extends Command
         $jobs = WhatsappJob::whereIn('status', ['pendente', 'erro'])
             ->where('tentativas', '<', 3)
             ->orderBy('id', 'asc') // Primeiro os mais antigos
-            ->limit(100) 
+            ->limit(100)
             ->get();
 
         if ($jobs->isEmpty()) {
@@ -54,20 +54,20 @@ class EnviarMensagensWhatsApp extends Command
                 }
 
                 $instance = $user->phone;
-                $payload = is_string($job->payload) ? json_decode($job->payload, true) : $job->payload;
-                $numeroDestino = $payload['number'] ?? null;
+                $contact = $job->contact()->first();
 
-                if (!$numeroDestino) {
-                    $this->registrarFalha($job, "Número de destino ausente no payload.");
-                    continue;
-                }
+                $numeroDestino = $contact->contact;
+                $payload = $item->generate($job->contact_id);
+
+
 
                 $this->info("[ID:{$job->id}] Enviando para: {$numeroDestino}");
 
                 // --- PASSO 1: HUMANIZAÇÃO (Simulação de Comportamento) ---
                 // Aleatoriedade entre digitar ou apenas visualizar
                 $presenceType = (rand(0, 10) > 3) ? 'composing' : 'recording';
-                
+                $payload = $item->generate($job->contact_id);
+
                 Http::withHeaders(['apikey' => $globalApiKey])
                     ->post("{$baseUrl}/chat/sendPresence/{$instance}", [
                         "number" => $numeroDestino,
@@ -89,7 +89,7 @@ class EnviarMensagensWhatsApp extends Command
 
                 if ($response->successful()) {
                     $dados = $response->json();
-                    
+
                     // Captura o ID da mensagem para o Webhook futuro
                     $remoteId = $dados['key']['id'] ?? ($dados['message']['key']['id'] ?? ($dados['response']['key']['id'] ?? null));
 
@@ -106,7 +106,6 @@ class EnviarMensagensWhatsApp extends Command
                 } else {
                     $this->registrarFalha($job, "API Erro: " . $response->status() . " - " . $response->body());
                 }
-
             } catch (\Exception $e) {
                 $this->registrarFalha($job, "Exception: " . $e->getMessage());
                 Log::error("Erro no disparo Job {$job->id}: " . $e->getMessage());
@@ -126,7 +125,7 @@ class EnviarMensagensWhatsApp extends Command
     private function registrarFalha($job, $mensagem)
     {
         $novaTentativa = $job->tentativas + 1;
-        
+
         $job->update([
             'status' => 'erro',
             'tentativas' => $novaTentativa,
