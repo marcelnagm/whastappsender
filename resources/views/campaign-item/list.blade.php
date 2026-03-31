@@ -71,7 +71,9 @@
                                             </button>
                                             <ul class="dropdown-menu shadow border-0">
                                                 <li><a class="dropdown-item" href="{{ route('campaign-items.generateAll',$campaignItem->id) }}"><i class="bi bi-layers me-2"></i> Gerar - TODOS Contatos</a></li>
+                                                @if(Auth::user()->role === 'admin')
                                                 <li><a class="dropdown-item" href="{{ route('campaign-items.generate',$campaignItem->id) }}"><i class="bi bi-lightning me-2"></i> Gerar - TESTE</a></li>
+                                                @endif
                                                 <li>
                                                     <hr class="dropdown-divider">
                                                 </li>

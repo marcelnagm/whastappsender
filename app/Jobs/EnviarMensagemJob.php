@@ -66,20 +66,15 @@ class EnviarMensagemJob implements ShouldQueue
 
             // --- PASSO 1: HUMANIZAÇÃO (Presence) ---
             $presenceType = (rand(0, 10) > 3) ? 'composing' : 'recording';
-            try{
-                if (env('APP_DEBUG'))
+            if (env('APP_DEBUG'))
                 Log::info('Passo 1');
             Http::withHeaders(['apikey' => $globalApiKey])
-            ->post("{$baseUrl}/chat/sendPresence/{$instance}", [
-                "number" => $numeroDestino,
-                "presence" => $presenceType,
-                "delay" => rand(1500, 3000)
-            ]);
+                ->post("{$baseUrl}/chat/sendPresence/{$instance}", [
+                    "number" => $numeroDestino,
+                    "presence" => $presenceType,
+                    "delay" => rand(1500, 3000)
+                ]);
 
-            }catch(Exception $ex){
-                Log::error('ERROR EM PRESENCE');
-                Log::error($ex);
-            }
             // Delay de "digitação" (4 a 9 segundos)
             sleep(rand(4, 9));
 
@@ -87,7 +82,7 @@ class EnviarMensagemJob implements ShouldQueue
             // --- PASSO 2: ENVIO REAL ---
 
             if (env('APP_DEBUG'))
-            Log::info('Passo 2');
+                Log::info('Passo 2');
             $endpoint = ltrim($job->endpoint, '/');
             $urlFinal = "{$baseUrl}/{$endpoint}{$instance}";
             if (env('APP_DEBUG'))
@@ -116,7 +111,7 @@ class EnviarMensagemJob implements ShouldQueue
             }
 
             if (env('APP_DEBUG'))
-            Log::info('Passo 3');
+                Log::info('Passo 3');
             // --- PASSO 3: IN  TERVALO ANTI-BAN (Cooldown) ---
             // Como o Worker processa um por um, este sleep garante a cadência do chip
             $pause = rand(25, 50);

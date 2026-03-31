@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Jobs\EnviarMensagemJob;
 use Illuminate\Http\Request;
 use App\Models\WhatsappJob;
-
+use Exception;
 
 class WhatsappJobController extends Controller
 {
@@ -23,9 +23,11 @@ class WhatsappJobController extends Controller
         }
 
         if ($request->filled('contact')) {
-            $query->where('payload', 'like', '%' . $request->contact . '%');
+            $query->whereHas('contact', function ($q) use ($request) {
+                $q->where('contact', 'like', '%' . $request->contact . '%')
+                    ->orWhere('name', 'like', '%' . $request->contact . '%');
+            });
         }
-
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
@@ -61,7 +63,7 @@ class WhatsappJobController extends Controller
         try {
             // 1. Localiza o Job (Garante que só tente re-enviar o que realmente deu erro)
             $job = WhatsappJob::where('id', $id)
-                ->where('status', 'erro')
+                ->whereIn('status', ['erro', 'fila'])
                 ->firstOrFail();
 
             // 2. Limpeza de rastro e Reset de Estado
@@ -76,7 +78,6 @@ class WhatsappJobController extends Controller
             EnviarMensagemJob::dispatch($job)->onQueue('disparos');
 
             return redirect()->back()->with('success', "O reenvio do Job #{$id} foi solicitado com sucesso.");
-
         } catch (Exception $e) {
             // Se o Job não for encontrado ou não for status 'erro'
             return redirect()->back()->with('error', "Não foi possível reprocessar este registro. Verifique se ele ainda está como 'erro'.");
