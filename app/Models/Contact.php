@@ -20,10 +20,10 @@ use Illuminate\Database\Eloquent\Model;
  */
 class Contact extends Model
 {
-    
+
     static $rules = [
-		'name' => 'required',
-		'contact' => 'required',
+        'name' => 'required',
+        'contact' => 'required',
     ];
 
     protected $perPage = 20;
@@ -33,7 +33,7 @@ class Contact extends Model
      *
      * @var array
      */
-    protected $fillable = ['name','contact','email','user_id','ignore_me','lid','status','score'];
+    protected $fillable = ['name', 'contact', 'email', 'user_id', 'ignore_me', 'lid', 'status', 'score'];
 
 
     /**
@@ -41,15 +41,17 @@ class Contact extends Model
      */
     public function contactFormat()
     {
-        
-return str_ireplace(['-','+',' '],'',$this->contact);
 
+        return str_ireplace(['-', '+', ' '], '', $this->contact);
     }
 
     public function user()
     {
         return $this->hasOne('App\Models\User', 'id', 'user_id');
     }
-    
 
+    public function whatsappjobs() // Sugiro plural para hasMany
+    {
+        return $this->hasMany('App\Models\WhatsappJob', 'contact_id', 'id');
+    }
 }
