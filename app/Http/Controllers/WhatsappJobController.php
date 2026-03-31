@@ -6,10 +6,82 @@ use App\Jobs\EnviarMensagemJob;
 use Illuminate\Http\Request;
 use App\Models\WhatsappJob;
 use Exception;
+use Illuminate\Support\Facades\Auth;
 
 class WhatsappJobController extends Controller
 {
     //
+    /**
+     * Remove múltiplos registros em uma única transação.
+     * Estratégia: Mass Delete para evitar N+1 queries de delete.
+     */
+    public function bulkDelete(Request $request)
+    {
+        $ids = json_decode($request->input('ids'), true);
+
+        if (!$ids || !is_array($ids)) {
+            return redirect()->back()->with('error', 'Nenhum item selecionado para remoção.');
+        }
+
+        try {
+            // Deleta os registros que pertencem ao usuário (ou todos se for admin)
+            $query = WhatsappJob::whereIn('id', $ids);
+
+            if (Auth::user()->role !== 'admin') {
+                $query->where('user_id', Auth::id());
+            }
+
+            $count = $query->delete();
+
+            return redirect()->back()->with('success', "{$count} registros removidos com sucesso.");
+        } catch (\Exception $e) {
+            Log::error("Erro no Bulk Delete: " . $e->getMessage());
+            return redirect()->back()->with('error', 'Falha ao remover registros selecionados.');
+        }
+    }
+
+    /**
+     * Reinfileira os jobs selecionados.
+     * Estratégia: Atualiza o status e despacha para a Queue individualmente para garantir o backoff.
+     */
+    public function bulkRetry(Request $request)
+    {
+        $ids = json_decode($request->input('ids'), true);
+
+        if (!$ids || !is_array($ids)) {
+            return redirect()->back()->with('error', 'Nenhum item selecionado para retentativa.');
+        }
+
+        try {
+            $jobs = WhatsappJob::whereIn('id', $ids)
+                ->where('status', 'erro') // Segurança: Só retenta o que de fato falhou
+                ->get();
+
+            if ($jobs->isEmpty()) {
+                return redirect()->back()->with('warning', 'Nenhum job em estado de erro foi encontrado na seleção.');
+            }
+
+            foreach ($jobs as $job) {
+                // 1. Limpa o rastro do erro anterior
+                $job->update([
+                    'status' => 'pendente',
+                    'erro_mensagem' => null,
+                    'evolution_status' => null
+                ]);
+
+                // 2. Despacha novamente para a fila (Queue)
+                // Substitua 'EnviarMensagemJob' pelo nome real da sua classe de Job
+                \App\Jobs\EnviarMensagemJob::dispatch($job);
+            }
+
+            return redirect()->back()->with('success', "{$jobs->count()} jobs reinfileirados para processamento.");
+        } catch (\Exception $e) {
+            Log::error("Erro no Bulk Retry: " . $e->getMessage());
+            return redirect()->back()->with('error', 'Falha ao processar retentativa em massa.');
+        }
+    }
+
+
     public function index(Request $request, $id)
     {
         // 1. TENTATIVA FLEXÍVEL: Busca por campanha OU por item se o ID for ambíguo

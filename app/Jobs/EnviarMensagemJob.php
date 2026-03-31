@@ -17,11 +17,7 @@ class EnviarMensagemJob implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     protected $jobModel;
-
-    // Tentativas automáticas do Laravel se o Job falhar (Ex: timeout da API)
     public $tries = 3;
-
-    // Tempo de espera entre tentativas automáticas
     public $backoff = 60;
 
     public function __construct(WhatsappJob $jobModel)
@@ -31,24 +27,14 @@ class EnviarMensagemJob implements ShouldQueue
 
     public function handle()
     {
-        // 1. Configurações de Infra
         $config = config('services.whatsapp');
         $baseUrl = "{$config['protocol']}://{$config['url']}:{$config['port']}";
         $globalApiKey = $config['apikey'];
-
         $job = $this->jobModel;
 
         try {
-            // 2. Validação de Instância
             $user = $job->user()->first();
-
-            if (env('APP_DEBUG'))
-                Log::info("user: {$user}");
-            if (env('APP_DEBUG'))
-                Log::info("iNSTANCIA: {$user->phone}");
             if (!$user || !$user->phone) {
-                if (env('APP_DEBUG'))
-                    Log::error($user);
                 $this->registrarErro("Usuário ou Phone (Instância) não configurado.");
                 return;
             }
@@ -56,18 +42,12 @@ class EnviarMensagemJob implements ShouldQueue
             $instance = $user->phone;
             $item = $job->campaignItem()->first();
             $contact = $job->contact()->first();
-            if (env('APP_DEBUG'))
-                Log::info("iNSTANCIA: {$instance}");
 
             $payload = $item->generate($job->contact_id);
             $numeroDestino = $contact->contact;
-            if (env('APP_DEBUG'))
-                Log::error("numero destin {$numeroDestino}");
 
-            // --- PASSO 1: HUMANIZAÇÃO (Presence) ---
+            // PASSO 1: HUMANIZAÇÃO
             $presenceType = (rand(0, 10) > 3) ? 'composing' : 'recording';
-            if (env('APP_DEBUG'))
-                Log::info('Passo 1');
             Http::withHeaders(['apikey' => $globalApiKey])
                 ->post("{$baseUrl}/chat/sendPresence/{$instance}", [
                     "number" => $numeroDestino,
@@ -75,18 +55,12 @@ class EnviarMensagemJob implements ShouldQueue
                     "delay" => rand(1500, 3000)
                 ]);
 
-            // Delay de "digitação" (4 a 9 segundos)
             sleep(rand(4, 9));
 
-
-            // --- PASSO 2: ENVIO REAL ---
-
-            if (env('APP_DEBUG'))
-                Log::info('Passo 2');
+            // PASSO 2: ENVIO REAL
             $endpoint = ltrim($job->endpoint, '/');
             $urlFinal = "{$baseUrl}/{$endpoint}{$instance}";
-            if (env('APP_DEBUG'))
-                Log::info("URL FINAL: {$urlFinal}");
+            
             $response = Http::withHeaders([
                 'apikey' => $globalApiKey,
                 'Content-Type' => 'application/json'
@@ -94,8 +68,6 @@ class EnviarMensagemJob implements ShouldQueue
 
             if ($response->successful()) {
                 $dados = $response->json();
-
-                // Captura IDs em diferentes níveis de retorno da Evolution
                 $remoteId = $dados['key']['id'] ?? ($dados['message']['key']['id'] ?? ($dados['response']['key']['id'] ?? null));
 
                 $job->update([
@@ -107,18 +79,31 @@ class EnviarMensagemJob implements ShouldQueue
                     'tentativas' => $job->tentativas + 1
                 ]);
             } else {
-                $this->registrarErro("API Erro: " . $response->status() . " - " . $response->body());
+                $status = $response->status();
+                $body = $response->json();
+
+                // --- LÓGICA DE SANITIZAÇÃO: DESATIVAR CONTATO INEXISTENTE ---
+                if ($status === 400) {
+
+                    $exists = $body['response']['message'][0]['exists'] ?? true;
+                     Log::warning("Contato ID {$contact->id} desativado: Número não existe no WhatsApp.");
+                    if ($exists === false) {
+                        $contact->status = 'no-whatsapp';
+                        $contact->save(); // Assume que sua tabela contacts tem coluna 'active' ou similar
+                        Log::warning("Contato ID {$contact->id} desativado: Número não existe no WhatsApp.");
+                        $this->registrarErro("Número Inexistente (Contato Desativado)");
+                        return; // Encerra sem retentar
+                    }
+                }
+
+                $this->registrarErro("API Erro: " . $status . " - " . $response->body());
             }
 
-            if (env('APP_DEBUG'))
-                Log::info('Passo 3');
-            // --- PASSO 3: IN  TERVALO ANTI-BAN (Cooldown) ---
-            // Como o Worker processa um por um, este sleep garante a cadência do chip
-            $pause = rand(25, 50);
-            sleep($pause);
+            // PASSO 3: COOLDOWN
+            sleep(rand(25, 50));
+
         } catch (\Exception $e) {
             $this->registrarErro("Exception: " . $e->getMessage());
-            // Lança a exceção para o Laravel Queue saber que deve tentar novamente (retry)
             throw $e;
         }
     }

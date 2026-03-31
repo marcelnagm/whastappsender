@@ -33,7 +33,7 @@ class Contact extends Model
      *
      * @var array
      */
-    protected $fillable = ['name','contact','email','user_id','ignore_me','lid'];
+    protected $fillable = ['name','contact','email','user_id','ignore_me','lid','status','score'];
 
 
     /**

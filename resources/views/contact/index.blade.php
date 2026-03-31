@@ -23,6 +23,10 @@
                         </a>
                         @endif
                     </form>
+
+                    <a href="/modelo.xlsx" class="btn btn-success btn-sm">
+                        <i class="bi bi-back"></i> Modelo
+                    </a>
                     <button class="btn btn-outline-secondary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#collapseImport">
                         <i class="bi bi-file-earmark-arrow-up"></i> Importar
                     </button>

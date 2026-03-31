@@ -35,12 +35,12 @@ class WebhookController extends Controller
                         $newStatus = ($state === 'open') ? 'connected' : 'disconnected';
 
                         if ($oldStatus !== $newStatus) {
-                            $instance->update(['status' => $newStatus]);
+                            // $instance->update(['status' => $newStatus]);
 
                             // REGRA: Notificar transição Conectado -> Desconectado
-                            if ($oldStatus === 'connected' && $newStatus === 'disconnected') {
-                                $this->sendDisconnectedEmail($instance);
-                            }
+                            // if ($oldStatus === 'connected' && $newStatus === 'disconnected') {
+                            //     $this->sendDisconnectedEmail($instance);
+                            // }
                         }
                     }
                     break;
