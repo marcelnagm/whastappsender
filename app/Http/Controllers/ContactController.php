@@ -20,6 +20,71 @@ class ContactController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
+    /**
+     * Altera o status de múltiplos contatos (ativo, inativo, no-whatsapp, etc)
+     * Estratégia: Mass Update para eficiência de I/O de banco de dados.
+     */
+    public function bulkStatus(Request $request)
+    {
+        $ids = json_decode($request->input('ids'), true);
+        $novoStatus = $request->input('status_value'); // 'ativo', 'inativo', etc.
+
+        if (!$ids || !is_array($ids)) {
+            return redirect()->back()->with('error', 'Nenhum contato selecionado.');
+        }
+
+        // Lista de status permitidos para evitar injeção de valores inválidos
+        $statusPermitidos = ['ativo', 'inativo', 'no-whatsapp'];
+        if (!in_array($novoStatus, $statusPermitidos)) {
+            return redirect()->back()->with('error', 'Status inválido solicitado.');
+        }
+
+        try {
+            $query = \App\Models\Contact::whereIn('id', $ids);
+
+            // Garantia de segurança: Usuário comum só altera seus próprios contatos
+            if (auth()->user()->role !== 'admin') {
+                $query->where('user_id', auth()->id());
+            }
+
+            $afetados = $query->update(['status' => $novoStatus]);
+
+            return redirect()->back()->with('success', "Status de {$afetados} contatos alterado para '{$novoStatus}'.");
+        } catch (\Exception $e) {
+            \Log::error("Erro no Bulk Status: " . $e->getMessage());
+            return redirect()->back()->with('error', 'Falha ao atualizar status dos contatos.');
+        }
+    }
+
+    /**
+     * Remove múltiplos contatos permanentemente.
+     * Estratégia: Bulk Delete com proteção de escopo de usuário.
+     */
+    public function bulkDelete(Request $request)
+    {
+        $ids = json_decode($request->input('ids'), true);
+
+        if (!$ids || !is_array($ids)) {
+            return redirect()->back()->with('error', 'Seleção inválida para remoção.');
+        }
+
+        try {
+            $query = \App\Models\Contact::whereIn('id', $ids);
+
+            // Segurança Crítica: Impede que um usuário delete contatos de outro via manipulação de ID no front
+            if (auth()->user()->role !== 'admin') {
+                $query->where('user_id', auth()->id());
+            }
+
+            $deletados = $query->delete();
+
+            return redirect()->back()->with('success', "{$deletados} contatos foram removidos da sua base.");
+        } catch (\Exception $e) {
+            \Log::error("Erro no Bulk Delete: " . $e->getMessage());
+            return redirect()->back()->with('error', 'Erro interno ao processar a exclusão em massa.');
+        }
+    }
+
     public function index(Request $request)
     {
         $search = $request->input('search');
@@ -38,6 +103,8 @@ class ContactController extends Controller
         return view('contact.index', compact('contacts'))
             ->with('i', (request()->input('page', 1) - 1) * $contacts->perPage());
     }
+
+
 
     /**
      * Show the form for creating a new resource.

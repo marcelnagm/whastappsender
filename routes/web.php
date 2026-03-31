@@ -31,8 +31,7 @@ Route::group(['namespace' => 'App\Http\Controllers', 'middleware' => ['guest']],
      */
     Route::get('/login', 'LoginController@show')->name('login');
     Route::post('/login', 'LoginController@login')->name('login.perform');
-
-    });
+});
 
 Route::get('/', 'App\Http\Controllers\HomeController@index')->name('home.index');
 
@@ -50,6 +49,13 @@ Route::group(['namespace' => 'App\Http\Controllers', 'middleware' => ['auth']], 
     Route::resource('/campaign-items', 'App\Http\Controllers\CampaignItemController')->middleware(['auth']);;
     Route::post('/contact/import', 'App\Http\Controllers\ContactController@import')->name('contacts.import')->middleware(['auth']);;
     Route::get('/contact/clean', 'App\Http\Controllers\ContactController@clean')->name('contacts.clear')->middleware(['auth']);;
+    Route::post('/contact/bulk-delete', 'App\Http\Controllers\ContactController@bulkDelete')
+        ->name('contacts.bulk-delete')
+        ->middleware(['auth']); // Garanta que apenas usuários logados acessem
+    Route::post('/contact/bulk-status', 'App\Http\Controllers\ContactController@bulkStatus')
+        ->name('contacts.bulk-status')
+        ->middleware(['auth']); // Garanta que apenas usuários logados acessem
+
     Route::get('/campaign-items/{id}/send', 'CampaignItemController@send')->name('campaign-items.send');
     Route::get('/campaign-items/{id}/generate', 'CampaignItemController@generate')->name('campaign-items.generate');
     Route::get('/campaign-items/{id}/generateAll', 'CampaignItemController@generateAll')->name('campaign-items.generateAll');
@@ -59,15 +65,15 @@ Route::group(['namespace' => 'App\Http\Controllers', 'middleware' => ['auth']], 
 
 
     Route::post('/whatsapp-jobs/{id}/retry', [WhatsappJobController::class, 'retry'])
-        ->name('whatsapp-jobs.retry')    
+        ->name('whatsapp-jobs.retry')
         ->middleware(['auth']); // Garanta que apenas usuários logados acessem
 
     Route::post('/whatsapp-jobs/bulk-delete', [WhatsappJobController::class, 'bulkDelete'])
-        ->name('whatsapp-jobs.bulk-delete')    
+        ->name('whatsapp-jobs.bulk-delete')
         ->middleware(['auth']); // Garanta que apenas usuários logados acessem
 
     Route::post('/whatsapp-jobs/bulk-retry', [WhatsappJobController::class, 'bulkRetry'])
-        ->name('whatsapp-jobs.bulk-retry')    
+        ->name('whatsapp-jobs.bulk-retry')
         ->middleware(['auth']); // Garanta que apenas usuários logados acessem
 
     Route::group(['middleware' => ['auth', 'admin'], 'prefix' => 'admin'], function () {
