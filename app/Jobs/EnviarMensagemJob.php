@@ -42,7 +42,7 @@ class EnviarMensagemJob implements ShouldQueue
             $instance = $user->phone;
             $item = $job->campaignItem()->first();
             $contact = $job->contact()->first();
-            if($contact->status === "no-whatsapp"){
+            if ($contact->status === "no-whatsapp") {
                 $this->jobModel->update([
                     'status' => 'erro',
                     'tentativas' => -3,
@@ -61,13 +61,13 @@ class EnviarMensagemJob implements ShouldQueue
                     "presence" => $presenceType,
                     "delay" => rand(1500, 3000)
                 ]);
-
-            sleep(rand(4, 9));
+            if (env('APP_ENV') !== 'local')
+                sleep(rand(4, 9));
 
             // PASSO 2: ENVIO REAL
             $endpoint = ltrim($job->endpoint, '/');
             $urlFinal = "{$baseUrl}/{$endpoint}{$instance}";
-            
+
             $response = Http::withHeaders([
                 'apikey' => $globalApiKey,
                 'Content-Type' => 'application/json'
@@ -93,7 +93,7 @@ class EnviarMensagemJob implements ShouldQueue
                 if ($status === 400) {
 
                     $exists = $body['response']['message'][0]['exists'] ?? true;
-                     Log::warning("Contato ID {$contact->id} desativado: Número não existe no WhatsApp.");
+                    Log::warning("Contato ID {$contact->id} desativado: Número não existe no WhatsApp.");
                     if ($exists === false) {
                         $contact->status = 'no-whatsapp';
                         $contact->save(); // Assume que sua tabela contacts tem coluna 'active' ou similar
@@ -107,8 +107,8 @@ class EnviarMensagemJob implements ShouldQueue
             }
 
             // PASSO 3: COOLDOWN
-            sleep(rand(25, 50));
-
+            if (env('APP_ENV') !== 'local')
+                sleep(rand(25, 50));
         } catch (\Exception $e) {
             $this->registrarErro("Exception: " . $e->getMessage());
             throw $e;
