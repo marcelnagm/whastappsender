@@ -27,6 +27,7 @@ class ProcessEvolutionWebhookJob implements ShouldQueue
 
     public function handle()
     {
+
         $event = $this->payload['event'] ?? null;
         $instanceName = $this->payload['instance'] ?? null;
 
@@ -37,10 +38,12 @@ class ProcessEvolutionWebhookJob implements ShouldQueue
                     break;
 
                 case 'messages.upsert':
+                    if(env('APP_DEBUG')) Log::alert(json_encode($this->payload));
                     $this->handleNewMessage($instanceName, $this->payload['data'] ?? []);
                     break;
 
                 case 'messages.update':
+                    if(env('APP_DEBUG')) Log::alert(json_encode($this->payload));
                     $this->handleMessageStatus($this->payload['data'] ?? []);
                     break;
             }
@@ -60,54 +63,112 @@ class ProcessEvolutionWebhookJob implements ShouldQueue
 
     private function handleNewMessage($instanceName, $data)
     {
-        // O seu JSON mostra que $data é o objeto da mensagem diretamente.
-        // Não existe um array 'message' para iterar.
-        $msg = $data;
+        // 1. Validação Básica
+        if ($data['key']['fromMe'] ?? false) {
+            return;
+        }
+        $remoteJid = $data['key']['remoteJid'] ?? null;
+        $senderPn = $data['key']['senderPn'] ?? null;
+        if ($remoteJid && str_contains($remoteJid, '@lid') && $senderPn) {
+            $this->syncLidWithContact($remoteJid, $senderPn);
+        }
 
-        // 1. Verificação de segurança: ignorar mensagens enviadas pela própria instância
-        if ($msg['key']['fromMe'] ?? false) {
+        // 2. Resolução do ID Real (Usa o senderPn se for LID)
+        $whatsappId = $this->resolveContactId($data);
+
+        if (!$whatsappId) {
+            \Illuminate\Support\Facades\Log::warning("Webhook recebido sem identificador válido.");
             return;
         }
 
-        $remoteJid = $msg['key']['remoteJid'] ?? null;
-        if (!$remoteJid) {
-            return;
-        }
-
-        // Extrai o número (ex: 5595981110695)
-        // Nota: Seu JID veio como @s.us.whatsapp.net, o explode lida com isso.
-        $whatsappId = explode('@', $remoteJid)[0];
-
-        // 2. Mapeamento de texto conforme o seu JSON específico (message -> conversation)
-        $text = $msg['message']['conversation']
-            ?? $msg['message']['extendedTextMessage']['text']
-            ?? $msg['message']['buttonsResponseMessage']['selectedDisplayText']
+        // 3. Extração do Texto (Simplificada para o que você recebe)
+        $text = $data['message']['conversation']
+            ?? $data['message']['extendedTextMessage']['text']
             ?? '';
 
+        // 4. Lógica de Negócio: Comando #sair
         if (strtolower(trim($text)) === '#sair') {
-            // Atualiza o banco de dados
-            \App\Models\Contact::where('contact', $whatsappId)->update(['ignore_me' => 1]);
-
-            // Alimenta a Blacklist no Redis para performance
-            \Illuminate\Support\Facades\Redis::sadd("blacklist:instance:{$instanceName}", $whatsappId);
-
-            \Illuminate\Support\Facades\Log::info("Opt-out processado para: {$whatsappId}");
+            $this->processOptOut($instanceName, $whatsappId);
         }
     }
-
     private function handleMessageStatus($data)
     {
-        foreach ($data as $update) {
+        // A Evolution v2.3 pode enviar um único objeto ou um array. Garantimos a iteração.
+        $remoteJid = $data['key']['remoteJid'] ?? null;
+        $senderPn = $data['key']['senderPn'] ?? null;
+        if ($remoteJid && str_contains($remoteJid, '@lid') && $senderPn) {
+            $this->syncLidWithContact($remoteJid, $senderPn);
+        }
+        $updates = isset($data['key']) ? [$data] : $data;
+
+        foreach ($updates as $update) {
             $msgId = $update['key']['id'] ?? null;
-            $status = strtolower($update['update']['status'] ?? '');
+            // O status pode vir em 'status' (raiz) ou 'update.status' dependendo do evento
+            $status = strtolower($update['status'] ?? $update['update']['status'] ?? '');
 
             if ($msgId && $status) {
+                // 1. Atualização do Job (Mensagem disparada)
                 $job = WhatsappJob::where('message_id', $msgId)->first();
                 if ($job) {
                     $job->update(['evolution_status' => $status]);
-                    // Lógica de score omitida aqui por brevidade, mas segue o mesmo padrão
+                }
+
+                // 2. Lógica de Mapeamento de LID para Contato Real
+                // Se o JID é um LID e temos o Sender Phone Number (PN)
+                if ($remoteJid && str_contains($remoteJid, '@lid') && $senderPn) {
+                    $this->syncLidWithContact($remoteJid, $senderPn);
                 }
             }
         }
+    }
+
+    /**
+     * Sincroniza o LID recebido com o número de telefone real no banco de dados.
+     */
+    private function syncLidWithContact($lid, $senderPn)
+    {
+        // Extrai apenas os números (ex: 559591234567)
+
+        if(str_contains($remoteJid, '@g')) return;
+
+        $cleanNumber = explode('@', $senderPn)[0];
+
+
+        if(env('APP_DEBUG')) Log::alert("Atualizado contato $cleanNumber : $lid");
+        \App\Models\Contact::where('contact', $cleanNumber)
+            ->update([
+                'lid' => $lid,
+                'updated_at' => now()
+            ]);
+
+        \Illuminate\Support\Facades\Log::info("LID Vinculado: Contato {$cleanNumber} agora mapeado para {$lid}");
+    }
+
+    private function processOptOut($instanceName, $whatsappId)
+    {
+        // Atualiza o banco de dados usando o número real (independente se veio de um LID)
+        $affected = \App\Models\Contact::where('contact', $whatsappId)
+            ->update(['ignore_me' => 1]);
+        Log::alert("opt-out: $whatsappId");
+        if ($affected) {
+            // Alimenta o Redis para que o sistema de disparo ignore este número instantaneamente
+            \Illuminate\Support\Facades\Redis::sadd("blacklist:instance:{$instanceName}", $whatsappId);
+
+            if(env('APP_DEBUG')) \Illuminate\Support\Facades\Log::info("Opt-out processado com sucesso para: {$whatsappId}");
+        }
+    }
+
+    private function resolveContactId($data)
+    {
+        $remoteJid = $data['key']['remoteJid'] ?? '';
+        $senderPn = $data['key']['senderPn'] ?? null;
+        if(env('APP_DEBUG')) Log::error("SENDER $senderPn - $remoteJid");
+        // Lógica Analítica: Se é LID e tem PN, o PN é a nossa chave primária no Contact
+        if (str_contains($remoteJid, '@lid') && $senderPn) {
+            return explode('@', $senderPn)[0];
+        }
+
+        // Fallback para JID comum (@s.whatsapp.net)
+        return explode('@', $remoteJid)[0];
     }
 }
