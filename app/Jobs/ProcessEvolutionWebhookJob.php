@@ -91,36 +91,58 @@ class ProcessEvolutionWebhookJob implements ShouldQueue
             $this->processOptOut($instanceName, $whatsappId);
         }
     }
-    private function handleMessageStatus($data)
+ /**
+     * Trata o status da mensagem vindo da Evolution v2.3
+     */
+    private function handleMessageStatus(array $data)
     {
-        // A Evolution v2.3 pode enviar um único objeto ou um array. Garantimos a iteração.
-        $remoteJid = $data['key']['remoteJid'] ?? null;
-        $senderPn = $data['key']['senderPn'] ?? null;
-        if ($remoteJid && str_contains($remoteJid, '@lid') && $senderPn) {
-            $this->syncLidWithContact($remoteJid, $senderPn);
-        }
-        $updates = isset($data['key']) ? [$data] : $data;
+        // Normaliza para lidar com múltiplos updates ou objeto único
+        $updates = isset($data['key']) ? [$data] : (is_array($data) ? $data : []);
 
         foreach ($updates as $update) {
             $msgId = $update['key']['id'] ?? null;
-            // O status pode vir em 'status' (raiz) ou 'update.status' dependendo do evento
-            $status = strtolower($update['status'] ?? $update['update']['status'] ?? '');
+            
+            // Prioriza o status numérico do campo 'status' ou 'update.status'
+            $numericStatus = $update['status'] ?? $update['update']['status'] ?? null;
 
-            if ($msgId && $status) {
-                // 1. Atualização do Job (Mensagem disparada)
-                $job = WhatsappJob::where('message_id', $msgId)->first();
-                if ($job) {
-                    $job->update(['evolution_status' => $status]);
-                }
-
-                // 2. Lógica de Mapeamento de LID para Contato Real
-                // Se o JID é um LID e temos o Sender Phone Number (PN)
-                if ($remoteJid && str_contains($remoteJid, '@lid') && $senderPn) {
-                    $this->syncLidWithContact($remoteJid, $senderPn);
-                }
+            if ($msgId && $numericStatus !== null) {
+                $this->updateJobStatus($msgId, (int) $numericStatus);
             }
         }
     }
+
+    /**
+     * Mapeia o Integer do Baileys para a String do seu Banco
+     */
+    private function updateJobStatus(string $msgId, int $status)
+    {
+        // Mapeamento oficial Baileys/Evolution v2.3
+        $statusMap = [
+            2 => 'sent',      // SERVER_ACK
+            3 => 'delivered', // DELIVERY_ACK
+            4 => 'read',      // READ
+            5 => 'played'     // PLAYED
+        ];
+
+        $finalStatus = $statusMap[$status] ?? $msgId;
+
+        // Log de debug para validar a entrada (Remova em produção após validar)
+        // Log::debug("Atualizando Message ID: $msgId | Status Numérico: $status | Mapeado para: $finalStatus");
+
+        WhatsappJob::where('message_id', $msgId)->update([
+            'evolution_status' => $finalStatus,
+            'updated_at' => now()
+        ]);
+    }# 1. Atualiza as referências do repositório remoto
+git fetch origin
+
+# 2. Força o seu branch atual a apontar exatamente para o commit do origin/main
+# Isso descarta todas as mudanças em arquivos já rastreados pelo Git
+git reset --hard origin/main
+
+# 3. Remove arquivos e pastas que não estão rastreados (untracked)
+# -f (force), -d (remover diretórios), -x (remover também arquivos no .gitignore, opcional)
+git clean -fd
 
     /**
      * Sincroniza o LID recebido com o número de telefone real no banco de dados.
