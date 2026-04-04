@@ -97,40 +97,41 @@ class ProcessEvolutionWebhookJob implements ShouldQueue
     private function handleMessageStatus(array $data)
     {
         // Normaliza para lidar com múltiplos updates ou objeto único
-        $updates = isset($data['key']) ? [$data] : (is_array($data) ? $data : []);
+        
+        $update = isset($data['key']) ? [$data] : (is_array($data) ? $data : []);
+        
+        Log::error(json_encode($update));
+        
+        if($update['remoteJid'] === "status@broadcast"){
+         if(env('APP_DEBUG') ) Log::info('Broadcast')  ;
+         return;
+        }
 
-        foreach ($updates as $update) {
-            $msgId = $update['key']['id'] ?? null;
+            $msgId = $update['keyId'] ?? null;
             
             // Prioriza o status numérico do campo 'status' ou 'update.status'
             $numericStatus = $update['status'] ?? $update['update']['status'] ?? null;
 
             if ($msgId && $numericStatus !== null) {
-                $this->updateJobStatus($msgId, (int) $numericStatus);
+                $this->updateJobStatus($msgId,  $numericStatus);
             }
-        }
+        
     }
 
     /**
      * Mapeia o Integer do Baileys para a String do seu Banco
      */
-    private function updateJobStatus(string $msgId, int $status)
+    private function updateJobStatus(string $msgId,  $status)
     {
-        // Mapeamento oficial Baileys/Evolution v2.3
-        $statusMap = [
-            2 => 'sent',      // SERVER_ACK
-            3 => 'delivered', // DELIVERY_ACK
-            4 => 'read',      // READ
-            5 => 'played'     // PLAYED
-        ];
+        
 
-        $finalStatus = $statusMap[$status] ?? msgId;
+        
 
         // Log de debug para validar a entrada (Remova em produção após validar)
         // Log::debug("Atualizando Message ID: $msgId | Status Numérico: $status | Mapeado para: $finalStatus");
 
         WhatsappJob::where('message_id', $msgId)->update([
-            'evolution_status' => $finalStatus,
+            'evolution_status' => $status,
             'updated_at' => now()
         ]);
     }
