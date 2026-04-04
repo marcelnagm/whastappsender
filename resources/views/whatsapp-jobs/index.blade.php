@@ -17,10 +17,11 @@
     ];
 
     $statusMapEvolution = [
-        'sent'         => 'Enviado',
-        'delivery_ack' => 'Entregue',
-        'read'         => 'Lido',
-        'viewed'       => 'Visualizado'
+        'SENT'         => 'Enviado',
+        'SERVER_ACK'         => 'Enviado',
+        'DELIVERY_ACK' => 'Entregue',
+        'READ'         => 'Lido',
+        'VIEWED'       => 'Visualizado'
     ];
 @endphp
 
