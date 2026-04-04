@@ -124,7 +124,7 @@ class ProcessEvolutionWebhookJob implements ShouldQueue
             5 => 'played'     // PLAYED
         ];
 
-        $finalStatus = $statusMap[$status] ?? $msgId;
+        $finalStatus = $statusMap[$status] ?? msgId;
 
         // Log de debug para validar a entrada (Remova em produção após validar)
         // Log::debug("Atualizando Message ID: $msgId | Status Numérico: $status | Mapeado para: $finalStatus");
@@ -133,16 +133,7 @@ class ProcessEvolutionWebhookJob implements ShouldQueue
             'evolution_status' => $finalStatus,
             'updated_at' => now()
         ]);
-    }# 1. Atualiza as referências do repositório remoto
-git fetch origin
-
-# 2. Força o seu branch atual a apontar exatamente para o commit do origin/main
-# Isso descarta todas as mudanças em arquivos já rastreados pelo Git
-git reset --hard origin/main
-
-# 3. Remove arquivos e pastas que não estão rastreados (untracked)
-# -f (force), -d (remover diretórios), -x (remover também arquivos no .gitignore, opcional)
-git clean -fd
+    }
 
     /**
      * Sincroniza o LID recebido com o número de telefone real no banco de dados.
