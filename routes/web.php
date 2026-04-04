@@ -77,6 +77,15 @@ Route::group(['namespace' => 'App\Http\Controllers', 'middleware' => ['auth']], 
         ->name('whatsapp-jobs.bulk-retry')
         ->middleware(['auth']); // Garanta que apenas usuários logados acessem
 
+
+    Route::prefix('chat')->group(function () {
+        Route::get('/', ['App\Http\Controllers\ChatController', 'index'])->name('chat.index');
+        Route::post('/show', ['App\Http\Controllers\ChatController', 'show'])->name('chat.show'); // Carrega mensagens
+        Route::post('/send', ['App\Http\Controllers\ChatController', 'sendMessage'])->name('chat.send');
+        Route::get('/search', ['App\Http\Controllers\ChatController', 'search'])->name('chat.search'); // Busca dinâmica
+    });
+
+    #rotass admin
     Route::group(['middleware' => ['auth', 'admin'], 'prefix' => 'admin'], function () {
 
         // Listagem e CRUD básico
