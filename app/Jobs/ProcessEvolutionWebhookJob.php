@@ -56,7 +56,7 @@ class ProcessEvolutionWebhookJob implements ShouldQueue
      */
     private function handleMessageStatus(array $data)
     {
-
+if(env("DEBUG_WEBHOOK_STATUS"))
 Log::info(json_encode($data));
         // Extração direta do ID e do Status (Caixa Alta)
         $msgId = $data['keyId'] ?? null;
@@ -94,8 +94,7 @@ Log::info(json_encode($data));
 
         // Normaliza para garantir que espaços ou case não quebrem o mapeamento
         $statusKey = strtoupper(trim($statusRaw));
-        $finalStatus = $map[$statusKey] ?? strtolower($statusKey);
-
+        $finalStatus =$statusRaw;
         $affected = WhatsappJob::where('message_id', $msgId)->update([
             'evolution_status' => $finalStatus,
             'updated_at' => now()
