@@ -80,7 +80,7 @@ class EnviarMensagemJob implements ShouldQueue
                 $remoteId = $dados['key']['id'] ?? ($dados['message']['key']['id'] ?? ($dados['response']['key']['id'] ?? null));
 
                 $job->update([
-                    'instance_id' => $instance? $instance->id: null,
+                    'instance_id' => $instance->id,
                     'status' => 'processado',
                     'message_id' => $remoteId,
                     'evolution_status' => 'sent',
