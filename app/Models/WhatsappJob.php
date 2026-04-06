@@ -26,6 +26,7 @@ class WhatsappJob extends Model
         'payload',
         'resposta',
         'message_id',
+        'instance_id',
         'campaign_id',
         'campaign_item_id',
         'evolution_status', 
