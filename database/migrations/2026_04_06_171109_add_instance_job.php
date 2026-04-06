@@ -19,7 +19,7 @@ return new class extends Migration
 
         Schema::table('whatsapp_job', function (Blueprint $table) {            
             $table->unsignedBigInteger('instance_id')->after('contact_id');
-            $table->foreign('instance_id')->references('id')->on('instance');
+            $table->foreign('instance_id')->references('id')->on('instances');
             
         });
     }
