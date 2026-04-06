@@ -18,7 +18,7 @@ return new class extends Migration
         DB::query('TRUNCATE TABLE whatsapp_job');
 
         Schema::table('whatsapp_job', function (Blueprint $table) {            
-            $table->unsignedBigInteger('instance_id')->after('contact_id');
+            $table->unsignedBigInteger('instance_id')->after('contact_id')->nullable();
             $table->foreign('instance_id')->references('id')->on('instances');
             
         });

@@ -32,15 +32,16 @@ class EnviarMensagemJob implements ShouldQueue
         $globalApiKey = $config['apikey'];
         $job = $this->jobModel;
 
+            
         try {
             $user = $job->user()->first();
-            if (!$user || !$user->phone) {
-                $this->registrarErro("Usuário ou Phone (Instância) não configurado.",);
+            $instance = $user->getInstanceActive();
+            if (!$user || !$instance) {
+                $this->registrarErro("Usuário ou Phone (Instância) não configurado.",null);
                 return;
             }
 
             
-            $instance = $user->getInstanceActive();
             $item = $job->campaignItem()->first();
             $contact = $job->contact()->first();
             if ($contact->status === "no-whatsapp") {
