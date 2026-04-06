@@ -39,7 +39,8 @@ class EnviarMensagemJob implements ShouldQueue
                 return;
             }
 
-            $instance = $user->phone;
+            
+            $instance = $user->getInstanceActive();
             $item = $job->campaignItem()->first();
             $contact = $job->contact()->first();
             if ($contact->status === "no-whatsapp") {
@@ -56,7 +57,7 @@ class EnviarMensagemJob implements ShouldQueue
             // PASSO 1: HUMANIZAÇÃO
             $presenceType = (rand(0, 10) > 3) ? 'composing' : 'recording';
             Http::withHeaders(['apikey' => $globalApiKey])
-                ->post("{$baseUrl}/chat/sendPresence/{$instance}", [
+                ->post("{$baseUrl}/chat/sendPresence/{$instance->instance_name}", [
                     "number" => $numeroDestino,
                     "presence" => $presenceType,
                     "delay" => rand(1500, 3000)
@@ -66,7 +67,7 @@ class EnviarMensagemJob implements ShouldQueue
 
             // PASSO 2: ENVIO REAL
             $endpoint = ltrim($job->endpoint, '/');
-            $urlFinal = "{$baseUrl}/{$endpoint}{$instance}";
+            $urlFinal = "{$baseUrl}/{$endpoint}{$instance->instance_name}";
 
             $response = Http::withHeaders([
                 'apikey' => $globalApiKey,
@@ -78,6 +79,7 @@ class EnviarMensagemJob implements ShouldQueue
                 $remoteId = $dados['key']['id'] ?? ($dados['message']['key']['id'] ?? ($dados['response']['key']['id'] ?? null));
 
                 $job->update([
+                    'instance_id' => $instance->id,
                     'status' => 'processado',
                     'message_id' => $remoteId,
                     'evolution_status' => 'sent',

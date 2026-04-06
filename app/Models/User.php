@@ -57,7 +57,7 @@ class User extends Authenticatable
      * Accessor Transiente: Mascara o campo 'phone'
      * Se o código antigo chamar $user->phone, ele retornará o número da instância ativa.
      */
-    public function getPhoneAttribute()
+    public function getInstanceActive()
     {
         // Busca a primeira instância com status 'connected'
         $activeInstance = $this->instances()
@@ -67,7 +67,7 @@ class User extends Authenticatable
 
         // Se houver uma instância conectada, retorna o identificador (ou apikey/token se preferir)
         // Se não houver, retorna null ou uma string vazia para não quebrar o layout
-        return $activeInstance ? $activeInstance->instance_name : null;
+        return $activeInstance ? $activeInstance : null;
     }
 
     /**
