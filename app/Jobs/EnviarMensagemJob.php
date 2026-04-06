@@ -35,7 +35,7 @@ class EnviarMensagemJob implements ShouldQueue
         try {
             $user = $job->user()->first();
             if (!$user || !$user->phone) {
-                $this->registrarErro("Usuário ou Phone (Instância) não configurado.");
+                $this->registrarErro("Usuário ou Phone (Instância) não configurado.",);
                 return;
             }
 
@@ -79,7 +79,7 @@ class EnviarMensagemJob implements ShouldQueue
                 $remoteId = $dados['key']['id'] ?? ($dados['message']['key']['id'] ?? ($dados['response']['key']['id'] ?? null));
 
                 $job->update([
-                    'instance_id' => $instance->id,
+                    'instance_id' => $instance? $instance->id: null,
                     'status' => 'processado',
                     'message_id' => $remoteId,
                     'evolution_status' => 'sent',
@@ -100,26 +100,27 @@ class EnviarMensagemJob implements ShouldQueue
                         $contact->status = 'no-whatsapp';
                         $contact->save(); // Assume que sua tabela contacts tem coluna 'active' ou similar
                         Log::warning("Contato ID {$contact->id} desativado: Número não existe no WhatsApp.");
-                        $this->registrarErro("Número Inexistente (Contato Desativado)");
+                        $this->registrarErro("Número Inexistente (Contato Desativado)",$instance);
                         return; // Encerra sem retentar
                     }
                 }
 
-                $this->registrarErro("API Erro: " . $status . " - " . $response->body());
+                $this->registrarErro("API Erro: " . $status . " - " . $response->body(),$instance);
             }
 
             // PASSO 3: COOLDOWN
             if (env('APP_ENV') !== 'local')
                 sleep(rand(25, 50));
         } catch (\Exception $e) {
-            $this->registrarErro("Exception: " . $e->getMessage());
+            $this->registrarErro("Exception: " . $e->getMessage(),$instance);
             throw $e;
         }
     }
 
-    private function registrarErro($mensagem)
+    private function registrarErro($mensagem,$instance)
     {
         $this->jobModel->update([
+            'instance_id' => $instance->id,
             'status' => 'erro',
             'tentativas' => $this->jobModel->tentativas + 1,
             'erro_mensagem' => substr($mensagem, 0, 255)
