@@ -8,7 +8,7 @@
 
             <div class="logo-wrapper mb-4 text-center">
                 <img style="background-color: #dbc5c8; border-radius: 100%;"
-                    src="{{ asset('images/logo-no-bg.png') }}"
+                    src="{{ asset('images/logo.jpg') }}"
                     alt="Logo" width="100" height="100"
                     class="mx-auto d-block shadow-sm">
             </div>

@@ -5,7 +5,7 @@
     <div class="card-body p-5">
         <div class="text-center mb-4">
             {{-- Substitua por um ícone de "Radar" ou "Data" que remeta a mineração --}}
-            <img style="background-color: #dbc5c8; border-radius: 100%;;" src="{{ asset('images/logo-no-bg.png') }}" alt="Logo" width="100%" height="100%" class="me-2 d-inline-block align-text-top">
+            <img style="background-color: #dbc5c8; border-radius: 100%;;" src="{{ asset('images/logo.jpg') }}" alt="Logo" width="100%" height="100%" class="me-2 d-inline-block align-text-top">
             
             <h2 class="fw-bold">{{env('APP_NAME ')}}</h2>
             <p class="text-muted">Acesse sua central de inteligência</p>
