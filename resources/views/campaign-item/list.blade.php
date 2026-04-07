@@ -21,10 +21,10 @@
 
     @include('layouts.partials.messages')
 
-    <div class="card border-0 shadow-sm overflow-hidden" style="border-radius: 15px;">
+    <div class="card border-0 shadow-sm" style="border-radius: 15px; position: relative;">
         <div class="card-body p-0">
             <div class="table-responsive" style="overflow: visible !important;">
-                <table class="table table-hover align-middle mb-0">
+                <table class="table table-hover align-middle mb-0" style="background: white;">
                     <thead class="bg-light border-bottom">
                         <tr>
                             <th class="ps-4 py-3 text-muted small fw-bold text-uppercase" style="letter-spacing: 0.5px;">Identificação</th>
@@ -37,7 +37,7 @@
                     <tbody>
                         @foreach ($campaignItems as $campaignItem)
                         @php $rate = $campaignItem->getDeliveryRate(); @endphp
-                        <tr class="transition-all">
+                        <tr class="transition-all table-row-custom">
                             <td class="ps-4 py-3">
                                 <div class="d-flex align-items-center">
                                     <div class="bg-light text-primary fw-bold rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px; font-size: 0.8rem;">
@@ -88,36 +88,30 @@
 
                             <td class="text-end pe-4 py-3">
                                 <div class="d-flex justify-content-end gap-2">
-                                    <div class="btn-group">
-                                        <button type="button" class="btn btn-sm btn-primary fw-bold px-3 dropdown-toggle shadow-none" data-bs-toggle="dropdown">
+                                    <div class="btn-group shadow-none">
+                                        <button type="button" class="btn btn-sm btn-primary fw-bold px-3 dropdown-toggle shadow-none" data-bs-toggle="dropdown" aria-expanded="false">
                                             <i class="bi bi-lightning-charge-fill me-1"></i> EXECUTAR
                                         </button>
-                                        <ul class="dropdown-menu dropdown-menu-end shadow border-0 p-2" style="border-radius: 12px;">
-                                            <li>
-                                                <h6 class="dropdown-header text-uppercase x-small fw-bold">Processamento</h6>
-                                            </li>
+                                        <ul class="dropdown-menu dropdown-menu-end shadow border-0 p-2" style="border-radius: 12px; z-index: 9999;">
+                                            <li><h6 class="dropdown-header text-uppercase x-small fw-bold">Processamento</h6></li>
                                             <li><a class="dropdown-item rounded-2 py-2" href="{{ route('campaign-items.generateAll',$campaignItem->id) }}"><i class="bi bi-people-fill me-2 text-muted"></i> Gerar para todos</a></li>
                                             @if(Auth::user()->role === 'admin')
                                             <li><a class="dropdown-item rounded-2 py-2" href="{{ route('campaign-items.generate',$campaignItem->id) }}"><i class="bi bi-bug me-2 text-muted"></i> Gerar Teste</a></li>
                                             @endif
-                                            <li>
-                                                <hr class="dropdown-divider">
-                                            </li>
+                                            <li><hr class="dropdown-divider"></li>
                                             <li><a class="dropdown-item rounded-2 py-2 text-success fw-bold" href="{{ route('campaign-items.send',$campaignItem->id) }}"><i class="bi bi-send-check-fill me-2"></i> Iniciar Disparo</a></li>
                                         </ul>
                                     </div>
 
                                     <div class="dropdown">
-                                        <button class="btn btn-sm btn-light border dropdown-toggle no-caret" type="button" data-bs-toggle="dropdown">
+                                        <button class="btn btn-sm btn-light border dropdown-toggle no-caret shadow-none" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                                             <i class="bi bi-three-dots-vertical"></i>
                                         </button>
-                                        <ul class="dropdown-menu dropdown-menu-end shadow border-0 p-2" style="border-radius: 12px;">
+                                        <ul class="dropdown-menu dropdown-menu-end shadow border-0 p-2" style="border-radius: 12px; z-index: 9999;">
                                             <li><a class="dropdown-item rounded-2" href="{{ route('campaign-items.show',$campaignItem->id) }}"><i class="bi bi-eye me-2"></i> Visualizar</a></li>
                                             <li><a class="dropdown-item rounded-2" href="{{ route('campaign-items.edit',$campaignItem->id) }}"><i class="bi bi-pencil me-2"></i> Editar</a></li>
                                             <li><a class="dropdown-item rounded-2" href="{{ route('whatsapp-jobs.index',$campaignItem->id) }}"><i class="bi bi-list-columns-reverse me-2"></i> Ver Logs</a></li>
-                                            <li>
-                                                <hr class="dropdown-divider">
-                                            </li>
+                                            <li><hr class="dropdown-divider"></li>
                                             <li>
                                                 <form action="{{ route('campaign-items.destroy',$campaignItem->id) }}" method="POST">
                                                     @csrf @method('DELETE')
@@ -144,44 +138,26 @@
 </div>
 
 <style>
-    /* Utility Classes */
-    .x-small {
-        font-size: 0.68rem;
-        letter-spacing: 0.2px;
+    .x-small { font-size: 0.68rem; letter-spacing: 0.2px; }
+    .bg-soft-primary { background-color: #e7f1ff; }
+    .transition-all { transition: all 0.2s ease-in-out; }
+    .no-caret::after { display: none; }
+
+    /* ESTA É A CORREÇÃO REAL: Eleva a linha que está com o dropdown aberto */
+    .table-row-custom:focus-within {
+        position: relative;
+        z-index: 1050 !important;
     }
 
-    .bg-soft-primary {
-        background-color: #e7f1ff;
-    }
-
-    .transition-all {
-        transition: all 0.2s ease-in-out;
-    }
-
-    .no-caret::after {
-        display: none;
-    }
-
-    /* Efeito de Hover na Linha */
     .table-hover tbody tr:hover {
         background-color: #fcfdfe;
         transform: scale(1.002);
         box-shadow: inset 4px 0 0 #0d6efd;
     }
 
-    /* Tooltip de Mídia Refinado */
-    .media-tooltip-container {
-        position: relative;
-        display: inline-block;
-    }
-
-    .avatar-preview {
-        transition: transform 0.2s;
-    }
-
-    .avatar-preview:hover {
-        transform: scale(1.1);
-    }
+    .media-tooltip-container { position: relative; display: inline-block; }
+    .avatar-preview { transition: transform 0.2s; }
+    .avatar-preview:hover { transform: scale(1.1); }
 
     .media-tooltip-content {
         visibility: hidden;
@@ -200,25 +176,14 @@
         overflow: hidden;
     }
 
-    .media-tooltip-content img {
-        width: 100%;
-        height: 160px;
-        object-fit: cover;
-    }
+    .media-tooltip-content img { width: 100%; height: 160px; object-fit: cover; }
+    .media-tooltip-container:hover .media-tooltip-content { visibility: visible; opacity: 1; bottom: 110%; }
 
-    .media-tooltip-container:hover .media-tooltip-content {
-        visibility: visible;
-        opacity: 1;
-        bottom: 110%;
-    }
+    .table-responsive::-webkit-scrollbar { height: 6px; }
+    .table-responsive::-webkit-scrollbar-thumb { background: #dee2e6; border-radius: 10px; }
 
-    /* Custom Scrollbar para Table Responsive */
-    .table-responsive::-webkit-scrollbar {
-        height: 6px;
-    }
-
-    .table-responsive::-webkit-scrollbar-thumb {
-        background: #dee2e6;
-        border-radius: 10px;
+    /* Ajuste para garantir que o menu não seja cortado por overflows de containers superiores */
+    .dropdown-menu {
+        margin-top: 0.5rem !important;
     }
 </style>
