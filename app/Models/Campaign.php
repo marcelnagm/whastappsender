@@ -86,5 +86,20 @@ class Campaign extends Model
         return parent::delete();
     }
 
+    public function summary()
+    {
+        return WhatsappJob::where('campaign_id',$this->id)
+            ->selectRaw('count(*) as total')
+            ->selectRaw("count(case when status = 'error' or evolution_status='error' then 1 end) as errors")
+            ->selectRaw("count(case when evolution_status = 'SERVER_ACK' then 1 end) as sent")
+            ->selectRaw("count(case when evolution_status = 'DELIVERED_ACK' then 1 end) as delivered")
+            ->selectRaw("count(case when evolution_status = 'READ' then 1 end) as read_count")
+            
+            ->first();
+        
+    }
+
+
+
 
 }

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\CampaignController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\InstanceController;
@@ -57,6 +58,7 @@ Route::group(['namespace' => 'App\Http\Controllers', 'middleware' => ['auth']], 
         ->name('contacts.bulk-status')
         ->middleware(['auth']); // Garanta que apenas usuários logados acessem
 
+    Route::get('/campaigns/{campaign}/report', [CampaignController::class, 'report'])->name('campaigns.report');    
     Route::get('/campaign-items/{id}/send', 'CampaignItemController@send')->name('campaign-items.send');
     Route::get('/campaign-items/{id}/generate', 'CampaignItemController@generate')->name('campaign-items.generate');
     Route::get('/campaign-items/{id}/generateAll', 'CampaignItemController@generateAll')->name('campaign-items.generateAll');

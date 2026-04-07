@@ -84,16 +84,10 @@ class WhatsappJobController extends Controller
 
     public function index(Request $request, $id)
     {
-        // 1. TENTATIVA FLEXÍVEL: Busca por campanha OU por item se o ID for ambíguo
-        $query = WhatsappJob::with(['contact', 'campaignItem'])->where(function ($q) use ($id) {
-            $q->where('campaign_item_id', $id);
-        });
-
-        // 2. FILTROS DINÂMICOS (Só entram se o usuário preencher no formulário)
-        if ($request->filled('campaign_item_id')) {
-            $query->where('campaign_item_id', $request->campaign_item_id);
-        }
-
+        // 1. BUSCA FLEXÍVEL
+        $query = WhatsappJob::with(['contact', 'campaignItem'])->where('campaign_item_id', $id);
+    
+        // 2. FILTROS DINÂMICOS
         if ($request->filled('contact')) {
             $query->whereHas('contact', function ($q) use ($request) {
                 $q->where('contact', 'like', '%' . $request->contact . '%')
@@ -103,32 +97,27 @@ class WhatsappJobController extends Controller
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
-
         if ($request->filled('evolution_status')) {
             $query->where('evolution_status', $request->evolution_status);
         }
-
-        // 3. DASHBOARD (Calculado antes da paginação para não perder dados)
-        // Usamos um clone limpo da query filtrada
+    
+        // 3. DASHBOARD (Cálculo com Clones)
         $dashboardQuery = clone $query;
-
         $statsStatus = $dashboardQuery->selectRaw('status, count(*) as total')
             ->groupBy('status')
             ->pluck('total', 'status');
-
+    
         $statsEvolution = (clone $query)->whereNotNull('evolution_status')
             ->selectRaw('evolution_status, count(*) as total')
             ->groupBy('evolution_status')
             ->pluck('total', 'evolution_status');
-
-        // 4. EXECUÇÃO FINAL
+    
+        // 4. EXECUÇÃO
         $jobs = $query->orderBy('id', 'desc')->paginate(50)->withQueryString();
-
-        // DEBUG INTERNO (Se os dados sumirem, descomente a linha abaixo para ver o SQL)
-        // dd($query->toSql(), $query->getBindings());
-
+    
         return view('whatsapp-jobs.index', compact('jobs', 'id', 'statsStatus', 'statsEvolution'));
     }
+    
 
     public function retry($id)
     {

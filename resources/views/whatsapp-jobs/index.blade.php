@@ -2,27 +2,40 @@
 
 @section('content')
 @php
-    // Dashboard Stats
-    $processados = $statsStatus['processado'] ?? 0;
-    $erros = $statsStatus['erro'] ?? 0;
-    $pendentes = $statsStatus['pendente'] ?? 0;
-    $totalGeral = $processados + $erros + $pendentes;
+// Mapeamento de Status
+$statusMapEvolution = [
+'SENT' => 'Enviado',
+'SERVER_ACK' => 'Enviado (Server)',
+'DELIVERY_ACK' => 'Entregue',
+'READ' => 'Lido',
+'VIEWED' => 'Visualizado'
+];
 
-    $calcPercent = fn($parcial, $total) => $total > 0 ? round(($parcial / $total) * 100, 1) : 0;
+$statusMap = [
+'processado' => ['label' => 'Sucesso', 'class' => 'bg-success shadow-sm'],
+'erro' => ['label' => 'Falha', 'class' => 'bg-danger shadow-sm'],
+'pendente' => ['label' => 'Em Fila', 'class' => 'bg-warning text-dark shadow-sm'],
+];
 
-    $statusMap = [
-        'processado' => ['label' => 'Sucesso', 'class' => 'bg-success shadow-sm'],
-        'erro'       => ['label' => 'Falha', 'class' => 'bg-danger shadow-sm'],
-        'pendente'   => ['label' => 'Em Fila', 'class' => 'bg-warning text-dark shadow-sm'],
-    ];
+// Cálculos do Dashboard
+$errorsCount = $statsStatus['erro'] ?? 0;
+$sentCount = ($statsEvolution['SERVER_ACK'] ?? 0) + ($statsEvolution['SENT'] ?? 0);
+$deliveredCount = $statsEvolution['DELIVERY_ACK'] ?? 0;
+$readCount = ($statsEvolution['READ'] ?? 0) + ($statsEvolution['VIEWED'] ?? 0);
 
-    $statusMapEvolution = [
-        'SENT'         => 'Enviado',
-        'SERVER_ACK'         => 'Enviado',
-        'DELIVERY_ACK' => 'Entregue',
-        'READ'         => 'Lido',
-        'VIEWED'       => 'Visualizado'
-    ];
+// O total válido para o gráfico é a soma dos estados finais/atuais
+$totalCalculado = $errorsCount + $sentCount + $deliveredCount + $readCount;
+$totalParaDivisao = $totalCalculado ?: 1; // Previne divisão por zero
+
+$calcPercent = fn($parcial) => round(($parcial / $totalParaDivisao) * 100, 1);
+
+// Estrutura dos Cards
+$cards = [
+['label' => 'Erros', 'color' => 'danger', 'count' => $errorsCount, 'pct' => $calcPercent($errorsCount), 'icon' => 'bi-x-circle'],
+['label' => 'Enviados', 'color' => 'primary', 'count' => $sentCount, 'pct' => $calcPercent($sentCount), 'icon' => 'bi-send'],
+['label' => 'Entregues', 'color' => 'info', 'count' => $deliveredCount, 'pct' => $calcPercent($deliveredCount), 'icon' => 'bi-check2-all'],
+['label' => 'Lidos', 'color' => 'success', 'count' => $readCount, 'pct' => $calcPercent($readCount), 'icon' => 'bi-eye']
+];
 @endphp
 
 <div class="container-fluid py-4">
@@ -62,17 +75,61 @@
             <p class="text-muted small mb-0">Gerenciamento de disparos e integridade de contatos.</p>
         </div>
         <div>
-            <button class="btn btn-outline-primary btn-sm fw-bold shadow-sm" type="button" data-bs-toggle="collapse" data-bs-target="#filterCollapse">
-                <i class="bi bi-funnel-fill me-1"></i> FILTROS
-            </button>
-            <a href="{{ route('campaign-items.index') }}" class="btn btn-secondary btn-sm fw-bold ms-2 shadow-sm">
+            <a href="{{ route('campaign-items.index') }}" class="btn btn-sm btn-secondary  fw-bold ms-2 shadow-sm">
                 <i class="bi bi-arrow-left me-1"></i> VOLTAR
             </a>
             <span class="badge bg-dark px-3 py-2 ms-2 shadow-sm">LOTE #{{ $id }}</span>
         </div>
     </div>
 
-    {{-- Seção de Filtros --}}
+    
+
+    {{-- Dashboard Superior: Gráfico + Cards --}}
+    <div class="row g-4 mb-4 justify-content-center">
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm p-3 h-100" style="border-radius: 15px;">
+                <div class="card-header bg-white border-0 text-center pb-0">
+                    <h6 class="fw-bold text-uppercase small text-muted mb-0">Distribuição Evolution API</h6>
+                </div>
+                <div class="card-body position-relative" style="height: 250px;">
+                    <canvas id="jobsPieChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-8">
+            <div class="row g-3 h-100">
+                @foreach($cards as $card)
+                <div class="col-md-6">
+                    <div class="card border-0 shadow-sm bg-{{ $card['color'] }} text-white p-4 h-100 position-relative overflow-hidden" style="border-radius: 15px;">
+                        <i class="bi {{ $card['icon'] }} position-absolute end-0 bottom-0 mb-n2 me-n2 opacity-25" style="font-size: 5rem;"></i>
+                        <div class="position-relative" style="z-index: 1;">
+                            <small class="opacity-75 uppercase fw-bold" style="font-size: 0.75rem; letter-spacing: 0.5px;">{{ $card['label'] }}</small>
+                            <h2 class="fw-bold mb-0 mt-1 display-6">{{ number_format($card['count'], 0, ',', '.') }}</h2>
+                            <div class="d-flex align-items-center mt-2">
+                                <div class="progress flex-grow-1 bg-white bg-opacity-25" style="height: 4px;">
+                                    <div class="progress-bar bg-white" style="width: {{ $card['pct'] }}%"></div>
+                                </div>
+                                <small class="ms-2 fw-bold" style="font-size: 0.8rem;">{{ $card['pct'] }}%</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                @endforeach
+            </div>
+        </div>
+    </div>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+        </div>
+        <div>
+            <button class="btn btn-outline-primary btn-sm fw-bold shadow-sm" type="button" data-bs-toggle="collapse" data-bs-target="#filterCollapse">
+                <i class="bi bi-funnel-fill me-1"></i> FILTROS
+            </button>
+        </div>
+    </div>
+
+    {{-- FIltros) --}}
     <div class="collapse {{ request()->anyFilled(['contact', 'status', 'evolution_status']) ? 'show' : '' }} mb-4" id="filterCollapse">
         <div class="card border-0 shadow-sm card-body bg-white border-start border-primary border-4">
             <form method="GET" action="{{ route('whatsapp-jobs.index', $id) }}" class="row g-3">
@@ -94,7 +151,7 @@
                     <select name="evolution_status" class="form-select form-select-sm">
                         <option value="">Todos</option>
                         @foreach($statusMapEvolution as $key => $label)
-                            <option value="{{ $key }}" {{ request('evolution_status') == $key ? 'selected' : '' }}>{{ $label }}</option>
+                        <option value="{{ $key }}" {{ request('evolution_status') == $key ? 'selected' : '' }}>{{ $label }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -106,31 +163,8 @@
         </div>
     </div>
 
-    {{-- Dashboard de Performance --}}
-    <div class="card border-0 shadow-sm mb-4">
-        <div class="card-body p-4">
-            <div class="row align-items-center">
-                <div class="col-md-3 border-end text-center">
-                    <label class="text-muted x-small fw-bold text-uppercase d-block mb-1">Taxa de Sucesso</label>
-                    <h2 class="fw-bold mb-0 text-primary">{{ $calcPercent($processados, $totalGeral) }}%</h2>
-                </div>
-                <div class="col-md-9 ps-md-4">
-                    <div class="d-flex justify-content-between mb-2 small fw-bold">
-                        <span class="text-success"><i class="bi bi-check-circle me-1"></i>{{ $processados }} Sucesso</span>
-                        <span class="text-danger"><i class="bi bi-x-circle me-1"></i>{{ $erros }} Falhas</span>
-                        <span class="text-warning"><i class="bi bi-clock-history me-1"></i>{{ $pendentes }} Em Fila</span>
-                    </div>
-                    <div class="progress shadow-sm" style="height: 12px; border-radius: 10px; background-color: #f0f2f8;">
-                        <div class="progress-bar bg-success" style="width: {{ $calcPercent($processados, $totalGeral) }}%"></div>
-                        <div class="progress-bar bg-danger" style="width: {{ $calcPercent($erros, $totalGeral) }}%"></div>
-                        <div class="progress-bar bg-warning" style="width: {{ $calcPercent($pendentes, $totalGeral) }}%"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    {{-- Tabela Principal --}}
+    {{-- Tabela Principal (Original Restaurada) --}}
+    
     <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0" id="jobsTable">
@@ -144,23 +178,23 @@
                         <th>Status WhatsApp</th>
                         <th>Ações</th>
                         @if(Auth::user()->role === 'admin')
-                            <th class="text-center">Log Erro</th>
-                            <th class="text-center">DevTools</th>
+                        <th class="text-center">Log Erro</th>
+                        <th class="text-center">DevTools</th>
                         @endif
                     </tr>
                 </thead>
                 <tbody>
                     @forelse ($jobs as $job)
                     @php
-                        $item = $job->campaignItem;
-                        $contact = $job->contact;
-                        $payloadJson = $item ? json_encode($item->generate($job->contact_id)) : '{}';
-                        $curlCommand = "curl -X POST '{$job->endpoint}' -H 'Content-Type: application/json' -d '" . addslashes($payloadJson) . "'";
-                        
-                        // Lógica de Cores do Contato (Baseado em Ativo vs No-Whatsapp)
-                        $isAtivo = ($contact && $contact->status === 'ativo');
-                        $contactClass = $isAtivo ? 'text-success' : 'text-danger';
-                        $contactIcon = $isAtivo ? 'bi-circle-fill' : 'bi-exclamation-triangle-fill';
+                    $item = $job->campaignItem;
+                    $contact = $job->contact;
+                    $payloadJson = $item ? json_encode($item->generate($job->contact_id)) : '{}';
+                    $curlCommand = "curl -X POST '{$job->endpoint}' -H 'Content-Type: application/json' -d '" . addslashes($payloadJson) . "'";
+
+                    // Lógica de Cores do Contato (Baseado em Ativo vs No-Whatsapp)
+                    $isAtivo = ($contact && $contact->status === 'ativo');
+                    $contactClass = $isAtivo ? 'text-success' : 'text-danger';
+                    $contactIcon = $isAtivo ? 'bi-circle-fill' : 'bi-exclamation-triangle-fill';
                     @endphp
                     <tr id="row-{{ $job->id }}">
                         <td class="ps-4">
@@ -174,7 +208,7 @@
                                     <div class="x-small {{ !$isAtivo ? 'text-danger fw-bold' : 'text-muted' }}">
                                         {{ $contact->contact ?? '---' }}
                                         @if(!$isAtivo && $contact->status === 'no-whatsapp')
-                                            <span class="ms-1 border-start ps-1 text-uppercase" style="font-size: 0.6rem;">[No-WA]</span>
+                                        <span class="ms-1 border-start ps-1 text-uppercase" style="font-size: 0.6rem;">[No-WA]</span>
                                         @endif
                                     </div>
                                 </div>
@@ -187,11 +221,11 @@
                         </td>
                         <td class="small fw-bold">
                             @if($job->evolution_status)
-                                <span class="text-primary text-uppercase" style="font-size: 0.7rem;">
-                                    <i class="bi bi-whatsapp me-1"></i>{{ $statusMapEvolution[$job->evolution_status] ?? $job->evolution_status }}
-                                </span>
+                            <span class="text-primary text-uppercase" style="font-size: 0.7rem;">
+                                <i class="bi bi-whatsapp me-1"></i>{{ $statusMapEvolution[$job->evolution_status] ?? $job->evolution_status }}
+                            </span>
                             @else
-                                <span class="text-muted opacity-50 italic small">Aguardando...</span>
+                            <span class="text-muted opacity-50 italic small">Aguardando...</span>
                             @endif
                         </td>
                         <td>
@@ -216,13 +250,13 @@
                         @if(Auth::user()->role === 'admin')
                         <td class="text-center">
                             @if($job->erro_mensagem)
-                                <button type="button" class="btn btn-xs btn-danger"
-                                    onclick="window.copyToClipboard(this.getAttribute('data-content'), '❌ Erro copiado!')"
-                                    data-content="{{ $job->erro_mensagem }}">
-                                    <i class="bi bi-bug-fill me-1"></i> Log
-                                </button>
+                            <button type="button" class="btn btn-xs btn-danger"
+                                onclick="window.copyToClipboard(this.getAttribute('data-content'), '❌ Erro copiado!')"
+                                data-content="{{ $job->erro_mensagem }}">
+                                <i class="bi bi-bug-fill me-1"></i> Log
+                            </button>
                             @else
-                                <span class="text-muted small opacity-50">---</span>
+                            <span class="text-muted small opacity-50">---</span>
                             @endif
                         </td>
                         <td class="text-center">
@@ -245,7 +279,7 @@
                 </tbody>
             </table>
         </div>
-        
+
         @if($jobs->hasPages())
         <div class="card-footer bg-white py-3 border-top-0 d-flex justify-content-center">
             {!! $jobs->links() !!}
@@ -255,20 +289,102 @@
 </div>
 
 <style>
-    .x-small { font-size: 0.72rem; }
-    .btn-xs { padding: 0.25rem 0.5rem; font-size: 0.7rem; }
-    .fw-mono { font-family: 'Courier New', Courier, monospace; font-size: 0.7rem; }
-    .badge { font-size: 0.65rem; }
-    .form-control-sm, .form-select-sm { font-size: 0.8rem; border-radius: 6px; }
-    .table-hover tbody tr:hover { background-color: #f8f9fc; }
-    .pagination { margin-bottom: 0; }
+    .x-small {
+        font-size: 0.72rem;
+    }
+
+    .btn-xs {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.7rem;
+    }
+
+    .fw-mono {
+        font-family: 'Courier New', Courier, monospace;
+        font-size: 0.7rem;
+    }
+
+    .badge {
+        font-size: 0.65rem;
+    }
+
+    .form-control-sm,
+    .form-select-sm {
+        font-size: 0.8rem;
+        border-radius: 6px;
+    }
+
+    .table-hover tbody tr:hover {
+        background-color: #f8f9fc;
+    }
+
+    .pagination {
+        margin-bottom: 0;
+    }
+
+    nav[role="navigation"] svg {
+        width: 20px;
+        height: 20px;
+        display: inline;
+    }
 </style>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    /** --- LÓGICA DE SELEÇÃO EM MASSA --- **/
+    /** --- INICIALIZAÇÃO DO GRÁFICO --- **/
+    document.addEventListener('DOMContentLoaded', function() {
+        const ctx = document.getElementById('jobsPieChart');
+        if (!ctx) return;
+
+        const dataValues = [{{
+                    $errorsCount
+                }},
+            {{
+                    $sentCount
+                }},
+            {{
+                    $deliveredCount
+                }},
+            {{
+                     $readCount
+                }}
+        ];
+
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Erros', 'Enviados', 'Entregues', 'Lidos'],
+                datasets: [{
+                    data: dataValues,
+                    backgroundColor: ['#dc3545', '#0d6efd', '#0dcaf0', '#198754'],
+                    hoverOffset: 15,
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            boxWidth: 10,
+                            padding: 20,
+                            font: {
+                                size: 11
+                            }
+                        }
+                    }
+                },
+                cutout: '75%'
+            }
+        });
+    });
+
+    /** --- LÓGICA DE SELEÇÃO EM MASSA (Original Restaurada) --- **/
     function toggleSelectAll(checked) {
         document.querySelectorAll('.job-checkbox').forEach(cb => cb.checked = checked);
-        document.getElementById('selectAll').checked = checked;
+        const selectAllCheckbox = document.getElementById('selectAll');
+        if (selectAllCheckbox) selectAllCheckbox.checked = checked;
         updateBulkBar();
     }
 
@@ -276,7 +392,7 @@
         const selected = document.querySelectorAll('.job-checkbox:checked');
         const bar = document.getElementById('bulkActionsBar');
         const countSpan = document.getElementById('selectedCount');
-        
+
         if (selected.length > 0) {
             bar.classList.remove('d-none');
             countSpan.innerText = selected.length;
@@ -289,23 +405,23 @@
         const ids = Array.from(document.querySelectorAll('.job-checkbox:checked')).map(cb => cb.value);
         if (ids.length === 0) return;
 
-        const confirmMsg = action === 'delete' 
-            ? `Deseja realmente REMOVER ${ids.length} registros?` 
-            : `Deseja REENVIAR ${ids.length} mensagens para a fila?`;
+        const confirmMsg = action === 'delete' ?
+            `Deseja realmente REMOVER ${ids.length} registros?` :
+            `Deseja REENVIAR ${ids.length} mensagens para a fila?`;
 
         if (!confirm(confirmMsg)) return;
 
-        const route = action === 'delete' 
-            ? "{{ route('whatsapp-jobs.bulk-delete') }}" 
-            : "{{ route('whatsapp-jobs.bulk-retry') }}";
-        
+        const route = action === 'delete' ?
+            "{{ route('whatsapp-jobs.bulk-delete') }}" :
+            "{{ route('whatsapp-jobs.bulk-retry') }}";
+
         document.getElementById('bulkActionForm').action = route;
         document.getElementById('bulkIdsInput').value = JSON.stringify(ids);
         document.getElementById('bulkActionInput').value = action;
         document.getElementById('bulkActionForm').submit();
     }
 
-    /** --- LÓGICA DE CÓPIA PARA CLIPBOARD --- **/
+    /** --- LÓGICA DE CÓPIA PARA CLIPBOARD (Original Restaurada) --- **/
     window.copyToClipboard = function(text, successMsg) {
         if (!text || text === '{}') return;
         if (navigator.clipboard && window.isSecureContext) {
@@ -325,7 +441,11 @@
         document.body.appendChild(textArea);
         textArea.focus();
         textArea.select();
-        try { if (document.execCommand('copy')) alert(successMsg); } catch (err) { console.error(err); }
+        try {
+            if (document.execCommand('copy')) alert(successMsg);
+        } catch (err) {
+            console.error(err);
+        }
         document.body.removeChild(textArea);
     }
 </script>

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Campaign;
+use App\Models\WhatsappJob;
 use Illuminate\Http\Request;
 use Auth;
 use Illuminate\Support\Facades\Storage;
@@ -36,6 +37,29 @@ class CampaignController extends Controller
         $campaign = new Campaign();
         return view('campaign.create', compact('campaign'));
     }
+
+    public function report(Campaign $campaign)
+    {
+        $this->authorizeOwner($campaign);
+
+        // Carrega a campanha com as contagens de cada status dos itens (mensagens)
+        $stats = $campaign->summary();
+
+        $total = $stats->total ?: 1; // Evita divisão por zero
+
+        $data = [
+            'campaign' => $campaign,
+            'total' => $stats->total,
+            'errors' => ['count' => $stats->errors, 'percent' => round(($stats->errors / $total) * 100, 1)],
+            'sent' => ['count' => $stats->sent, 'percent' => round(($stats->sent / $total) * 100, 1)],
+            'delivered' => ['count' => $stats->delivered, 'percent' => round(($stats->delivered / $total) * 100, 1)],
+            'read' => ['count' => $stats->read_count, 'percent' => round(($stats->read_count / $total) * 100, 1)],
+            'items' => $campaign->campaignItems()->paginate(50)     // Detalhado por item
+        ];
+
+        return view('campaign.report', $data);
+    }
+
 
     /**
      * Store a newly created resource in storage.
@@ -117,6 +141,13 @@ class CampaignController extends Controller
         } catch (\Exception $e) {
             return redirect()->route('campaigns.index')
                 ->with('error', 'Falha na exclusão: ' . $e->getMessage());
+        }
+    }
+
+    private function authorizeOwner(Campaign $campaign)
+    {
+        if ($campaign->user_id !== Auth::id()) {
+            abort(403, 'Acesso negado a esta instância.');
         }
     }
 }
