@@ -61,6 +61,20 @@ class InstanceController extends Controller
             ->with('success', 'Instância removida localmente.');
     }
 
+    public function warmup(Instance $instance)
+    {
+        $this->authorizeOwner($instance);
+
+        // Inverte o status (0 ou 1)
+        $instance->warmup = $instance->warmup == 1 ? 0 : 1;
+        $instance->save(); // O parênteses é obrigatório
+
+        $statusMsg = $instance->warmup ? 'Ativado' : 'Desativado';
+
+        return redirect()->route('instances.index')
+            ->with('success', "Aquecimento (Warmup) {$statusMsg} com sucesso!");
+    }
+
     private function authorizeOwner(Instance $instance)
     {
         if ($instance->user_id !== Auth::id()) {

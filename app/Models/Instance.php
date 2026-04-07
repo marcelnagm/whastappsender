@@ -16,6 +16,7 @@ class Instance extends Model
      */
     protected $fillable = [
         'user_id',
+        'warmup',
         'name',
         'instance_name',
         'status'

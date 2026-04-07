@@ -107,6 +107,7 @@ Route::group(['namespace' => 'App\Http\Controllers', 'middleware' => ['auth']], 
 
         // Ver detalhes / Escanear QR Code
         Route::get('/{instance}', [InstanceController::class, 'show'])->name('instances.show');
+        Route::get('/{instance}/warmup', [InstanceController::class, 'warmup'])->name('instances.warmup');
 
         // Deletar instância
         Route::delete('/{instance}', [InstanceController::class, 'destroy'])->name('instances.destroy');

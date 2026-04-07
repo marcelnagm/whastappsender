@@ -26,6 +26,7 @@ nohup php artisan queue:work --queue=disparos --sleep=3 --tries=3 > "$LOG_PATH/w
 # 4. Inicia o Worker Default (E-mails, Geral)
 echo "[4/4] Iniciando Worker: Fila DEFAULT..."
 nohup php artisan queue:work --queue=default --sleep=3 --tries=3 > "$LOG_PATH/worker_default.log" 2>&1 &
+nohup php artisan queue:work --queue=warmup  --sleep=3 --tries=3 > "$LOG_PATH/worker_warmup.log" 2>&1 &
 
 # 5. Inicia o Schedule (Rodando em Loop)
 # O Laravel Schedule normalmente roda via Cron, mas em dev rodamos o work

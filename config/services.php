@@ -36,5 +36,9 @@ return [
         'port'     => env('WHATSAPP_PORT', '8080'),
         'apikey'   => env('WHATSAPP_APIKEY'),
     ],
+    'groq' => [
+        'key' => env('GROQ_API_KEY', null),
+        
+    ],
 
 ];
