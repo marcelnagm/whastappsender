@@ -21,7 +21,7 @@ class GenerateWarmupConversations extends Command
             ->select('instances.*') // Garante que retornamos objetos do tipo Instance
             ->get();
         // 2. Busca instâncias em Warmup (Alvos)
-        
+
         $targets = Instance::where('warmup', 1)
             ->where('status', 'connected')
             ->whereHas('user', function ($query) {
