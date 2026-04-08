@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 
@@ -33,11 +32,11 @@ class Instance extends Model
     ];
 
     /**
-     * Relacionamento: Uma instância pertence a um único Usuário.
+     * @return \Illuminate\Database\Eloquent\Relations\HasOne
      */
-    public function user(): BelongsTo
+    public function user()
     {
-        return $this->belongsTo(User::class, 'user_id', 'id');
+        return $this->hasOne('App\Models\User', 'id', 'user_id');
     }
 
     /**
