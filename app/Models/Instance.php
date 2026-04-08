@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 
@@ -31,17 +32,14 @@ class Instance extends Model
         'updated_at' => 'datetime',
     ];
 
-
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasOne
+     * Relacionamento: Uma instância pertence a um único Usuário.
      */
-    public function user()
+    public function user(): BelongsTo
     {
-        return $this->hasOne('App\Models\User', 'id', 'user_id');
+        return $this->belongsTo(User::class, 'user_id', 'id');
     }
 
-
-    
     /**
      * Boot do Model: Lógica automática na criação.
      * Aqui garantimos que o 'instance_name' seja gerado se estiver vazio.
