@@ -28,23 +28,24 @@ class envioQueue extends Command
      * @return int
      */
     public function handle()
-{
-    $jobs = WhatsappJob::whereIn('status', ['pendente', 'erro'])
-        ->where('tentativas', '<', 3)
-        ->orderBy('id', 'asc')
-        ->limit(100)
-        ->get();
+    {
+        $jobs = WhatsappJob::whereIn('status', ['pendente', 'erro'])
+            ->where('tentativas', '<', 3)
+            ->orderBy('id', 'asc')
+            ->limit(100)
+            ->get();
 
-    if ($jobs->isEmpty()) {
-        $this->warn("Nenhum job pendente encontrado no banco."); // Isso vai te avisar no terminal
-        return;
+        if ($jobs->isEmpty()) {
+            $this->warn("Nenhum job pendente encontrado no banco."); // Isso vai te avisar no terminal
+            return;
+        }
+
+        $this->info("Encontrados " . $jobs->count() . " jobs. Despachando...");
+
+        foreach ($jobs as $job) {
+            $job->update(['status' => 'fila']);
+            \App\Jobs\EnviarMensagemJob::dispatch($job)->onQueue('disparos');
+        }
+        return Command::SUCCESS;
     }
-
-    $this->info("Encontrados " . $jobs->count() . " jobs. Despachando...");
-
-    foreach ($jobs as $job) {
-        $job->update(['status' => 'fila']);        
-        \App\Jobs\EnviarMensagemJob::dispatch($job)->onQueue('disparos');
-    }
-}
 }

@@ -14,7 +14,7 @@ class EnviarMensagensWhatsApp extends Command
 
     public function handle()
     {
-        // 1. Configurações de Infra (Carregamento único fora do loop)
+        // 1. Configurações de Infra
         $config = config('services.whatsapp');
         $baseUrl = "{$config['protocol']}://{$config['url']}:{$config['port']}";
         $globalApiKey = $config['apikey'];
@@ -24,10 +24,11 @@ class EnviarMensagensWhatsApp extends Command
             return self::FAILURE;
         }
 
-        // 2. Busca Lote Maior (Aumentamos para 100 para dar vazão)
-        $jobs = WhatsappJob::whereIn('status', ['pendente', 'erro'])
+        // 2. Busca Lote
+        $jobs = WhatsappJob::with(['campaignItem', 'user', 'contact']) // Eager loading para evitar N+1
+            ->whereIn('status', ['pendente', 'erro'])
             ->where('tentativas', '<', 3)
-            ->orderBy('id', 'asc') // Primeiro os mais antigos
+            ->orderBy('id', 'asc')
             ->limit(100)
             ->get();
 
@@ -38,48 +39,51 @@ class EnviarMensagensWhatsApp extends Command
         $this->info("Iniciando lote de " . $jobs->count() . " mensagens.");
 
         foreach ($jobs as $index => $job) {
-            // A cada 10 mensagens, fazemos uma pausa maior (Respiro do lote)
             if ($index > 0 && $index % 10 == 0) {
                 $lotePause = rand(40, 70);
-                $this->warn("Pausa de Lote: Aguardando {$lotePause}s para resfriar a instância...");
+                $this->warn("Pausa de Lote: Aguardando {$lotePause}s...");
                 sleep($lotePause);
             }
 
             try {
-                // Instância do usuário (Telefone)
-                $user = $job->user()->first();
+                $user = $job->user;
                 if (!$user || !$user->phone) {
-                    $this->registrarFalha($job, "Usuário sem instância/phone configurado.");
+                    $this->registrarFalha($job, "Usuário sem instância configurada.");
                     continue;
                 }
 
                 $instance = $user->phone;
-                $contact = $job->contact()->first();
-
+                $contact = $job->contact;
                 $numeroDestino = $contact->contact;
-                $payload = $item->generate($job->contact_id);
 
+                // CORREÇÃO: Acessando o CampaignItem através do Job
+                $campaignItem = $job->campaignItem; 
+                
+                if (!$campaignItem) {
+                    $this->registrarFalha($job, "Job sem CampaignItem vinculado.");
+                    continue;
+                }
 
+                // Linha 60: Substituído $item por $campaignItem
+                $payload = $campaignItem->generate($job->contact_id);
 
                 $this->info("[ID:{$job->id}] Enviando para: {$numeroDestino}");
 
-                // --- PASSO 1: HUMANIZAÇÃO (Simulação de Comportamento) ---
-                // Aleatoriedade entre digitar ou apenas visualizar
+                // --- PASSO 1: HUMANIZAÇÃO ---
                 $presenceType = (rand(0, 10) > 3) ? 'composing' : 'recording';
-                $payload = $item->generate($job->contact_id);
-
+                
+                // Chamada de presença (Opcional: você já gerou o payload acima, não precisa repetir na linha 69)
                 Http::withHeaders(['apikey' => $globalApiKey])
                     ->post("{$baseUrl}/chat/sendPresence/{$instance}", [
                         "number" => $numeroDestino,
                         "presence" => $presenceType,
-                        "delay" => rand(1500, 3000) // Delay interno da Evolution
+                        "delay" => rand(1500, 3000)
                     ]);
 
-                // Tempo que o "usuário" leva para enviar após começar a digitar
                 sleep(rand(4, 8));
 
                 // --- PASSO 2: ENVIO REAL ---
-                $endpoint = ltrim($job->endpoint, '/'); // Remove barra duplicada se existir
+                $endpoint = ltrim($job->endpoint, '/');
                 $urlFinal = "{$baseUrl}/{$endpoint}{$instance}";
 
                 $response = Http::withHeaders([
@@ -89,8 +93,6 @@ class EnviarMensagensWhatsApp extends Command
 
                 if ($response->successful()) {
                     $dados = $response->json();
-
-                    // Captura o ID da mensagem para o Webhook futuro
                     $remoteId = $dados['key']['id'] ?? ($dados['message']['key']['id'] ?? ($dados['response']['key']['id'] ?? null));
 
                     $job->update([
@@ -104,15 +106,13 @@ class EnviarMensagensWhatsApp extends Command
 
                     $this->info("SUCESSO: ID {$remoteId}");
                 } else {
-                    $this->registrarFalha($job, "API Erro: " . $response->status() . " - " . $response->body());
+                    $this->registrarFalha($job, "API Erro: " . $response->status());
                 }
             } catch (\Exception $e) {
                 $this->registrarFalha($job, "Exception: " . $e->getMessage());
                 Log::error("Erro no disparo Job {$job->id}: " . $e->getMessage());
             }
 
-            // --- PASSO 3: INTERVALO ENTRE REQUESTS (Anti-Ban) ---
-            // Aumentamos a média para segurança total
             $pause = rand(20, 45);
             $this->comment("Aguardando {$pause}s...");
             sleep($pause);
@@ -125,13 +125,11 @@ class EnviarMensagensWhatsApp extends Command
     private function registrarFalha($job, $mensagem)
     {
         $novaTentativa = $job->tentativas + 1;
-
         $job->update([
             'status' => 'erro',
             'tentativas' => $novaTentativa,
             'erro_mensagem' => substr($mensagem, 0, 255)
         ]);
-
         $this->error("FALHA: {$job->id} - Tentativa {$novaTentativa}/3");
     }
 }

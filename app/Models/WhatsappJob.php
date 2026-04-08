@@ -10,7 +10,7 @@ class WhatsappJob extends Model
 {
     use HasFactory;
 
-    
+
 
     /**
      * Tabela associada ao blueprint fornecido.
@@ -29,12 +29,12 @@ class WhatsappJob extends Model
         'instance_id',
         'campaign_id',
         'campaign_item_id',
-        'evolution_status', 
+        'evolution_status',
         'erro_mensagem',
         'tentativas',
         'user_id',
         'contact_id'
-        
+
     ];
 
     /**
@@ -78,9 +78,9 @@ class WhatsappJob extends Model
      * @return \Illuminate\Database\Eloquent\Relations\HasOne
      */
     public function contact()
-{
-    return $this->belongsTo(Contact::class, 'contact_id');
-}
+    {
+        return $this->belongsTo(Contact::class, 'contact_id');
+    }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasOne
@@ -106,13 +106,22 @@ class WhatsappJob extends Model
 
     public static function getErrorRate($user_id)
     {
-        $stats = \App\Models\WhatsappJob::where('user_id', $user_id)
-            ->where('status','erro')
-            ->first();
+        // 1. Total de jobs do usuário (denominador)
+        $total = \App\Models\WhatsappJob::where('user_id', $user_id)->count();
 
-        if (!$stats || $stats->total == 0) return 0;
+        if ($total === 0) {
+            return 0;
+        }
 
-        return round(($stats->entregues / $stats->total) * 100, 1);
+        // 2. Total de erros aplicando a lógica OU (status ou evolution_status)
+        $errors = \App\Models\WhatsappJob::where('user_id', $user_id)
+            ->where(function ($query) {
+                $query->where('status', 'erro')
+                    ->orWhere('evolution_status', 'error');
+            })
+            ->count();
+
+        // 3. Retorna apenas o valor calculado: (erros / total) * 100
+        return round(($errors / $total) * 100, 1);
     }
-    
 }

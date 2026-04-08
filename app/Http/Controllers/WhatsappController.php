@@ -55,11 +55,4 @@ class WhatsappController extends Controller
         }
     }
 
-    public function send($id)
-    {
-        if (WhatsappService::isConnected(Auth::User()->contact())) {
-            WhatsappService::sender(Auth::User()->contact(), $id, 'Teste de ssitema');
-        }
-        return redirect()->route('whatsapp.index')->withStatus(__('Mengem removida com sucesso'));
-    }
 }

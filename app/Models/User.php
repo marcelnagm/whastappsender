@@ -84,6 +84,7 @@ class User extends Authenticatable
     public function setPasswordAttribute($value)
     {
         $this->attributes['password'] = bcrypt($value);
+        return $this;
     }
 
 
@@ -101,13 +102,6 @@ class User extends Authenticatable
     {
         return $this->role === 'admin';
     }
-
-
-    public function contact()
-    {
-        return str_ireplace(['-', '+', ' ', '(', ')'], '', $this->phone);
-    }
-
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany

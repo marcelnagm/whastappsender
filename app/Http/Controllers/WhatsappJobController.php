@@ -6,6 +6,7 @@ use App\Jobs\EnviarMensagemJob;
 use Illuminate\Http\Request;
 use App\Models\WhatsappJob;
 use Exception;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 
 class WhatsappJobController extends Controller

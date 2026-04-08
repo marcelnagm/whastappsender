@@ -31,14 +31,17 @@ class Instance extends Model
         'updated_at' => 'datetime',
     ];
 
+
     /**
-     * Relacionamento: Uma instância pertence a um único Usuário.
+     * @return \Illuminate\Database\Eloquent\Relations\HasOne
      */
     public function user()
     {
-        return $this->belongsTo(User::class);
+        return $this->hasOne('App\Models\User', 'id', 'user_id');
     }
 
+
+    
     /**
      * Boot do Model: Lógica automática na criação.
      * Aqui garantimos que o 'instance_name' seja gerado se estiver vazio.

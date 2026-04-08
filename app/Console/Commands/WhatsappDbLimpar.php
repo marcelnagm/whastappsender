@@ -2,7 +2,10 @@
 
 namespace App\Console\Commands;
 
+use Exception;
+use GrahamCampbell\ResultType\Success;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Log;
 
 class WhatsappDbLimpar extends Command
 {
@@ -28,14 +31,21 @@ class WhatsappDbLimpar extends Command
     public function handle()
     {
 
-        $query = \App\Models\WhatsappJob::where('status', 'erro');
+        try {
+
+            $query = \App\Models\WhatsappJob::where('status', 'erro');
 
 
 
-        // Opcional: Mover para tabela de histórico antes de deletar
-        // DB::insert("insert into whatsapp_jobs_history select * from whatsapp_jobs where...");
+            // Opcional: Mover para tabela de histórico antes de deletar
+            // DB::insert("insert into whatsapp_jobs_history select * from whatsapp_jobs where...");
 
-        $query->delete();
+            $query->delete();
 
+            return 0;
+        } catch (Exception $ex) {
+            Log::error($ex->getMessage());
+            return 1;
+        }
     }
 }
