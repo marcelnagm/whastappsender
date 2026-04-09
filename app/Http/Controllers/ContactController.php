@@ -148,8 +148,7 @@ class ContactController extends Controller
         $contact = Contact::findOrFail($id);
         $contact->syncFromEvolution();
         return response($contact->profile_url, 200)
-        ->header('Content-Type', 'text/plain');
-
+            ->header('Content-Type', 'text/plain');
     }
 
 
