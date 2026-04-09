@@ -48,6 +48,7 @@
               <hr class="dropdown-divider bg-secondary">
             </li>
             <li><a class="dropdown-item text-warning" href="#"><i class="bi bi-graph-up-arrow me-2"></i>Logs</a></li>
+            <li><a href="{{ route('panic.index') }}" class="dropdown-item text-warning" href="#"><i class="bi bi-activity me-2"></i>PANICO!</a></li>
           </ul>
         </li>
         @endif

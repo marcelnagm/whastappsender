@@ -4,6 +4,7 @@ use App\Http\Controllers\CampaignController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\InstanceController;
+use App\Http\Controllers\PanicController;
 use Illuminate\Support\Facades\Mail;
 use App\Http\Controllers\WhatsappController;
 use Illuminate\Support\Facades\Auth;
@@ -58,7 +59,7 @@ Route::group(['namespace' => 'App\Http\Controllers', 'middleware' => ['auth']], 
         ->name('contacts.bulk-status')
         ->middleware(['auth']); // Garanta que apenas usuários logados acessem
 
-    Route::get('/campaigns/{campaign}/report', [CampaignController::class, 'report'])->name('campaigns.report');    
+    Route::get('/campaigns/{campaign}/report', [CampaignController::class, 'report'])->name('campaigns.report');
     Route::get('/campaign-items/{id}/send', 'CampaignItemController@send')->name('campaign-items.send');
     Route::get('/campaign-items/{id}/generate', 'CampaignItemController@generate')->name('campaign-items.generate');
     Route::get('/campaign-items/{id}/generateAll', 'CampaignItemController@generateAll')->name('campaign-items.generateAll');
@@ -79,6 +80,8 @@ Route::group(['namespace' => 'App\Http\Controllers', 'middleware' => ['auth']], 
         ->name('whatsapp-jobs.bulk-retry')
         ->middleware(['auth']); // Garanta que apenas usuários logados acessem
 
+
+        // 
     Route::group(['middleware' => ['auth', 'admin'], 'prefix' => 'admin'], function () {
 
         // Listagem e CRUD básico
@@ -90,6 +93,12 @@ Route::group(['namespace' => 'App\Http\Controllers', 'middleware' => ['auth']], 
         // Ações de Controle de Status (As convenientes para sua VPS)
         Route::patch('/users/{user}/toggle-active', 'UserController@toggleActive')->name('users.toggleActive');
         Route::patch('/users/{user}/toggle-admin', 'UserController@toggleAdmin')->name('users.toggleAdmin');
+
+
+        Route::get('/panic/', [PanicController::class, 'index'])->name('panic.index');
+        Route::post('/panic/clear', [PanicController::class, 'clear'])->name('admin.panic.clear');
+        Route::post('/panic/toggle', [PanicController::class, 'toggle'])->name('admin.panic.toggle');
+        Route::post('/panic/warmup', [PanicController::class, 'warmup'])->name('admin.panic.Warmup');
     });
 
     Route::post('/notifications/clear', function () {
@@ -120,7 +129,6 @@ Route::group(['namespace' => 'App\Http\Controllers', 'middleware' => ['auth']], 
          */
         Route::get('/{instance}/sync', [InstanceController::class, 'sync'])->name('instances.sync');
     });
-
 
     Route::get('/test-email', function () {
         $data = ['name' => 'Teste do Sistema', 'body' => 'O SMTP está funcionando corretamente!'];

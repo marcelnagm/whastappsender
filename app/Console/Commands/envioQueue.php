@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\WhatsappJob;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
 class envioQueue extends Command
@@ -29,6 +30,11 @@ class envioQueue extends Command
      */
     public function handle()
     {
+        if (Cache::has('system_panic_mode')) {
+            
+            return 1;
+        }
+
         $jobs = WhatsappJob::whereIn('status', ['pendente', 'erro'])
             ->where('tentativas', '<', 3)
             ->orderBy('id', 'asc')

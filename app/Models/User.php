@@ -31,7 +31,6 @@ class User extends Authenticatable
         'password'
     ];
 
-    protected $appends = ['phone'];
 
     /**
      * The attributes that should be hidden for serialization.
@@ -69,10 +68,6 @@ class User extends Authenticatable
         // Se não houver, retorna null ou uma string vazia para não quebrar o layout
         return $activeInstance ? $activeInstance : null;
     }
-
-    /**
-     * Define que o campo 'phone' deve ser incluído na conversão para Array ou JSON
-     */
 
 
     /**

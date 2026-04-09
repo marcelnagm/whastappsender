@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 use App\Models\Instance;
 use App\Jobs\OrchestrateWarmupJob;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
 class GenerateWarmupConversations extends Command
@@ -14,6 +15,10 @@ class GenerateWarmupConversations extends Command
 
     public function handle()
     {
+        if (Cache::has('system_panic_mode')) {
+            
+            return 1;
+        }
         // 1. Busca instâncias Admin (Origem)
         $admins = Instance::join('users', 'instances.user_id', '=', 'users.id')
             ->where('users.role', 'admin')

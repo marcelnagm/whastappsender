@@ -7,6 +7,7 @@ use App\Models\Contact;
 use App\Models\CampaignItem;
 use App\Models\WhatsappJob;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -17,6 +18,11 @@ class GerarJobsWhatsApp extends Command
 
     public function handle()
     {
+        if (Cache::has('system_panic_mode')) {
+            
+            return 1;
+        }
+
         $id = $this->argument('item_id');
         $campaignItem = CampaignItem::with('campaign')->find($id);
 

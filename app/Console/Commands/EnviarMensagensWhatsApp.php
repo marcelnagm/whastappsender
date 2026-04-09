@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use App\Models\WhatsappJob;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -14,6 +15,11 @@ class EnviarMensagensWhatsApp extends Command
 
     public function handle()
     {
+
+        if (Cache::has('system_panic_mode')) {
+            
+            return 1;
+        }
         // 1. Configurações de Infra
         $config = config('services.whatsapp');
         $baseUrl = "{$config['protocol']}://{$config['url']}:{$config['port']}";

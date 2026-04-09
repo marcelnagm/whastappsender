@@ -9,6 +9,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -31,7 +32,10 @@ class EnviarMensagemJob implements ShouldQueue
         $baseUrl = "{$config['protocol']}://{$config['url']}:{$config['port']}";
         $globalApiKey = $config['apikey'];
         $job = $this->jobModel;
-
+        if (Cache::has('system_panic_mode')) {
+            
+            return 1;
+        }
             
         try {
             $user = $job->user()->first();
