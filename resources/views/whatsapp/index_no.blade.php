@@ -202,7 +202,6 @@
                     qrContainer.html('<p class="text-danger small">Erro na estrutura do QR.</p>');
                 }
             },
-            ,
             error: function(err) {
                 console.error("Erro na API:", err);
                 qrContainer.html('<p class="text-danger small">Serviço Indisponível</p>');
