@@ -101,7 +101,7 @@ Log::info(json_encode($data));
         ]);
 
         if ($affected === 0) {
-            Log::warning("ACK Recebido ($statusKey), mas ID não encontrado: $msgId");
+            #Log::warning("ACK Recebido ($statusKey), mas ID não encontrado: $msgId");
         } elseif (config('app.debug')) {
             Log::info("Job Atualizado: $msgId -> $finalStatus");
         }

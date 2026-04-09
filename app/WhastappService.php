@@ -128,41 +128,24 @@ class WhastappService
                     $res = $client->sendAsync($request)->wait();
                     $res = json_decode($res->getBody(), true);
                 } catch (ConnectException $ex) {
+                    
+                    Log::error($ex);
                     return false;
                 } catch (ClientException $ex) {
+                    
+                    Log::error($ex);
                     return false;
                 }
 
             return false;
         } catch (ConnectException $ex) {
+            Log::error($ex);
             return false;
+            
         }
         return false;
     }
 
-
-    public static function sender($name, $client_phone, $message, $operation)
-    {
-
-
-        $hostname = env("WHATSAPP_URL", "somedefaultvalue");
-        $port = env("WHATSAPP_PORT", "somedefaultvalue");
-        $apikey = env("WHATSAPP_APIKEY", "somedefaultvalue");
-        try {
-            $client = new Client();
-            $headers = [
-                'Content-Type' => 'application/json',
-                'apikey' => $apikey
-            ];
-            $body = $message;
-            $body = json_encode($body);
-            $request = new Request('POST', $hostname . ':' . $port . '/message/' . $operation . '/' . $name, $headers, $body);
-            $res = $client->sendAsync($request)->wait();
-            return true;
-        } catch (ClientException $ex) {
-            return false;
-        }
-    }
 
 
     /**
