@@ -127,99 +127,54 @@
     }
 </style>
 @endsection
-
 @section('js')
 <script>
-    /**
-     * Variáveis de Ambiente injetadas via Blade
-     */
-    const protocol = "{{ env('MIX_WHATSAPP_PUBLIC_PROTOCOL', 'http') }}";
-    const hostname = "{{ env('MIX_WHATSAPP_PUBLIC_URL', 'localhost') }}";
-    const port = "{{ env('MIX_WHATSAPP_PUBLIC_PORT', '8080') }}";
-    const apiKey = "{{ env('WHATSAPP_APIKEY') }}";
-    const session = "{{ $instance }}"; // Identificador da instância
-
-    const baseUrl = `${protocol}://${hostname}:${port}`;
+    const session = "{{ $instance }}";
     let qrcod_lido = false;
 
     $(document).ready(function() {
-        // 1. Checa se a sessão já está conectada ao carregar a página
-        checkSessionStatus();
+        getQR();
+        if (typeof checkSessionStatus === "function") {
+            checkSessionStatus();
+        }
     });
 
-    /**
-     * Verifica o status da sessão na API
-     */
-    function checkSessionStatus() {
-        $.ajax({
-            type: 'GET',
-            url: `${baseUrl}/sessions/${session}/status`,
-            success: function(response) {
-                console.log("Sessão Ativa:", response);
-                // Se estiver conectado, podemos recarregar para mostrar o status de sucesso
-                // ou redirecionar. Aqui mantemos sua lógica original de reload.
-                location.reload(true);
-            },
-            error: function() {
-                console.log("Sessão inativa ou inexistente. Gerando QR...");
-                qrcod_lido = false;
-                getQR();
-            }
-        });
-    }
-
-    /**
-     * Solicita um novo QR Code para a instância
-     */
     function getQR() {
         const qrContainer = $("#qr");
-
-        // Feedback visual de carregamento
-        if (!qrContainer.find('.fa-spin').length) {
-            qrContainer.html('<div class="text-center text-muted"><i class="fas fa-sync fa-spin fa-2x mb-2"></i><p class="small">Gerando...</p></div>');
-        }
+        qrContainer.html('<div class="text-center text-muted"><i class="fas fa-sync fa-spin fa-2x mb-2"></i><p class="small">Gerando QR Code...</p></div>');
 
         $.ajax({
-            url: `${baseUrl}/instance/connect/${session}`,
+            url: "{{ route('whatsapp.qr', ['id' => $instance]) }}",
             type: 'GET',
-            headers: {
-                "apikey": apiKey
-            },
-            contentType: 'application/json',
+            dataType: 'json',
             success: function(data) {
-                // A Evolution v2 costuma retornar o base64 dentro de 'code' 
-                // ou dentro de um objeto 'qrcode'.
-                const qrData = data.code || data.base64 || (data.qrcode ? data.qrcode.base64 : null);
+                // PRIORIDADE: base64 da raiz ou dentro de qrcode
+                // O 'code' (2@...) só é usado se o base64 falhar e ele contiver o cabeçalho de imagem
+                let qrData = null;
+
+                if (data.base64) {
+                    qrData = data.base64;
+                } else if (data.qrcode && data.qrcode.base64) {
+                    qrData = data.qrcode.base64;
+                } else if (data.code && data.code.includes('data:image')) {
+                    qrData = data.code;
+                }
 
                 if (qrData) {
                     const img = new Image();
-                    // Garante que o prefixo data:image existe
                     img.src = qrData.includes('data:image') ? qrData : `data:image/png;base64,${qrData}`;
                     img.className = "img-fluid animate__animated animate__fadeIn";
+                    img.style.maxWidth = "260px";
+
                     qrContainer.html(img);
                 } else {
-                    console.log("Estrutura recebida:", data); // Para você debugar no console
-                    qrContainer.html('<p class="text-danger small">Erro na estrutura do QR.</p>');
+                    console.error("Dados recebidos sem base64:", data);
+                    qrContainer.html('<p class="text-danger small">A API não enviou a imagem (base64). Verifique o console.</p>');
                 }
             },
             error: function(err) {
-                console.error("Erro na API:", err);
-                qrContainer.html('<p class="text-danger small">Serviço Indisponível</p>');
-            }
-        });
-    }
-
-    /**
-     * Remove a sessão (Logout da instância)
-     */
-    function remove_session() {
-        if (!confirm("Deseja realmente desconectar este WhatsApp?")) return;
-
-        $.ajax({
-            url: `${baseUrl}/sessions/${session}`,
-            type: 'DELETE',
-            success: function(data) {
-                location.reload(true);
+                console.error("Erro no Proxy Laravel:", err);
+                qrContainer.html('<p class="text-danger small">Erro na comunicação com o servidor.</p>');
             }
         });
     }

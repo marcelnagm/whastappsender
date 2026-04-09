@@ -55,4 +55,10 @@ class WhatsappController extends Controller
         }
     }
 
+    public function qr($id)
+    {
+
+        return WhatsappService::qr($id);
+    }
+
 }

@@ -43,6 +43,8 @@ Route::group(['namespace' => 'App\Http\Controllers', 'middleware' => ['auth']], 
 
     Route::prefix('whatsapp')->middleware(['auth'])->name('whatsapp.')->group(function () {
         Route::get('/{id}', 'App\Http\Controllers\WhatsappController@index')->name('index');
+        Route::get('/{id}/qr', 'App\Http\Controllers\WhatsappController@qr')->name('qr');
+        Route::get('/delete', 'WhatsappController@delete')->name('delete');
         Route::get('/delete', 'WhatsappController@delete')->name('delete');
     });
 
