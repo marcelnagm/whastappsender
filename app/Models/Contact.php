@@ -69,7 +69,7 @@ class Contact extends Model
             $config = config('services.whatsapp');
             $baseUrl = "{$config['protocol']}://{$config['url']}:{$config['port']}";
             $apiKey = $config['apikey'];
-            $instance = $this->user()->first()->phone;
+            $instance = $this->user()->first()->getInstanceActive();
             // dd($instance);
             // Endpoint para buscar informações do número/perfil
             $response = Http::withHeaders([
