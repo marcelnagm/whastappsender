@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Http;
-
+use Illuminate\Support\Facades\Log;
 
 /**
  * Class Contact
@@ -93,10 +93,11 @@ class Contact extends Model
                     return true;
                 }
             }
-            
+
+            // Se o 404 persisti
         } catch (\Exception $e) {
             dd($e);
-            \Log::error("Falha ao sincronizar contato #{$this->id} com Evolution: " . $e->getMessage());
+            Log::error("Falha ao sincronizar contato #{$this->id} com Evolution: " . $e->getMessage());
         }
 
         return false;

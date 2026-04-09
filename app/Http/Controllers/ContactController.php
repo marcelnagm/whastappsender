@@ -142,9 +142,14 @@ class ContactController extends Controller
      */
     public function photo($id)
     {
+        if (class_exists('\Debugbar')) {
+            \Debugbar::disable();
+        }
         $contact = Contact::findOrFail($id);
         $contact->syncFromEvolution();
-        return $contact->profile_url; // Retorno bruto para o fetch
+        return response($contact->profile_url, 200)
+        ->header('Content-Type', 'text/plain');
+
     }
 
 
