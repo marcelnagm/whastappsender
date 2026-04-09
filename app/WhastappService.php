@@ -208,6 +208,9 @@ class WhastappService
             $res = $client->sendAsync($request)->wait();
             $res = json_decode($res->getBody(), true);
 
+
+            if(env('DEBUG_WHATSAPP_QR', false)) Log::debug('qr: '.json_encode($res));
+
             return $res;
         } catch (ConnectException $ex) {
             Log::error('' . $ex->getMessage());
