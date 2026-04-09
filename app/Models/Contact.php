@@ -94,11 +94,7 @@ class Contact extends Model
                 }
             }
 
-            // Se o 404 persistir, significa que o WhatsApp não encontrou o JID
-            if ($response->status() === 404) {
-                $this->status = 'no-whatsapp';
-                $this->save();
-            }
+            // Se o 404 persisti
         } catch (\Exception $e) {
             dd($e);
             \Log::error("Falha ao sincronizar contato #{$this->id} com Evolution: " . $e->getMessage());
