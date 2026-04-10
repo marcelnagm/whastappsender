@@ -12,6 +12,7 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Carbon;
 
 class EnviarMensagemJob implements ShouldQueue
 {
@@ -33,19 +34,27 @@ class EnviarMensagemJob implements ShouldQueue
         $globalApiKey = $config['apikey'];
         $job = $this->jobModel;
         if (Cache::has('system_panic_mode')) {
-            
+
             return 1;
         }
-            
+
+        if (!$this->isAllowedNow()) {
+            // Lança o job de volta para a fila para daqui a X segundos
+            return $this->release(
+                $this->secondsUntilNextWindow() + rand(60, 600) // + "Jitter" aleatório
+            );
+        }
+
+
         try {
             $user = $job->user()->first();
             $instance = $user->getInstanceActive();
             if (!$user || !$instance) {
-                $this->registrarErro("Usuário ou Phone (Instância) não configurado.",null);
+                $this->registrarErro("Usuário ou Phone (Instância) não configurado.", null);
                 return;
             }
 
-            
+
             $item = $job->campaignItem()->first();
             $contact = $job->contact()->first();
             if ($contact->status === "no-whatsapp") {
@@ -67,7 +76,7 @@ class EnviarMensagemJob implements ShouldQueue
                     "presence" => $presenceType,
                     "delay" => rand(1500, 3000)
                 ]);
-            if (env('APP_ENV') !== 'local')
+            if (config('app.env') !== 'local')
                 sleep(rand(4, 9));
 
             // PASSO 2: ENVIO REAL
@@ -105,32 +114,63 @@ class EnviarMensagemJob implements ShouldQueue
                         $contact->status = 'no-whatsapp';
                         $contact->save(); // Assume que sua tabela contacts tem coluna 'active' ou similar
                         Log::warning("Contato ID {$contact->id} desativado: Número não existe no WhatsApp.");
-                        $this->registrarErro("Número Inexistente (Contato Desativado)",$instance);
+                        $this->registrarErro("Número Inexistente (Contato Desativado)", $instance);
                         return; // Encerra sem retentar
                     }
                 }
 
-                $this->registrarErro("API Erro: " . $status . " - " . $response->body(),$instance);
+                $this->registrarErro("API Erro: " . $status . " - " . $response->body(), $instance);
             }
 
             // PASSO 3: COOLDOWN
-            if (env('APP_ENV') !== 'local')
+            if (config('app.env') !== 'local')
                 sleep(rand(25, 50));
         } catch (\Exception $e) {
-            $this->registrarErro("Exception: " . $e->getMessage(),$instance);
+            $this->registrarErro("Exception: " . $e->getMessage(), $instance);
             throw $e;
         }
     }
 
-    private function registrarErro($mensagem,$instance)
+    private function registrarErro($mensagem, $instance)
     {
         $this->jobModel->update([
-            'instance_id' => $instance->id,
+            'instance_id' => $instance ? $instance->id : null,
             'status' => 'erro',
             'tentativas' => $this->jobModel->tentativas + 1,
             'erro_mensagem' => substr($mensagem, 0, 255)
         ]);
 
         Log::error("Falha no Job ID {$this->jobModel->id}: {$mensagem}");
+    }
+
+    public function isAllowedNow(): bool
+    {
+        // Força o fuso horário se necessário (ex: 'America/Boa_Vista')
+        $now = Carbon::now('America/Sao_Paulo');
+
+        if ($now->isWeekend()) return false;
+
+        $start = Carbon::createFromTime(9, 0, 0, 'America/Sao_Paulo');
+        $end = Carbon::createFromTime(19, 0, 0, 'America/Sao_Paulo');
+
+        return $now->between($start, $end);
+    }
+
+    public function secondsUntilNextWindow(): int
+    {
+        $now = Carbon::now('America/Sao_Paulo');
+        $nextWindow = Carbon::now('America/Sao_Paulo')->setTime(8, 0, 0);
+
+        if ($now->hour >= 18) {
+            $nextWindow->addDay();
+        }
+
+        if ($nextWindow->isSaturday()) {
+            $nextWindow->addDays(2);
+        } elseif ($nextWindow->isSunday()) {
+            $nextWindow->addDay();
+        }
+
+        return $now->diffInSeconds($nextWindow);
     }
 }
