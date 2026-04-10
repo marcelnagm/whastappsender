@@ -39,10 +39,13 @@ class EnviarMensagemJob implements ShouldQueue
         }
 
         if (!$this->isAllowedNow()) {
-            // Lança o job de volta para a fila para daqui a X segundos
-            return $this->release(
-                $this->secondsUntilNextWindow() + rand(60, 600) // + "Jitter" aleatório
+            // 1. Agenda o retorno para a fila
+            $this->release(
+                $this->secondsUntilNextWindow() + rand(60, 600)
             );
+
+            // 2. Encerra o handle() sem tentar retornar o resultado do release
+            return;
         }
 
 
