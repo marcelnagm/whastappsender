@@ -38,7 +38,11 @@ class PanicController extends Controller
     {
         try {
             // Comando para limpar a fila específica
-            Artisan::call('queue:clear', ['--queue' => 'disparos']);
+            Artisan::call('queue:clear', [
+                '--queue' => 'disparos',
+                '--force' => true,      // Ignora a pergunta de confirmação
+                '--no-interaction' => true // Garante que o Symfony Console não busque o STDIN
+            ]);
 
             return back()->with('success', 'Fila de disparos limpa. Todos os jobs pendentes foram removidos.');
         } catch (\Exception $e) {
@@ -50,8 +54,11 @@ class PanicController extends Controller
     {
         try {
             // Comando para limpar a fila específica
-            Artisan::call('queue:clear', ['--queue' => 'warmup']);
-
+            Artisan::call('queue:clear', [
+                '--queue' => 'warmup',
+                '--force' => true,      // Ignora a pergunta de confirmação
+                '--no-interaction' => true // Garante que o Symfony Console não busque o STDIN
+            ]);
             return back()->with('success', 'Fila de disparos limpa. Todos os jobs pendentes foram removidos.');
         } catch (\Exception $e) {
             return back()->with('error', 'Erro ao limpar fila: ' . $e->getMessage());
