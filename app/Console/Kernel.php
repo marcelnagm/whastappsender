@@ -16,16 +16,18 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule)
     {
         // $schedule->command('inspire')->hourly();
-        $schedule->command('whatsapp:queue')
-             ->everyMinute()
-             ->withoutOverlapping();
+
+        if (env('WHATSAPP_AUTOSEND'))
+            $schedule->command('whatsapp:queue')
+                ->everyMinute()
+                ->withoutOverlapping();
 
         $schedule->command('warmup:generate')
-             ->dailyAt('08:00')
-             ->timezone('America/Boa_Vista') // Garante o horário local
-             ->withoutOverlapping();
-    // Higiene do Banco: Move ou deleta registros antigos às 03:00 da manhã
-    // $schedule->command('whatsapp:db:limpar')->dailyAt('03:00');
+            ->dailyAt('08:00')
+            ->timezone('America/Boa_Vista') // Garante o horário local
+            ->withoutOverlapping();
+        // Higiene do Banco: Move ou deleta registros antigos às 03:00 da manhã
+        // $schedule->command('whatsapp:db:limpar')->dailyAt('03:00');
     }
 
     /**
@@ -35,7 +37,7 @@ class Kernel extends ConsoleKernel
      */
     protected function commands()
     {
-        $this->load(__DIR__.'/Commands');
+        $this->load(__DIR__ . '/Commands');
 
         require base_path('routes/console.php');
     }
