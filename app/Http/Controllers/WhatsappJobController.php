@@ -72,7 +72,7 @@ class WhatsappJobController extends Controller
 
                 // 2. Despacha novamente para a fila (Queue)
                 // Substitua 'EnviarMensagemJob' pelo nome real da sua classe de Job
-                \App\Jobs\EnviarMensagemJob::dispatch($job);
+                \App\Jobs\EnviarMensagemJob::dispatch($job)->onQueue('disparos');
             }
 
             return redirect()->back()->with('success', "{$jobs->count()} jobs reinfileirados para processamento.");
