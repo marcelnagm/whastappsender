@@ -52,7 +52,7 @@
         <div class="col-lg-5 d-none d-lg-block text-center">
             <div class="position-relative">
                 <div class="blob-glow"></div>
-                <img src="{{ asset('images/logo-no-bg.png') }}" alt="Logo Sender" class="img-fluid floating-logo" width="100%">
+                <img src="{{ asset('images/logo.jpg') }}" alt="Logo Sender" class="img-fluid floating-logo" width="100%">
             </div>
         </div>
     </div>
