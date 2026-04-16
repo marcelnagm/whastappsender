@@ -17,10 +17,10 @@ class Kernel extends ConsoleKernel
     {
         // $schedule->command('inspire')->hourly();
 
-        if (env('WHATSAPP_AUTOSEND'))
-            $schedule->command('whatsapp:queue')
-                ->everyMinute()
-                ->withoutOverlapping();
+        // if (env('WHATSAPP_AUTOSEND'))
+        //     $schedule->command('whatsapp:queue')
+        //         ->everyMinute()
+        //         ->withoutOverlapping();
 
         $schedule->command('warmup:generate')
             ->dailyAt('08:00')
