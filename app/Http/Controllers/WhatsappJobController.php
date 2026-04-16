@@ -65,7 +65,7 @@ class WhatsappJobController extends Controller
             foreach ($jobs as $job) {
                 // 1. Limpa o rastro do erro anterior
                 $job->update([
-                    'status' => 'pendente',
+                    'status' => 'fila',
                     'erro_mensagem' => null,
                     'evolution_status' => null
                 ]);
