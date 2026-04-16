@@ -38,7 +38,7 @@ class envioQueue extends Command
         $jobs = WhatsappJob::whereIn('status', ['pendente', 'erro'])
             ->where('tentativas', '<', 3)
             ->orderBy('id', 'asc')
-            ->limit(100)
+             ->limit(env('WHATSAPP_BATCH_SIZE'))
             ->get();
 
         if ($jobs->isEmpty()) {
