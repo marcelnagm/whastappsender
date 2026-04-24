@@ -40,5 +40,9 @@ return [
         'key' => env('GROQ_API_KEY', null),
         
     ],
+    'ai' => [
+        'debug_webhook' => env('AI_DEBUG_WEBHOOK', false),
+        'debug_flow' => env('AI_DEBUG_FLOW', false),
+    ],
 
 ];

@@ -8,10 +8,11 @@ use Illuminate\Support\Facades\Log;
 
 class GroqConversationGenerator implements ConversationGeneratorInterface
 {
-    public function generate(int $count, string $topic): array
+    public function generate(int $count, string $topic, $prompt  = null): array
     {
         $apiKey = config('services.groq.key'); // Puxa do config/services.php
 
+        if($prompt)
         $prompt = "Atue como um brasileiro nativo no WhatsApp. Gere um diálogo informal de {$count} mensagens alternadas sobre '{$topic}'. "
             . "Use gírias leves, abreviações (vc, tbm, blz) e ocasionalmente um erro de digitação. "
             . "Retorne APENAS um array JSON de strings. Não adicione explicações.";

@@ -31,6 +31,11 @@
         <li class="nav-item">
           <a href="{{route('campaign-items.index')}}" class="nav-link text-white"><i class="bi bi-list-check me-1"></i> Itens</a>
         </li>
+        <li class="nav-item">
+          <a href="{{ route('profile.edit') }}" class="nav-link {{ request()->is('me/profile') ? 'active text-secondary' : 'text-white' }}">
+            <i class="bi bi-person-lines-fill me-1"></i> Meu Perfil
+          </a>
+        </li>
 
         @if(Auth::user()->role === 'admin')
         <li class="nav-item dropdown">

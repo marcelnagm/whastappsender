@@ -28,7 +28,14 @@ class User extends Authenticatable
         'name',
         'email',
         'username',
-        'password'
+        'password',
+        'ai_enabled',
+        'ai_mode',
+        'ai_model',
+        'ai_temperature',
+        'ai_max_tokens',
+        'ai_system_prompt',
+        'ai_business_hours_only',
     ];
 
 
@@ -50,6 +57,10 @@ class User extends Authenticatable
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
+        'ai_enabled' => 'boolean',
+        'ai_temperature' => 'decimal:2',
+        'ai_max_tokens' => 'integer',
+        'ai_business_hours_only' => 'boolean',
     ];
 
     /**
@@ -104,5 +115,15 @@ class User extends Authenticatable
     public function instances()
     {
         return $this->hasMany('App\Models\Instance', 'user_id', 'id');
+    }
+
+    public function aiSessions()
+    {
+        return $this->hasMany('App\Models\AiSession', 'user_id', 'id');
+    }
+
+    public function aiRules()
+    {
+        return $this->hasMany('App\Models\AiRule', 'user_id', 'id');
     }
 }

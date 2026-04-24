@@ -40,6 +40,8 @@ Route::get('/', 'App\Http\Controllers\HomeController@index')->name('home.index')
 
 Route::group(['namespace' => 'App\Http\Controllers', 'middleware' => ['auth']], function () {
 
+    Route::get('/me/profile', [UserController::class, 'editProfile'])->name('profile.edit');
+    Route::post('/me/profile', [UserController::class, 'updateProfile'])->name('profile.update');
 
     Route::prefix('whatsapp')->middleware(['auth'])->name('whatsapp.')->group(function () {
         Route::get('/{id}', 'App\Http\Controllers\WhatsappController@index')->name('index');

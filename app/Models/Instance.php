@@ -39,6 +39,11 @@ class Instance extends Model
         return $this->hasOne('App\Models\User', 'id', 'user_id');
     }
 
+    public function aiSessions()
+    {
+        return $this->hasMany('App\Models\AiSession', 'instance_id', 'id');
+    }
+
     /**
      * Boot do Model: Lógica automática na criação.
      * Aqui garantimos que o 'instance_name' seja gerado se estiver vazio.

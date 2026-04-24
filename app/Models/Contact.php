@@ -57,6 +57,11 @@ class Contact extends Model
         return $this->hasMany('App\Models\WhatsappJob', 'contact_id', 'id');
     }
 
+    public function aiSessions()
+    {
+        return $this->hasMany('App\Models\AiSession', 'contact_id', 'id');
+    }
+
 
     public function syncFromEvolution()
     {

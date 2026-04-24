@@ -5,6 +5,8 @@ namespace App\Jobs;
 use App\Models\Instance;
 use App\Models\Contact;
 use App\Models\WhatsappJob;
+use App\Services\AI\AiAutoReplyService;
+use App\Services\AI\AiInboundMessageRecorder;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -109,18 +111,68 @@ Log::info(json_encode($data));
 
     private function handleNewMessage($instanceName, $data)
     {
-        if ($data['key']['fromMe'] ?? false) return;
+        $this->debugWebhook('Nova mensagem recebida (messages.upsert)', [
+            'instance' => $instanceName,
+            'remoteJid' => $data['key']['remoteJid'] ?? null,
+            'messageId' => $data['key']['id'] ?? null,
+            'fromMe' => $data['key']['fromMe'] ?? null,
+            'payload' => $data,
+        ]);
+
+        if ($this->isGroupMessage($data)) {
+            $this->debugWebhook('Mensagem ignorada por ser de grupo', [
+                'remoteJid' => $data['key']['remoteJid'] ?? null,
+            ]);
+            return;
+        }
+
+        // if ($data['key']['fromMe'] ?? false) {
+        //     $this->debugWebhook('Mensagem ignorada por ser fromMe', [
+        //         'remoteJid' => $data['key']['remoteJid'] ?? null,
+        //     ]);
+        //     return;
+        // }
 
         $whatsappId = $this->resolveContactId($data);
-        if (!$whatsappId) return;
+        if (!$whatsappId) {
+            $this->debugWebhook('Mensagem ignorada: contato nao resolvido', [
+                'remoteJid' => $data['key']['remoteJid'] ?? null,
+                'senderPn' => $data['key']['senderPn'] ?? null,
+            ]);
+            return;
+        }
 
         $text = $data['message']['conversation'] 
               ?? $data['message']['extendedTextMessage']['text'] 
               ?? '';
 
+        app(AiInboundMessageRecorder::class)->record((string) $instanceName, (array) $data, (string) $text);
+        $this->debugWebhook('Mensagem inbound registrada para IA', [
+            'instance' => $instanceName,
+            'whatsappId' => $whatsappId,
+            'textPreview' => mb_substr(trim((string) $text), 0, 200),
+        ]);
+
         if (strtolower(trim($text)) === '#sair') {
             $this->processOptOut($instanceName, $whatsappId);
+            $this->debugWebhook('Opt-out processado (#sair)', [
+                'instance' => $instanceName,
+                'whatsappId' => $whatsappId,
+            ]);
+            return;
         }
+
+        $this->debugWebhook('Encaminhando mensagem para fluxo de IA', [
+            'instance' => $instanceName,
+            'whatsappId' => $whatsappId,
+        ]);
+        app(AiAutoReplyService::class)->handleInbound((string) $instanceName, (array) $data, (string) $text);
+    }
+
+    private function isGroupMessage(array $data): bool
+    {
+        $remoteJid = $data['key']['remoteJid'] ?? '';
+        return str_contains($remoteJid, '@g.us');
     }
 
     private function handleInstanceUpdate($name, $data)
@@ -151,6 +203,15 @@ Log::info(json_encode($data));
         if (Contact::where('contact', $whatsappId)->update(['ignore_me' => 1])) {
             Redis::sadd("blacklist:instance:{$instanceName}", $whatsappId);
         }
+    }
+
+    private function debugWebhook(string $message, array $context = []): void
+    {
+        if (!config('services.ai.debug_webhook', false)) {
+            return;
+        }
+
+        Log::info('[AI_WEBHOOK_DEBUG] ' . $message, $context);
     }
 }
 
