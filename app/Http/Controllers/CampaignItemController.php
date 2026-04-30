@@ -2,16 +2,17 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\GenerateCampaignItemJobsJob;
 use App\Models\CampaignItem;
 use App\Models\Contact;
 use App\Models\Campaign;
 use App\Models\WhatsappJob;
+use App\Notifications\CampaignItemGenerationStatus;
 use App\WhastappService;
 use Illuminate\Http\Request;
 use Auth;
 use Illuminate\Support\Facades\Storage;
 use Image;
-use Illuminate\Support\Facades\Artisan;
 use League\Flysystem\UnixVisibility\PortableVisibilityConverter;
 
 
@@ -69,6 +70,7 @@ class CampaignItemController extends Controller
 
         $data = $request->all();
         $data['user_id'] = Auth::id();
+        $data['welcome_enabled'] = $request->boolean('welcome_enabled');
 
         // Define a URL inicial caso tenha vindo via campo image_url
         $data['image'] = $request->input('image_url');
@@ -115,7 +117,7 @@ class CampaignItemController extends Controller
 
     public function generateAll($id)
     {
-        $campaignItem = CampaignItem::select('id', 'user_id')->findOrFail($id);
+        $campaignItem = CampaignItem::select('id', 'user_id', 'name')->findOrFail($id);
 
         // 1. Conte direto no banco. Muito mais rápido que pluck()->count()
         $totalContatos = Contact::where('user_id', $campaignItem->user_id)
@@ -126,9 +128,13 @@ class CampaignItemController extends Controller
             return redirect()->back()->with('error', 'Nenhum contato validado encontrado para este usuário.');
         }
 
-        // 2. Despacha o comando para a fila (background)
-        // Certifique-se de que o comando NÃO seja interativo (sem $this->confirm)
-        Artisan::queue('whatsapp:gerar', ['item_id' => $id]);
+        // 2. Despacha um Job assíncrono na fila default para gerar os registros.
+        GenerateCampaignItemJobsJob::dispatch((int) $id)->onQueue('default');
+        Auth::user()->notify(new CampaignItemGenerationStatus(
+            (int) $campaignItem->id,
+            (string) $campaignItem->name,
+            'started'
+        ));
 
         return redirect()->route('campaign-items.index')
             ->with('success', "Iniciada a geração de {$totalContatos} disparos em segundo plano.");
@@ -176,6 +182,7 @@ class CampaignItemController extends Controller
         ]));
 
         $data = $request->all();
+        $data['welcome_enabled'] = $request->boolean('welcome_enabled');
 
         if ($request->hasFile('file_upload')) {
             // 1. Remover arquivo antigo do MinIO se existir

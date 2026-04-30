@@ -8,17 +8,19 @@ use Illuminate\Support\Facades\Log;
 
 class GroqConversationGenerator implements ConversationGeneratorInterface
 {
-    public function generate(int $count, string $topic, $prompt  = null): array
+    public function generate(int $count, string $topic, $prompt = null): array
     {
         $apiKey = config('services.groq.key'); // Puxa do config/services.php
 
-        if($prompt)
-        $prompt = "Atue como um brasileiro nativo no WhatsApp. Gere um diálogo informal de {$count} mensagens alternadas sobre '{$topic}'. "
-            . "Use gírias leves, abreviações (vc, tbm, blz) e ocasionalmente um erro de digitação. "
-            . "Retorne APENAS um array JSON de strings. Não adicione explicações.";
+        if (!$prompt) {
+            $prompt = "Atue como um brasileiro nativo no WhatsApp. Gere um diálogo informal de {$count} mensagens alternadas sobre '{$topic}'. "
+                . "Use gírias leves, abreviações (vc, tbm, blz) e ocasionalmente um erro de digitação. "
+                . "Retorne APENAS um array JSON de strings. Não adicione explicações.";
+        }
 
         try {
             $response = Http::withToken($apiKey)
+                ->retry(3, 700)
                 ->timeout(30)
                 ->post("https://api.groq.com/openai/v1/chat/completions", [
                     "model" => "llama-3.3-70b-versatile",
@@ -32,24 +34,89 @@ class GroqConversationGenerator implements ConversationGeneratorInterface
                 ]);
 
             if ($response->failed()) {
-                throw new \Exception("Groq API Error: " . $response->body());
+                $responseBody = (string) $response->body();
+                Log::error('Groq API retornou erro HTTP', [
+                    'status' => $response->status(),
+                    'reason' => $response->reason(),
+                    'body_preview' => mb_substr($responseBody, 0, 600),
+                ]);
+                throw new \Exception("Groq API Error HTTP " . $response->status());
             }
 
             $json = $response->json();
-            $content = $json['choices'][0]['message']['content'] ?? '';
+            $content = (string) ($json['choices'][0]['message']['content'] ?? '');
+            $messages = $this->decodeMessagesFromContent($content);
 
-            // Sanitização para garantir que pegamos apenas o JSON caso a IA mande lixo de texto
-            $content= json_decode($content);
-            if (!is_array($content)) {
-                Log::warning("Falha ao decodificar JSON da Groq. Conteúdo: " . $content);
+            if (empty($messages)) {
+                Log::warning("Falha ao decodificar JSON da Groq. Conteúdo bruto: " . $content);
                 return $this->fallbackScript($count);
             }
 
-            return $content;
+            return array_slice($messages, 0, $count);
         } catch (\Exception $e) {
-            Log::error("Erro no Warmup Generator: " . $e->getMessage());
+            Log::error("Erro no Warmup Generator: " . $e->getMessage(), [
+                'exception' => get_class($e),
+            ]);
             return $this->fallbackScript($count);
         }
+    }
+
+    private function decodeMessagesFromContent(string $content): array
+    {
+        $content = trim($content);
+        if ($content === '') {
+            return [];
+        }
+
+        // Tentativa 1: conteúdo já é JSON puro.
+        $decoded = json_decode($content, true);
+        if (is_array($decoded)) {
+            return $this->extractMessages($decoded);
+        }
+
+        // Tentativa 2: resposta veio em bloco markdown ```json ... ```.
+        if (preg_match('/```(?:json)?\s*(\[.*\])\s*```/is', $content, $matches)) {
+            $decoded = json_decode($matches[1], true);
+            if (is_array($decoded)) {
+                return $this->extractMessages($decoded);
+            }
+        }
+
+        // Tentativa 3: extrai o primeiro array JSON dentro do texto.
+        if (preg_match('/\[[\s\S]*\]/', $content, $matches)) {
+            $decoded = json_decode($matches[0], true);
+            if (is_array($decoded)) {
+                return $this->extractMessages($decoded);
+            }
+        }
+
+        return [];
+    }
+
+    private function extractMessages(array $decoded): array
+    {
+        if (isset($decoded['messages']) && is_array($decoded['messages'])) {
+            return $this->normalizeMessages($decoded['messages']);
+        }
+
+        if (isset($decoded['data']) && is_array($decoded['data'])) {
+            return $this->normalizeMessages($decoded['data']);
+        }
+
+        return $this->normalizeMessages($decoded);
+    }
+
+    private function normalizeMessages(array $messages): array
+    {
+        $normalized = [];
+        foreach ($messages as $message) {
+            $value = trim((string) $message);
+            if ($value !== '') {
+                $normalized[] = $value;
+            }
+        }
+
+        return $normalized;
     }
 
     private function fallbackScript(int $count): array

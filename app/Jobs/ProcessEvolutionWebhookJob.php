@@ -4,9 +4,11 @@ namespace App\Jobs;
 
 use App\Models\Instance;
 use App\Models\Contact;
+use App\Models\User;
 use App\Models\WhatsappJob;
 use App\Services\AI\AiAutoReplyService;
 use App\Services\AI\AiInboundMessageRecorder;
+use App\Services\AI\GroqAgentResponder;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -162,6 +164,14 @@ Log::info(json_encode($data));
             return;
         }
 
+        if ($this->handleWelcomeReply((string) $instanceName, (string) $whatsappId, (string) $text)) {
+            $this->debugWebhook('Resposta inbound tratada pelo fluxo welcome', [
+                'instance' => $instanceName,
+                'whatsappId' => $whatsappId,
+            ]);
+            return;
+        }
+
         $this->debugWebhook('Encaminhando mensagem para fluxo de IA', [
             'instance' => $instanceName,
             'whatsappId' => $whatsappId,
@@ -203,6 +213,72 @@ Log::info(json_encode($data));
         if (Contact::where('contact', $whatsappId)->update(['ignore_me' => 1])) {
             Redis::sadd("blacklist:instance:{$instanceName}", $whatsappId);
         }
+    }
+
+    private function handleWelcomeReply(string $instanceName, string $whatsappId, string $text): bool
+    {
+        $instance = Instance::where('instance_name', $instanceName)->first();
+        if (!$instance) {
+            return false;
+        }
+
+        $pendingKey = "welcome:pending_reply:user:{$instance->user_id}";
+        if (!Redis::sismember($pendingKey, $whatsappId)) {
+            return false;
+        }
+
+        $contact = Contact::where('user_id', $instance->user_id)
+            ->where('contact', $whatsappId)
+            ->first();
+
+        if (!$contact) {
+            return false;
+        }
+
+        $user = User::find($instance->user_id);
+        if (!$user) {
+            return false;
+        }
+
+        $campaignItemId = Redis::hget("welcome:contact_campaign:user:{$instance->user_id}", $whatsappId) ?: null;
+        $reply = $this->generateWelcomeReply($user, $text);
+
+        $job = WhatsappJob::create([
+            'endpoint' => '/message/sendText/',
+            'status' => 'pendente',
+            'payload' => [
+                'number' => $contact->contact,
+                'text' => $reply,
+            ],
+            'campaign_item_id' => $campaignItemId,
+            'user_id' => $instance->user_id,
+            'contact_id' => $contact->id,
+            'tentativas' => 0,
+        ]);
+
+        \App\Jobs\EnviarMensagemJob::dispatch($job)->onQueue('disparos');
+
+        Redis::srem($pendingKey, $whatsappId);
+        Redis::hdel("welcome:contact_campaign:user:{$instance->user_id}", $whatsappId);
+
+        return true;
+    }
+
+    private function generateWelcomeReply(User $user, string $text): string
+    {
+        $result = app(GroqAgentResponder::class)->generateReply($user, [
+            [
+                'role' => 'user',
+                'content' => "Mensagem inbound do lead apos primeiro contato: {$text}. Gere resposta curta, cordial e que avance a conversa.",
+            ],
+        ]);
+
+        $reply = trim((string) ($result['reply'] ?? ''));
+        if ($reply === '') {
+            $reply = 'Perfeito! Obrigado por responder. Posso te mostrar os proximos detalhes agora?';
+        }
+
+        return $reply;
     }
 
     private function debugWebhook(string $message, array $context = []): void

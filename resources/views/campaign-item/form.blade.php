@@ -66,6 +66,22 @@ Editar Item: {{ $campaignItem->name }}
                                     {{ Form::select('campaign_id', $campaigns, $campaignItem->campaign_id, ['class' => 'form-select', 'required']) }}
                                 </div>
 
+                                <div class="mb-4">
+                                    <div class="form-check form-switch">
+                                        <input
+                                            class="form-check-input"
+                                            type="checkbox"
+                                            id="welcome_enabled"
+                                            name="welcome_enabled"
+                                            value="1"
+                                            {{ old('welcome_enabled', $campaignItem->welcome_enabled) ? 'checked' : '' }}>
+                                        <label class="form-check-label fw-bold" for="welcome_enabled">
+                                            Mensagem de boas-vindas habilitada
+                                        </label>
+                                    </div>
+                                    <small class="text-muted">Ative para marcar este item como mensagem de boas-vindas.</small>
+                                </div>
+
                                 {{-- Substitua o bloco da URL da Imagem por este --}}
                                 <div class="mb-4">
                                     <label class="form-label fw-bold d-flex justify-content-between">

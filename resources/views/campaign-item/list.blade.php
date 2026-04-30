@@ -1,4 +1,16 @@
 <div class="container-fluid py-4">
+    @php
+        $generationNotifications = auth()->user()->notifications
+            ->filter(function ($notification) {
+                return ($notification->data['context'] ?? null) === 'campaign_item_generate'
+                    && !empty($notification->data['campaign_item_id']);
+            })
+            ->sortByDesc('created_at')
+            ->groupBy(function ($notification) {
+                return (int) ($notification->data['campaign_item_id'] ?? 0);
+            });
+    @endphp
+
     <div class="d-flex justify-content-between align-items-end mb-4">
         <div>
             <nav aria-label="breadcrumb">
@@ -37,6 +49,10 @@
                     <tbody>
                         @foreach ($campaignItems as $campaignItem)
                         @php $rate = $campaignItem->getDeliveryRate(); @endphp
+                        @php
+                            $itemStatusNotification = optional($generationNotifications->get((int) $campaignItem->id))->first();
+                            $itemStatus = $itemStatusNotification->data['status'] ?? null;
+                        @endphp
                         <tr class="transition-all table-row-custom">
                             <td class="ps-4 py-3">
                                 <div class="d-flex align-items-center">
@@ -48,6 +64,32 @@
                                         <div class="badge bg-soft-primary text-primary x-small fw-normal">
                                             <i class="bi bi-tag-fill me-1"></i>{{ $campaignItem->campaign->name ?? 'N/A' }}
                                         </div>
+                                        @if($itemStatus === 'started')
+                                        <div class="mt-1">
+                                            <span class="badge bg-warning-subtle text-warning-emphasis x-small fw-normal">
+                                                <i class="bi bi-hourglass-split me-1"></i> Gerando...
+                                            </span>
+                                        </div>
+                                        @elseif($itemStatus === 'completed')
+                                        <div class="mt-1">
+                                            <span class="badge bg-info-subtle text-info-emphasis x-small fw-normal">
+                                                <i class="bi bi-check2-circle me-1"></i> Geração concluída
+                                            </span>
+                                        </div>
+                                        @elseif($itemStatus === 'error')
+                                        <div class="mt-1">
+                                            <span class="badge bg-danger-subtle text-danger-emphasis x-small fw-normal">
+                                                <i class="bi bi-x-circle me-1"></i> Erro na geração
+                                            </span>
+                                        </div>
+                                        @endif
+                                        @if($campaignItem->welcome_enabled)
+                                        <div class="mt-1">
+                                            <span class="badge bg-success-subtle text-success-emphasis x-small fw-normal">
+                                                <i class="bi bi-chat-heart-fill me-1"></i> Boas-vindas
+                                            </span>
+                                        </div>
+                                        @endif
                                     </div>
                                 </div>
                             </td>

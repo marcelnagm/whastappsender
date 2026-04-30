@@ -58,8 +58,11 @@ class EnviarMensagemJob implements ShouldQueue
             }
 
 
-            $item = $job->campaignItem()->first();
             $contact = $job->contact()->first();
+            if (!$contact) {
+                $this->registrarErro("Contato não encontrado para o job.", $instance);
+                return;
+            }
             if ($contact->status === "no-whatsapp") {
                 $this->jobModel->update([
                     'status' => 'erro',
@@ -68,7 +71,15 @@ class EnviarMensagemJob implements ShouldQueue
                 ]);
             }
 
-            $payload = $item->generate($job->contact_id);
+            $payload = is_array($job->payload) ? $job->payload : null;
+            if (!$payload) {
+                $item = $job->campaignItem()->first();
+                if (!$item) {
+                    $this->registrarErro("CampaignItem não encontrado para o job.", $instance);
+                    return;
+                }
+                $payload = $item->generate($job->contact_id);
+            }
             $numeroDestino = $contact->contact;
 
             // PASSO 1: HUMANIZAÇÃO

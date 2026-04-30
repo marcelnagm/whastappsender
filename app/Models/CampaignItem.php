@@ -46,7 +46,11 @@ class CampaignItem extends Model
      *
      * @var array
      */
-    protected $fillable = ['name', 'text', 'image', 'user_id', 'campaign_id'];
+    protected $fillable = ['name', 'text', 'image', 'user_id', 'campaign_id', 'welcome_enabled'];
+
+    protected $casts = [
+        'welcome_enabled' => 'boolean',
+    ];
 
 
     /**
