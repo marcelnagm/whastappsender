@@ -1,64 +1,50 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400"></a></p>
+# 🚀 SAMA Envios - Enterprise WhatsApp Marketing & Automation Platform
 
-<p align="center">
-<a href="https://travis-ci.org/laravel/framework"><img src="https://travis-ci.org/laravel/framework.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+![PHP Version](https://img.shields.io/badge/php-%5E8.2-777bb4?style=for-the-badge&logo=php&logoColor=white)
+![Laravel Version](https://img.shields.io/badge/laravel-%5E11.0-ff2d20?style=for-the-badge&logo=laravel&logoColor=white)
+![Tailwind](https://img.shields.io/badge/tailwind-%2338B2AC.svg?style=for-the-badge&logo=tailwind-css&logoColor=white)
+![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white)
 
-## About Laravel
+**SAMA Envios** é uma solução de nível empresarial para disparos em massa e automação de WhatsApp. Projetada para desenvolvedores e agências que não podem permitir perda de dados ou instabilidade de servidor durante grandes campanhas.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+---
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## 💎 O Diferencial Técnico (Engine Sênior)
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+Diferente de scripts amadores, a SAMA foi construída com foco em **processamento assíncrono**. Enquanto outros scripts travam o navegador, a SAMA gerencia tudo via **Workers em Background**.
 
-## Learning Laravel
+* **Zero Loss Architecture:** Todas as mensagens são salvas em filas (Database Queues). Se o servidor oscilar, o sistema retoma exatamente de onde parou.
+* **Supervisor Ready:** Gerenciamento de processos via Supervisor, garantindo que o motor de envio esteja sempre online (24/7).
+* **Anti-Block Smart Cadence:** Algoritmo humanizado que aplica delays aleatórios e pausas entre lotes, protegendo a reputação dos seus chips.
+* **Resiliência em Lote (Bulk Retry):** Painel exclusivo para monitorar erros. Se a API falhar, você reinfiltra os jobs corrompidos com um clique.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+---
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains over 1500 video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## 🛠️ Funcionalidades Principais
 
-## Laravel Sponsors
+* ✅ **Multi-Instâncias:** Gerencie múltiplos números e conexões QR Code simultaneamente.
+* ✅ **Dashboard Analítico:** Acompanhe em tempo real a taxa de sucesso e erros dos seus disparos.
+* ✅ **Gestão de Leads Inteligente:** Importação massiva via Excel/CSV com mapeamento dinâmico.
+* ✅ **Templates Personalizados:** Use variáveis dinâmicas (Ex: `Olá, {{nome}}`) para aumentar a conversão.
+* ✅ **Suporte Multi-Mídia:** Envie textos, imagens, PDFs e áudios (formato OGG para simular gravação na hora).
+* ✅ **API de Alta Performance:** Integração nativa e otimizada com Evolution API.
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the Laravel [Patreon page](https://patreon.com/taylorotwell).
+---
 
-### Premium Partners
+## 💻 Stack Técnica
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Cubet Techno Labs](https://cubettech.com)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[Many](https://www.many.co.uk)**
-- **[Webdock, Fast VPS Hosting](https://www.webdock.io/en)**
-- **[DevSquad](https://devsquad.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[OP.GG](https://op.gg)**
-- **[CMS Max](https://www.cmsmax.com/)**
-- **[WebReinvent](https://webreinvent.com/?utm_source=laravel&utm_medium=github&utm_campaign=patreon-sponsors)**
+* **Backend:** Laravel 11.x (Clean Code & SOLID Principles)
+* **Frontend:** Tailwind CSS & Blade Templates
+* **Database:** MySQL / PostgreSQL / SQLite
+* **Queue Driver:** Database (Otimizado para visibilidade e estabilidade)
+* **Infra:** Docker Ready (Includes Dockerfile & Docker Compose)
 
-## Contributing
+---
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+## ⚙️ Instalação em 3 Passos
 
-## Code of Conduct
-
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+### 1. Preparação
+```bash
+composer install
+cp .env.example .env
+php artisan key:generate
