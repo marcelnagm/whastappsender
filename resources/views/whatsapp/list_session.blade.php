@@ -1,11 +1,11 @@
 
 <thead class="thead-light">
     <tr>
-        <th class="" scope="col">Sessão </th>
-        <th class="" scope="col">Hardware </th>
-        <th class="" scope="col">Estado da Bateria</th>
-        <th class="" scope="col">Status de Conexão</th>
-        <th class="" scope="col">Ações</th>
+        <th class="" scope="col">Session</th>
+        <th class="" scope="col">Hardware</th>
+        <th class="" scope="col">Battery</th>
+        <th class="" scope="col">Connection</th>
+        <th class="" scope="col">Actions</th>
     </tr>
 </thead>
 <tbody>    

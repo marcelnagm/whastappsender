@@ -4,11 +4,11 @@
 <div class="card shadow-lg border-0 rounded-lg">
     <div class="card-body p-5">
         <div class="text-center mb-4">
-            {{-- Substitua por um ícone de "Radar" ou "Data" que remeta a mineração --}}
+            {{-- Optional: replace with a radar/data themed icon --}}
             <img style="background-color: #dbc5c8; border-radius: 100%;;" src="{{ asset('images/logo.jpg') }}" alt="Logo" width="100%" height="100%" class="me-2 d-inline-block align-text-top">
             
             <h2 class="fw-bold">{{env('APP_NAME ')}}</h2>
-            <p class="text-muted">Acesse sua central de inteligência</p>
+            <p class="text-muted">Sign in to your intelligence hub</p>
         </div>
 
         <form method="post" action="{{ route('login.perform') }}">
@@ -19,7 +19,7 @@
             <div class="form-floating mb-3">
                 <input type="text" class="form-control border-0 bg-light" id="floatingName" name="username" 
                        value="{{ old('username') }}" placeholder="Username" required autofocus>
-                <label for="floatingName">Usuário ou E-mail</label>
+                <label for="floatingName">Username or email</label>
                 @if ($errors->has('username'))
                     <small class="text-danger">{{ $errors->first('username') }}</small>
                 @endif
@@ -28,7 +28,7 @@
             <div class="form-floating mb-3">
                 <input type="password" class="form-control border-0 bg-light" id="floatingPassword" name="password" 
                        placeholder="Password" required>
-                <label for="floatingPassword">Senha</label>
+                <label for="floatingPassword">Password</label>
                 @if ($errors->has('password'))
                     <small class="text-danger">{{ $errors->first('password') }}</small>
                 @endif
@@ -38,14 +38,14 @@
                 <div class="form-check">
                     <input class="form-check-input" type="checkbox" name="remember" value="1" id="remember">
                     <label class="form-check-label text-muted" for="remember">
-                        Manter conectado
+                        Keep me signed in
                     </label>
                 </div>
-                {{-- Link de esqueci a senha pode ser adicionado aqui depois --}}
+                {{-- Forgot password link can be added here later --}}
             </div>
 
             <button class="btn btn-primary btn-lg w-100 shadow-sm fw-bold py-3" type="submit">
-                Entrar no Sistema
+                Sign in
             </button>
         </form>
     </div>

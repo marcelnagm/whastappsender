@@ -15,7 +15,7 @@
         </div>
         <div class="d-flex gap-2">
             <a class="btn btn-outline-secondary btn-sm fw-bold shadow-sm px-3" href="{{ route('contacts.index') }}">
-                <i class="bi bi-arrow-left me-1"></i> VOLTAR
+                <i class="bi bi-arrow-left me-1"></i> BACK
             </a>
             {{-- Manual sync --}}
             <button class="btn btn-info btn-sm fw-bold shadow-sm px-3 text-white" onclick="syncProfile({{ $contact->id }})" id="btnSync">
@@ -31,8 +31,8 @@
         <div class="col-lg-4 col-md-5">
             <div class="card border-0 shadow-sm rounded-4 mb-4 overflow-hidden">
                 <div class="card-body p-4 text-center">
-                    {{-- Foto clicável para sincronizar --}}
-                    <div class="position-relative d-inline-block cursor-pointer" onclick="syncProfile({{ $contact->id }})" style="cursor: pointer;" title="Clique para atualizar foto">
+                    {{-- Clickable photo to sync --}}
+                    <div class="position-relative d-inline-block cursor-pointer" onclick="syncProfile({{ $contact->id }})" style="cursor: pointer;" title="Click to refresh photo">
                         <div id="avatarContainer">
                             @if($contact->profile_url)
                                 <img src="{{ $contact->profile_url }}" 
@@ -101,7 +101,7 @@
                                     <th class="ps-4">Job ID</th>
                                     <th>Job status</th>
                                     <th>Status WhatsApp</th>
-                                    <th class="text-end pe-4">Ação</th>
+                                    <th class="text-end pe-4">Action</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -124,7 +124,7 @@
                                     </td>
                                 </tr>
                                 @empty
-                                <tr><td colspan="4" class="text-center py-4 text-muted">Sem histórico.</td></tr>
+                                <tr><td colspan="4" class="text-center py-4 text-muted">No history yet.</td></tr>
                                 @endforelse
                             </tbody>
                         </table>
@@ -145,7 +145,7 @@ async function syncProfile(id) {
 
     // Estado de carregamento
     btn.disabled = true;
-    icon.classList.add('bi-spin'); // Adicione uma animação de giro se tiver CSS
+    icon.classList.add('bi-spin'); // Add spin animation in CSS if desired
     loader.classList.remove('d-none');
     if(img) img.style.opacity = '0.3';
 
@@ -162,7 +162,7 @@ async function syncProfile(id) {
             badge.classList.remove('bg-danger');
             badge.classList.add('bg-success');
         } else {
-            alert('A API não retornou uma foto para este número ou o contato não existe no WhatsApp.');
+            alert('The API did not return a photo for this number, or the contact does not exist on WhatsApp.');
         }
     } catch (error) {
         console.error('Sync error:', error);

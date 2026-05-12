@@ -16,7 +16,7 @@
         :root {
             --bg-dark: #121212;
             --card-dark: #1e1e1e;
-            --accent-color: #ffc107; /* Amarelo Radar */
+            --accent-color: #ffc107; /* Radar accent yellow */
         }
 
         body {
@@ -48,7 +48,7 @@
             object-fit: contain;
         }
 
-        /* CONFIGURAÇÃO DOS INPUTS BRANCOS */
+        /* White input fields */
         .form-control {
             background-color: #ffffff !important;
             border: 1px solid #ced4da !important;
@@ -65,7 +65,7 @@
             box-shadow: 0 0 0 0.25rem rgba(255, 193, 7, 0.25);
         }
 
-        /* Ajuste para Floating Labels sobre fundo branco */
+        /* Floating labels over white inputs */
         .form-floating > label {
             color: #6c757d !important;
             left: 5px;

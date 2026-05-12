@@ -8,7 +8,7 @@
     <div id="bulkActionsBar" class="card border-0 shadow-lg bg-dark text-white position-fixed bottom-0 start-50 translate-middle-x mb-4 d-none" style="z-index: 1050; min-width: 500px; border-radius: 50px;">
         <div class="card-body d-flex align-items-center justify-content-between py-2 px-4">
             <div class="small">
-                <span id="selectedCount" class="fw-bold text-warning">0</span> selecionados
+                <span id="selectedCount" class="fw-bold text-warning">0</span> selected
             </div>
             <div class="d-flex gap-2">
                 <button type="button" class="btn btn-success btn-sm fw-bold rounded-pill" onclick="submitBulk('ativo')">
@@ -49,7 +49,7 @@
                         </button>
                     </form>
                     <a href="{{ route('contacts.create') }}" class="btn btn-success btn-sm fw-bold px-3 shadow-sm">
-                        <i class="bi bi-plus-lg"></i> NOVO
+                        <i class="bi bi-plus-lg"></i> NEW
                     </a>
                 </div>
             </div>
@@ -97,7 +97,7 @@
                                                     <i class="bi bi-person text-secondary" style="font-size: 1.2rem;"></i>
                                                 </div>
                                             @endif
-                                            {{-- Loader discreto --}}
+                                            {{-- Subtle row loader --}}
                                             <div id="loader-{{ $contact->id }}" class="position-absolute top-50 start-50 translate-middle d-none">
                                                 <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
                                             </div>

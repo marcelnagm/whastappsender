@@ -1,6 +1,6 @@
 @extends('layouts.app-master')
 
-@section('template_title', 'Editar Usuário - ' . $user->name)
+@section('template_title', 'Edit user - ' . $user->name)
 
 @section('content')
 <div class="container-fluid py-4">
@@ -11,13 +11,13 @@
                     <i class="bi bi-arrow-left"></i>
                 </a>
                 <h1 class="h3 mb-0 text-gray-800 fw-bold">
-                    <i class="bi bi-person-gear text-primary me-2"></i>Editar Perfil de Usuário
+                    <i class="bi bi-person-gear text-primary me-2"></i>Edit user profile
                 </h1>
             </div>
 
             <div class="card border-0 shadow-sm rounded-4">
                 <div class="card-header bg-white py-3 border-bottom">
-                    <h6 class="m-0 font-weight-bold text-primary">Dados Cadastrais: {{ $user->name }}</h6>
+                    <h6 class="m-0 font-weight-bold text-primary">Account details: {{ $user->name }}</h6>
                 </div>
 
                 <div class="card-body p-4">
@@ -33,16 +33,16 @@
 
                     <form method="POST" action="{{ route('users.update', $user->id) }}" role="form">
                         @csrf
-                        @method('POST') {{-- Como suas rotas estão como POST para update, mantemos aqui --}}
+                        @method('POST') {{-- Routes use POST for update --}}
 
                         <div class="row g-3">
                             <div class="col-md-12">
-                                <label for="name" class="form-label small fw-bold text-uppercase">Nome Completo</label>
-                                <input type="text" name="name" id="name" class="form-control" value="{{ old('name', $user->name) }}" placeholder="Ex: João Silva">
+                                <label for="name" class="form-label small fw-bold text-uppercase">Full name</label>
+                                <input type="text" name="name" id="name" class="form-control" value="{{ old('name', $user->name) }}" placeholder="e.g. Jane Smith">
                             </div>
 
                             <div class="col-md-6">
-                                <label for="username" class="form-label small fw-bold text-uppercase">Nome de Usuário (Login)</label>
+                                <label for="username" class="form-label small fw-bold text-uppercase">Username (login)</label>
                                 <div class="input-group">
                                     <span class="input-group-text bg-light">@</span>
                                     <input type="text" name="username" id="username" class="form-control" value="{{ old('username', $user->username) }}">
@@ -50,7 +50,7 @@
                             </div>
 
                             <div class="col-md-6">
-                                <label for="email" class="form-label small fw-bold text-uppercase">E-mail Oficial</label>
+                                <label for="email" class="form-label small fw-bold text-uppercase">Official email</label>
                                 <input type="email" name="email" id="email" class="form-control" value="{{ old('email', $user->email) }}">
                             </div>
 
@@ -59,26 +59,26 @@
                             <div class="col-md-12">
                                 <div class="alert alert-light border-0 small mb-3">
                                     <i class="bi bi-info-circle me-2 text-primary"></i> 
-                                    Deixe os campos de senha em <strong>branco</strong> caso não deseje alterá-la.
+                                    Leave the password fields <strong>blank</strong> if you do not want to change the password.
                                 </div>
                             </div>
 
                             <div class="col-md-6">
-                                <label for="password" class="form-label small fw-bold text-uppercase">Nova Senha</label>
+                                <label for="password" class="form-label small fw-bold text-uppercase">New password</label>
                                 <input type="password" name="password" id="password" class="form-control" placeholder="••••••••">
                             </div>
 
                             <div class="col-md-6">
-                                <label for="password_confirmation" class="form-label small fw-bold text-uppercase">Confirmar Nova Senha</label>
+                                <label for="password_confirmation" class="form-label small fw-bold text-uppercase">Confirm new password</label>
                                 <input type="password" name="password_confirmation" id="password_confirmation" class="form-control" placeholder="••••••••">
                             </div>
 
                             <div class="col-md-12 mt-5 d-flex justify-content-between">
                                 <button type="button" class="btn btn-link text-danger fw-bold text-decoration-none" onclick="window.history.back()">
-                                    Cancelar
+                                    Cancel
                                 </button>
                                 <button type="submit" class="btn btn-primary px-5 shadow-sm fw-bold">
-                                    <i class="bi bi-check2-circle me-2"></i>Salvar Alterações
+                                    <i class="bi bi-check2-circle me-2"></i>Save changes
                                 </button>
                             </div>
                         </div>
@@ -88,8 +88,8 @@
             
             <div class="mt-4 text-center">
                 <small class="text-muted">
-                    Usuário criado em: <strong>{{ $user->created_at->format('d/m/Y H:i') }}</strong> | 
-                    Última atualização: <strong>{{ $user->updated_at->format('d/m/Y H:i') }}</strong>
+                    User created: <strong>{{ $user->created_at->format('d/m/Y H:i') }}</strong> | 
+                    Last updated: <strong>{{ $user->updated_at->format('d/m/Y H:i') }}</strong>
                 </small>
             </div>
         </div>

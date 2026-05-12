@@ -27,7 +27,7 @@
             </h1>
         </div>
         <a href="{{ route('campaign-items.create') }}" class="btn btn-primary px-4 py-2 fw-bold shadow-sm rounded-pill">
-            <i class="bi bi-plus-lg me-2"></i> NOVO ITEM
+            <i class="bi bi-plus-lg me-2"></i> NEW ITEM
         </a>
     </div>
 
@@ -132,7 +132,7 @@
                                 <div class="d-flex justify-content-end gap-2">
                                     <div class="btn-group shadow-none">
                                         <button type="button" class="btn btn-sm btn-primary fw-bold px-3 dropdown-toggle shadow-none" data-bs-toggle="dropdown" aria-expanded="false">
-                                            <i class="bi bi-lightning-charge-fill me-1"></i> EXECUTAR
+                                            <i class="bi bi-lightning-charge-fill me-1"></i> RUN
                                         </button>
                                         <ul class="dropdown-menu dropdown-menu-end shadow border-0 p-2" style="border-radius: 12px; z-index: 9999;">
                                             <li><h6 class="dropdown-header text-uppercase x-small fw-bold">Processing</h6></li>

@@ -1,6 +1,6 @@
 @extends('layouts.app-master')
 
-@section('template_title', 'Meu Perfil e IA')
+@section('template_title', 'My profile & AI')
 
 @section('content')
 <div class="container-fluid py-4">
@@ -8,7 +8,7 @@
         <div class="col-md-10 col-lg-9">
             <div class="d-flex align-items-center mb-4 gap-3">
                 <h1 class="h3 mb-0 text-gray-800 fw-bold">
-                    <i class="bi bi-person-circle text-primary me-2"></i>Meu Perfil e Configuração da IA
+                    <i class="bi bi-person-circle text-primary me-2"></i>My profile & AI settings
                 </h1>
             </div>
 
@@ -30,14 +30,14 @@
                 <div class="d-flex justify-content-between flex-wrap gap-2 align-items-center">
                     <span>
                         <i class="bi {{ $isAiReady ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill' }} me-2"></i>
-                        {{ $isAiReady ? 'IA pronta para resposta automatica.' : 'IA ainda nao esta em modo automatico.' }}
+                        {{ $isAiReady ? 'AI is ready for automatic replies.' : 'AI is not in automatic mode yet.' }}
                     </span>
                     <span class="badge {{ $isAiReady ? 'bg-success' : 'bg-secondary' }}">
-                        {{ $isAiReady ? 'Status: Ativo' : 'Status: Inativo' }}
+                        {{ $isAiReady ? 'Status: Active' : 'Status: Inactive' }}
                     </span>
                 </div>
                 <small class="d-block mt-2">
-                    A IA responde pela mesma instancia que recebeu a mensagem no webhook, sem trocar para outra instancia.
+                    The AI replies from the same instance that received the message in the webhook, without switching to another instance.
                 </small>
             </div>
 
@@ -46,16 +46,16 @@
 
                 <div class="card border-0 shadow-sm rounded-4 mb-4">
                     <div class="card-header bg-white py-3 border-bottom">
-                        <h6 class="m-0 font-weight-bold text-primary">Dados da Conta</h6>
+                        <h6 class="m-0 font-weight-bold text-primary">Account details</h6>
                     </div>
                     <div class="card-body p-4">
                         <div class="row g-3">
                             <div class="col-md-12">
-                                <label for="name" class="form-label small fw-bold text-uppercase">Nome Completo</label>
+                                <label for="name" class="form-label small fw-bold text-uppercase">Full name</label>
                                 <input type="text" name="name" id="name" class="form-control" value="{{ old('name', $user->name) }}" required>
                             </div>
                             <div class="col-md-6">
-                                <label for="username" class="form-label small fw-bold text-uppercase">Usuário</label>
+                                <label for="username" class="form-label small fw-bold text-uppercase">Username</label>
                                 <div class="input-group">
                                     <span class="input-group-text bg-light">@</span>
                                     <input type="text" name="username" id="username" class="form-control" value="{{ old('username', $user->username) }}" required>
@@ -66,12 +66,12 @@
                                 <input type="email" name="email" id="email" class="form-control" value="{{ old('email', $user->email) }}" required>
                             </div>
                             <div class="col-md-6">
-                                <label for="password" class="form-label small fw-bold text-uppercase">Nova Senha</label>
-                                <input type="password" name="password" id="password" class="form-control" placeholder="Deixe em branco para manter">
+                                <label for="password" class="form-label small fw-bold text-uppercase">New password</label>
+                                <input type="password" name="password" id="password" class="form-control" placeholder="Leave blank to keep current">
                             </div>
                             <div class="col-md-6">
-                                <label for="password_confirmation" class="form-label small fw-bold text-uppercase">Confirmar Senha</label>
-                                <input type="password" name="password_confirmation" id="password_confirmation" class="form-control" placeholder="Repita a nova senha">
+                                <label for="password_confirmation" class="form-label small fw-bold text-uppercase">Confirm password</label>
+                                <input type="password" name="password_confirmation" id="password_confirmation" class="form-control" placeholder="Repeat new password">
                             </div>
                         </div>
                     </div>
@@ -79,29 +79,29 @@
 
                 <div class="card border-0 shadow-sm rounded-4">
                     <div class="card-header bg-white py-3 border-bottom">
-                        <h6 class="m-0 font-weight-bold text-primary">Funcionário de IA (GROQ)</h6>
+                        <h6 class="m-0 font-weight-bold text-primary">AI assistant (GROQ)</h6>
                     </div>
                     <div class="card-body p-4">
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <div class="form-check form-switch mt-2">
                                     <input class="form-check-input" type="checkbox" role="switch" name="ai_enabled" id="ai_enabled" value="1" {{ old('ai_enabled', $user->ai_enabled) ? 'checked' : '' }}>
-                                    <label class="form-check-label fw-semibold" for="ai_enabled">Ativar IA para meu WhatsApp</label>
+                                    <label class="form-check-label fw-semibold" for="ai_enabled">Enable AI for my WhatsApp</label>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-check form-switch mt-2">
                                     <input class="form-check-input" type="checkbox" role="switch" name="ai_business_hours_only" id="ai_business_hours_only" value="1" {{ old('ai_business_hours_only', $user->ai_business_hours_only) ? 'checked' : '' }}>
-                                    <label class="form-check-label fw-semibold" for="ai_business_hours_only">Responder apenas em horário comercial</label>
+                                    <label class="form-check-label fw-semibold" for="ai_business_hours_only">Reply only during business hours</label>
                                 </div>
                             </div>
 
                             <div class="col-md-4">
-                                <label for="ai_mode" class="form-label small fw-bold text-uppercase">Modo da IA</label>
+                                <label for="ai_mode" class="form-label small fw-bold text-uppercase">AI mode</label>
                                 <select name="ai_mode" id="ai_mode" class="form-select" required>
-                                    <option value="off" {{ old('ai_mode', $user->ai_mode) === 'off' ? 'selected' : '' }}>Desligado</option>
-                                    <option value="assist" {{ old('ai_mode', $user->ai_mode) === 'assist' ? 'selected' : '' }}>Assistido</option>
-                                    <option value="auto" {{ old('ai_mode', $user->ai_mode) === 'auto' ? 'selected' : '' }}>Automático</option>
+                                    <option value="off" {{ old('ai_mode', $user->ai_mode) === 'off' ? 'selected' : '' }}>Off</option>
+                                    <option value="assist" {{ old('ai_mode', $user->ai_mode) === 'assist' ? 'selected' : '' }}>Assist</option>
+                                    <option value="auto" {{ old('ai_mode', $user->ai_mode) === 'auto' ? 'selected' : '' }}>Automatic</option>
                                 </select>
                             </div>
 
@@ -121,10 +121,10 @@
                             </div>
 
                             <div class="col-12">
-                                <label for="ai_system_prompt" class="form-label small fw-bold text-uppercase">Prompt do Funcionário de IA</label>
-                                <textarea name="ai_system_prompt" id="ai_system_prompt" rows="8" class="form-control" placeholder="Ex: Você é atendente comercial da empresa X, responda com objetividade e peça nome completo antes de avançar.">{{ old('ai_system_prompt', $user->ai_system_prompt) }}</textarea>
+                                <label for="ai_system_prompt" class="form-label small fw-bold text-uppercase">AI system prompt</label>
+                                <textarea name="ai_system_prompt" id="ai_system_prompt" rows="8" class="form-control" placeholder="e.g. You are a sales assistant for company X; reply concisely and ask for full name before proceeding.">{{ old('ai_system_prompt', $user->ai_system_prompt) }}</textarea>
                                 <small class="text-muted d-block mt-2">
-                                    Este prompt define o comportamento base do agente. Em modo automático, ele será usado nas respostas geradas pelo GROQ.
+                                    This prompt defines the agent's baseline behavior. In automatic mode it is used for GROQ-generated replies.
                                 </small>
                             </div>
                         </div>
@@ -133,7 +133,7 @@
 
                 <div class="mt-4 d-flex justify-content-end">
                     <button type="submit" class="btn btn-primary px-5 shadow-sm fw-bold">
-                        <i class="bi bi-check2-circle me-2"></i>Salvar Configurações
+                        <i class="bi bi-check2-circle me-2"></i>Save settings
                     </button>
                 </div>
             </form>

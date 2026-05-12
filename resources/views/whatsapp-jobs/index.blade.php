@@ -28,37 +28,37 @@ $totalParaDivisao = $totalCalculado ?: 1;
 
 $calcPercent = fn($parcial) => round(($parcial / $totalParaDivisao) * 100, 1);
 
-// Estrutura dos Cards
+// Card layout for dashboard
 $cards = [
-['label' => 'Erros', 'color' => 'danger', 'count' => $errorsCount, 'pct' => $calcPercent($errorsCount), 'icon' => 'bi-x-circle'],
-['label' => 'Enviados', 'color' => 'primary', 'count' => $sentCount, 'pct' => $calcPercent($sentCount), 'icon' => 'bi-send'],
-['label' => 'Entregues', 'color' => 'info', 'count' => $deliveredCount, 'pct' => $calcPercent($deliveredCount), 'icon' => 'bi-check2-all'],
-['label' => 'Lidos', 'color' => 'success', 'count' => $readCount, 'pct' => $calcPercent($readCount), 'icon' => 'bi-eye']
+['label' => 'Errors', 'color' => 'danger', 'count' => $errorsCount, 'pct' => $calcPercent($errorsCount), 'icon' => 'bi-x-circle'],
+['label' => 'Sent', 'color' => 'primary', 'count' => $sentCount, 'pct' => $calcPercent($sentCount), 'icon' => 'bi-send'],
+['label' => 'Delivered', 'color' => 'info', 'count' => $deliveredCount, 'pct' => $calcPercent($deliveredCount), 'icon' => 'bi-check2-all'],
+['label' => 'Read', 'color' => 'success', 'count' => $readCount, 'pct' => $calcPercent($readCount), 'icon' => 'bi-eye']
 ];
 @endphp
 
 <div class="container-fluid py-4">
-    {{-- BARRA DE AÇÕES EM MASSA (STICKY BULK BAR) --}}
+    {{-- Sticky bulk actions bar --}}
     <div id="bulkActionsBar" class="card border-0 shadow-lg bg-dark text-white position-fixed bottom-0 start-50 translate-middle-x mb-4 d-none" style="z-index: 1050; min-width: 450px; border-radius: 50px;">
         <div class="card-body d-flex align-items-center justify-content-between py-2 px-4">
             <div class="small">
-                <span id="selectedCount" class="fw-bold text-warning">0</span> selecionados
+                <span id="selectedCount" class="fw-bold text-warning">0</span> selected
             </div>
             <div class="d-flex gap-2">
                 <button type="button" class="btn btn-warning btn-sm fw-bold rounded-pill" onclick="submitBulk('retry')">
-                    <i class="bi bi-arrow-repeat me-1"></i> RETENTAR
+                    <i class="bi bi-arrow-repeat me-1"></i> RETRY
                 </button>
                 <button type="button" class="btn btn-danger btn-sm fw-bold rounded-pill" onclick="submitBulk('delete')">
-                    <i class="bi bi-trash me-1"></i> REMOVER
+                    <i class="bi bi-trash me-1"></i> REMOVE
                 </button>
                 <button type="button" class="btn btn-link btn-sm text-white text-decoration-none" onclick="toggleSelectAll(false)">
-                    Cancelar
+                    Cancel
                 </button>
             </div>
         </div>
     </div>
 
-    {{-- Formulário Oculto para Bulk Actions --}}
+    {{-- Hidden form for bulk actions --}}
     <form id="bulkActionForm" method="POST" action="" class="d-none">
         @csrf
         <input type="hidden" name="ids" id="bulkIdsInput">
@@ -69,13 +69,13 @@ $cards = [
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h1 class="h3 mb-0 text-gray-800 fw-bold">
-                <i class="bi bi-terminal-split text-primary me-2"></i>Monitor de Operações
+                <i class="bi bi-terminal-split text-primary me-2"></i>Operations monitor
             </h1>
-            <p class="text-muted small mb-0">Gerenciamento de disparos e integridade de contatos.</p>
+            <p class="text-muted small mb-0">Send jobs and contact delivery health.</p>
         </div>
         <div>
             <a href="{{ route('campaign-items.index') }}" class="btn btn-sm btn-secondary  fw-bold ms-2 shadow-sm">
-                <i class="bi bi-arrow-left me-1"></i> VOLTAR
+                <i class="bi bi-arrow-left me-1"></i> BACK
             </a>
             <span class="badge bg-dark px-3 py-2 ms-2 shadow-sm">LOTE #{{ $id }}</span>
         </div>
@@ -83,12 +83,12 @@ $cards = [
 
     
 
-    {{-- Dashboard Superior: Gráfico + Cards --}}
+    {{-- Top dashboard: chart + cards --}}
     <div class="row g-4 mb-4 justify-content-center">
         <div class="col-lg-4">
             <div class="card border-0 shadow-sm p-3 h-100" style="border-radius: 15px;">
                 <div class="card-header bg-white border-0 text-center pb-0">
-                    <h6 class="fw-bold text-uppercase small text-muted mb-0">Distribuição Evolution API</h6>
+                    <h6 class="fw-bold text-uppercase small text-muted mb-0">Evolution API distribution</h6>
                 </div>
                 <div class="card-body position-relative" style="height: 250px;">
                     <canvas id="jobsPieChart"></canvas>
@@ -123,46 +123,46 @@ $cards = [
         </div>
         <div>
             <button class="btn btn-outline-primary btn-sm fw-bold shadow-sm" type="button" data-bs-toggle="collapse" data-bs-target="#filterCollapse">
-                <i class="bi bi-funnel-fill me-1"></i> FILTROS
+                <i class="bi bi-funnel-fill me-1"></i> FILTERS
             </button>
         </div>
     </div>
 
-    {{-- FIltros) --}}
+    {{-- Filters --}}
     <div class="collapse {{ request()->anyFilled(['contact', 'status', 'evolution_status']) ? 'show' : '' }} mb-4" id="filterCollapse">
         <div class="card border-0 shadow-sm card-body bg-white border-start border-primary border-4">
             <form method="GET" action="{{ route('whatsapp-jobs.index', $id) }}" class="row g-3">
                 <div class="col-md-4">
-                    <label class="x-small fw-bold text-uppercase text-muted mb-1">Busca por Contato</label>
-                    <input type="text" name="contact" class="form-control form-control-sm" value="{{ request('contact') }}" placeholder="Nome ou número...">
+                    <label class="x-small fw-bold text-uppercase text-muted mb-1">Contact search</label>
+                    <input type="text" name="contact" class="form-control form-control-sm" value="{{ request('contact') }}" placeholder="Name or number...">
                 </div>
                 <div class="col-md-3">
-                    <label class="x-small fw-bold text-uppercase text-muted mb-1">Status Interno</label>
+                    <label class="x-small fw-bold text-uppercase text-muted mb-1">Internal status</label>
                     <select name="status" class="form-select form-select-sm">
-                        <option value="">Todos</option>
-                        <option value="processado" {{ request('status') == 'processado' ? 'selected' : '' }}>Sucesso</option>
-                        <option value="erro" {{ request('status') == 'erro' ? 'selected' : '' }}>Falha</option>
-                        <option value="pendente" {{ request('status') == 'pendente' ? 'selected' : '' }}>Em Fila</option>
+                        <option value="">All</option>
+                        <option value="processado" {{ request('status') == 'processado' ? 'selected' : '' }}>Success</option>
+                        <option value="erro" {{ request('status') == 'erro' ? 'selected' : '' }}>Failed</option>
+                        <option value="pendente" {{ request('status') == 'pendente' ? 'selected' : '' }}>Queued</option>
                     </select>
                 </div>
                 <div class="col-md-3">
-                    <label class="x-small fw-bold text-uppercase text-muted mb-1">Status WhatsApp</label>
+                    <label class="x-small fw-bold text-uppercase text-muted mb-1">WhatsApp status</label>
                     <select name="evolution_status" class="form-select form-select-sm">
-                        <option value="">Todos</option>
+                        <option value="">All</option>
                         @foreach($statusMapEvolution as $key => $label)
                         <option value="{{ $key }}" {{ request('evolution_status') == $key ? 'selected' : '' }}>{{ $label }}</option>
                         @endforeach
                     </select>
                 </div>
                 <div class="col-md-2 d-flex align-items-end gap-2">
-                    <button type="submit" class="btn btn-primary btn-sm w-100 fw-bold shadow-sm">FILTRAR</button>
-                    <a href="{{ route('whatsapp-jobs.index', $id) }}" class="btn btn-light btn-sm w-100 fw-bold border">LIMPAR</a>
+                    <button type="submit" class="btn btn-primary btn-sm w-100 fw-bold shadow-sm">FILTER</button>
+                    <a href="{{ route('whatsapp-jobs.index', $id) }}" class="btn btn-light btn-sm w-100 fw-bold border">CLEAR</a>
                 </div>
             </form>
         </div>
     </div>
 
-    {{-- Tabela Principal (Original Restaurada) --}}
+    {{-- Main jobs table --}}
     
     <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
         <div class="table-responsive">
@@ -172,12 +172,12 @@ $cards = [
                         <th class="ps-4" style="width: 40px;">
                             <input type="checkbox" class="form-check-input shadow-none" id="selectAll" onclick="toggleSelectAll(this.checked)">
                         </th>
-                        <th>Destinatário</th>
-                        <th>Status Interno</th>
-                        <th>Status WhatsApp</th>
-                        <th>Ações</th>
+                        <th>Recipient</th>
+                        <th>Internal status</th>
+                        <th>WhatsApp status</th>
+                        <th>Actions</th>
                         @if(Auth::user()->role === 'admin')
-                        <th class="text-center">Log Erro</th>
+                        <th class="text-center">Error log</th>
                         <th class="text-center">DevTools</th>
                         @endif
                     </tr>
@@ -190,7 +190,7 @@ $cards = [
                     $payloadJson = $item ? json_encode($item->generate($job->contact_id)) : '{}';
                     $curlCommand = "curl -X POST '{$job->endpoint}' -H 'Content-Type: application/json' -d '" . addslashes($payloadJson) . "'";
 
-                    // Lógica de Cores do Contato (Baseado em Ativo vs No-Whatsapp)
+                    // Contact row color: active vs no-WhatsApp
                     $isAtivo = ($contact && $contact->status === 'ativo');
                     $contactClass = $isAtivo ? 'text-success' : 'text-danger';
                     $contactIcon = $isAtivo ? 'bi-circle-fill' : 'bi-exclamation-triangle-fill';
@@ -201,7 +201,7 @@ $cards = [
                         </td>
                         <td>
                             <div class="d-flex align-items-center">
-                                <i class="bi {{ $contactIcon }} {{ $contactClass }} me-2" style="font-size: 0.6rem;" title="{{ $isAtivo ? 'Contato Ativo' : 'Número Inválido/Inativo' }}"></i>
+                                <i class="bi {{ $contactIcon }} {{ $contactClass }} me-2" style="font-size: 0.6rem;" title="{{ $isAtivo ? 'Active contact' : 'Invalid / inactive number' }}"></i>
                                 <div>
                                     <div class="fw-bold text-dark">{{ $contact->name ?? 'N/A' }}</div>
                                     <div class="x-small {{ !$isAtivo ? 'text-danger fw-bold' : 'text-muted' }}">
@@ -224,21 +224,21 @@ $cards = [
                                 <i class="bi bi-whatsapp me-1"></i>{{ $statusMapEvolution[$job->evolution_status] ?? $job->evolution_status }}
                             </span>
                             @else
-                            <span class="text-muted opacity-50 italic small">Aguardando...</span>
+                            <span class="text-muted opacity-50 italic small">Waiting...</span>
                             @endif
                         </td>
                         <td>
                             <div class="btn-group">
                                 <button type="button" class="btn btn-xs btn-outline-secondary"
-                                    onclick="window.copyToClipboard(this.getAttribute('data-content'), '📂 JSON copiado!')"
-                                    data-content='{!! $payloadJson !!}' title="Copiar Payload">
+                                    onclick="window.copyToClipboard(this.getAttribute('data-content'), 'JSON copied to clipboard')"
+                                    data-content='{!! $payloadJson !!}' title="Copy payload">
                                     <i class="bi bi-filetype-json"></i>
                                 </button>
 
                                 @if($job->status == 'erro')
                                 <form action="{{ route('whatsapp-jobs.retry', $job->id) }}" method="POST" class="d-inline">
                                     @csrf
-                                    <button type="submit" class="btn btn-xs btn-outline-danger shadow-none" title="Retentar">
+                                    <button type="submit" class="btn btn-xs btn-outline-danger shadow-none" title="Retry">
                                         <i class="bi bi-arrow-repeat"></i>
                                     </button>
                                 </form>
@@ -250,7 +250,7 @@ $cards = [
                         <td class="text-center">
                             @if($job->erro_mensagem)
                             <button type="button" class="btn btn-xs btn-danger"
-                                onclick="window.copyToClipboard(this.getAttribute('data-content'), '❌ Erro copiado!')"
+                                onclick="window.copyToClipboard(this.getAttribute('data-content'), 'Error copied to clipboard')"
                                 data-content="{{ $job->erro_mensagem }}">
                                 <i class="bi bi-bug-fill me-1"></i> Log
                             </button>
@@ -260,7 +260,7 @@ $cards = [
                         </td>
                         <td class="text-center">
                             <button type="button" class="btn btn-sm btn-dark fw-mono"
-                                onclick="window.copyToClipboard(this.getAttribute('data-content'), '🚀 cURL copiado!')"
+                                onclick="window.copyToClipboard(this.getAttribute('data-content'), 'cURL copied to clipboard')"
                                 data-content="{{ $curlCommand }}">
                                 <i class="bi bi-terminal-fill me-1"></i> cURL
                             </button>
@@ -271,7 +271,7 @@ $cards = [
                     <tr>
                         <td colspan="100%" class="text-center py-5 text-muted border-0">
                             <i class="bi bi-inbox fs-2 d-block mb-2"></i>
-                            Nenhum registro encontrado para os filtros aplicados.
+                            No records found for the current filters.
                         </td>
                     </tr>
                     @endforelse
@@ -329,7 +329,7 @@ $cards = [
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    /** --- INICIALIZAÇÃO DO GRÁFICO --- **/
+    /** --- Chart init --- **/
     document.addEventListener('DOMContentLoaded', function() {
         const ctx = document.getElementById('jobsPieChart');
         if (!ctx) return;
@@ -351,7 +351,7 @@ $cards = [
         new Chart(ctx, {
             type: 'doughnut',
             data: {
-                labels: ['Erros', 'Enviados', 'Entregues', 'Lidos'],
+                labels: ['Errors', 'Sent', 'Delivered', 'Read'],
                 datasets: [{
                     data: dataValues,
                     backgroundColor: ['#dc3545', '#0d6efd', '#0dcaf0', '#198754'],
@@ -379,7 +379,7 @@ $cards = [
         });
     });
 
-    /** --- LÓGICA DE SELEÇÃO EM MASSA (Original Restaurada) --- **/
+    /** --- Bulk selection --- **/
     function toggleSelectAll(checked) {
         document.querySelectorAll('.job-checkbox').forEach(cb => cb.checked = checked);
         const selectAllCheckbox = document.getElementById('selectAll');
@@ -405,8 +405,8 @@ $cards = [
         if (ids.length === 0) return;
 
         const confirmMsg = action === 'delete' ?
-            `Deseja realmente REMOVER ${ids.length} registros?` :
-            `Deseja REENVIAR ${ids.length} mensagens para a fila?`;
+            `Really REMOVE ${ids.length} record(s)?` :
+            `Resend ${ids.length} message(s) to the queue?`;
 
         if (!confirm(confirmMsg)) return;
 
@@ -420,7 +420,7 @@ $cards = [
         document.getElementById('bulkActionForm').submit();
     }
 
-    /** --- LÓGICA DE CÓPIA PARA CLIPBOARD (Original Restaurada) --- **/
+    /** --- Clipboard copy --- **/
     window.copyToClipboard = function(text, successMsg) {
         if (!text || text === '{}') return;
         if (navigator.clipboard && window.isSecureContext) {

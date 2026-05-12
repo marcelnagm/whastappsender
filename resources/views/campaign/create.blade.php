@@ -25,7 +25,7 @@
 
                 <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
                     <div class="card-header bg-white border-0 py-3 border-bottom">
-                        <span class="fw-bold text-muted text-uppercase small">Configurações Básicas</span>
+                        <span class="fw-bold text-muted text-uppercase small">Basic settings</span>
                     </div>
                     
                     <div class="card-body p-4">

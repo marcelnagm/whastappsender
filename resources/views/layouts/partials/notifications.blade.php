@@ -5,12 +5,12 @@
         @if($unreadCount > 0)
             <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.6rem;">
                 {{ $unreadCount }}
-                <span class="visually-hidden">mensagens não lidas</span>
+                <span class="visually-hidden">unread notifications</span>
             </span>
         @endif
     </a>
     <ul class="dropdown-menu dropdown-menu-end shadow border-0" aria-labelledby="notifDropdown" style="width: 300px; max-height: 400px; overflow-y: auto;">
-        <li class="dropdown-header border-bottom pb-2 mb-2">Notificações Recentes</li>
+        <li class="dropdown-header border-bottom pb-2 mb-2">Recent notifications</li>
         
         @forelse(auth()->user()->unreadNotifications as $notification)
             <li>
@@ -20,7 +20,7 @@
                             <i class="bi bi-check2-circle text-success fs-4"></i>
                         </div>
                         <div class="flex-grow-1">
-                            <p class="mb-0 small fw-bold text-dark">{{ $notification->data['title'] ?? 'Sync Concluído' }}</p>
+                            <p class="mb-0 small fw-bold text-dark">{{ $notification->data['title'] ?? 'Sync complete' }}</p>
                             <p class="mb-0 small text-muted">{{ $notification->data['message'] }}</p>
                             <small class="text-primary font-monospace">{{ $notification->created_at->diffForHumans() }}</small>
                         </div>
@@ -30,7 +30,7 @@
         @empty
             <li class="p-4 text-center">
                 <i class="bi bi-bell-slash text-muted d-block mb-2 fs-3"></i>
-                <span class="small text-muted">Tudo limpo por aqui!</span>
+                <span class="small text-muted">You are all caught up.</span>
             </li>
         @endforelse
 
@@ -39,7 +39,7 @@
                 <form action="{{ route('notifications.clear') }}" method="POST">
                     @csrf
                     <button type="submit" class="dropdown-item text-center small text-primary fw-bold py-2">
-                        Marcar todas como lidas
+                        Mark all as read
                     </button>
                 </form>
             </li>

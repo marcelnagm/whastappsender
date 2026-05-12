@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="pt-BR">
+<html lang="en">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -34,7 +34,7 @@
 </head>
 <body>
     
-    {{-- A Navbar agora é dinâmica --}}
+    {{-- Navbar is included dynamically --}}
     @include('layouts.partials.navbar')
 
     <main class="container main-content fade-in">
@@ -42,7 +42,7 @@
     </main>
 
     <script src="https://code.jquery.com/jquery-3.6.3.min.js"></script>   
-    {{-- Importante: Bundle contém o JS para o Menu Responsivo --}}
+    {{-- Bundle includes responsive menu JS --}}
     <script src="{{ url('assets/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
     
     @yield('js')

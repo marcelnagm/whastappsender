@@ -1,6 +1,6 @@
 @extends('layouts.app-master')
 
-@section('template_title', 'Gerenciamento de Usuários')
+@section('template_title', 'User management')
 
 @section('content')
 <div class="container-fluid py-4">
@@ -8,12 +8,12 @@
         <div class="col-sm-12">
             <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
                 <h1 class="h3 mb-0 text-gray-800 fw-bold">
-                    <i class="bi bi-shield-lock-fill text-primary me-2"></i>Controle de Acessos
+                    <i class="bi bi-shield-lock-fill text-primary me-2"></i>Access control
                 </h1>
                 <div class="d-flex gap-2">
                     <form method="GET" action="{{ route('users.index') }}" class="d-flex gap-1 shadow-sm rounded">
                         <input type="text" name="search" class="form-control form-control-sm border-0 px-3"
-                            placeholder="Nome, email ou login..." value="{{ request('search') }}" style="min-width: 250px;">
+                            placeholder="Name, email or username..." value="{{ request('search') }}" style="min-width: 250px;">
                         <button type="submit" class="btn btn-primary btn-sm">
                             <i class="bi bi-search"></i>
                         </button>
@@ -24,7 +24,7 @@
 
             <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
                 <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-bottom">
-                    <h6 class="m-0 font-weight-bold text-primary">Usuários Cadastrados ({{ $users->total() }})</h6>
+                    <h6 class="m-0 font-weight-bold text-primary">Registered users ({{ $users->total() }})</h6>
                 </div>
 
                 @if ($message = Session::get('success'))
@@ -39,11 +39,11 @@
                             <thead class="table-light small text-uppercase fw-bold">
                                 <tr>
                                     <th class="ps-4">ID</th>
-                                    <th>Usuário</th>
-                                    <th>E-mail</th>
-                                    <th class="text-center">Cargo (Role)</th>
+                                    <th>User</th>
+                                    <th>Email</th>
+                                    <th class="text-center">Role</th>
                                     <th class="text-center">Status</th>
-                                    <th class="text-center">Ações</th>
+                                    <th class="text-center">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -74,13 +74,13 @@
                                     </td>
                                     <td class="text-center">
                                         <div class="btn-group btn-group-sm shadow-sm border rounded">
-                                            <a class="btn btn-white text-primary" href="{{ route('users.edit', $user->id) }}" title="Editar Usuário">
+                                            <a class="btn btn-white text-primary" href="{{ route('users.edit', $user->id) }}" title="Edit user">
                                                 <i class="bi bi-pencil-square"></i>
                                             </a>
                                             
                                             <form action="{{ route('users.toggleAdmin', $user->id) }}" method="POST" style="display:inline">
                                                 @csrf @method('PATCH')
-                                                <button type="submit" class="btn btn-white text-orange-500" title="Alternar Admin/User">
+                                                <button type="submit" class="btn btn-white text-orange-500" title="Toggle admin / user">
                                                     <i class="bi bi-person-badge"></i>
                                                 </button>
                                             </form>
@@ -88,7 +88,7 @@
                                             <form action="{{ route('users.destroy', $user->id) }}" method="POST" style="display:inline">
                                                 @csrf @method('DELETE')
                                                 <button type="submit" class="btn btn-white text-danger" 
-                                                    onclick="return confirm('ATENÇÃO: Deletar este usuário impedirá o acesso dele ao sistema. Confirma?')">
+                                                    onclick="return confirm('WARNING: Deleting this user will revoke their access to the system. Continue?')">
                                                     <i class="bi bi-trash3"></i>
                                                 </button>
                                             </form>
@@ -98,7 +98,7 @@
                                 @empty
                                 <tr>
                                     <td colspan="6" class="text-center py-5 text-muted">
-                                        Nenhum usuário encontrado.
+                                        No users found.
                                     </td>
                                 </tr>
                                 @endforelse
@@ -116,12 +116,12 @@
 </div>
 
 <style>
-    /* Estilos para manter a identidade visual */
+    /* Keep visual identity for toolbar buttons */
     .btn-white { background: white; border: none; }
     .btn-white:hover { background: #f8f9fa; }
     .text-orange-500 { color: #f97316; }
     
-    /* Ajuste de paginação */
+    /* Pagination tweaks */
     nav[role="navigation"] svg { width: 20px; height: 20px; }
 </style>
 @endsection

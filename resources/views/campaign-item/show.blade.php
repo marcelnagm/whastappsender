@@ -1,7 +1,7 @@
 @extends('layouts.app-master')
 
 @section('template_title')
-Detalhes: {{ $campaignItem->name }}
+Details: {{ $campaignItem->name }}
 @endsection
 
 @section('content')
