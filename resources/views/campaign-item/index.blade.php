@@ -1,6 +1,6 @@
 @extends('layouts.app-master')
 
-@section('template_title', 'Itens de Campanha')
+@section('template_title', 'Campaign items')
 
 @section('content')
  

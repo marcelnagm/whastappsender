@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Log;
 class EnviarMensagensWhatsApp extends Command
 {
     protected $signature = 'whatsapp:disparar';
-    protected $description = 'Disparador profissional com humanização e proteção anti-ban';
+    protected $description = 'Professional sender with humanization and anti-ban safeguards';
 
     public function handle()
     {
@@ -20,18 +20,18 @@ class EnviarMensagensWhatsApp extends Command
             
             return 1;
         }
-        // 1. Configurações de Infra
+        // 1. Infrastructure config
         $config = config('services.whatsapp');
         $baseUrl = "{$config['protocol']}://{$config['url']}:{$config['port']}";
         $globalApiKey = $config['apikey'];
 
         if (!$config['url'] || !$globalApiKey) {
-            $this->error("Erro Crítico: Configurações de API ausentes.");
+            $this->error("Critical error: API configuration missing.");
             return self::FAILURE;
         }
 
-        // 2. Busca Lote
-        $jobs = WhatsappJob::with(['campaignItem', 'user', 'contact']) // Eager loading para evitar N+1
+        // 2. Fetch batch
+        $jobs = WhatsappJob::with(['campaignItem', 'user', 'contact']) // Eager loading to avoid N+1
             ->whereIn('status', ['pendente', 'erro'])
             ->where('tentativas', '<', 3)
             ->orderBy('id', 'asc')
@@ -42,19 +42,19 @@ class EnviarMensagensWhatsApp extends Command
             return self::SUCCESS;
         }
 
-        $this->info("Iniciando lote de " . $jobs->count() . " mensagens.");
+        $this->info("Starting batch of " . $jobs->count() . " messages.");
 
         foreach ($jobs as $index => $job) {
             if ($index > 0 && $index % 10 == 0) {
                 $lotePause = rand(40, 70);
-                $this->warn("Pausa de Lote: Aguardando {$lotePause}s...");
+                $this->warn("Batch pause: waiting {$lotePause}s...");
                 sleep($lotePause);
             }
 
             try {
                 $user = $job->user;
                 if (!$user || !$user->phone) {
-                    $this->registrarFalha($job, "Usuário sem instância configurada.");
+                    $this->registrarFalha($job, "User has no instance configured.");
                     continue;
                 }
 
@@ -66,19 +66,19 @@ class EnviarMensagensWhatsApp extends Command
                 $campaignItem = $job->campaignItem; 
                 
                 if (!$campaignItem) {
-                    $this->registrarFalha($job, "Job sem CampaignItem vinculado.");
+                    $this->registrarFalha($job, "Job has no linked CampaignItem.");
                     continue;
                 }
 
                 // Linha 60: Substituído $item por $campaignItem
                 $payload = $campaignItem->generate($job->contact_id);
 
-                $this->info("[ID:{$job->id}] Enviando para: {$numeroDestino}");
+                $this->info("[ID:{$job->id}] Sending to: {$numeroDestino}");
 
                 // --- PASSO 1: HUMANIZAÇÃO ---
                 $presenceType = (rand(0, 10) > 3) ? 'composing' : 'recording';
                 
-                // Chamada de presença (Opcional: você já gerou o payload acima, não precisa repetir na linha 69)
+                // Presence call (optional warmup before send)
                 Http::withHeaders(['apikey' => $globalApiKey])
                     ->post("{$baseUrl}/chat/sendPresence/{$instance}", [
                         "number" => $numeroDestino,
@@ -88,7 +88,7 @@ class EnviarMensagensWhatsApp extends Command
 
                 sleep(rand(4, 8));
 
-                // --- PASSO 2: ENVIO REAL ---
+                // --- STEP 2: Actual send ---
                 $endpoint = ltrim($job->endpoint, '/');
                 $urlFinal = "{$baseUrl}/{$endpoint}{$instance}";
 
@@ -110,21 +110,21 @@ class EnviarMensagensWhatsApp extends Command
                         'tentativas' => $job->tentativas + 1
                     ]);
 
-                    $this->info("SUCESSO: ID {$remoteId}");
+                    $this->info("SUCCESS: ID {$remoteId}");
                 } else {
-                    $this->registrarFalha($job, "API Erro: " . $response->status());
+                    $this->registrarFalha($job, "API error: " . $response->status());
                 }
             } catch (\Exception $e) {
                 $this->registrarFalha($job, "Exception: " . $e->getMessage());
-                Log::error("Erro no disparo Job {$job->id}: " . $e->getMessage());
+                Log::error("Send error for job {$job->id}: " . $e->getMessage());
             }
 
             $pause = rand(20, 45);
-            $this->comment("Aguardando {$pause}s...");
+            $this->comment("Waiting {$pause}s...");
             sleep($pause);
         }
 
-        $this->info('Lote finalizado.');
+        $this->info('Batch finished.');
         return self::SUCCESS;
     }
 
@@ -136,6 +136,6 @@ class EnviarMensagensWhatsApp extends Command
             'tentativas' => $novaTentativa,
             'erro_mensagem' => substr($mensagem, 0, 255)
         ]);
-        $this->error("FALHA: {$job->id} - Tentativa {$novaTentativa}/3");
+        $this->error("FAILURE: {$job->id} - Attempt {$novaTentativa}/3");
     }
 }

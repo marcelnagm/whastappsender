@@ -14,38 +14,38 @@ class AiAutoReplyService
 {
     public function handleInbound(string $instanceName, array $data, string $text): void
     {
-        $this->debugFlow('Iniciando avaliacao de auto-reply IA', [
+        $this->debugFlow('Starting AI auto-reply evaluation', [
             'instance' => $instanceName,
             'remoteJid' => $data['key']['remoteJid'] ?? null,
             'messageId' => $data['key']['id'] ?? null,
         ]);
 
         // if (($data['key']['fromMe'] ?? false) === true) {
-        //     $this->debugFlow('Abortado: mensagem fromMe');
+        //     $this->debugFlow('Aborted: fromMe message');
         //     return;
         // }
 
         $remoteJid = (string) ($data['key']['remoteJid'] ?? '');
         if ($this->isGroupMessage($remoteJid)) {
-            $this->debugFlow('Abortado: mensagem de grupo', ['remoteJid' => $remoteJid]);
+            $this->debugFlow('Aborted: group message', ['remoteJid' => $remoteJid]);
             return;
         }
 
         $text = trim($text);
         if ($text === '') {
-            $this->debugFlow('Abortado: texto vazio');
+            $this->debugFlow('Aborted: empty text');
             return;
         }
 
         $instance = Instance::where('instance_name', $instanceName)->first();
         if (!$instance) {
-            $this->debugFlow('Abortado: instancia nao encontrada', ['instance' => $instanceName]);
+            $this->debugFlow('Aborted: instance not found', ['instance' => $instanceName]);
             return;
         }
 
         $contact = $this->resolveContact($instance->user_id, $data);
         if (!$contact || (int) ($contact->ignore_me ?? 0) === 1) {
-            $this->debugFlow('Abortado: contato inexistente ou ignorado', [
+            $this->debugFlow('Aborted: contact missing or ignored', [
                 'contact' => $contact->contact ?? null,
                 'lid' => $contact->lid ?? ($data['key']['remoteJid'] ?? null),
                 'ignore_me' => $contact->ignore_me ?? null,
@@ -55,7 +55,7 @@ class AiAutoReplyService
 
         $user = User::find($instance->user_id);
         if (!$user || !$user->ai_enabled || $user->ai_mode !== 'auto') {
-            $this->debugFlow('Abortado: IA desabilitada ou fora do modo auto', [
+            $this->debugFlow('Aborted: AI disabled or not in auto mode', [
                 'user_id' => $instance->user_id,
                 'ai_enabled' => $user->ai_enabled ?? null,
                 'ai_mode' => $user->ai_mode ?? null,
@@ -76,7 +76,7 @@ class AiAutoReplyService
         );
 
         if ($session->human_handoff || $session->status !== 'active') {
-            $this->debugFlow('Abortado: sessao em handoff ou inativa', [
+            $this->debugFlow('Aborted: session in handoff or inactive', [
                 'session_id' => $session->id,
                 'status' => $session->status,
                 'human_handoff' => $session->human_handoff,
@@ -101,7 +101,7 @@ class AiAutoReplyService
         $result = app(GroqAgentResponder::class)->generateReply($user, $history);
         $reply = trim((string) ($result['reply'] ?? ''));
         if ($reply === '') {
-            $this->debugFlow('Abortado: GROQ retornou resposta vazia', [
+            $this->debugFlow('Aborted: GROQ returned empty reply', [
                 'session_id' => $session->id,
             ]);
             return;
@@ -121,7 +121,7 @@ class AiAutoReplyService
         ]);
 
         SendAiReplyJob::dispatch($outbound->id, $instance->id, $contact->id)->onQueue('disparos');
-        $this->debugFlow('Resposta IA enfileirada com sucesso', [
+        $this->debugFlow('AI reply queued successfully', [
             'session_id' => $session->id,
             'ai_message_id' => $outbound->id,
             'instance_id' => $instance->id,
@@ -160,7 +160,7 @@ class AiAutoReplyService
 
                 if ($contact && $contact->lid !== $remoteJid) {
                     $contact->update(['lid' => $remoteJid]);
-                    $this->debugFlow('LID sincronizado com contato', [
+                    $this->debugFlow('LID synced with contact', [
                         'contact_id' => $contact->id,
                         'contact' => $contact->contact,
                         'lid' => $remoteJid,
@@ -175,7 +175,7 @@ class AiAutoReplyService
                 ->first();
 
             if ($contactByLid) {
-                $this->debugFlow('Contato encontrado diretamente por LID', [
+                $this->debugFlow('Contact resolved by LID', [
                     'contact_id' => $contactByLid->id,
                     'lid' => $remoteJid,
                 ]);
@@ -186,7 +186,7 @@ class AiAutoReplyService
 
         $contactNumber = $this->resolveContactNumber($data);
         if (!$contactNumber) {
-            $this->debugFlow('Abortado: numero de contato nao resolvido');
+            $this->debugFlow('Aborted: contact number could not be resolved');
             return null;
         }
 

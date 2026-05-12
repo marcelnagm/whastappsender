@@ -23,7 +23,7 @@ class InstanceDisconnectedMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: '⚠️ Atenção: WhatsApp Desconectado - ' . $this->instance->name,
+            subject: '⚠️ Alert: WhatsApp disconnected - ' . $this->instance->name,
         );
     }
 

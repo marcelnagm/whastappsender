@@ -1,7 +1,7 @@
 @extends('layouts.app-master')
 
 @section('template_title')
-    Editar Campanha: {{ $campaign->name }}
+    Edit campaign: {{ $campaign->name }}
 @endsection
 
 @section('content')
@@ -9,13 +9,13 @@
         <div class="d-flex align-items-center justify-content-between mb-4">
             <div>
                 <h1 class="h3 mb-0 text-gray-800 fw-bold">
-                    <i class="bi bi-pencil-square text-primary me-2"></i>Ajustar Campanha
+                    <i class="bi bi-pencil-square text-primary me-2"></i>Edit campaign
                 </h1>
-                <p class="text-muted small mb-0">Você está editando a campanha: <span class="badge bg-primary-subtle text-primary border border-primary-subtle fw-semibold">{{ $campaign->name }}</span></p>
+                <p class="text-muted small mb-0">You are editing: <span class="badge bg-primary-subtle text-primary border border-primary-subtle fw-semibold">{{ $campaign->name }}</span></p>
             </div>
             <div class="d-flex gap-2">
                 <a href="{{ route('campaigns.index') }}" class="btn btn-outline-secondary btn-sm shadow-sm">
-                    <i class="bi bi-arrow-left"></i> Voltar
+                    <i class="bi bi-arrow-left"></i> Back
                 </a>
             </div>
         </div>
@@ -27,7 +27,7 @@
 
                 <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
                     <div class="card-header bg-white border-0 py-3 border-bottom d-flex align-items-center justify-content-between">
-                        <span class="fw-bold text-muted text-uppercase small">Configurações da Estratégia</span>
+                        <span class="fw-bold text-muted text-uppercase small">Strategy settings</span>
                         <span class="text-xs text-muted">ID: #{{ $campaign->id }}</span>
                     </div>
                     
@@ -52,7 +52,7 @@
                             </div>
                             <div class="col">
                                 <p class="text-muted small mb-0">
-                                    <strong>Nota:</strong> Alterar o nome ou as configurações básicas não afeta as mensagens já disparadas, apenas os novos envios desta campanha.
+                                    <strong>Note:</strong> Changing the name or basic settings does not affect messages already sent—only new sends from this campaign.
                                 </p>
                             </div>
                         </div>

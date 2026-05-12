@@ -53,8 +53,8 @@ class WhastappService
         $device = array(
             'session' => $result['wid']['user'],
             'hw' => $result['phone']['device_manufacturer'] . ' - ' . $result['platform'],
-            'batt' => $result['plugged'] ? $result['battery'] . '-' . 'Carregando' : $result['battery'] . '-' . 'Descarregando',
-            'respond' => $result['isResponse'] ? 'Está Respondendo' : 'Não Responde',
+            'batt' => $result['plugged'] ? $result['battery'] . '-' . 'Charging' : $result['battery'] . '-' . 'Discharging',
+            'respond' => $result['isResponse'] ? 'Replying' : 'Not replying',
         );
 
         //# Print response. 

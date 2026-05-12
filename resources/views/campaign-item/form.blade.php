@@ -1,38 +1,38 @@
 @extends('layouts.app-master')
 
 @section('template_title')
-Editar Item: {{ $campaignItem->name }}
+Edit item: {{ $campaignItem->name }}
 @endsection
 
 @section('content')
 <div class="container-fluid py-4">
     <div class="row">
         <div class="col-12">
-            {{-- Header e Breadcrumb --}}
+            {{-- Header & breadcrumb --}}
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <div>
                     <nav aria-label="breadcrumb">
                         <ol class="breadcrumb mb-1">
-                            <li class="breadcrumb-item"><a href="{{ route('campaigns.index') }}">Campanhas</a></li>
-                            <li class="breadcrumb-item active">Editar Item</li>
+                            <li class="breadcrumb-item"><a href="{{ route('campaigns.index') }}">Campaigns</a></li>
+                            <li class="breadcrumb-item active">Edit item</li>
                         </ol>
                     </nav>
-                    <h1 class="h3 mb-0 text-gray-800 fw-bold">Configurar Mensagem</h1>
+                    <h1 class="h3 mb-0 text-gray-800 fw-bold">Configure message</h1>
                 </div>
                 <a href="{{ route('campaign-items.index') }}" class="btn btn-outline-secondary shadow-sm">
-                    <i class="bi bi-arrow-left"></i> Voltar
+                    <i class="bi bi-arrow-left"></i> Back
                 </a>
             </div>
 
             @include('layouts.partials.messages')
 
-            {{-- Alerta de Bloqueio Operacional --}}
+            {{-- Operational lock alert --}}
             @if($campaignItem->campaign && $campaignItem->campaign->status === 'running')
             <div class="alert alert-warning border-0 shadow-sm d-flex align-items-center mb-4">
                 <i class="bi bi-exclamation-triangle-fill fs-4 me-3"></i>
                 <div>
-                    <strong>Campanha em Execução!</strong><br>
-                    Esta mensagem pertence a uma campanha que está ativa nos mineradores. Alterar o conteúdo agora pode causar disparos inconsistentes.
+                    <strong>Campaign is running!</strong><br>
+                    This message belongs to an active campaign. Editing now may cause inconsistent sends.
                 </div>
             </div>
             @endif
@@ -42,7 +42,7 @@ Editar Item: {{ $campaignItem->name }}
                     <div class="card border-0 shadow-sm rounded-3">
                         <div class="card-body p-4">
                             @php
-                            // Lógica para definir se é criação ou edição
+                            // Create vs edit routing
                             $isEdit = !empty($campaignItem->id);
                             $route = $isEdit
                             ? route('campaign-items.update', ['campaign_item' => $campaignItem->id])
@@ -56,13 +56,13 @@ Editar Item: {{ $campaignItem->name }}
                                 @endif
 
                                 <div class="mb-4">
-                                    {{ Form::label('name', 'Identificação do Item', ['class' => 'form-label fw-bold']) }}
+                                    {{ Form::label('name', 'Item name', ['class' => 'form-label fw-bold']) }}
                                     {{ Form::text('name', $campaignItem->name, ['class' => 'form-control' . ($errors->has('name') ? ' is-invalid' : ''), 'required']) }}
-                                    <small class="text-muted">Nome interno para controle de lotes.</small>
+                                    <small class="text-muted">Internal label for batch control.</small>
                                 </div>
 
                                 <div class="mb-4">
-                                    {{ Form::label('campaign_id', 'Vincular à Campanha', ['class' => 'form-label fw-bold']) }}
+                                    {{ Form::label('campaign_id', 'Link to campaign', ['class' => 'form-label fw-bold']) }}
                                     {{ Form::select('campaign_id', $campaigns, $campaignItem->campaign_id, ['class' => 'form-select', 'required']) }}
                                 </div>
 
@@ -76,23 +76,23 @@ Editar Item: {{ $campaignItem->name }}
                                             value="1"
                                             {{ old('welcome_enabled', $campaignItem->welcome_enabled) ? 'checked' : '' }}>
                                         <label class="form-check-label fw-bold" for="welcome_enabled">
-                                            Mensagem de boas-vindas habilitada
+                                            Welcome message enabled
                                         </label>
                                     </div>
-                                    <small class="text-muted">Ative para marcar este item como mensagem de boas-vindas.</small>
+                                    <small class="text-muted">Enable to mark this item as the welcome message.</small>
                                 </div>
 
-                                {{-- Substitua o bloco da URL da Imagem por este --}}
+                                {{-- Media URL vs upload --}}
                                 <div class="mb-4">
                                     <label class="form-label fw-bold d-flex justify-content-between">
-                                        Origem da Mídia
+                                        Media source
                                         <div class="form-check form-switch ms-3">
                                             <input class="form-check-input" type="checkbox" id="toggle_upload" name="use_upload" value="1" {{ $campaignItem->image && !filter_var($campaignItem->image, FILTER_VALIDATE_URL) ? 'checked' : '' }}>
-                                            <label class="form-check-label text-muted" style="font-size: 0.8rem;" for="toggle_upload">Fazer Upload (S3)</label>
+                                            <label class="form-check-label text-muted" style="font-size: 0.8rem;" for="toggle_upload">Upload (S3)</label>
                                         </div>
                                     </label>
 
-                                    {{-- Opção 1: URL Externa --}}
+                                    {{-- Option 1: external URL --}}
                                     <div id="url_container" class="{{ $campaignItem->image && !filter_var($campaignItem->image, FILTER_VALIDATE_URL) ? 'd-none' : '' }}">
                                         <div class="input-group">
                                             <span class="input-group-text"><i class="bi bi-link-45deg"></i></span>
@@ -100,7 +100,7 @@ Editar Item: {{ $campaignItem->name }}
                                         </div>
                                     </div>
 
-                                    {{-- Opção 2: Upload de Arquivo --}}
+                                    {{-- Option 2: file upload --}}
                                     <div id="upload_container" class="{{ $campaignItem->image && !filter_var($campaignItem->image, FILTER_VALIDATE_URL) ? '' : 'd-none' }}">
                                         <div class="input-group">
                                             <span class="input-group-text"><i class="bi bi-file-earmark-image"></i></span>
@@ -108,30 +108,30 @@ Editar Item: {{ $campaignItem->name }}
                                         </div>
                                         @if($campaignItem->image && !filter_var($campaignItem->image, FILTER_VALIDATE_URL))
                                         <div class="mt-2 small text-success">
-                                            <i class="bi bi-check-circle"></i> Arquivo atual: <code>{{ basename($campaignItem->image) }}</code>
+                                            <i class="bi bi-check-circle"></i> Current file: <code>{{ basename($campaignItem->image) }}</code>
                                         </div>
                                         @endif
                                     </div>
                                 </div>
 
                                 <div class="mb-4">
-                                    {{ Form::label('text', 'Conteúdo da Mensagem', ['class' => 'form-label fw-bold']) }}
+                                    {{ Form::label('text', 'Message body', ['class' => 'form-label fw-bold']) }}
                                     {{ Form::textarea('text', $campaignItem->text, ['class' => 'form-control', 'id' => 'message_text', 'rows' => '6']) }}
                                     <div class="d-flex justify-content-between mt-2">
                                         <div class="btn-group border shadow-sm">
                                             <button type="button" class="btn btn-sm btn-light" onclick="insertFormat('*')"><b>B</b></button>
                                             <button type="button" class="btn btn-sm btn-light" onclick="insertFormat('_')"><i>I</i></button>
                                         </div>
-                                        <small id="char_count" class="text-muted fw-bold">0 caracteres</small>
+                                        <small id="char_count" class="text-muted fw-bold">0 characters</small>
                                     </div>
                                 </div>
 
                                 <div class="d-grid gap-2">
                                     <button type="submit" class="btn btn-primary btn-lg shadow" {{ ($campaignItem->campaign && $campaignItem->campaign->status === 'running') ? 'disabled' : '' }}>
-                                        <i class="bi bi-cloud-upload"></i> Salvar Alterações
+                                        <i class="bi bi-cloud-upload"></i> Save changes
                                     </button>
                                     @if($campaignItem->campaign && $campaignItem->campaign->status === 'running')
-                                    <small class="text-danger text-center font-italic">Desative a campanha para permitir a edição.</small>
+                                    <small class="text-danger text-center font-italic">Stop the campaign to allow editing.</small>
                                     @endif
                                 </div>
                             </form>
@@ -192,8 +192,8 @@ Editar Item: {{ $campaignItem->name }}
         function updatePreview() {
             let text = $msgInput.val(),
                 url = $imgInput.val();
-            $previewText.text(text || "Visualização da mensagem...");
-            $charCount.text(text.length + " caracteres");
+            $previewText.text(text || "Message preview...");
+            $charCount.text(text.length + " characters");
 
             if (url && url.length > 5) {
                 $previewImg.attr('src', url).on('load', () => $previewImgContainer.removeClass('d-none')).on('error', () => $previewImgContainer.addClass('d-none'));
@@ -220,7 +220,7 @@ Editar Item: {{ $campaignItem->name }}
         if ($(this).is(':checked')) {
             $('#url_container').addClass('d-none');
             $('#upload_container').removeClass('d-none');
-            $('#image_url').val(''); // Limpa a URL para priorizar o upload
+            $('#image_url').val(''); // Clear URL so upload takes priority
         } else {
             $('#url_container').removeClass('d-none');
             $('#upload_container').addClass('d-none');

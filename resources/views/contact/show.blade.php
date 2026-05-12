@@ -1,7 +1,7 @@
 @extends('layouts.app-master')
 
 @section('template_title')
-    Perfil: {{ $contact->name }}
+    Profile: {{ $contact->name }}
 @endsection
 
 @section('content')
@@ -9,20 +9,20 @@
     <div class="d-flex align-items-center justify-content-between mb-4">
         <div>
             <h1 class="h3 mb-0 text-gray-800 fw-bold">
-                <i class="bi bi-person-badge text-primary me-2"></i>Ficha do Lead
+                <i class="bi bi-person-badge text-primary me-2"></i>Lead profile
             </h1>
-            <p class="text-muted small mb-0">Gestão de perfil e rastreabilidade de envios.</p>
+            <p class="text-muted small mb-0">Profile and send history.</p>
         </div>
         <div class="d-flex gap-2">
             <a class="btn btn-outline-secondary btn-sm fw-bold shadow-sm px-3" href="{{ route('contacts.index') }}">
                 <i class="bi bi-arrow-left me-1"></i> VOLTAR
             </a>
-            {{-- Botão de Sincronização Manual --}}
+            {{-- Manual sync --}}
             <button class="btn btn-info btn-sm fw-bold shadow-sm px-3 text-white" onclick="syncProfile({{ $contact->id }})" id="btnSync">
-                <i class="bi bi-arrow-clockwise me-1" id="syncIcon"></i> SINCRONIZAR
+                <i class="bi bi-arrow-clockwise me-1" id="syncIcon"></i> SYNC
             </button>
             <a class="btn btn-primary btn-sm fw-bold shadow-sm px-3" href="{{ route('contacts.edit', $contact->id) }}">
-                <i class="bi bi-pencil me-1"></i> EDITAR DADOS
+                <i class="bi bi-pencil me-1"></i> EDIT
             </a>
         </div>
     </div>
@@ -49,7 +49,7 @@
                             @endif
                         </div>
                         
-                        {{-- Overlay de carregamento --}}
+                        {{-- Loading overlay --}}
                         <div id="syncLoader" class="position-absolute top-50 start-50 translate-middle d-none">
                             <div class="spinner-border text-primary" role="status"></div>
                         </div>
@@ -61,7 +61,7 @@
                     </div>
 
                     <h4 class="fw-bold mt-3 mb-0 text-dark">{{ $contact->name }}</h4>
-                    <p class="text-muted small mb-3">ID Interno: #{{ $contact->id }}</p>
+                    <p class="text-muted small mb-3">Internal ID: #{{ $contact->id }}</p>
                     
                     <div class="d-flex justify-content-center gap-2">
                         <span class="badge bg-primary-soft text-primary px-3 py-2 rounded-pill shadow-sm">
@@ -86,11 +86,11 @@
         </div>
 
         <div class="col-lg-8 col-md-7">
-            {{-- Tabela de Jobs (Mantida igual ao anterior) --}}
+            {{-- Recent jobs table --}}
             <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
                 <div class="card-header bg-white py-3 border-bottom">
                     <h6 class="m-0 font-weight-bold text-dark text-uppercase small">
-                        <i class="bi bi-clock-history me-2 text-primary"></i>Log de Envios Recentes
+                        <i class="bi bi-clock-history me-2 text-primary"></i>Recent sends
                     </h6>
                 </div>
                 <div class="card-body p-0">
@@ -99,7 +99,7 @@
                             <thead class="bg-light x-small text-muted text-uppercase fw-bold">
                                 <tr>
                                     <th class="ps-4">Job ID</th>
-                                    <th>Status Operação</th>
+                                    <th>Job status</th>
                                     <th>Status WhatsApp</th>
                                     <th class="text-end pe-4">Ação</th>
                                 </tr>
@@ -113,12 +113,12 @@
                                             {{ strtoupper($job->status) }}
                                         </span>
                                     </td>
-                                    <td class="small fw-bold">{{ $job->evolution_status ?? 'PENDENTE' }}</td>
+                                    <td class="small fw-bold">{{ $job->evolution_status ?? 'PENDING' }}</td>
                                     <td class="text-end pe-4">
                                         @if($job->status == 'erro')
                                             <form action="{{ route('whatsapp-jobs.retry', $job->id) }}" method="POST">
                                                 @csrf
-                                                <button type="submit" class="btn btn-xs btn-outline-danger fw-bold rounded-pill">RE-ENVIAR</button>
+                                                <button type="submit" class="btn btn-xs btn-outline-danger fw-bold rounded-pill">RESEND</button>
                                             </form>
                                         @endif
                                     </td>
@@ -165,8 +165,8 @@ async function syncProfile(id) {
             alert('A API não retornou uma foto para este número ou o contato não existe no WhatsApp.');
         }
     } catch (error) {
-        console.error('Erro na sincronização:', error);
-        alert('Erro ao conectar com o servidor.');
+        console.error('Sync error:', error);
+        alert('Could not reach the server.');
     } finally {
         btn.disabled = false;
         icon.classList.remove('bi-spin');

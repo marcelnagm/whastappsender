@@ -1,7 +1,7 @@
 @extends('layouts.app-master')
 
 @section('template_title')
-    Editar Contato: {{ $contact->name }}
+    Edit contact: {{ $contact->name }}
 @endsection
 
 @section('content')
@@ -9,13 +9,13 @@
         <div class="d-flex align-items-center justify-content-between mb-4">
             <div>
                 <h1 class="h3 mb-0 text-gray-800 fw-bold">
-                    <i class="bi bi-pencil-square text-primary me-2"></i>Editar Contato
+                    <i class="bi bi-pencil-square text-primary me-2"></i>Edit contact
                 </h1>
-                <p class="text-muted small mb-0">Atualizando os dados de: <strong>{{ $contact->name }}</strong> (ID: #{{ $contact->id }})</p>
+                <p class="text-muted small mb-0">Updating: <strong>{{ $contact->name }}</strong> (ID: #{{ $contact->id }})</p>
             </div>
             <div class="d-flex gap-2">
                 <a href="{{ route('contacts.index') }}" class="btn btn-outline-secondary btn-sm shadow-sm">
-                    <i class="bi bi-arrow-left"></i> Voltar
+                    <i class="bi bi-arrow-left"></i> Back
                 </a>
             </div>
         </div>
@@ -27,7 +27,7 @@
 
                 <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
                     <div class="card-header bg-white border-0 py-3 border-bottom">
-                        <span class="fw-bold text-muted text-uppercase small">Ajustar Credenciais</span>
+                        <span class="fw-bold text-muted text-uppercase small">Update details</span>
                     </div>
                     
                     <div class="card-body p-4">
@@ -42,7 +42,7 @@
                 </div>
 
                 <div class="mt-4 text-center">
-                    <p class="text-muted x-small">Última atualização: {{ $contact->updated_at->format('d/m/Y H:i') }}</p>
+                    <p class="text-muted x-small">Last updated: {{ $contact->updated_at->format('d/m/Y H:i') }}</p>
                 </div>
             </div>
         </div>

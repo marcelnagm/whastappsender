@@ -1,22 +1,22 @@
 <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
     <div class="card-header bg-white border-0 py-3 border-bottom">
         <h5 class="mb-0 fw-bold text-dark">
-            <i class="bi bi-person-plus me-2 text-primary"></i>Informações do Contato
+            <i class="bi bi-person-plus me-2 text-primary"></i>Contact details
         </h5>
     </div>
     
     <div class="card-body bg-light-subtle p-4">
         <div class="row g-3">
-            {{-- Linha 1: Nome e WhatsApp --}}
+            {{-- Row 1: name & WhatsApp --}}
             <div class="col-md-6">
                 <div class="form-floating mb-3">
                     {{ Form::text('name', $contact->name, [
                         'class' => 'form-control border-0 shadow-sm' . ($errors->has('name') ? ' is-invalid' : ''), 
-                        'placeholder' => 'Nome completo',
+                        'placeholder' => 'Full name',
                         'id' => 'name',
                         'required' => 'required'
                     ]) }}
-                    {{ Form::label('name', 'Nome do Contato') }}
+                    {{ Form::label('name', 'Contact name') }}
                     {!! $errors->first('name', '<div class="invalid-feedback">:message</div>') !!}
                 </div>
             </div>
@@ -25,16 +25,16 @@
                 <div class="form-floating mb-3">
                     {{ Form::text('contact', $contact->contactFormat(), [
                         'class' => 'form-control border-0 shadow-sm' . ($errors->has('contact') ? ' is-invalid' : ''), 
-                        'placeholder' => 'Contato',
+                        'placeholder' => 'Number',
                         'id' => 'contact',
                         'required' => 'required'
                     ]) }}
-                    {{ Form::label('contact', 'Número de Telefone / WhatsApp') }}
+                    {{ Form::label('contact', 'Phone / WhatsApp number') }}
                     {!! $errors->first('contact', '<div class="invalid-feedback">:message</div>') !!}
                 </div>
             </div>
 
-            {{-- Linha 2: E-mail e LID --}}
+            {{-- Row 2: email & LID --}}
             <div class="col-md-8">
                 <div class="form-floating mb-3">
                     {{ Form::email('email', $contact->email, [
@@ -42,7 +42,7 @@
                         'placeholder' => 'E-mail',
                         'id' => 'email'
                     ]) }}
-                    {{ Form::label('email', 'Endereço de E-mail') }}
+                    {{ Form::label('email', 'Email address') }}
                     {!! $errors->first('email', '<div class="invalid-feedback">:message</div>') !!}
                 </div>
             </div>
@@ -51,27 +51,27 @@
                 <div class="form-floating mb-3">
                     {{ Form::text('lid', $contact->lid, [
                         'class' => 'form-control border-0 shadow-sm' . ($errors->has('lid') ? ' is-invalid' : ''), 
-                        'placeholder' => 'LID / Origem',
+                        'placeholder' => 'LID / source',
                         'id' => 'lid',
                         'readonly' => 'readonly'
                     ]) }}
-                    {{ Form::label('lid', 'LID (Origem do Lead)') }}
+                    {{ Form::label('lid', 'LID (lead source)') }}
                     {!! $errors->first('lid', '<div class="invalid-feedback">:message</div>') !!}
                 </div>
             </div>
 
-            {{-- Linha 3: Status e Score --}}
+            {{-- Row 3: status & score --}}
             <div class="col-md-6">
                 <div class="form-floating mb-3">
                     {{ Form::select('status', [
-                        'ativo' => 'Ativo',
-                        'inativo' => 'Inativo',
-                        'no-whatsapp' => 'Não possui WhatsApp'
+                        'ativo' => 'Active',
+                        'inativo' => 'Inactive',
+                        'no-whatsapp' => 'No WhatsApp'
                     ], $contact->status, [
                         'class' => 'form-select border-0 shadow-sm' . ($errors->has('status') ? ' is-invalid' : ''),
                         'id' => 'status'
                     ]) }}
-                    {{ Form::label('status', 'Status do Cadastro') }}
+                    {{ Form::label('status', 'Record status') }}
                     {!! $errors->first('status', '<div class="invalid-feedback">:message</div>') !!}
                 </div>
             </div>
@@ -85,7 +85,7 @@
                         'min' => 0,
                         'max' => 100
                     ]) }}
-                    {{ Form::label('score', 'Score / Temperatura (0-100)') }}
+                    {{ Form::label('score', 'Score / temperature (0-100)') }}
                     {!! $errors->first('score', '<div class="invalid-feedback">:message</div>') !!}
                 </div>
             </div>
@@ -94,7 +94,7 @@
 
     <div class="card-footer bg-white border-0 p-4 pt-0 d-flex justify-content-end gap-2">
         <button type="submit" class="btn btn-primary px-5 py-2 fw-bold shadow-sm rounded-3 text-uppercase" style="letter-spacing: 0.5px;">
-            <i class="bi bi-check2-circle me-1"></i> Salvar Contato
+            <i class="bi bi-check2-circle me-1"></i> Save contact
         </button>
     </div>
 </div>

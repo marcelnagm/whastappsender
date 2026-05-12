@@ -47,12 +47,12 @@ class SyncContactsJob implements ShouldQueue
                 ->withBody($jsonPayload, 'application/json')
                 ->post($url);
         } catch (Exception $ex) {
-            Log::error("Erro na conexão com Evolution: " . $ex->getMessage());
+            Log::error("Evolution connection error: " . $ex->getMessage());
             throw $ex;
         }
 
         if ($response->failed()) {
-            Log::error("Evolution API retornou erro {$response->status()}: " . $response->body());
+            Log::error("Evolution API error {$response->status()}: " . $response->body());
             return;
         }
 

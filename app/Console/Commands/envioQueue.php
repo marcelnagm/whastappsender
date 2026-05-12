@@ -86,8 +86,8 @@ class envioQueue extends Command
         if ((int) Redis::llen($poolKey) === 0) {
             $messages = app(GroqConversationGenerator::class)->generate(
                 50,
-                'primeiro contato whatsapp',
-                "Gere 50 mensagens curtas em pt-BR para primeiro contato no WhatsApp, incluindo variacoes de bom dia. Retorne apenas JSON array."
+                'whatsapp first contact',
+                "Generate 50 short English first-contact WhatsApp messages, including good-morning variations. Return only a JSON array."
             );
 
             if (!is_array($messages) || empty($messages)) {

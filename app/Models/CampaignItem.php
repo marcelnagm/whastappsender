@@ -85,7 +85,7 @@ class CampaignItem extends Model
                 Storage::disk('s3')->delete($relativePath);
             } else {
                 // Log de segurança caso o path ainda esteja desalinhado
-                \Log::warning("Tentativa de delete falhou: arquivo não encontrado em {$relativePath}");
+                \Log::warning("Delete attempt failed: file not found at {$relativePath}");
             }
         }
         return parent::delete();

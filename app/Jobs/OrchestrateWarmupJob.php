@@ -31,7 +31,7 @@ class OrchestrateWarmupJob implements ShouldQueue
         if (!$admin || !$target) return;
 
         // Pede para a IA gerar as 40 frases
-        $script = $generator->generate(40, 'dia a dia e tecnologia');
+        $script = $generator->generate(40, 'day-to-day and technology');
         $delayAcumulado = 0;
 
         foreach ($script as $index => $frase) {

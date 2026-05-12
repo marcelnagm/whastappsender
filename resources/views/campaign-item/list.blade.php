@@ -16,14 +16,14 @@
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb mb-1">
                     <li class="breadcrumb-item small text-uppercase fw-bold"><a href="#" class="text-decoration-none">Dashboard</a></li>
-                    <li class="breadcrumb-item small text-uppercase fw-bold active">Campanhas</li>
+                    <li class="breadcrumb-item small text-uppercase fw-bold active">Campaigns</li>
                 </ol>
             </nav>
             <h1 class="h3 mb-0 text-gray-800 fw-bold">
                 <span class="bg-primary bg-opacity-10 p-2 rounded-3 me-2">
                     <i class="bi bi-layers-fill text-primary"></i>
                 </span>
-                Itens de Campanha
+                Campaign items
             </h1>
         </div>
         <a href="{{ route('campaign-items.create') }}" class="btn btn-primary px-4 py-2 fw-bold shadow-sm rounded-pill">
@@ -39,11 +39,11 @@
                 <table class="table table-hover align-middle mb-0" style="background: white;">
                     <thead class="bg-light border-bottom">
                         <tr>
-                            <th class="ps-4 py-3 text-muted small fw-bold text-uppercase" style="letter-spacing: 0.5px;">Identificação</th>
-                            <th class="py-3 text-muted small fw-bold text-uppercase">Conteúdo</th>
-                            <th class="py-3 text-center text-muted small fw-bold text-uppercase">Mídia</th>
+                            <th class="ps-4 py-3 text-muted small fw-bold text-uppercase" style="letter-spacing: 0.5px;">Name</th>
+                            <th class="py-3 text-muted small fw-bold text-uppercase">Content</th>
+                            <th class="py-3 text-center text-muted small fw-bold text-uppercase">Media</th>
                             <th class="py-3 text-muted small fw-bold text-uppercase">Performance (ACK)</th>
-                            <th class="py-3 text-end pe-4 text-muted small fw-bold text-uppercase">Ações</th>
+                            <th class="py-3 text-end pe-4 text-muted small fw-bold text-uppercase">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -67,26 +67,26 @@
                                         @if($itemStatus === 'started')
                                         <div class="mt-1">
                                             <span class="badge bg-warning-subtle text-warning-emphasis x-small fw-normal">
-                                                <i class="bi bi-hourglass-split me-1"></i> Gerando...
+                                                <i class="bi bi-hourglass-split me-1"></i> Generating...
                                             </span>
                                         </div>
                                         @elseif($itemStatus === 'completed')
                                         <div class="mt-1">
                                             <span class="badge bg-info-subtle text-info-emphasis x-small fw-normal">
-                                                <i class="bi bi-check2-circle me-1"></i> Geração concluída
+                                                <i class="bi bi-check2-circle me-1"></i> Generation complete
                                             </span>
                                         </div>
                                         @elseif($itemStatus === 'error')
                                         <div class="mt-1">
                                             <span class="badge bg-danger-subtle text-danger-emphasis x-small fw-normal">
-                                                <i class="bi bi-x-circle me-1"></i> Erro na geração
+                                                <i class="bi bi-x-circle me-1"></i> Generation failed
                                             </span>
                                         </div>
                                         @endif
                                         @if($campaignItem->welcome_enabled)
                                         <div class="mt-1">
                                             <span class="badge bg-success-subtle text-success-emphasis x-small fw-normal">
-                                                <i class="bi bi-chat-heart-fill me-1"></i> Boas-vindas
+                                                <i class="bi bi-chat-heart-fill me-1"></i> Welcome
                                             </span>
                                         </div>
                                         @endif
@@ -108,11 +108,11 @@
                                     </div>
                                     <div class="media-tooltip-content">
                                         <img src="{{ $campaignItem->image }}" alt="Preview">
-                                        <div class="p-2 text-center small fw-bold text-dark border-top bg-light">Preview da Mídia</div>
+                                        <div class="p-2 text-center small fw-bold text-dark border-top bg-light">Media preview</div>
                                     </div>
                                 </div>
                                 @else
-                                <span class="badge bg-light text-muted fw-normal px-2 py-1"><i class="bi bi-chat-left-text me-1"></i> Texto</span>
+                                <span class="badge bg-light text-muted fw-normal px-2 py-1"><i class="bi bi-chat-left-text me-1"></i> Text</span>
                                 @endif
                             </td>
 
@@ -135,13 +135,13 @@
                                             <i class="bi bi-lightning-charge-fill me-1"></i> EXECUTAR
                                         </button>
                                         <ul class="dropdown-menu dropdown-menu-end shadow border-0 p-2" style="border-radius: 12px; z-index: 9999;">
-                                            <li><h6 class="dropdown-header text-uppercase x-small fw-bold">Processamento</h6></li>
-                                            <li><a class="dropdown-item rounded-2 py-2" href="{{ route('campaign-items.generateAll',$campaignItem->id) }}"><i class="bi bi-people-fill me-2 text-muted"></i> Gerar para todos</a></li>
+                                            <li><h6 class="dropdown-header text-uppercase x-small fw-bold">Processing</h6></li>
+                                            <li><a class="dropdown-item rounded-2 py-2" href="{{ route('campaign-items.generateAll',$campaignItem->id) }}"><i class="bi bi-people-fill me-2 text-muted"></i> Generate for all</a></li>
                                             @if(Auth::user()->role === 'admin')
-                                            <li><a class="dropdown-item rounded-2 py-2" href="{{ route('campaign-items.generate',$campaignItem->id) }}"><i class="bi bi-bug me-2 text-muted"></i> Gerar Teste</a></li>
+                                            <li><a class="dropdown-item rounded-2 py-2" href="{{ route('campaign-items.generate',$campaignItem->id) }}"><i class="bi bi-bug me-2 text-muted"></i> Generate test</a></li>
                                             @endif
                                             <li><hr class="dropdown-divider"></li>
-                                            <li><a class="dropdown-item rounded-2 py-2 text-success fw-bold" href="{{ route('campaign-items.send',$campaignItem->id) }}"><i class="bi bi-send-check-fill me-2"></i> Iniciar Disparo</a></li>
+                                            <li><a class="dropdown-item rounded-2 py-2 text-success fw-bold" href="{{ route('campaign-items.send',$campaignItem->id) }}"><i class="bi bi-send-check-fill me-2"></i> Start sending</a></li>
                                         </ul>
                                     </div>
 
@@ -150,15 +150,15 @@
                                             <i class="bi bi-three-dots-vertical"></i>
                                         </button>
                                         <ul class="dropdown-menu dropdown-menu-end shadow border-0 p-2" style="border-radius: 12px; z-index: 9999;">
-                                            <li><a class="dropdown-item rounded-2" href="{{ route('campaign-items.show',$campaignItem->id) }}"><i class="bi bi-eye me-2"></i> Visualizar</a></li>
-                                            <li><a class="dropdown-item rounded-2" href="{{ route('campaign-items.edit',$campaignItem->id) }}"><i class="bi bi-pencil me-2"></i> Editar</a></li>
-                                            <li><a class="dropdown-item rounded-2" href="{{ route('whatsapp-jobs.index',$campaignItem->id) }}"><i class="bi bi-list-columns-reverse me-2"></i> Ver Logs</a></li>
+                                            <li><a class="dropdown-item rounded-2" href="{{ route('campaign-items.show',$campaignItem->id) }}"><i class="bi bi-eye me-2"></i> View</a></li>
+                                            <li><a class="dropdown-item rounded-2" href="{{ route('campaign-items.edit',$campaignItem->id) }}"><i class="bi bi-pencil me-2"></i> Edit</a></li>
+                                            <li><a class="dropdown-item rounded-2" href="{{ route('whatsapp-jobs.index',$campaignItem->id) }}"><i class="bi bi-list-columns-reverse me-2"></i> View logs</a></li>
                                             <li><hr class="dropdown-divider"></li>
                                             <li>
                                                 <form action="{{ route('campaign-items.destroy',$campaignItem->id) }}" method="POST">
                                                     @csrf @method('DELETE')
-                                                    <button type="submit" class="dropdown-item rounded-2 text-danger" onclick="return confirm('Excluir item?')">
-                                                        <i class="bi bi-trash me-2"></i> Excluir
+                                                    <button type="submit" class="dropdown-item rounded-2 text-danger" onclick="return confirm('Delete this item?')">
+                                                        <i class="bi bi-trash me-2"></i> Delete
                                                     </button>
                                                 </form>
                                             </li>
@@ -185,7 +185,7 @@
     .transition-all { transition: all 0.2s ease-in-out; }
     .no-caret::after { display: none; }
 
-    /* ESTA É A CORREÇÃO REAL: Eleva a linha que está com o dropdown aberto */
+    /* Raise row when dropdown is open */
     .table-row-custom:focus-within {
         position: relative;
         z-index: 1050 !important;
@@ -224,7 +224,7 @@
     .table-responsive::-webkit-scrollbar { height: 6px; }
     .table-responsive::-webkit-scrollbar-thumb { background: #dee2e6; border-radius: 10px; }
 
-    /* Ajuste para garantir que o menu não seja cortado por overflows de containers superiores */
+    /* Prevent dropdown clipping from parent overflow */
     .dropdown-menu {
         margin-top: 0.5rem !important;
     }

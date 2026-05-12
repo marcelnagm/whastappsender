@@ -1,10 +1,10 @@
 @extends('layouts.app-master')
 
-@section('template_title', 'Gerenciamento de Contatos')
+@section('template_title', 'Contact management')
 
 @section('content')
 <div class="container-fluid py-4">
-    {{-- BARRA DE AÇÕES EM MASSA (STICKY BULK BAR) --}}
+    {{-- Sticky bulk actions bar --}}
     <div id="bulkActionsBar" class="card border-0 shadow-lg bg-dark text-white position-fixed bottom-0 start-50 translate-middle-x mb-4 d-none" style="z-index: 1050; min-width: 500px; border-radius: 50px;">
         <div class="card-body d-flex align-items-center justify-content-between py-2 px-4">
             <div class="small">
@@ -12,22 +12,22 @@
             </div>
             <div class="d-flex gap-2">
                 <button type="button" class="btn btn-success btn-sm fw-bold rounded-pill" onclick="submitBulk('ativo')">
-                    <i class="bi bi-check-circle me-1"></i> ATIVAR
+                    <i class="bi bi-check-circle me-1"></i> ACTIVATE
                 </button>
                 <button type="button" class="btn btn-secondary btn-sm fw-bold rounded-pill" onclick="submitBulk('inativo')">
-                    <i class="bi bi-slash-circle me-1"></i> INATIVAR
+                    <i class="bi bi-slash-circle me-1"></i> DEACTIVATE
                 </button>
                 <button type="button" class="btn btn-danger btn-sm fw-bold rounded-pill" onclick="submitBulk('delete')">
-                    <i class="bi bi-trash me-1"></i> REMOVER
+                    <i class="bi bi-trash me-1"></i> REMOVE
                 </button>
                 <button type="button" class="btn btn-link btn-sm text-white text-decoration-none" onclick="toggleSelectAll(false)">
-                    Cancelar
+                    Cancel
                 </button>
             </div>
         </div>
     </div>
 
-    {{-- Formulário Oculto para Bulk Action --}}
+    {{-- Hidden form for bulk actions --}}
     <form id="bulkActionForm" method="POST" action="" class="d-none">
         @csrf
         <input type="hidden" name="ids" id="bulkIdsInput">
@@ -38,12 +38,12 @@
         <div class="col-sm-12">
             <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
                 <h1 class="h3 mb-0 text-gray-800 fw-bold">
-                    <i class="bi bi-people-fill text-primary me-2"></i>Base de Contatos
+                    <i class="bi bi-people-fill text-primary me-2"></i>Contacts
                 </h1>
                 <div class="d-flex gap-2">
                     <form method="GET" action="{{ route('contacts.index') }}" class="d-flex gap-1 shadow-sm rounded bg-white">
                         <input type="text" name="search" class="form-control form-control-sm border-0 px-3 shadow-none"
-                            placeholder="Nome, zap ou e-mail..." value="{{ request('search') }}" style="min-width: 250px;">
+                            placeholder="Name, WhatsApp or email..." value="{{ request('search') }}" style="min-width: 250px;">
                         <button type="submit" class="btn btn-primary btn-sm">
                             <i class="bi bi-search"></i>
                         </button>
@@ -56,7 +56,7 @@
 
             <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
                 <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-bottom">
-                    <h6 class="m-0 font-weight-bold text-primary">Listagem de Leads ({{ $contacts->total() }})</h6>
+                    <h6 class="m-0 font-weight-bold text-primary">Leads ({{ $contacts->total() }})</h6>
                 </div>
 
                 @if ($message = Session::get('success'))
@@ -73,12 +73,12 @@
                                     <th class="ps-4" style="width: 40px;">
                                         <input type="checkbox" class="form-check-input shadow-none" id="selectAll" onclick="toggleSelectAll(this.checked)">
                                     </th>
-                                    <th style="width: 60px;">Foto</th>
-                                    <th>Nome / Info</th>
+                                    <th style="width: 60px;">Photo</th>
+                                    <th>Name / info</th>
                                     <th>WhatsApp</th>
                                     <th class="text-center">Score</th>
                                     <th class="text-center">Status</th>
-                                    <th class="text-center">Ações</th>
+                                    <th class="text-center">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -88,7 +88,7 @@
                                         <input type="checkbox" class="form-check-input contact-checkbox shadow-none" value="{{ $contact->id }}" onclick="updateBulkBar()">
                                     </td>
                                     <td>
-                                        {{-- Célula da Foto com Sync --}}
+                                        {{-- Avatar cell + sync --}}
                                         <div class="position-relative d-inline-block" style="cursor: pointer;" onclick="syncProfileRow({{ $contact->id }})" id="avatar-container-{{ $contact->id }}">
                                             @if($contact->profile_url)
                                                 <img src="{{ $contact->profile_url }}" id="img-{{ $contact->id }}" class="rounded-circle shadow-sm border" style="width: 40px; height: 40px; object-fit: cover;">
@@ -126,7 +126,7 @@
                                     </td>
                                     <td class="text-center" id="status-cell-{{ $contact->id }}">
                                         @if($contact->status === 'ativo')
-                                        <span class="badge bg-success-soft text-success rounded-pill px-3">Ativo</span>
+                                        <span class="badge bg-success-soft text-success rounded-pill px-3">Active</span>
                                         @elseif($contact->status === 'no-whatsapp')
                                         <span class="badge bg-danger-soft text-danger rounded-pill px-3">No-WA</span>
                                         @else
@@ -135,18 +135,18 @@
                                     </td>
                                     <td class="text-center">
                                         <div class="btn-group btn-group-sm shadow-sm border rounded bg-white">
-                                            <a class="btn btn-white border-end" href="{{ route('contacts.show',$contact->id) }}" title="Visualizar"><i class="bi bi-eye"></i></a>
-                                            <a class="btn btn-white border-end text-primary" href="{{ route('contacts.edit',$contact->id) }}" title="Editar"><i class="bi bi-pencil"></i></a>
+                                            <a class="btn btn-white border-end" href="{{ route('contacts.show',$contact->id) }}" title="View"><i class="bi bi-eye"></i></a>
+                                            <a class="btn btn-white border-end text-primary" href="{{ route('contacts.edit',$contact->id) }}" title="Edit"><i class="bi bi-pencil"></i></a>
                                             <form action="{{ route('contacts.destroy',$contact->id) }}" method="POST" style="display:inline">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="submit" class="btn btn-white text-danger" onclick="return confirm('Excluir contato?')"><i class="bi bi-trash"></i></button>
+                                                <button type="submit" class="btn btn-white text-danger" onclick="return confirm('Delete contact?')"><i class="bi bi-trash"></i></button>
                                             </form>
                                         </div>
                                     </td>
                                 </tr>
                                 @empty
-                                <tr><td colspan="7" class="text-center py-5 text-muted">Nenhum contato encontrado.</td></tr>
+                                <tr><td colspan="7" class="text-center py-5 text-muted">No contacts found.</td></tr>
                                 @endforelse
                             </tbody>
                         </table>
@@ -162,7 +162,7 @@
 </div>
 
 <script>
-    // Sincronização individual na linha
+    // Per-row photo sync
     async function syncProfileRow(id) {
         const loader = document.getElementById(`loader-${id}`);
         const container = document.getElementById(`avatar-container-${id}`);
@@ -177,12 +177,12 @@
 
             if (photoUrl && photoUrl !== '') {
                 container.innerHTML = `<img src="${photoUrl}" class="rounded-circle shadow-sm border" style="width: 40px; height: 40px; object-fit: cover;">`;
-                statusCell.innerHTML = `<span class="badge bg-success-soft text-success rounded-pill px-3">Ativo</span>`;
+                statusCell.innerHTML = `<span class="badge bg-success-soft text-success rounded-pill px-3">Active</span>`;
             } else {
                 statusCell.innerHTML = `<span class="badge bg-danger-soft text-danger rounded-pill px-3">No-WA</span>`;
             }
         } catch (error) {
-            console.error('Erro:', error);
+            console.error('Error:', error);
         } finally {
             loader.classList.add('d-none');
             container.style.opacity = '1';
@@ -213,8 +213,8 @@
         if (ids.length === 0) return;
 
         let confirmMsg = (action === 'delete') 
-            ? `REMOVER ${ids.length} contatos?` 
-            : `Mudar status de ${ids.length} contatos para '${action}'?`;
+            ? `Remove ${ids.length} contacts?` 
+            : `Change status for ${ids.length} contacts to '${action}'?`;
 
         if (!confirm(confirmMsg)) return;
 

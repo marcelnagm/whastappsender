@@ -50,7 +50,7 @@ class ProcessEvolutionWebhookJob implements ShouldQueue
                     break;
             }
         } catch (\Exception $e) {
-            Log::error("Falha no ProcessEvolutionWebhookJob: " . $e->getMessage());
+            Log::error("ProcessEvolutionWebhookJob failed: " . $e->getMessage());
             throw $e;
         }
     }
@@ -107,13 +107,13 @@ Log::info(json_encode($data));
         if ($affected === 0) {
             #Log::warning("ACK Recebido ($statusKey), mas ID não encontrado: $msgId");
         } elseif (config('app.debug')) {
-            Log::info("Job Atualizado: $msgId -> $finalStatus");
+            Log::info("Job updated: $msgId -> $finalStatus");
         }
     }
 
     private function handleNewMessage($instanceName, $data)
     {
-        $this->debugWebhook('Nova mensagem recebida (messages.upsert)', [
+        $this->debugWebhook('New message received (messages.upsert)', [
             'instance' => $instanceName,
             'remoteJid' => $data['key']['remoteJid'] ?? null,
             'messageId' => $data['key']['id'] ?? null,
@@ -122,14 +122,14 @@ Log::info(json_encode($data));
         ]);
 
         if ($this->isGroupMessage($data)) {
-            $this->debugWebhook('Mensagem ignorada por ser de grupo', [
+            $this->debugWebhook('Message ignored (group chat)', [
                 'remoteJid' => $data['key']['remoteJid'] ?? null,
             ]);
             return;
         }
 
         // if ($data['key']['fromMe'] ?? false) {
-        //     $this->debugWebhook('Mensagem ignorada por ser fromMe', [
+        //     $this->debugWebhook('Message ignored (fromMe)', [
         //         'remoteJid' => $data['key']['remoteJid'] ?? null,
         //     ]);
         //     return;
@@ -137,7 +137,7 @@ Log::info(json_encode($data));
 
         $whatsappId = $this->resolveContactId($data);
         if (!$whatsappId) {
-            $this->debugWebhook('Mensagem ignorada: contato nao resolvido', [
+            $this->debugWebhook('Message ignored: contact could not be resolved', [
                 'remoteJid' => $data['key']['remoteJid'] ?? null,
                 'senderPn' => $data['key']['senderPn'] ?? null,
             ]);
@@ -149,7 +149,7 @@ Log::info(json_encode($data));
               ?? '';
 
         app(AiInboundMessageRecorder::class)->record((string) $instanceName, (array) $data, (string) $text);
-        $this->debugWebhook('Mensagem inbound registrada para IA', [
+        $this->debugWebhook('Inbound message recorded for AI', [
             'instance' => $instanceName,
             'whatsappId' => $whatsappId,
             'textPreview' => mb_substr(trim((string) $text), 0, 200),
@@ -157,7 +157,7 @@ Log::info(json_encode($data));
 
         if (strtolower(trim($text)) === '#sair') {
             $this->processOptOut($instanceName, $whatsappId);
-            $this->debugWebhook('Opt-out processado (#sair)', [
+            $this->debugWebhook('Opt-out processed (#sair)', [
                 'instance' => $instanceName,
                 'whatsappId' => $whatsappId,
             ]);
@@ -165,14 +165,14 @@ Log::info(json_encode($data));
         }
 
         if ($this->handleWelcomeReply((string) $instanceName, (string) $whatsappId, (string) $text)) {
-            $this->debugWebhook('Resposta inbound tratada pelo fluxo welcome', [
+            $this->debugWebhook('Inbound reply handled by welcome flow', [
                 'instance' => $instanceName,
                 'whatsappId' => $whatsappId,
             ]);
             return;
         }
 
-        $this->debugWebhook('Encaminhando mensagem para fluxo de IA', [
+        $this->debugWebhook('Forwarding message to AI flow', [
             'instance' => $instanceName,
             'whatsappId' => $whatsappId,
         ]);
@@ -269,13 +269,13 @@ Log::info(json_encode($data));
         $result = app(GroqAgentResponder::class)->generateReply($user, [
             [
                 'role' => 'user',
-                'content' => "Mensagem inbound do lead apos primeiro contato: {$text}. Gere resposta curta, cordial e que avance a conversa.",
+                'content' => "Inbound message from lead after first contact: {$text}. Generate a short, friendly reply that moves the conversation forward.",
             ],
         ]);
 
         $reply = trim((string) ($result['reply'] ?? ''));
         if ($reply === '') {
-            $reply = 'Perfeito! Obrigado por responder. Posso te mostrar os proximos detalhes agora?';
+            $reply = 'Perfect — thanks for replying. Can I walk you through the next details now?';
         }
 
         return $reply;

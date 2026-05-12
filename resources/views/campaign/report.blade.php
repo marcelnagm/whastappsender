@@ -5,20 +5,20 @@
     {{-- Header --}}
     <div class="mb-4 d-flex justify-content-between align-items-end">
         <div>
-            <h2 class="fw-bold mb-1 text-dark">Relatório de Performance</h2>
-            <p class="text-muted mb-0">Campanha: <span class="text-primary fw-semibold">{{ $campaign->name }}</span></p>
+            <h2 class="fw-bold mb-1 text-dark">Performance report</h2>
+            <p class="text-muted mb-0">Campaign: <span class="text-primary fw-semibold">{{ $campaign->name }}</span></p>
         </div>
         <div class="text-end text-muted small">
             <i class="bi bi-calendar3 me-1"></i> {{ $campaign->created_at->format('d/m/H:i') }}
         </div>
     </div>
 
-    {{-- Dashboard: Gráfico + Cards --}}
+    {{-- Dashboard: chart + cards --}}
     <div class="row g-4 mb-5">
         <div class="col-lg-4">
             <div class="card border-0 shadow-sm p-3 h-100">
                 <div class="card-header bg-white border-0 text-center pb-0">
-                    <h6 class="fw-bold text-uppercase small text-muted mb-0">Distribuição</h6>
+                    <h6 class="fw-bold text-uppercase small text-muted mb-0">Distribution</h6>
                 </div>
                 <div class="card-body" style="height: 250px;">
                     <canvas id="campaignPieChart"></canvas>
@@ -30,10 +30,10 @@
             <div class="row g-3 h-100">
                 @php
                     $cards = [
-                        ['l' => 'Erros', 'c' => 'danger', 'v' => $errors['count'] ?? 0, 'p' => $errors['percent'] ?? 0, 'i' => 'bi-x-circle'],
-                        ['l' => 'Enviados', 'c' => 'primary', 'v' => $sent['count'] ?? 0, 'p' => $sent['percent'] ?? 0, 'i' => 'bi-send'],
-                        ['l' => 'Entregues', 'c' => 'info', 'v' => $delivered['count'] ?? 0, 'p' => $delivered['percent'] ?? 0, 'i' => 'bi-check2-all'],
-                        ['l' => 'Lidos', 'c' => 'success', 'v' => $read['count'] ?? 0, 'p' => $read['percent'] ?? 0, 'i' => 'bi-eye']
+                        ['l' => 'Errors', 'c' => 'danger', 'v' => $errors['count'] ?? 0, 'p' => $errors['percent'] ?? 0, 'i' => 'bi-x-circle'],
+                        ['l' => 'Sent', 'c' => 'primary', 'v' => $sent['count'] ?? 0, 'p' => $sent['percent'] ?? 0, 'i' => 'bi-send'],
+                        ['l' => 'Delivered', 'c' => 'info', 'v' => $delivered['count'] ?? 0, 'p' => $delivered['percent'] ?? 0, 'i' => 'bi-check2-all'],
+                        ['l' => 'Read', 'c' => 'success', 'v' => $read['count'] ?? 0, 'p' => $read['percent'] ?? 0, 'i' => 'bi-eye']
                     ];
                 @endphp
 
@@ -51,7 +51,7 @@
         </div>
     </div>
 
-    {{-- Tabela --}}
+    {{-- Table --}}
     <div class="card border-0 shadow-sm overflow-visible" style="border-radius: 15px;">
         <div class="table-responsive" style="max-height: 600px; overflow-y: auto;">
             <table class="table align-middle mb-0 text-center table-hover sticky-table">
@@ -59,11 +59,11 @@
                     <tr>
                         <th class="text-start ps-4 py-3">Item ID</th>
                         <th>Total</th>
-                        <th class="text-danger">Erros</th>
-                        <th class="text-primary">Enviados</th>
-                        <th class="text-info">Entregues</th>
-                        <th class="text-success">Lidos</th>
-                        <th class="text-end pe-4">Ação</th>
+                        <th class="text-danger">Errors</th>
+                        <th class="text-primary">Sent</th>
+                        <th class="text-info">Delivered</th>
+                        <th class="text-success">Read</th>
+                        <th class="text-end pe-4">Action</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -80,11 +80,11 @@
                             <td>{{ $s->delivered ?? 0 }} <br><small class="text-muted">{{ round((($s->delivered ?? 0) / $itemTotal) * 100, 1) }}%</small></td>
                             <td>{{ $s->read_count ?? 0 }} <br><small class="text-muted">{{ round((($s->read_count ?? 0) / $itemTotal) * 100, 1) }}%</small></td>
                             <td class="text-end pe-4">
-                                <a href="{{ route('campaign-items.show', $item->id) }}" class="btn btn-sm btn-outline-primary px-3">Ver</a>
+                                <a href="{{ route('campaign-items.show', $item->id) }}" class="btn btn-sm btn-outline-primary px-3">View</a>
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="7" class="py-5 text-muted">Sem dados.</td></tr>
+                        <tr><td colspan="7" class="py-5 text-muted">No data.</td></tr>
                     @endforelse
                 </tbody>
             </table>
@@ -104,7 +104,7 @@
         const ctx = document.getElementById('campaignPieChart');
         if (!ctx) return;
 
-        // Forçamos o valor a ser numérico (int) para o JS não receber vácuo ou strings
+        // Force numeric values for Chart.js
         const dataValues = [
             {{ (int)($errors['count'] ?? 0) }},
             {{ (int)($sent['count'] ?? 0) }},
@@ -115,7 +115,7 @@
         new Chart(ctx, {
             type: 'doughnut',
             data: {
-                labels: ['Erros', 'Enviados', 'Entregues', 'Lidos'],
+                labels: ['Errors', 'Sent', 'Delivered', 'Read'],
                 datasets: [{
                     data: dataValues,
                     backgroundColor: ['#dc3545', '#0d6efd', '#0dcaf0', '#198754'],
@@ -137,7 +137,7 @@
     .table td { padding: 1rem 0.5rem; border-bottom: 1px solid #f1f5f9; }
 </style>
 <style>
-    /* "Mata" os ícones gigantes da paginação do Tailwind */
+    /* Shrink oversized Tailwind pagination icons */
     nav[role="navigation"] svg {
         width: 20px;
         height: 20px;
@@ -149,7 +149,7 @@
         margin-bottom: 0;
     }
 
-    /* Garante que o texto de "Showing X to Y" fique pequeno */
+    /* Keep "Showing X to Y" text compact */
     .relative.inline-flex.items-center.px-4.py-2 {
         padding: 5px 10px;
         font-size: 14px;

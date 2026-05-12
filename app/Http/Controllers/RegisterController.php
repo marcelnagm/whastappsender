@@ -39,7 +39,7 @@ class RegisterController extends Controller
 
         // auth()->login($user);
 
-        return redirect('/')->with('success', "Conta Criada, entre em contato 5595981110695 para ativa-la.");
+        return redirect('/')->with('success', "Account created. Contact 5595981110695 to activate it.");
     }
 
     private function generateFollowUp($data)
@@ -58,13 +58,13 @@ class RegisterController extends Controller
             // 2. Validação de Variável de Ambiente
             $campaignItemId = env('WHATSAPP_MESSAGE_UP');
             if (!$campaignItemId) {
-                Log::error("Follow-up abortado: WHATSAPP_MESSAGE_UP não configurado no .env");
+                Log::error("Follow-up aborted: WHATSAPP_MESSAGE_UP not set in .env");
                 return;
             }
 
             $item = CampaignItem::find($campaignItemId);
             if (!$item) {
-                Log::error("Follow-up abortado: CampaignItem {$campaignItemId} não encontrado.");
+                Log::error("Follow-up aborted: CampaignItem {$campaignItemId} not found.");
                 return;
             }
 
@@ -88,7 +88,7 @@ class RegisterController extends Controller
         } catch (\Exception $e) {
             // SILENT FAIL: Registra o erro no log, mas não interrompe o fluxo do usuário.
             // A verdade útil: O cadastro do usuário é mais importante que o follow-up.
-            Log::critical("Falha crítica no Follow-up de {$data['email']}: " . $e->getMessage());
+            Log::critical("Critical follow-up failure for {$data['email']}: " . $e->getMessage());
         }
     }
 }

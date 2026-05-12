@@ -1,7 +1,7 @@
 @extends('layouts.app-master')
 
 @section('template_title')
-    Nova Campanha - Mining System
+    New campaign - Mining System
 @endsection
 
 @section('content')
@@ -9,12 +9,12 @@
         <div class="d-flex align-items-center justify-content-between mb-4">
             <div>
                 <h1 class="h3 mb-0 text-gray-800 fw-bold">
-                    <i class="bi bi-rocket-takeoff text-primary me-2"></i>Lançar Nova Campanha
+                    <i class="bi bi-rocket-takeoff text-primary me-2"></i>Launch new campaign
                 </h1>
-                <p class="text-muted small mb-0">Defina o nome e os parâmetros iniciais da sua estratégia de disparos.</p>
+                <p class="text-muted small mb-0">Set the name and initial parameters for your send strategy.</p>
             </div>
             <a href="{{ route('campaigns.index') }}" class="btn btn-outline-secondary btn-sm shadow-sm">
-                <i class="bi bi-arrow-left"></i> Voltar para Campanhas
+                <i class="bi bi-arrow-left"></i> Back to campaigns
             </a>
         </div>
 
@@ -34,8 +34,7 @@
 
                             @include('campaign.form')
 
-                            {{-- Nota: O botão de submit já deve estar dentro do campaign.form 
-                                 Se não estiver, adicione aqui um botão condizente --}}
+                            {{-- Submit button lives in campaign.form --}}
                         </form>
                     </div>
                 </div>
@@ -47,9 +46,9 @@
                                 <i class="bi bi-info-circle fs-4"></i>
                             </div>
                             <div>
-                                <h6 class="fw-bold mb-1">Próximos Passos:</h6>
+                                <h6 class="fw-bold mb-1">Next steps</h6>
                                 <p class="text-muted small mb-0">
-                                    Após criar a campanha, você poderá adicionar os <strong>Itens da Campanha</strong> (mensagens/mídias) e vincular a lista de <strong>Contatos</strong> para o envio.
+                                    After creating the campaign you can add <strong>campaign items</strong> (messages/media) and link your <strong>contact</strong> list for sending.
                                 </p>
                             </div>
                         </div>

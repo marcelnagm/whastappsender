@@ -12,8 +12,8 @@ Detalhes: {{ $campaignItem->name }}
                 <div>
                     <nav aria-label="breadcrumb">
                         <ol class="breadcrumb mb-1">
-                            <li class="breadcrumb-item small text-uppercase fw-bold"><a href="{{ route('campaign-items.index') }}" class="text-decoration-none">Itens de Campanha</a></li>
-                            <li class="breadcrumb-item small text-uppercase fw-bold active">Detalhes</li>
+                            <li class="breadcrumb-item small text-uppercase fw-bold"><a href="{{ route('campaign-items.index') }}" class="text-decoration-none">Campaign items</a></li>
+                            <li class="breadcrumb-item small text-uppercase fw-bold active">Details</li>
                         </ol>
                     </nav>
                     <h1 class="h3 mb-0 text-gray-800 fw-bold">
@@ -25,10 +25,10 @@ Detalhes: {{ $campaignItem->name }}
                 </div>
                 <div class="d-flex gap-2">
                     <a class="btn btn-light border px-3 fw-bold shadow-sm" href="{{ route('campaign-items.index') }}">
-                        <i class="bi bi-arrow-left me-1"></i> Voltar
+                        <i class="bi bi-arrow-left me-1"></i> Back
                     </a>
                     <a class="btn btn-success px-3 fw-bold shadow-sm" href="{{ route('campaign-items.edit', $campaignItem->id) }}">
-                        <i class="bi bi-pencil me-1"></i> Editar
+                        <i class="bi bi-pencil me-1"></i> Edit
                     </a>
                 </div>
             </div>
@@ -37,37 +37,37 @@ Detalhes: {{ $campaignItem->name }}
                 <div class="col-lg-5">
                     <div class="card border-0 shadow-sm mb-4" style="border-radius: 15px;">
                         <div class="card-header bg-white py-3 border-bottom-0">
-                            <h6 class="m-0 fw-bold text-primary text-uppercase small" style="letter-spacing: 1px;">Informações do Item</h6>
+                            <h6 class="m-0 fw-bold text-primary text-uppercase small" style="letter-spacing: 1px;">Item details</h6>
                         </div>
                         <div class="card-body p-0">
                             <table class="table table-hover mb-0">
                                 <tbody class="align-middle">
                                     <tr>
-                                        <td class="ps-4 fw-bold text-muted small" style="width: 35%;">Campanha:</td>
+                                        <td class="ps-4 fw-bold text-muted small" style="width: 35%;">Campaign:</td>
                                         <td class="pe-4">
                                             <span class="badge bg-soft-primary text-primary fw-bold">
-                                                {{ $campaignItem->campaign->name ?? 'Sem Campanha' }}
+                                                {{ $campaignItem->campaign->name ?? 'No campaign' }}
                                             </span>
                                         </td>
                                     </tr>
                                     <tr>
-                                        <td class="ps-4 fw-bold text-muted small">Criado por:</td>
+                                        <td class="ps-4 fw-bold text-muted small">Created by:</td>
                                         <td class="pe-4 text-dark small">{{ $campaignItem->user->name ?? 'N/A' }}</td>
                                     </tr>
                                     <tr>
-                                        <td class="ps-4 fw-bold text-muted small">Mídia:</td>
+                                        <td class="ps-4 fw-bold text-muted small">Media:</td>
                                         <td class="pe-4">
                                             @if($campaignItem->image)
                                             <a href="{{ $campaignItem->image }}" target="_blank" class="btn btn-xs btn-outline-info rounded-pill px-3 py-1 fw-bold" style="font-size: 0.7rem;">
-                                                <i class="bi bi-box-arrow-up-right me-1"></i> Ver Link Original
+                                                <i class="bi bi-box-arrow-up-right me-1"></i> Open original link
                                             </a>
                                             @else
-                                            <span class="text-muted italic small">Somente Texto</span>
+                                            <span class="text-muted italic small">Text only</span>
                                             @endif
                                         </td>
                                     </tr>
                                     <tr>
-                                        <td class="ps-4 fw-bold text-muted small">Taxa de Entrega:</td>
+                                        <td class="ps-4 fw-bold text-muted small">Delivery rate:</td>
                                         <td class="pe-4">
                                             @php $rate = $campaignItem->getDeliveryRate(); @endphp
                                             <span class="fw-bold text-{{ $rate >= 80 ? 'success' : ($rate >= 50 ? 'warning' : 'danger') }}">
@@ -85,18 +85,18 @@ Detalhes: {{ $campaignItem->name }}
                             <div class="col-8">
                                 <div class="btn-group w-100 shadow-sm">
                                     <a href="{{ route('campaign-items.send', $campaignItem->id) }}" class="btn btn-primary btn-lg fw-bold flex-grow-1">
-                                        <i class="bi bi-send-check-fill me-2"></i> INICIAR DISPARO
+                                        <i class="bi bi-send-check-fill me-2"></i> START SENDING
                                     </a>
                                     <button type="button" class="btn btn-primary btn-lg dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
                                         <span class="visually-hidden">Toggle Dropdown</span>
                                     </button>
                                     <ul class="dropdown-menu dropdown-menu-end shadow border-0 p-2" style="border-radius: 12px;">
                                         <li>
-                                            <h6 class="dropdown-header text-uppercase x-small fw-bold">Preparação</h6>
+                                            <h6 class="dropdown-header text-uppercase x-small fw-bold">Prep</h6>
                                         </li>
-                                        <li><a class="dropdown-item rounded-2" href="{{ route('campaign-items.generateAll',$campaignItem->id) }}"><i class="bi bi-layers me-2 text-muted"></i> Gerar para Todos</a></li>
+                                        <li><a class="dropdown-item rounded-2" href="{{ route('campaign-items.generateAll',$campaignItem->id) }}"><i class="bi bi-layers me-2 text-muted"></i> Generate for all</a></li>
                                         @if(Auth::user()->role === 'admin')
-                                        <li><a class="dropdown-item rounded-2" href="{{ route('campaign-items.generate',$campaignItem->id) }}"><i class="bi bi-lightning-charge me-2 text-muted"></i> Gerar Teste</a></li>
+                                        <li><a class="dropdown-item rounded-2" href="{{ route('campaign-items.generate',$campaignItem->id) }}"><i class="bi bi-lightning-charge me-2 text-muted"></i> Generate test</a></li>
                                         @endif
                                     </ul>
                                 </div>
@@ -108,7 +108,7 @@ Detalhes: {{ $campaignItem->name }}
                             </div>
                         </div>
                         <p class="text-center text-muted x-small mt-3 mb-0 italic">
-                            <i class="bi bi-info-circle me-1"></i> Certifique-se de ter gerado os itens antes de disparar.
+                            <i class="bi bi-info-circle me-1"></i> Generate queue items before starting sends.
                         </p>
                     </div>
                 </div>
@@ -122,7 +122,7 @@ Detalhes: {{ $campaignItem->name }}
                                     <i class="bi bi-person-fill text-white fs-4"></i>
                                 </div>
                                 <div>
-                                    <h6 class="mb-0 fw-bold">Seu Cliente</h6>
+                                    <h6 class="mb-0 fw-bold">Your contact</h6>
                                     <span class="x-small opacity-75">online</span>
                                 </div>
                             </div>
@@ -158,7 +158,7 @@ Detalhes: {{ $campaignItem->name }}
 
                         <div class="p-2 bg-light d-flex align-items-center border-top">
                             <i class="bi bi-emoji-smile fs-4 mx-2 text-muted"></i>
-                            <div class="flex-grow-1 bg-white rounded-pill py-2 px-3 text-muted small">Mensagem</div>
+                            <div class="flex-grow-1 bg-white rounded-pill py-2 px-3 text-muted small">Message</div>
                             <i class="bi bi-mic-fill fs-4 mx-3 text-muted"></i>
                         </div>
                     </div>
@@ -169,14 +169,14 @@ Detalhes: {{ $campaignItem->name }}
 </div>
 
 <style>
-    /* Estilo do Fundo do Chat */
+    /* Chat background */
     .bg-whatsapp-chat {
         background-color: #e5ddd5;
         background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png');
         background-size: contain;
     }
 
-    /* Balão de Mensagem Estilizado */
+    /* Message bubble */
     .whatsapp-bubble {
         max-width: 85%;
         margin-left: auto;

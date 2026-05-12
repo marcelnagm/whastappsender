@@ -82,7 +82,7 @@ class SendWelcomeCampaignMessageJob implements ShouldQueue
             ]);
 
             if (!$response->successful()) {
-                Log::warning('Falha envio welcome inicial', [
+                Log::warning('Initial welcome send failed', [
                     'campaign_item_id' => $this->campaignItemId,
                     'contact_id' => $this->contactId,
                     'status' => $response->status(),
@@ -95,7 +95,7 @@ class SendWelcomeCampaignMessageJob implements ShouldQueue
             Redis::expire("welcome:pending_reply:user:{$this->userId}", 60 * 60 * 24 * 15);
             Redis::expire("welcome:contact_campaign:user:{$this->userId}", 60 * 60 * 24 * 15);
         } catch (\Throwable $e) {
-            Log::error('Erro ao enviar welcome inicial', [
+            Log::error('Error sending initial welcome', [
                 'campaign_item_id' => $this->campaignItemId,
                 'contact_id' => $this->contactId,
                 'error' => $e->getMessage(),
@@ -110,20 +110,20 @@ class SendWelcomeCampaignMessageJob implements ShouldQueue
         if ((int) Redis::llen($poolKey) === 0) {
             $messages = app(GroqConversationGenerator::class)->generate(
                 50,
-                'primeiro contato whatsapp',
-                'Gere 50 mensagens curtas de primeiro contato para vendas no WhatsApp (em pt-BR).
-O objetivo é abrir o loop de conversação e gerar uma resposta do lead.
+                'whatsapp first contact',
+                'Generate 50 short first-contact sales messages for WhatsApp (in English).
+The goal is to open the conversation loop and get a reply from the lead.
 
-Diretrizes de Vendas (Copywriting):
-1. Estrutura Obrigatória: Saudação + Gancho (focado em uma dor ou benefício) + Pergunta de Baixa Fricção (ex: "Faz sentido para você?", "É você que cuida disso?", "Podemos falar 1 minuto?").
-2. Tom: Humano, direto e consultivo. É terminantemente proibido soar como telemarketing genérico ou usar emojis em excesso.
-3. Variações de "Bom dia": Devem ser ganchos matinais de negócios (ex: "Bom dia, [Nome]! Estava analisando o mercado de vocês e notei...").
+Sales copy guidelines:
+1. Required structure: Greeting + hook (pain or benefit) + low-friction question (e.g. "Does this make sense for you?", "Are you the right person for this?", "Can we chat for one minute?").
+2. Tone: Human, direct, consultative. Do not sound like generic telemarketing or overuse emojis.
+3. Morning variations: Use business-focused morning hooks (e.g. "Hi [Name], I was looking at your space and noticed...").
 
-Estrutura de Dados Exigida:
-Retorne EXCLUSIVAMENTE um array JSON contendo objetos com as chaves: "categoria" (ex: "frio", "follow-up", "matinal") e "mensagem" (o texto da abordagem).
+Required data shape:
+Return ONLY a JSON array of objects with keys: "categoria" (e.g. "cold", "follow-up", "morning") and "mensagem" (the outreach text).
 
-Restrição Estrita de Saída:
-Não inclua introduções, conclusões ou blocos de código (como ```json). A saída deve começar com [ e terminar com ], sendo um JSON perfeitamente válido para parse imediato.'
+Strict output rules:
+No introductions, conclusions, or code fences (like ```json). Output must start with [ and end with ], as valid JSON for immediate parsing.'
             );
 
             if (!is_array($messages) || empty($messages)) {

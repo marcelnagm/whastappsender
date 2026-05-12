@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Cache;
 class GerarJobsWhatsApp extends Command
 {
     protected $signature = 'whatsapp:gerar {item_id}';
-    protected $description = 'Gera a fila de disparos otimizada';
+    protected $description = 'Build optimized send queue';
 
     public function handle()
     {
@@ -25,18 +25,18 @@ class GerarJobsWhatsApp extends Command
         $campaignItem = CampaignItem::with('campaign')->find($id);
 
         if (!$campaignItem) {
-            $this->error("Item da campanha não encontrado!");
+            $this->error("Campaign item not found!");
             return self::FAILURE;
         }
 
         if ((bool) ($campaignItem->welcome_enabled ?? false)) {
             OrchestrateWelcomeCampaignJob::dispatch((int) $campaignItem->id)->onQueue('default');
-            $this->info("Fluxo welcome orquestrado em background.");
+            $this->info("Welcome flow orchestrated in the background.");
             return self::SUCCESS;
         }
 
-        // 1. Chunking para não estourar a RAM
-        // Buscamos apenas contatos válidos (já minerados/validados)
+        // 1. Chunk to avoid RAM spikes
+        // Only valid (mined/validated) contacts
         Contact::where('user_id', $campaignItem->user_id)
             ->whereNull('ignore_me') // Regra: só gera para quem foi minerado          
             ->where('status','ativo') // Regra: só gera para quem foi minerado          
@@ -62,11 +62,11 @@ class GerarJobsWhatsApp extends Command
                 // 2. Insert de alta performance (1 query por 1000 registros)
                 if (!empty($jobs)) {
                     WhatsappJob::insert($jobs);
-                    $this->info("Lote de jobs inserido...");
+                    $this->info("Job batch inserted...");
                 }
             });
 
-        $this->info("Sucesso! Fila de disparos gerada com performance.");
+        $this->info("Success: send queue generated.");
         return self::SUCCESS;
     }
 }

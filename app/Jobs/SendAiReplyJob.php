@@ -40,7 +40,7 @@ class SendAiReplyJob implements ShouldQueue
         if ($aiMessage->session && (int) $aiMessage->session->instance_id !== (int) $instance->id) {
             $aiMessage->update([
                 'status' => 'error',
-                'error' => 'Instancia divergente da sessao de IA',
+                'error' => 'Instance does not match AI session',
             ]);
             return;
         }
@@ -48,7 +48,7 @@ class SendAiReplyJob implements ShouldQueue
         if ((int) $contact->user_id !== (int) $instance->user_id) {
             $aiMessage->update([
                 'status' => 'error',
-                'error' => 'Contato nao pertence ao dono da instancia',
+                'error' => 'Contact does not belong to this instance owner',
             ]);
             return;
         }
@@ -56,7 +56,7 @@ class SendAiReplyJob implements ShouldQueue
         if ($contact->status === 'no-whatsapp') {
             $aiMessage->update([
                 'status' => 'error',
-                'error' => 'Contato marcado como no-whatsapp',
+                'error' => 'Contact marked as no-whatsapp',
             ]);
             return;
         }
@@ -104,7 +104,7 @@ class SendAiReplyJob implements ShouldQueue
                 $aiMessage->session->update(['last_outbound_at' => now()]);
             }
         } catch (\Throwable $e) {
-            Log::error('Falha no SendAiReplyJob: ' . $e->getMessage());
+            Log::error('SendAiReplyJob failed: ' . $e->getMessage());
             $aiMessage->update([
                 'status' => 'error',
                 'error' => mb_substr($e->getMessage(), 0, 600),

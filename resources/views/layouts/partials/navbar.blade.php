@@ -2,7 +2,7 @@
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
   <div class="container">
     <a class="navbar-brand d-flex align-items-center" href="/">
-      {{-- LOGO DA EMPRESA --}}
+      {{-- Company logo --}}
       <img src="{{ asset('images/logo.jpg') }}" alt="Logo" width="55" height="55" class="me-2 d-inline-block align-text-top">
       <span class="fw-bold">{{ config('app.name', 'Sender') }}</span>
     </a>
@@ -29,11 +29,11 @@
           <a href="/contacts" class="nav-link text-white"><i class="bi bi-people me-1"></i> Contacts</a>
         </li>
         <li class="nav-item">
-          <a href="{{route('campaign-items.index')}}" class="nav-link text-white"><i class="bi bi-list-check me-1"></i> Itens</a>
+          <a href="{{route('campaign-items.index')}}" class="nav-link text-white"><i class="bi bi-list-check me-1"></i> Items</a>
         </li>
         <li class="nav-item">
           <a href="{{ route('profile.edit') }}" class="nav-link {{ request()->is('me/profile') ? 'active text-secondary' : 'text-white' }}">
-            <i class="bi bi-person-lines-fill me-1"></i> Meu Perfil
+            <i class="bi bi-person-lines-fill me-1"></i> My Profile
           </a>
         </li>
 
@@ -45,15 +45,15 @@
           <ul class="dropdown-menu dropdown-menu-dark shadow-lg border-0" aria-labelledby="adminDrop">
             <li>
               <a class="dropdown-item {{ request()->is('admin/users*') ? 'active' : '' }}" href="{{ route('users.index') }}">
-                <i class="bi bi-person-gear me-2"></i>Gestão de Usuários
+                <i class="bi bi-person-gear me-2"></i>User Management
               </a>
             </li>
-            <li><a class="dropdown-item" href="#"><i class="bi bi-hdd-network me-2"></i>Instâncias Globais</a></li>
+            <li><a class="dropdown-item" href="#"><i class="bi bi-hdd-network me-2"></i>Global Instances</a></li>
             <li>
               <hr class="dropdown-divider bg-secondary">
             </li>
             <li><a class="dropdown-item text-warning" href="#"><i class="bi bi-graph-up-arrow me-2"></i>Logs</a></li>
-            <li><a href="{{ route('panic.index') }}" class="dropdown-item text-warning" href="#"><i class="bi bi-activity me-2"></i>PANICO!</a></li>
+            <li><a href="{{ route('panic.index') }}" class="dropdown-item text-warning" href="#"><i class="bi bi-activity me-2"></i>PANIC!</a></li>
           </ul>
         </li>
         @endif
@@ -61,7 +61,7 @@
 
       <div class="d-flex align-items-center border-top border-secondary pt-3 pt-lg-0 border-lg-0">
 
-        {{-- INJEÇÃO DO PARTIAL DE NOTIFICAÇÕES --}}
+        {{-- Notifications partial --}}
         <div class="me-3">
           @include('layouts.partials.notifications')
         </div>
@@ -70,7 +70,7 @@
           {{ auth()->user()->name }}
         </span>
         <a href="{{ route('logout.perform') }}" class="btn btn-sm btn-outline-danger w-100 w-lg-auto">
-          <i class="bi bi-box-arrow-right"></i> Sair
+          <i class="bi bi-box-arrow-right"></i> Log out
         </a>
       </div>
       @endauth

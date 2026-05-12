@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Log;
 class GenerateWarmupConversations extends Command
 {
     protected $signature = 'warmup:generate';
-    protected $description = 'Gera rotinas de aquecimento para instâncias ativas';
+    protected $description = 'Generate warmup routines for active instances';
 
     public function handle()
     {
@@ -19,13 +19,13 @@ class GenerateWarmupConversations extends Command
             
             return 1;
         }
-        // 1. Busca instâncias Admin (Origem)
+        // 1. Admin instances (source)
         $admins = Instance::join('users', 'instances.user_id', '=', 'users.id')
             ->where('users.role', 'admin')
             ->where('instances.status', 'connected')
             ->select('instances.*') // Garante que retornamos objetos do tipo Instance
             ->get();
-        // 2. Busca instâncias em Warmup (Alvos)
+        // 2. Instances in warmup (targets)
 
         $targets = Instance::where('warmup', 1)
             ->where('status', 'connected')
@@ -35,11 +35,11 @@ class GenerateWarmupConversations extends Command
             ->get();
 
         if ($admins->isEmpty() || $targets->isEmpty()) {
-            $this->error("Faltam instâncias Admin ou Alvos em modo Warmup.");
+            $this->error("Missing admin instances or targets in warmup mode.");
             return;
         }
 
-        $this->info("Iniciando orquestração para " . $targets->count() . " chips.");
+        $this->info("Starting orchestration for " . $targets->count() . " chips.");
 
         foreach ($targets as $target) {
             // Seleciona um admin aleatório para interagir com este chip

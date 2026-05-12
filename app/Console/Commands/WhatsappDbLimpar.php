@@ -21,7 +21,7 @@ class WhatsappDbLimpar extends Command
      *
      * @var string
      */
-    protected $description = 'Limpa os concluidos';
+    protected $description = 'Clear completed records';
 
     /**
      * Execute the console command.

@@ -30,13 +30,13 @@ class ContactController extends Controller
         $novoStatus = $request->input('status_value'); // 'ativo', 'inativo', etc.
 
         if (!$ids || !is_array($ids)) {
-            return redirect()->back()->with('error', 'Nenhum contato selecionado.');
+            return redirect()->back()->with('error', 'No contacts selected.');
         }
 
         // Lista de status permitidos para evitar injeção de valores inválidos
         $statusPermitidos = ['ativo', 'inativo', 'no-whatsapp'];
         if (!in_array($novoStatus, $statusPermitidos)) {
-            return redirect()->back()->with('error', 'Status inválido solicitado.');
+            return redirect()->back()->with('error', 'Invalid status requested.');
         }
 
         try {
@@ -49,10 +49,10 @@ class ContactController extends Controller
 
             $afetados = $query->update(['status' => $novoStatus]);
 
-            return redirect()->back()->with('success', "Status de {$afetados} contatos alterado para '{$novoStatus}'.");
+            return redirect()->back()->with('success', "Status updated for {$afetados} contact(s) to '{$novoStatus}'.");
         } catch (\Exception $e) {
-            \Log::error("Erro no Bulk Status: " . $e->getMessage());
-            return redirect()->back()->with('error', 'Falha ao atualizar status dos contatos.');
+            \Log::error("Bulk status error: " . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to update contact status.');
         }
     }
 
@@ -65,7 +65,7 @@ class ContactController extends Controller
         $ids = json_decode($request->input('ids'), true);
 
         if (!$ids || !is_array($ids)) {
-            return redirect()->back()->with('error', 'Seleção inválida para remoção.');
+            return redirect()->back()->with('error', 'Invalid selection for removal.');
         }
 
         try {
@@ -78,10 +78,10 @@ class ContactController extends Controller
 
             $deletados = $query->delete();
 
-            return redirect()->back()->with('success', "{$deletados} contatos foram removidos da sua base.");
+            return redirect()->back()->with('success', "{$deletados} contact(s) removed from your database.");
         } catch (\Exception $e) {
-            \Log::error("Erro no Bulk Delete: " . $e->getMessage());
-            return redirect()->back()->with('error', 'Erro interno ao processar a exclusão em massa.');
+            \Log::error("Bulk delete error: " . $e->getMessage());
+            return redirect()->back()->with('error', 'Internal error while processing bulk delete.');
         }
     }
 

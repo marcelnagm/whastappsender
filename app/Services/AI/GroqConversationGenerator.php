@@ -10,12 +10,12 @@ class GroqConversationGenerator implements ConversationGeneratorInterface
 {
     public function generate(int $count, string $topic, $prompt = null): array
     {
-        $apiKey = config('services.groq.key'); // Puxa do config/services.php
+        $apiKey = config('services.groq.key'); // From config/services.php
 
         if (!$prompt) {
-            $prompt = "Atue como um brasileiro nativo no WhatsApp. Gere um diálogo informal de {$count} mensagens alternadas sobre '{$topic}'. "
-                . "Use gírias leves, abreviações (vc, tbm, blz) e ocasionalmente um erro de digitação. "
-                . "Retorne APENAS um array JSON de strings. Não adicione explicações.";
+            $prompt = "Act as a native English speaker on WhatsApp. Generate an informal back-and-forth dialogue of {$count} alternating messages about '{$topic}'. "
+                . "Use light slang, casual abbreviations (u, rn, tbh) and occasionally a small typo. "
+                . "Return ONLY a JSON array of strings. Do not add explanations.";
         }
 
         try {
@@ -35,7 +35,7 @@ class GroqConversationGenerator implements ConversationGeneratorInterface
 
             if ($response->failed()) {
                 $responseBody = (string) $response->body();
-                Log::error('Groq API retornou erro HTTP', [
+                Log::error('Groq API returned HTTP error', [
                     'status' => $response->status(),
                     'reason' => $response->reason(),
                     'body_preview' => mb_substr($responseBody, 0, 600),
@@ -48,13 +48,13 @@ class GroqConversationGenerator implements ConversationGeneratorInterface
             $messages = $this->decodeMessagesFromContent($content);
 
             if (empty($messages)) {
-                Log::warning("Falha ao decodificar JSON da Groq. Conteúdo bruto: " . $content);
+                Log::warning("Failed to decode Groq JSON. Raw content: " . $content);
                 return $this->fallbackScript($count);
             }
 
             return array_slice($messages, 0, $count);
         } catch (\Exception $e) {
-            Log::error("Erro no Warmup Generator: " . $e->getMessage(), [
+            Log::error("Warmup Generator error: " . $e->getMessage(), [
                 'exception' => get_class($e),
             ]);
             return $this->fallbackScript($count);
@@ -121,6 +121,6 @@ class GroqConversationGenerator implements ConversationGeneratorInterface
 
     private function fallbackScript(int $count): array
     {
-        return array_fill(0, $count, "Beleza, combinamos assim!");
+        return array_fill(0, $count, "Sounds good — let's do it that way!");
     }
 }

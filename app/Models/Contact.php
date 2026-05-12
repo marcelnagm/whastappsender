@@ -102,7 +102,7 @@ class Contact extends Model
             // Se o 404 persisti
         } catch (\Exception $e) {
             dd($e);
-            Log::error("Falha ao sincronizar contato #{$this->id} com Evolution: " . $e->getMessage());
+            Log::error("Failed to sync contact #{$this->id} with Evolution: " . $e->getMessage());
         }
 
         return false;

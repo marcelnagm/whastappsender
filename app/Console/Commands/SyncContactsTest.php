@@ -10,7 +10,7 @@ use App\Models\User;
 class SyncContactsTest extends Command
 {
     protected $signature = 'sync:test {user_id} {instance}';
-    protected $description = 'Teste bruto de sincronização de contatos via terminal';
+    protected $description = 'Raw contact sync test via terminal';
 
     public function handle()
     {
@@ -19,7 +19,7 @@ class SyncContactsTest extends Command
         $apiKey = "B67D461E-C9C1-4198-966D-0F672D626998";
         $url = "http://localhost:8080/chat/findContacts/{$instance}";
 
-        $this->info("Iniciando requisição para: $url");
+        $this->info("Starting request to: $url");
 
         $response = Http::withHeaders([
             'apikey' => $apiKey,
@@ -27,7 +27,7 @@ class SyncContactsTest extends Command
         ])->post($url, ['where' => (object)[]]);
 
         if ($response->failed()) {
-            $this->error("Erro na API: " . $response->status());
+            $this->error("API error: " . $response->status());
             $this->line($response->body());
             return 1;
         }
@@ -36,7 +36,7 @@ class SyncContactsTest extends Command
         
         // Se a Evolution 2.3 retornar um objeto com a chave 'data' ou 'contacts', ajuste aqui:
         // Se for um array direto, o Laravel trata como tal.
-        $this->info("Contatos recebidos: " . count($contacts));
+        $this->info("Contacts received: " . count($contacts));
 
         foreach ($contacts as $contact) {
             $jid = $contact['remoteJid'] ?? $contact['id'] ?? null;
@@ -46,16 +46,16 @@ class SyncContactsTest extends Command
             $c = Contact::updateOrCreate(
                 ['lid' => $jid, 'user_id' => $userId],
                 [
-                    'name' => $contact['pushName'] ?? $contact['name'] ?? 'Sem Nome',
+                    'name' => $contact['pushName'] ?? $contact['name'] ?? 'Unnamed',
                     'phone' => explode('@', $jid)[0],
                     'profile_url' => $contact['profilePicUrl'] ?? null,
                 ]
             );
 
-            $this->line("Sincronizado: " . ($contact['pushName'] ?? $jid));
+            $this->line("Synced: " . ($contact['pushName'] ?? $jid));
         }
 
-        $this->info("Finalizado com sucesso.");
+        $this->info("Finished successfully.");
         return 0;
     }
 }

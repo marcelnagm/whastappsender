@@ -47,7 +47,7 @@ class GenerateCampaignItemJobsJob implements ShouldQueue
                 ));
             }
         } catch (\Throwable $e) {
-            Log::error('Falha ao gerar jobs de campanha', [
+            Log::error('Failed to generate campaign jobs', [
                 'campaign_item_id' => $this->itemId,
                 'error' => $e->getMessage(),
             ]);
