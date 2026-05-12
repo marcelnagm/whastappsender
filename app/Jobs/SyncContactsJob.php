@@ -35,7 +35,7 @@ class SyncContactsJob implements ShouldQueue
         $url = "{$baseUrl}/chat/findContacts/{$this->instanceName}";
 
         try {
-            // REPLICA O --data DO SEU CURL: Garante que o JSON vá como {"where": {}}
+            // Match your curl --data shape: JSON must be {"where": {}}
             $jsonPayload = json_encode([
                 'where' => (object)[]
             ]);

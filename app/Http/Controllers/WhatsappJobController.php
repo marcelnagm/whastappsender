@@ -13,8 +13,8 @@ class WhatsappJobController extends Controller
 {
     //
     /**
-     * Remove múltiplos registros em uma única transação.
-     * Estratégia: Mass Delete para evitar N+1 queries de delete.
+     * Remove multiple records in one go.
+     * Mass delete to avoid N+1 delete queries.
      */
     public function bulkDelete(Request $request)
     {
@@ -25,7 +25,7 @@ class WhatsappJobController extends Controller
         }
 
         try {
-            // Deleta os registros que pertencem ao usuário (ou todos se for admin)
+            // Delete rows owned by the user (or all if admin)
             $query = WhatsappJob::whereIn('id', $ids);
 
             if (Auth::user()->role !== 'admin') {
@@ -42,8 +42,8 @@ class WhatsappJobController extends Controller
     }
 
     /**
-     * Reinfileira os jobs selecionados.
-     * Estratégia: Atualiza o status e despacha para a Queue individualmente para garantir o backoff.
+     * Re-queue selected failed jobs.
+     * Updates status and dispatches each job so backoff / retries apply correctly.
      */
     public function bulkRetry(Request $request)
     {
@@ -55,7 +55,7 @@ class WhatsappJobController extends Controller
 
         try {
             $jobs = WhatsappJob::whereIn('id', $ids)
-                ->where('status', 'erro') // Segurança: Só retenta o que de fato falhou
+                ->where('status', 'erro') // Only rows that actually failed
                 ->get();
 
             if ($jobs->isEmpty()) {
@@ -63,15 +63,14 @@ class WhatsappJobController extends Controller
             }
 
             foreach ($jobs as $job) {
-                // 1. Limpa o rastro do erro anterior
+                // 1. Clear previous failure metadata
                 $job->update([
                     'status' => 'fila',
                     'erro_mensagem' => null,
                     'evolution_status' => null
                 ]);
 
-                // 2. Despacha novamente para a fila (Queue)
-                // Substitua 'EnviarMensagemJob' pelo nome real da sua classe de Job
+                // 2. Push back onto the send queue
                 \App\Jobs\EnviarMensagemJob::dispatch($job)->onQueue('disparos');
             }
 
@@ -85,10 +84,10 @@ class WhatsappJobController extends Controller
 
     public function index(Request $request, $id)
     {
-        // 1. BUSCA FLEXÍVEL
+        // 1. Flexible search
         $query = WhatsappJob::with(['contact', 'campaignItem'])->where('campaign_item_id', $id);
     
-        // 2. FILTROS DINÂMICOS
+        // 2. Dynamic filters
         if ($request->filled('contact')) {
             $query->whereHas('contact', function ($q) use ($request) {
                 $q->where('contact', 'like', '%' . $request->contact . '%')
@@ -102,7 +101,7 @@ class WhatsappJobController extends Controller
             $query->where('evolution_status', $request->evolution_status);
         }
     
-        // 3. DASHBOARD (Cálculo com Clones)
+        // 3. Dashboard aggregates (clone query so filters stay intact)
         $dashboardQuery = clone $query;
         $statsStatus = $dashboardQuery->selectRaw('status, count(*) as total')
             ->groupBy('status')
@@ -113,7 +112,7 @@ class WhatsappJobController extends Controller
             ->groupBy('evolution_status')
             ->pluck('total', 'evolution_status');
     
-        // 4. EXECUÇÃO
+        // 4. Paginated listing
         $jobs = $query->orderBy('id', 'desc')->paginate(50)->withQueryString();
     
         return view('whatsapp-jobs.index', compact('jobs', 'id', 'statsStatus', 'statsEvolution'));
@@ -123,25 +122,25 @@ class WhatsappJobController extends Controller
     public function retry($id)
     {
         try {
-            // 1. Localiza o Job (Garante que só tente re-enviar o que realmente deu erro)
+            // 1. Load job (only failed or queued rows)
             $job = WhatsappJob::where('id', $id)
                 ->whereIn('status', ['erro', 'fila'])
                 ->firstOrFail();
 
-            // 2. Limpeza de rastro e Reset de Estado
+            // 2. Reset state / error trace
             $job->update([
                 'status' => 'pendente',
-                'erro_mensagem' => null, // Limpa o erro anterior para não confundir o usuário
+                'erro_mensagem' => null, // Clear old error so UI/logs stay clear
                 'evolution_status' => null,
                 'updated_at' => now()
             ]);
 
-            // 3. Reinjeção na Fila (A verdade útil: O worker precisa ser avisado)
+            // 3. Dispatch to workers
             EnviarMensagemJob::dispatch($job)->onQueue('disparos');
 
             return redirect()->back()->with('success', "Retry for job #{$id} has been queued.");
         } catch (Exception $e) {
-            // Se o Job não for encontrado ou não for status 'erro'
+            // Job missing or not in a retryable state
             return redirect()->back()->with('error', "Could not reprocess this record. Make sure it is still in 'erro' status.");
         }
     }

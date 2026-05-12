@@ -116,7 +116,7 @@ class WhastappService
                         'webhook_events'    => [
                             'MESSAGES_UPSERT', // Recebe novas mensagens
                             'MESSAGES_UPDATE', // RECEBE O STATUS DE LEITURA (ACK)
-                            'SEND_MESSAGE'     // Confirmação de envio
+                            'SEND_MESSAGE'     // Send receipt / confirmation event
                         ]
                     ];
                     $client = new Client();

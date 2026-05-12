@@ -8,14 +8,14 @@ class WebhookController extends Controller
 {
     public function receive(Request $request)
     {
-        // Validação mínima para não processar lixo
+        // Minimal validation — ignore junk payloads
         $payload = $request->all();
         
         if (!isset($payload['event'])) {
             return response()->json(['status' => 'ignored'], 200);
         }
 
-        // Despacha para a fila do Redis
+        // Dispatch to the Redis queue
         ProcessEvolutionWebhookJob::dispatch($payload);
 
         return response()->json(['status' => 'queued'], 200);

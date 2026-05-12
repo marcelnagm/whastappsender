@@ -38,19 +38,19 @@ class GerarJobsWhatsApp extends Command
         // 1. Chunk to avoid RAM spikes
         // Only valid (mined/validated) contacts
         Contact::where('user_id', $campaignItem->user_id)
-            ->whereNull('ignore_me') // Regra: só gera para quem foi minerado          
-            ->where('status','ativo') // Regra: só gera para quem foi minerado          
-            ->chunkById(1000, function ($contatos) use ($campaignItem) {
+            ->whereNull('ignore_me') // Only mined / validated contacts
+            ->where('status','ativo') // Only active WhatsApp numbers
+            ->chunkById(1000, function ($contacts) use ($campaignItem) {
 
                 $jobs = [];
                 $now = now();
 
-                foreach ($contatos as $contato) {
+                foreach ($contacts as $contact) {
                     $jobs[] = [
                         'user_id'          => $campaignItem->user_id,
                         'campaign_id'      => $campaignItem->campaign_id,
                         'campaign_item_id' => $campaignItem->id,
-                        'contact_id'       => $contato->id, // A âncora que definimos
+                        'contact_id'       => $contact->id, // Stable foreign key
                         'status'           => 'pendente',
                         'endpoint'  => 
                             $campaignItem->getOperation(),
@@ -59,7 +59,7 @@ class GerarJobsWhatsApp extends Command
                     ];
                 }
 
-                // 2. Insert de alta performance (1 query por 1000 registros)
+                // 2. Bulk insert (one query per chunk of up to 1000 rows)
                 if (!empty($jobs)) {
                     WhatsappJob::insert($jobs);
                     $this->info("Job batch inserted...");

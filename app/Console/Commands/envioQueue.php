@@ -23,7 +23,7 @@ class envioQueue extends Command
      *
      * @var string
      */
-    protected $description = 'Gera Queue de disparo';
+    protected $description = 'Dispatch pending WhatsApp send jobs to the queue';
 
     /**
      * Execute the console command.
@@ -45,11 +45,11 @@ class envioQueue extends Command
             ->get();
 
         if ($jobs->isEmpty()) {
-            $this->warn("Nenhum job pendente encontrado no banco."); // Isso vai te avisar no terminal
+            $this->warn('No pending jobs found in the database.');
             return;
         }
 
-        $this->info("Encontrados " . $jobs->count() . " jobs. Despachando...");
+        $this->info('Found ' . $jobs->count() . ' job(s). Dispatching...');
 
         foreach ($jobs as $job) {
             $campaignItem = $job->campaignItem;

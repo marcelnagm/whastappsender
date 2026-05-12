@@ -9,12 +9,12 @@ class AdminMiddleware
 {
     public function handle(Request $request, Closure $next)
     {
-        // Verifica se está logado E se o campo 'role' no banco é 'admin'
+        // Must be logged in with role = admin
         if (Auth::check() && Auth::user()->role === 'admin') {
             return $next($request);
         }
 
-        // Se não for admin, chuta para a home ou login com erro
+        // Otherwise redirect home with an error
         return redirect('/')->with('error', 'Access denied. Administrators only.');
     }
 }

@@ -11,7 +11,7 @@ class InstanceController extends Controller
 {
     public function index()
     {
-        // Lista apenas as instâncias do usuário logado
+        // Only instances for the signed-in user (admins see all)
         if (auth()->user()->isAdmin())
             $instances = Instance::paginate(10);
         else $instances = auth()->user()->instances()->latest()->paginate(10);
@@ -28,10 +28,10 @@ class InstanceController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'phone' => 'required|string|max:20', // Recebendo o telefone do formulário
+            'phone' => 'required|string|max:20', // Phone from the form
         ]);
 
-        // Limpa o telefone para ser usado como ID técnico (apenas números)
+        // Normalize phone into a numeric technical id
         $instanceName = preg_replace('/[^0-9]/', '', $request->phone);
 
         Auth::user()->instances()->create([
@@ -53,7 +53,7 @@ class InstanceController extends Controller
     {
         $this->authorizeOwner($instance);
 
-        // No futuro, aqui você disparará o DELETE para a Evolution API
+        // Later: call Evolution API DELETE here
         $instance->delete();
         WhatsappService::delete($instance->instance_name);
 
@@ -65,9 +65,9 @@ class InstanceController extends Controller
     {
         $this->authorizeOwner($instance);
 
-        // Inverte o status (0 ou 1)
+        // Toggle warmup flag (0 or 1)
         $instance->warmup = $instance->warmup == 1 ? 0 : 1;
-        $instance->save(); // O parênteses é obrigatório
+        $instance->save();
 
         $statusMsg = $instance->warmup ? 'enabled' : 'disabled';
 
@@ -84,10 +84,10 @@ class InstanceController extends Controller
 
     public function sync($id)
     {
-        // 1. Validação básica: Verifique se o usuário é dono desta instância (se você tiver essa tabela)
+        // 1. Ensure the user owns this instance
         $ins = Instance::findOrFail($id);
 
-        // 2. Despacha o Job passando o Nome da Instância e o ID do Usuário
+        // 2. Dispatch sync job with instance name and user id
         if ($ins->isMine())
             \App\Jobs\SyncContactsJob::dispatch(auth()->id(), $ins->instance_name);
         else redirect()->route('instances.index')

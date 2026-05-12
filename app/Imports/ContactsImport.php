@@ -10,10 +10,9 @@ use Maatwebsite\Excel\Concerns\WithHeadingRow;
 class ContactsImport implements ToModel , WithHeadingRow
 {
     /**
-    * @param array $row
-    *
-    * @return \Illuminate\Database\Eloquent\Model|null
-    */
+     * Maps spreadsheet rows to Contact models.
+     * Supports multiple heading aliases (Portuguese/English) for legacy files.
+     */
     public function model(array $row)
     {
         // dd($row);

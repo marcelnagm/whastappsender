@@ -9,31 +9,25 @@ use Maatwebsite\Excel\Facades\Excel;
 use Auth;
 
 /**
-   use Illuminate\Support\Facades\Auth;
  * Class ContactController
  * @package App\Http\Controllers
  */
 class ContactController extends Controller
 {
     /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    /**
-     * Altera o status de múltiplos contatos (ativo, inativo, no-whatsapp, etc)
-     * Estratégia: Mass Update para eficiência de I/O de banco de dados.
+     * Bulk-update contact status (active, inactive, no-whatsapp, etc.).
+     * Uses a mass update for fewer database round-trips.
      */
     public function bulkStatus(Request $request)
     {
         $ids = json_decode($request->input('ids'), true);
-        $novoStatus = $request->input('status_value'); // 'ativo', 'inativo', etc.
+        $novoStatus = $request->input('status_value'); // e.g. ativo, inativo
 
         if (!$ids || !is_array($ids)) {
             return redirect()->back()->with('error', 'No contacts selected.');
         }
 
-        // Lista de status permitidos para evitar injeção de valores inválidos
+        // Allowed statuses only (prevents invalid injected values)
         $statusPermitidos = ['ativo', 'inativo', 'no-whatsapp'];
         if (!in_array($novoStatus, $statusPermitidos)) {
             return redirect()->back()->with('error', 'Invalid status requested.');
@@ -42,7 +36,7 @@ class ContactController extends Controller
         try {
             $query = \App\Models\Contact::whereIn('id', $ids);
 
-            // Garantia de segurança: Usuário comum só altera seus próprios contatos
+            // Non-admins may only change their own contacts
             if (auth()->user()->role !== 'admin') {
                 $query->where('user_id', auth()->id());
             }
@@ -57,8 +51,8 @@ class ContactController extends Controller
     }
 
     /**
-     * Remove múltiplos contatos permanentemente.
-     * Estratégia: Bulk Delete com proteção de escopo de usuário.
+     * Permanently remove multiple contacts.
+     * Bulk delete with user scope protection.
      */
     public function bulkDelete(Request $request)
     {
@@ -71,7 +65,7 @@ class ContactController extends Controller
         try {
             $query = \App\Models\Contact::whereIn('id', $ids);
 
-            // Segurança Crítica: Impede que um usuário delete contatos de outro via manipulação de ID no front
+            // Prevent deleting another user's contacts via forged ids
             if (auth()->user()->role !== 'admin') {
                 $query->where('user_id', auth()->id());
             }
@@ -98,7 +92,7 @@ class ContactController extends Controller
                 });
             })
             ->orderBy('name', 'asc')
-            ->paginate(20); // Defini 20 para melhorar a usabilidade
+            ->paginate(20); // 20 per page for usability
 
         return view('contact.index', compact('contacts'))
             ->with('i', (request()->input('page', 1) - 1) * $contacts->perPage());

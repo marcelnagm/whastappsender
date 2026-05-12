@@ -8,16 +8,16 @@ use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
-    // Listagem com filtro simples
+    // Simple search listing
     public function index(Request $request)
     {
-        // 1. Captura o termo de busca do input 'search'
+        // 1. Read search term from input
         $search = $request->input('search');
 
-        // 2. Inicia a Query
+        // 2. Base query
         $query = User::query();
 
-        // 3. Aplica o filtro se houver algo escrito
+        // 3. Apply filter when a term is present
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'LIKE', "%{$search}%")
@@ -26,13 +26,13 @@ class UserController extends Controller
             });
         }
 
-        // 4. Paginação (Importante: use o appends para não perder a busca ao mudar de página)
+        // 4. Paginate (use appends so search survives page changes)
         $users = $query->latest()->paginate(10)->appends(['search' => $search]);
 
         return view('admin.users.index', compact('users'));
     }   
 
-    // Alternar status Ativo/Inativo
+    // Toggle active / inactive
     public function toggleActive(User $user)
     {
         $user->active = $user->active  == 1 ? 0 : 1;
@@ -40,7 +40,7 @@ class UserController extends Controller
         return back()->with('success', 'User status updated.');
     }
 
-    // Alterar Role (Admin/User)
+    // Toggle role (admin / user)
     public function toggleAdmin(User $user)
     {
         $newRole = $user->role === 'admin' ? 'user' : 'admin';
@@ -49,13 +49,13 @@ class UserController extends Controller
         return back()->with('success', 'Role updated successfully.');
     }
 
-    // Formulário de Edição
+    // Edit form
     public function edit(User $user)
     {
         return view('admin.users.edit', compact('user'));
     }
 
-    // Update dos dados
+    // Persist changes
     public function update(Request $request, User $user)
     {
         $data = $request->validate([
@@ -116,7 +116,7 @@ class UserController extends Controller
         return redirect()->route('profile.edit')->with('success', 'Profile and AI settings updated successfully.');
     }
 
-    // Exclusão (Cuidado aqui)
+    // Deletion (destructive)
     public function destroy(User $user)
     {
         $user->delete();

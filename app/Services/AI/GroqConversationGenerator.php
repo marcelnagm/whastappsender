@@ -28,9 +28,9 @@ class GroqConversationGenerator implements ConversationGeneratorInterface
                         ["role" => "user", "content" => $prompt]
                     ],
                     "temperature" => 1,
-                    "max_completion_tokens" => 2048, // Aumentado para suportar 40 frases longas
+                    "max_completion_tokens" => 2048, // Raised to fit longer multi-line scripts
                     "top_p" => 1,
-                    "stream" => false, // OBRIGATÓRIO: No PHP/Jobs usamos false para pegar a resposta cheia
+                    "stream" => false, // Must be false in PHP/jobs to read the full completion
                 ]);
 
             if ($response->failed()) {
@@ -68,13 +68,13 @@ class GroqConversationGenerator implements ConversationGeneratorInterface
             return [];
         }
 
-        // Tentativa 1: conteúdo já é JSON puro.
+        // Attempt 1: content is already raw JSON.
         $decoded = json_decode($content, true);
         if (is_array($decoded)) {
             return $this->extractMessages($decoded);
         }
 
-        // Tentativa 2: resposta veio em bloco markdown ```json ... ```.
+        // Attempt 2: response wrapped in markdown ```json ... ```.
         if (preg_match('/```(?:json)?\s*(\[.*\])\s*```/is', $content, $matches)) {
             $decoded = json_decode($matches[1], true);
             if (is_array($decoded)) {
@@ -82,7 +82,7 @@ class GroqConversationGenerator implements ConversationGeneratorInterface
             }
         }
 
-        // Tentativa 3: extrai o primeiro array JSON dentro do texto.
+        // Attempt 3: extract the first JSON array from the text.
         if (preg_match('/\[[\s\S]*\]/', $content, $matches)) {
             $decoded = json_decode($matches[0], true);
             if (is_array($decoded)) {
@@ -110,7 +110,13 @@ class GroqConversationGenerator implements ConversationGeneratorInterface
     {
         $normalized = [];
         foreach ($messages as $message) {
-            $value = trim((string) $message);
+            if (is_string($message)) {
+                $value = trim($message);
+            } elseif (is_array($message)) {
+                $value = trim((string) ($message['message'] ?? $message['mensagem'] ?? $message['text'] ?? ''));
+            } else {
+                $value = trim((string) $message);
+            }
             if ($value !== '') {
                 $normalized[] = $value;
             }

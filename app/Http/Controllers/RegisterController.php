@@ -45,17 +45,17 @@ class RegisterController extends Controller
     private function generateFollowUp($data)
     {
         try {
-            // 1. Garantir o Registro do Contato (Usa updateOrCreate para evitar erro de duplicata)
-            $contato = Contact::updateOrCreate(
-                ['contact' => $data['ddi'].$data['phone']], // Chave de busca (evita Exception de Unique Index)
+            // 1. Upsert contact (updateOrCreate avoids duplicate key errors)
+            $contact = Contact::updateOrCreate(
+                ['contact' => $data['ddi'].$data['phone']], // Lookup key (avoids unique index exceptions)
                 [
                     'name'    => $data['name'] . ' Site',
                     'email'   => $data['email'],
-                    'user_id' => 1 // ID do Admin/Sistema
+                    'user_id' => 1 // Admin / system user id
                 ]
             );
 
-            // 2. Validação de Variável de Ambiente
+            // 2. Environment variable check
             $campaignItemId = env('WHATSAPP_MESSAGE_UP');
             if (!$campaignItemId) {
                 Log::error("Follow-up aborted: WHATSAPP_MESSAGE_UP not set in .env");
@@ -68,13 +68,13 @@ class RegisterController extends Controller
                 return;
             }
 
-            // 3. Persistência do Job
+            // 3. Persist job row
             $now = now();
             $job = new WhatsappJob([
                 'user_id'          => $item->user_id,
                 'campaign_id'      => $item->campaign_id,
                 'campaign_item_id' => $item->id,
-                'contact_id'       => $contato->id,
+                'contact_id'       => $contact->id,
                 'status'           => 'pendente',
                 'endpoint'         => $item->getOperation(),
                 'created_at'       => $now,
@@ -82,12 +82,11 @@ class RegisterController extends Controller
             ]);
 
             if ($job->save()) {
-                // 4. Despacho para Fila (Queue) - Essencial para não travar o Request do usuário
+                // 4. Queue dispatch — keeps the HTTP request responsive
                 \App\Jobs\EnviarMensagemJob::dispatch($job)->onQueue('default');
             }
         } catch (\Exception $e) {
-            // SILENT FAIL: Registra o erro no log, mas não interrompe o fluxo do usuário.
-            // A verdade útil: O cadastro do usuário é mais importante que o follow-up.
+            // Silent fail: log only; user signup must not break on follow-up issues.
             Log::critical("Critical follow-up failure for {$data['email']}: " . $e->getMessage());
         }
     }

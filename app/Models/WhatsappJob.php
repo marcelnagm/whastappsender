@@ -13,12 +13,12 @@ class WhatsappJob extends Model
 
 
     /**
-     * Tabela associada ao blueprint fornecido.
+     * Table backing this Eloquent model.
      */
     protected $table = 'whatsapp_job';
 
     /**
-     * Atributos que podem ser preenchidos em massa.
+     * Mass-assignable attributes.
      */
     protected $fillable = [
         'endpoint',
@@ -38,13 +38,12 @@ class WhatsappJob extends Model
     ];
 
     /**
-     * Casting de tipos para facilitar a manipulação do JSON no Laravel.
-     * Sem isso, 'payload' e 'resposta' virão como strings, dificultando o loop.
+     * Casts JSON columns to PHP arrays for easier access.
      */
     protected $casts = [
         'payload' => 'array',
         'resposta' => 'array',
-        'status' => 'string', // Garante consistência com o ENUM
+        'status' => 'string', // Keep aligned with DB enum/text column
     ];
 
 
@@ -57,10 +56,10 @@ class WhatsappJob extends Model
     }
 
     /**
-     * Escopo para facilitar a busca no Comando de envio.
-     * Uso: WhatsappJob::pendentes()->get();
+     * Query scope for pending jobs.
+     * Usage: WhatsappJob::pending()->get();
      */
-    public function scopePendentes($query)
+    public function scopePending($query)
     {
         return $query->where('status', 'pendente');
     }
@@ -95,25 +94,25 @@ class WhatsappJob extends Model
         $stats = \App\Models\WhatsappJob::where('user_id', $user_id)
             ->selectRaw('
                 COUNT(*) as total,
-                SUM(CASE WHEN evolution_status IN ("DELIVERED", "READ", "PLAYED", "delivered", "read", "played") THEN 1 ELSE 0 END) as entregues
+                SUM(CASE WHEN evolution_status IN ("DELIVERED", "READ", "PLAYED", "delivered", "read", "played") THEN 1 ELSE 0 END) as delivered_count
             ')
             ->first();
 
         if (!$stats || $stats->total == 0) return 0;
 
-        return round(($stats->entregues / $stats->total) * 100, 1);
+        return round(($stats->delivered_count / $stats->total) * 100, 1);
     }
 
     public static function getErrorRate($user_id)
     {
-        // 1. Total de jobs do usuário (denominador)
+        // 1. Denominator: all jobs for this user
         $total = \App\Models\WhatsappJob::where('user_id', $user_id)->count();
 
         if ($total === 0) {
             return 0;
         }
 
-        // 2. Total de erros aplicando a lógica OU (status ou evolution_status)
+        // 2. Numerator: rows failed internally or marked error by Evolution
         $errors = \App\Models\WhatsappJob::where('user_id', $user_id)
             ->where(function ($query) {
                 $query->where('status', 'erro')
@@ -121,7 +120,7 @@ class WhatsappJob extends Model
             })
             ->count();
 
-        // 3. Retorna apenas o valor calculado: (erros / total) * 100
+        // 3. Error rate percentage
         return round(($errors / $total) * 100, 1);
     }
 }

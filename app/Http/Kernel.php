@@ -7,8 +7,8 @@ use Illuminate\Foundation\Http\Kernel as HttpKernel;
 class Kernel extends HttpKernel
 {
     /**
-     * Middleware GLOBAIS.
-     * Rodam em todas as requisições. NÃO coloque travas de acesso aqui.
+     * Global middleware.
+     * Runs on every request. Do not put access-control locks here.
      */
     protected $middleware = [
         // \App\Http\Middleware\TrustHosts::class,
@@ -21,7 +21,7 @@ class Kernel extends HttpKernel
     ];
 
     /**
-     * Grupos de Middleware.
+     * Middleware groups.
      */
     protected $middlewareGroups = [
         'web' => [
@@ -41,8 +41,8 @@ class Kernel extends HttpKernel
     ];
 
     /**
-     * Middleware de ROTA.
-     * Aqui você registra o 'apelido' para usar nas rotas específicas.
+     * Route middleware aliases.
+     * Register short names to use on specific routes.
      */
     protected $routeMiddleware = [
         'auth' => \App\Http\Middleware\Authenticate::class,
@@ -55,7 +55,7 @@ class Kernel extends HttpKernel
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
         
-        // CORREÇÃO: O 'admin' deve ficar apenas aqui.
+        // Keep the admin alias registered here only.
         'admin' => \App\Http\Middleware\AdminMiddleware::class,
     ];
 }

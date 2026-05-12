@@ -23,7 +23,7 @@ class GenerateWarmupConversations extends Command
         $admins = Instance::join('users', 'instances.user_id', '=', 'users.id')
             ->where('users.role', 'admin')
             ->where('instances.status', 'connected')
-            ->select('instances.*') // Garante que retornamos objetos do tipo Instance
+            ->select('instances.*') // Ensure hydrated models are Instance
             ->get();
         // 2. Instances in warmup (targets)
 
@@ -42,15 +42,15 @@ class GenerateWarmupConversations extends Command
         $this->info("Starting orchestration for " . $targets->count() . " chips.");
 
         foreach ($targets as $target) {
-            // Seleciona um admin aleatório para interagir com este chip
+            // Pick a random admin instance to ping this SIM
             $admin = $admins->random();
 
-            // Dispara o Orquestrador que gera as 40 frases e agenda os delays
+            // Orchestrator builds ~40 lines and staggers delays
             OrchestrateWarmupJob::dispatch($admin->id, $target->id);
 
-            $this->line("Agendado: Admin [{$admin->instance_name}] <-> Target [{$target->instance_name}]");
+            $this->line("Scheduled: Admin [{$admin->instance_name}] <-> Target [{$target->instance_name}]");
         }
 
-        Log::info("Warmup: " . $targets->count() . " conversas orquestradas.");
+        Log::info("Warmup: " . $targets->count() . " conversation(s) orchestrated.");
     }
 }

@@ -23,7 +23,7 @@ class PanicController extends Controller
             Cache::forget($panicKey);
             $msg = 'Sending system resumed successfully.';
         } else {
-            // Define a flag sem tempo de expiração
+            // Set flag with no TTL
             Cache::forever($panicKey, true);
             $msg = 'SYSTEM PAUSED: Workers will skip new processing.';
         }
@@ -32,16 +32,15 @@ class PanicController extends Controller
     }
 
     /**
-     * Limpa fisicamente a fila do driver (Redis/Database)
+     * Physically clear the queue on the driver (Redis / database).
      */
     public function clear()
     {
         try {
-            // Comando para limpar a fila específica
             Artisan::call('queue:clear', [
                 '--queue' => 'disparos',
-                '--force' => true,      // Ignora a pergunta de confirmação
-                '--no-interaction' => true // Garante que o Symfony Console não busque o STDIN
+                '--force' => true,      // Skip confirmation prompt
+                '--no-interaction' => true // Avoid Symfony waiting on STDIN
             ]);
 
             return back()->with('success', 'Send queue cleared. All pending jobs were removed.');
@@ -53,11 +52,10 @@ class PanicController extends Controller
     public function warmup()
     {
         try {
-            // Comando para limpar a fila específica
             Artisan::call('queue:clear', [
                 '--queue' => 'warmup',
-                '--force' => true,      // Ignora a pergunta de confirmação
-                '--no-interaction' => true // Garante que o Symfony Console não busque o STDIN
+                '--force' => true,
+                '--no-interaction' => true
             ]);
             return back()->with('success', 'Warmup queue cleared. All pending jobs were removed.');
         } catch (\Exception $e) {

@@ -42,10 +42,10 @@ class CampaignController extends Controller
     {
         $this->authorizeOwner($campaign);
 
-        // Carrega a campanha com as contagens de cada status dos itens (mensagens)
+        // Load aggregate stats for the campaign
         $stats = $campaign->summary();
 
-        $total = $stats->total ?: 1; // Evita divisão por zero
+        $total = $stats->total ?: 1; // Avoid division by zero
 
         $data = [
             'campaign' => $campaign,
@@ -54,7 +54,7 @@ class CampaignController extends Controller
             'sent' => ['count' => $stats->sent, 'percent' => round(($stats->sent / $total) * 100, 1)],
             'delivered' => ['count' => $stats->delivered, 'percent' => round(($stats->delivered / $total) * 100, 1)],
             'read' => ['count' => $stats->read_count, 'percent' => round(($stats->read_count / $total) * 100, 1)],
-            'items' => $campaign->campaignItems()->paginate(50)     // Detalhado por item
+            'items' => $campaign->campaignItems()->paginate(50)     // Per-item detail
         ];
 
         return view('campaign.report', $data);
@@ -130,7 +130,7 @@ class CampaignController extends Controller
      */
     public function destroy($id)
     {
-        // 1. Localiza a campanha ou falha
+        // 1. Load campaign or 404
         $campaign = Campaign::with('campaignItems')->findOrFail($id);
 
         try {

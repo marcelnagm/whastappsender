@@ -30,7 +30,7 @@ class testSender extends Command
     public function handle()
     {
         // $this->info('TEste de envio');
-        // $sess = $this->ask('Qual a sesão?','95981110695')      ;  
+        // $sess = $this->ask('Session name?', '95981110695');  
         // $num = $this->ask('Quakl o numero?','559581074892@s.whatsapp.net');
         
         //  WhastappService::sender($sess,$num, 'teste e envio');       

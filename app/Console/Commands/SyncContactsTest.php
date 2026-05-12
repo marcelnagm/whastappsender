@@ -34,8 +34,8 @@ class SyncContactsTest extends Command
 
         $contacts = $response->json();
         
-        // Se a Evolution 2.3 retornar um objeto com a chave 'data' ou 'contacts', ajuste aqui:
-        // Se for um array direto, o Laravel trata como tal.
+        // Evolution 2.3 may wrap rows under `data` / `contacts`; adjust parsing if your payload differs.
+        // When the API returns a bare array, `json()` already gives a PHP list.
         $this->info("Contacts received: " . count($contacts));
 
         foreach ($contacts as $contact) {

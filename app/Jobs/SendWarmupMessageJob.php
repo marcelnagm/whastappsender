@@ -29,8 +29,8 @@ class SendWarmupMessageJob implements ShouldQueue
         $config = config('services.whatsapp');
         $baseUrl = "{$config['protocol']}://{$config['url']}:{$config['port']}";
 
-        // 1. Simular Presença (Digitando ou Gravando)
-        // Alternamos entre 'composing' (digitando) e 'recording' (gravando) aleatoriamente
+        // 1. Simulate presence (typing vs recording)
+        // Randomly alternate composing/recording states
         $presenceType = rand(0, 1) ? 'composing' : 'recording';
 
         $presenceEndpoint = "{$baseUrl}/chat/retrivePresence/{$this->senderName}";
@@ -41,13 +41,13 @@ class SendWarmupMessageJob implements ShouldQueue
         ])->post($presenceEndpoint, [
             'number' => $this->receiverPhone,
             'presence' => $presenceType,
-            'delay' => rand(1500, 3000) // Tempo que o status ficará visível para o alvo
+            'delay' => rand(1500, 3000) // How long the presence bubble stays visible
         ]);
 
-        // Pequena pausa no PHP para a presença ser notada antes do texto chegar
-        usleep(500000); // 0.5 segundos
+        // Short pause so the presence is visible before the text arrives
+        usleep(500000); // 0.5 seconds
 
-        // 2. Enviar o Texto Real
+        // 2. Send the actual text
         $textEndpoint = "{$baseUrl}/message/sendText/{$this->senderName}";
 
         Http::withHeaders([
@@ -56,7 +56,7 @@ class SendWarmupMessageJob implements ShouldQueue
         ])->post($textEndpoint, [
             'number' => $this->receiverPhone,
             'text' => $this->frase,
-            'delay' => rand(1000, 2000) // Delay adicional interno da API
+            'delay' => rand(1000, 2000) // Extra API-side delay
         ]);
     }
 }

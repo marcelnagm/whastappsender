@@ -62,7 +62,7 @@ class EnviarMensagensWhatsApp extends Command
                 $contact = $job->contact;
                 $numeroDestino = $contact->contact;
 
-                // CORREÇÃO: Acessando o CampaignItem através do Job
+                // Resolve campaign item through the job relation
                 $campaignItem = $job->campaignItem; 
                 
                 if (!$campaignItem) {
@@ -70,12 +70,11 @@ class EnviarMensagensWhatsApp extends Command
                     continue;
                 }
 
-                // Linha 60: Substituído $item por $campaignItem
                 $payload = $campaignItem->generate($job->contact_id);
 
                 $this->info("[ID:{$job->id}] Sending to: {$numeroDestino}");
 
-                // --- PASSO 1: HUMANIZAÇÃO ---
+                // Step 1: humanize — typing / recording presence
                 $presenceType = (rand(0, 10) > 3) ? 'composing' : 'recording';
                 
                 // Presence call (optional warmup before send)

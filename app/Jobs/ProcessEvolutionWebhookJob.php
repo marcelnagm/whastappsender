@@ -37,7 +37,7 @@ class ProcessEvolutionWebhookJob implements ShouldQueue
         try {
             switch ($event) {
                 case 'messages.update':
-                    // Processamento direto de mensagem única conforme seu relato
+                    // Single-message status payload
                     $this->handleMessageStatus($data);
                     break;
 
@@ -56,26 +56,26 @@ class ProcessEvolutionWebhookJob implements ShouldQueue
     }
 
     /**
-     * Trata o status de UMA única mensagem (Evolution v2.3)
+     * Handle status for one outbound message (Evolution v2.3).
      */
     private function handleMessageStatus(array $data)
     {
 if(env("DEBUG_WEBHOOK_STATUS"))
 Log::info(json_encode($data));
-        // Extração direta do ID e do Status (Caixa Alta)
+        // Direct extraction of message id and status (uppercase keys in map)
         $msgId = $data['keyId'] ?? null;
         
-        // Na v2.3, o status de update muitas vezes vem dentro de 'update'
+        // v2.3 often nests the new status under 'update'
         $statusRaw = $data['status'] ?? null;
 
         if (!$msgId || !$statusRaw) {
-            if (config('app.debug')) Log::warning("Webhook Status: Dados incompletos", ['id' => $msgId, 'status' => $statusRaw]);
+            if (config('app.debug')) Log::warning('Webhook status: incomplete payload', ['id' => $msgId, 'status' => $statusRaw]);
             return;
         }
 
         $this->updateJobStatus($msgId, (string) $statusRaw);
 
-        // Sincronização de LID (aproveita o evento de ACK para mapear o contato)
+        // LID sync: use ACK event to map LID <-> phone contact
         $remoteJid = $data['key']['remoteJid'] ?? null;
         $senderPn = $data['key']['senderPn'] ?? null;
         if ($remoteJid && str_contains($remoteJid, '@lid') && $senderPn) {
@@ -84,7 +84,7 @@ Log::info(json_encode($data));
     }
 
     /**
-     * Mapeia e persiste o status no banco
+     * Map Evolution status and persist on our job row.
      */
     private function updateJobStatus(string $msgId, string $statusRaw)
     {
@@ -96,7 +96,7 @@ Log::info(json_encode($data));
             'ERROR'        => 'error'
         ];
 
-        // Normaliza para garantir que espaços ou case não quebrem o mapeamento
+        // Normalize whitespace/case so downstream consumers stay consistent
         $statusKey = strtoupper(trim($statusRaw));
         $finalStatus =$statusRaw;
         $affected = WhatsappJob::where('message_id', $msgId)->update([
@@ -105,7 +105,7 @@ Log::info(json_encode($data));
         ]);
 
         if ($affected === 0) {
-            #Log::warning("ACK Recebido ($statusKey), mas ID não encontrado: $msgId");
+            #Log::warning("ACK received ($statusKey) but message_id not found: $msgId");
         } elseif (config('app.debug')) {
             Log::info("Job updated: $msgId -> $finalStatus");
         }

@@ -67,24 +67,23 @@ class CampaignItem extends Model
         $fullUrl = $this->image;
 
         if ($fullUrl) {
-            // 1. Pegamos apenas o caminho após o domínio e porta
-            // De: http://s3.meusistema.local:9000/ads/ads/1/15.jpeg
-            // Para: /ads/ads/1/15.jpeg
+            // 1. Take only the path after host/port
+            // From: http://s3.example.local:9000/ads/ads/1/15.jpeg
+            // To:   /ads/ads/1/15.jpeg
             $path = parse_url($fullUrl, PHP_URL_PATH);
 
-            // 2. Removemos a primeira ocorrência do nome do bucket ('ads') 
-            // e qualquer barra sobrando no início.
-            // O Laravel 's3' já entra no bucket automaticamente, então o path
-            // não pode começar com o nome do bucket.
+            // 2. Strip the first bucket segment ('ads') and any leading slash.
+            // Laravel's 's3' disk already targets the bucket, so the stored path
+            // must not repeat the bucket name.
 
-            // Transformamos '/ads/ads/1/15.jpeg' em 'ads/1/15.jpeg'
+            // Turn '/ads/ads/1/15.jpeg' into 'ads/1/15.jpeg'
             $relativePath = preg_replace('/^\/?ads\//', '', $path);
 
-            // 3. Execução da deleção
+            // 3. Delete from storage
             if (Storage::disk('s3')->exists($relativePath)) {
                 Storage::disk('s3')->delete($relativePath);
             } else {
-                // Log de segurança caso o path ainda esteja desalinhado
+                // Misaligned path — log for investigation
                 \Log::warning("Delete attempt failed: file not found at {$relativePath}");
             }
         }
@@ -113,7 +112,7 @@ class CampaignItem extends Model
             $data  = [
                 'number' => $contact->contact,
                 "mediatype" => $this->imageType(),
-                "mimetype"  => "image/png",     // Garanta que corresponde à extensão do arquivo
+                "mimetype"  => "image/png",     // Should match the real media type/extension
                 "caption"   => $this->text,
                 "media"     => $this->image,
                 "fileName"  => "teste1.jpg"
@@ -130,21 +129,21 @@ class CampaignItem extends Model
 
     public function imageType()
     {
-        // 1. Validação básica: existe imagem e é uma URL válida?
+        // 1. Basic check: image set and valid URL?
         if (!isset($this->image) || !filter_var($this->image, FILTER_VALIDATE_URL)) {
             return 'text';
         }
 
-        // 2. Extrair apenas o PATH da URL (remove ?width=1280, etc.)
+        // 2. URL path only (strips ?width=1280, etc.)
         $path = parse_url($this->image, PHP_URL_PATH);
         if (!$path) {
             return 'text';
         }
 
-        // 3. Pegar a extensão de forma limpa e converter para minúsculo
+        // 3. Normalize extension to lowercase
         $extension = strtolower(pathinfo($path, PATHINFO_EXTENSION));
 
-        // 4. Mapeamento de tipos permitidos
+        // 4. Allowed type map
         $formats = [
             'image' => ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'],
             'video' => ['mp4', 'webm', 'ogg', 'mov', 'avi'],
@@ -156,7 +155,7 @@ class CampaignItem extends Model
             }
         }
 
-        // Se não for imagem nem vídeo reconhecido, trata como texto ou erro
+        // Unknown image/video — treat as plain text payload
         return 'text';
     }
 
@@ -170,13 +169,13 @@ class CampaignItem extends Model
         $stats = \App\Models\WhatsappJob::where('campaign_item_id', $this->id)
             ->selectRaw('
                 COUNT(*) as total,
-                SUM(CASE WHEN evolution_status IN ("DELIVERED", "READ", "PLAYED", "delivered","delivery_ack", "read", "played") THEN 1 ELSE 0 END) as entregues
+                SUM(CASE WHEN evolution_status IN ("DELIVERED", "READ", "PLAYED", "delivered","delivery_ack", "read", "played") THEN 1 ELSE 0 END) as delivered_count
             ')
             ->first();
 
         if (!$stats || $stats->total == 0) return 0;
 
-        return round(($stats->entregues / $stats->total) * 100, 1);
+        return round(($stats->delivered_count / $stats->total) * 100, 1);
     }
 
     public function summary()

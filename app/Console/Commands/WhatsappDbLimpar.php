@@ -37,7 +37,7 @@ class WhatsappDbLimpar extends Command
 
 
 
-            // Opcional: Mover para tabela de histórico antes de deletar
+            // Optional: copy rows to a history table before deleting
             // DB::insert("insert into whatsapp_jobs_history select * from whatsapp_jobs where...");
 
             $query->delete();

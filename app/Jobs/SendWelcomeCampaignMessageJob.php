@@ -120,7 +120,7 @@ Sales copy guidelines:
 3. Morning variations: Use business-focused morning hooks (e.g. "Hi [Name], I was looking at your space and noticed...").
 
 Required data shape:
-Return ONLY a JSON array of objects with keys: "categoria" (e.g. "cold", "follow-up", "morning") and "mensagem" (the outreach text).
+Return ONLY a JSON array of objects with keys: "category" (e.g. "cold", "follow-up", "morning") and "message" (the outreach text).
 
 Strict output rules:
 No introductions, conclusions, or code fences (like ```json). Output must start with [ and end with ], as valid JSON for immediate parsing.'

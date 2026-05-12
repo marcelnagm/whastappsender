@@ -30,7 +30,7 @@ class InstanceDisconnectedMail extends Mailable
     public function content(): Content
     {
         return new Content(
-            view: 'emails.instance_disconnected', // Onde está o HTML do e-mail
+            view: 'emails.instance_disconnected',
         );
     }
 }

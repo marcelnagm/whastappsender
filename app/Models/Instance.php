@@ -12,7 +12,7 @@ class Instance extends Model
     use HasFactory;
 
     /**
-     * Atributos que podem ser preenchidos em massa.
+     * Mass-assignable attributes.
      */
     protected $fillable = [
         'user_id',
@@ -23,8 +23,8 @@ class Instance extends Model
     ];
 
     /**
-     * Conversão de tipos (Casting).
-     * Garante que status seja tratado como string e datas como Carbon.
+     * Attribute casting.
+     * Keeps status as string and timestamps as Carbon instances.
      */
     protected $casts = [
         'created_at' => 'datetime',
@@ -45,8 +45,8 @@ class Instance extends Model
     }
 
     /**
-     * Boot do Model: Lógica automática na criação.
-     * Aqui garantimos que o 'instance_name' seja gerado se estiver vazio.
+     * Model boot: auto-fill logic on create.
+     * Generates `instance_name` when the client leaves it blank.
      */
     protected static function boot()
     {
@@ -54,14 +54,14 @@ class Instance extends Model
 
         static::creating(function ($instance) {
             if (empty($instance->instance_name)) {
-                // Gera um nome único: nome-do-usuario-id-timestamp
+                // Unique slug: name-userid-timestamp
                 $instance->instance_name = Str::slug($instance->name) . '-' . $instance->user_id . '-' . time();
             }
         });
     }
 
     /**
-     * Helper: Verifica se a instância está conectada.
+     * Whether this row represents a connected session.
      */
     public function isConnected(): bool
     {

@@ -52,7 +52,7 @@ class Contact extends Model
         return $this->hasOne('App\Models\User', 'id', 'user_id');
     }
 
-    public function whatsappjobs() // Sugiro plural para hasMany
+    public function whatsappjobs()
     {
         return $this->hasMany('App\Models\WhatsappJob', 'contact_id', 'id');
     }
@@ -65,7 +65,7 @@ class Contact extends Model
 
     public function syncFromEvolution()
     {
-        // Previne requisições desnecessárias se o número for inválido
+        // Skip Evolution calls when the number is empty
         if (empty($this->contact)) {
             return false;
         }
@@ -76,7 +76,7 @@ class Contact extends Model
             $apiKey = $config['apikey'];
             $instance = $this->user()->first()->getInstanceActive();
             // dd($instance);
-            // Endpoint para buscar informações do número/perfil
+            // Evolution endpoint: profile picture / number metadata
             $response = Http::withHeaders([
                 'apikey' => $apiKey,
                 'Content-Type' => 'application/json'
@@ -84,22 +84,22 @@ class Contact extends Model
                 'number' => $this->contact
             ]);
 
-            // Se retornar 200/201 e tiver a URL
+            // Success path
             if ($response->successful()) {
                 $data = $response->json();
 
-                // A Evolution v2.3 costuma retornar { "profilePictureUrl": "..." } ou { "url": "..." }
+                // Evolution v2.3 may return { "profilePictureUrl": "..." } or { "url": "..." }
                 $url = $data['profilePictureUrl'] ?? $data['url'] ?? null;
 
                 if ($url && $this->profile_url !== $url) {
                     $this->profile_url = $url;
-                    $this->status = 'ativo'; // Se tem foto, o número é válido
+                    $this->status = 'ativo'; // Photo implies a valid WhatsApp user
                     $this->save();
                     return true;
                 }
             }
 
-            // Se o 404 persisti
+            // Non-success responses fall through
         } catch (\Exception $e) {
             dd($e);
             Log::error("Failed to sync contact #{$this->id} with Evolution: " . $e->getMessage());

@@ -39,12 +39,12 @@ class EnviarMensagemJob implements ShouldQueue
         }
 
         if (!$this->isAllowedNow()) {
-            // 1. Agenda o retorno para a fila
+            // 1. Re-queue after the next allowed window
             $this->release(
                 $this->secondsUntilNextWindow() + rand(60, 600)
             );
 
-            // 2. Encerra o handle() sem tentar retornar o resultado do release
+            // 2. End handle(); release() already schedules the retry
             return;
         }
 
@@ -82,7 +82,7 @@ class EnviarMensagemJob implements ShouldQueue
             }
             $numeroDestino = $contact->contact;
 
-            // PASSO 1: HUMANIZAÇÃO
+            // STEP 1: Humanize — typing/recording presence
             $presenceType = (rand(0, 10) > 3) ? 'composing' : 'recording';
             Http::withHeaders(['apikey' => $globalApiKey])
                 ->post("{$baseUrl}/chat/sendPresence/{$instance->instance_name}", [
@@ -93,7 +93,7 @@ class EnviarMensagemJob implements ShouldQueue
             if (config('app.env') !== 'local')
                 sleep(rand(4, 9));
 
-            // PASSO 2: ENVIO REAL
+            // STEP 2: Actual API send
             $endpoint = ltrim($job->endpoint, '/');
             $urlFinal = "{$baseUrl}/{$endpoint}{$instance->instance_name}";
 
@@ -119,24 +119,24 @@ class EnviarMensagemJob implements ShouldQueue
                 $status = $response->status();
                 $body = $response->json();
 
-                // --- LÓGICA DE SANITIZAÇÃO: DESATIVAR CONTATO INEXISTENTE ---
+                // Sanitize: mark contact when WhatsApp says number is invalid
                 if ($status === 400) {
 
                     $exists = $body['response']['message'][0]['exists'] ?? true;
                     Log::warning("Contact ID {$contact->id} disabled: number does not exist on WhatsApp.");
                     if ($exists === false) {
                         $contact->status = 'no-whatsapp';
-                        $contact->save(); // Assume que sua tabela contacts tem coluna 'active' ou similar
+                        $contact->save();
                         Log::warning("Contact ID {$contact->id} disabled: number does not exist on WhatsApp.");
                         $this->registrarErro("Invalid number (contact marked inactive)", $instance);
-                        return; // Encerra sem retentar
+                        return; // Stop without further retries
                     }
                 }
 
                 $this->registrarErro("API error: " . $status . " - " . $response->body(), $instance);
             }
 
-            // PASSO 3: COOLDOWN
+            // STEP 3: Cool-down between sends
             if (config('app.env') !== 'local')
                 sleep(rand(25, 50));
         } catch (\Exception $e) {
@@ -159,7 +159,7 @@ class EnviarMensagemJob implements ShouldQueue
 
     public function isAllowedNow(): bool
     {
-        // Força o fuso horário se necessário (ex: 'America/Boa_Vista')
+        // Force business-hours evaluation in a fixed timezone (e.g. America/Boa_Vista)
         $now = Carbon::now('America/Sao_Paulo');
 
         if ($now->isWeekend()) return false;

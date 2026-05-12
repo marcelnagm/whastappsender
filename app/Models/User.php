@@ -64,19 +64,17 @@ class User extends Authenticatable
     ];
 
     /**
-     * Accessor Transiente: Mascara o campo 'phone'
-     * Se o código antigo chamar $user->phone, ele retornará o número da instância ativa.
+     * Transient accessor: resolves the active WhatsApp instance for legacy `$user->phone` usage.
      */
     public function getInstanceActive()
     {
-        // Busca a primeira instância com status 'connected'
+        // First connected instance (randomized when several exist)
         $activeInstance = $this->instances()
             ->where('status', 'connected')
             ->inRandomOrder()
             ->first();
 
-        // Se houver uma instância conectada, retorna o identificador (ou apikey/token se preferir)
-        // Se não houver, retorna null ou uma string vazia para não quebrar o layout
+        // Return the model or null so callers can null-check safely
         return $activeInstance ? $activeInstance : null;
     }
 

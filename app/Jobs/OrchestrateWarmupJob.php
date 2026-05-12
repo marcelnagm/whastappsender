@@ -30,19 +30,19 @@ class OrchestrateWarmupJob implements ShouldQueue
 
         if (!$admin || !$target) return;
 
-        // Pede para a IA gerar as 40 frases
+        // Ask the model for ~40 warmup lines
         $script = $generator->generate(40, 'day-to-day and technology');
         $delayAcumulado = 0;
 
         foreach ($script as $index => $frase) {
-            // Regra: Índice PAR = Admin enviando pro Target. ÍMPAR = Target respondendo pro Admin.
+            // Even index: admin instance -> target. Odd: target -> admin.
             $senderName = ($index % 2 === 0) ? $admin->instance_name : $target->instance_name;
-            $receiverPhone = ($index % 2 === 0) ? $target->instance_name  : $admin->instance_name ; // Requer coluna 'phone'
+            $receiverPhone = ($index % 2 === 0) ? $target->instance_name  : $admin->instance_name ; // requires phone column
 
-            // Caos Controlado: Intervalo entre 1 e 4 minutos por mensagem
+            // Controlled randomness: 1–4 minutes between lines
             $delayAcumulado += rand(60, 240);
 
-            // Dispara para a fila dedicada
+            // Dedicated warmup queue
             SendWarmupMessageJob::dispatch($senderName, $receiverPhone, $frase)
                 ->delay(now()->addSeconds($delayAcumulado))
                 ->onQueue('warmup');

@@ -24,9 +24,9 @@ class Kernel extends ConsoleKernel
 
         $schedule->command('warmup:generate')
             ->dailyAt('08:00')
-            ->timezone('America/Boa_Vista') // Garante o horário local
+            ->timezone('America/Boa_Vista') // Use local timezone for the schedule
             ->withoutOverlapping();
-        // Higiene do Banco: Move ou deleta registros antigos às 03:00 da manhã
+        // DB housekeeping: move or purge old records at 03:00 (optional)
         // $schedule->command('whatsapp:db:limpar')->dailyAt('03:00');
     }
 

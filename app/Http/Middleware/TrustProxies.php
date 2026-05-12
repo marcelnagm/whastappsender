@@ -13,7 +13,7 @@ class TrustProxies extends Middleware
      * @var array<int, string>|string|null
      */
      // No Laravel 9/10/11:
-     protected $proxies = '*'; // Confia em todos os proxies (padrão para Docker)
+     protected $proxies = '*'; // Trust all proxies (typical Docker / reverse-proxy setup)
 
     /**
      * The headers that should be used to detect proxies.

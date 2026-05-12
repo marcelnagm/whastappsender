@@ -65,31 +65,31 @@ class CampaignItemController extends Controller
     public function store(Request $request)
     {
         $request->validate(array_merge(CampaignItem::$rules, [
-            'file_upload' => 'nullable|image|max:5120', // Máx 5MB
+            'file_upload' => 'nullable|image|max:5120', // Max ~5MB
         ]));
 
         $data = $request->all();
         $data['user_id'] = Auth::id();
         $data['welcome_enabled'] = $request->boolean('welcome_enabled');
 
-        // Define a URL inicial caso tenha vindo via campo image_url
+        // Default image field from URL when no upload
         $data['image'] = $request->input('image_url');
 
-        // 1. Cria primeiro para obter o ID
+        // 1. Create row first to obtain id
         $campaignItem = CampaignItem::create($data);
 
-        // 2. Processa Upload se existir
+        // 2. Optional file upload
         if ($request->hasFile('file_upload')) {
             $file = $request->file('file_upload');
             $extension = $file->getClientOriginalExtension();
 
-            // Estrutura: ads/{id-campanha}/{id-item}.extensao
+            // Path pattern: ads/{campaign_id}/{item_id}.{ext}
             $path = "ads/{$campaignItem->campaign_id}/{$campaignItem->id}.{$extension}";
 
-            // Upload para o MinIO (disco 's3' ou o nome que você deu ao MinIO no filesystems.php)
+            // Upload to MinIO (disk name from config/filesystems.php, often 's3')
             Storage::disk('s3')->put($path, file_get_contents($file));
 
-            // Atualiza o registro com a URL do MinIO ou o path relativo
+            // Persist public/minio URL (or relative path, depending on driver)
             $campaignItem->update(['image' => Storage::disk('s3')->url($path)]);
         }
 
@@ -119,16 +119,16 @@ class CampaignItemController extends Controller
     {
         $campaignItem = CampaignItem::select('id', 'user_id', 'name')->findOrFail($id);
 
-        // 1. Conte direto no banco. Muito mais rápido que pluck()->count()
+        // 1. Count eligible contacts (single query, faster than pluck()->count())
         $totalContatos = Contact::where('user_id', $campaignItem->user_id)
-            ->whereNull('ignore_me') // Regra: só gera para quem foi minerado
+            ->whereNull('ignore_me') // Only mined / validated leads
             ->count();
 
         if ($totalContatos === 0) {
             return redirect()->back()->with('error', 'No validated contacts found for this user.');
         }
 
-        // 2. Despacha um Job assíncrono na fila default para gerar os registros.
+        // 2. Async job on default queue to materialize send rows
         GenerateCampaignItemJobsJob::dispatch((int) $id)->onQueue('default');
         Auth::user()->notify(new CampaignItemGenerationStatus(
             (int) $campaignItem->id,
@@ -185,15 +185,15 @@ class CampaignItemController extends Controller
         $data['welcome_enabled'] = $request->boolean('welcome_enabled');
 
         if ($request->hasFile('file_upload')) {
-            // 1. Remover arquivo antigo do MinIO se existir
+            // 1. Remove previous MinIO object when replacing upload
             if ($campaignItem->image && !filter_var($campaignItem->image, FILTER_VALIDATE_URL)) {
-                // Extrai o path do arquivo da URL salva (ou usa o padrão se você salvar o path)
+                // Derive object key from stored URL (adjust if your MinIO URL shape differs)
                 $oldPath = parse_url($campaignItem->image, PHP_URL_PATH);
-                $oldPath = ltrim($oldPath, '/ads/'); // Ajuste dependendo de como o MinIO retorna a URL
+                $oldPath = ltrim($oldPath, '/ads/'); // Depends on how MinIO returns URLs
                 Storage::disk('s3')->delete("ads/{$campaignItem->campaign_id}/" . basename($campaignItem->image));
             }
 
-            // 2. Novo Upload
+            // 2. New upload
             $file = $request->file('file_upload');
             $extension = $file->getClientOriginalExtension();
             $path = "ads/{$campaignItem->campaign_id}/{$campaignItem->id}.{$extension}";
@@ -201,7 +201,7 @@ class CampaignItemController extends Controller
             Storage::disk('s3')->put($path, file_get_contents($file));
             $data['image'] = Storage::disk('s3')->url($path);
         } else {
-            // Se não subiu arquivo, usa o que está no campo URL
+            // No new file — keep URL field
             $data['image'] = $request->input('image_url') ?? $campaignItem->image;
         }
 
