@@ -69,7 +69,7 @@ class GroqAgentResponder
                 'tokens_out' => $json['usage']['completion_tokens'] ?? null,
             ];
         } catch (\Throwable $e) {
-            Log::error('Erro no GroqAgentResponder: ' . $e->getMessage());
+            Log::error('GroqAgentResponder error: ' . $e->getMessage());
 
             return [
                 'reply' => $this->fallbackReply(),
@@ -83,13 +83,13 @@ class GroqAgentResponder
 
     private function defaultSystemPrompt(): string
     {
-        return 'Você é um atendente brasileiro, objetivo e educado. '
-            . 'Responda em pt-BR, com mensagens curtas, claras e úteis. '
-            . 'Quando faltar contexto, faça uma pergunta curta para avançar.';
+        return 'You are a concise, polite support agent on WhatsApp. '
+            . 'Reply in clear, short messages. '
+            . 'When context is missing, ask one brief question to move forward.';
     }
 
     private function fallbackReply(): string
     {
-        return 'Perfeito, recebi sua mensagem. Pode me dar mais um detalhe para eu te ajudar melhor?';
+        return 'Thanks — got it. Can you share one more detail so I can help?';
     }
 }

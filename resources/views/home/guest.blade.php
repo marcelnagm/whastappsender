@@ -8,36 +8,36 @@
         <div class="col-lg-7 text-start">
             <div class="d-inline-flex align-items-center badge bg-dark border border-warning text-warning mb-3 px-3 py-2 rounded-pill">
                 <span class="spinner-grow spinner-grow-sm me-2" role="status"></span>
-                <small class="fw-bold text-uppercase">Tecnologia Proprietária Ativa</small>
+                <small class="fw-bold text-uppercase">Proprietary technology active</small>
             </div>
 
             <h1 class="display-2 fw-bold text-white mb-3">
-                Comunicação em Massa com <br><span class="text-warning">Inteligência Preditiva.</span>
+                Mass communication with <br><span class="text-warning">predictive intelligence.</span>
             </h1>
 
             <p class="lead text-white-50 mb-4 fs-4" style="max-width: 650px;">
-                Pare de enviar mensagens e comece a gerir fluxos de alta performance. Realize seu cadastro e solicite a ativação da sua licença exclusiva.
+                Stop blasting messages and start managing high-performance flows. Register and request activation for your exclusive license.
             </p>
 
             <div class="d-flex flex-column align-items-start gap-3">
                 <div class="d-flex gap-3 flex-wrap">
                     @guest
                     <a href="{{ route('register.perform') }}" class="btn btn-warning btn-lg px-5 fw-bold shadow-lg py-3">
-                        <i class="bi bi-person-plus-fill me-2"></i>CRIAR MINHA CONTA
+                        <i class="bi bi-person-plus-fill me-2"></i>CREATE MY ACCOUNT
                     </a>
 
                     <a href="{{ route('login.perform') }}" class="btn btn-outline-light btn-lg px-4 py-3">
-                        JÁ SOU PARCEIRO
+                        I ALREADY HAVE AN ACCOUNT
                     </a>
                     @endguest
 
                     @auth
                     <div class="card bg-warning text-dark p-3 shadow-lg border-0">
-                        <h5 class="fw-bold mb-1"><i class="bi bi-shield-lock-fill me-2"></i>Conta Criada com Sucesso!</h5>
-                        <p class="small mb-2">Para liberar o console de disparos, clique no botão abaixo:</p>
-                        <a href="https://wa.me/5595981115965?text=Olá!+Acabei+de+me+cadastrar+no+Sender+com+o+usuário+{{ auth()->user()->username }}+e+quero+solicitar+a+ativação+do+meu+acesso."
+                        <h5 class="fw-bold mb-1"><i class="bi bi-shield-lock-fill me-2"></i>Account created successfully!</h5>
+                        <p class="small mb-2">To unlock the sending console, click the button below:</p>
+                        <a href="https://wa.me/5595981115965?text=Hi!+I+just+registered+on+Sender+with+username+{{ auth()->user()->username }}+and+would+like+to+request+access+activation."
                             target="_blank" class="btn btn-dark fw-bold w-100 py-2">
-                            <i class="bi bi-whatsapp me-2"></i>SOLICITAR ATIVAÇÃO AGORA
+                            <i class="bi bi-whatsapp me-2"></i>REQUEST ACTIVATION NOW
                         </a>
                     </div>
                     @endauth
@@ -45,7 +45,7 @@
             </div>
 
             <p class="text-muted mt-4 small">
-                <i class="bi bi-info-circle me-1"></i> Acesso ao Dashboard liberado apenas após validação da licença.
+                <i class="bi bi-info-circle me-1"></i> Dashboard access is granted only after your license is validated.
             </p>
         </div>
 
@@ -62,27 +62,27 @@
             <div class="card bg-dark border-secondary h-100 p-4 hover-lift">
                 <div class="d-flex align-items-center mb-3">
                     <i class="bi bi-robot text-warning fs-1 me-3"></i>
-                    <h5 class="text-white fw-bold mb-0">IA de Balanceamento</h5>
+                    <h5 class="text-white fw-bold mb-0">Load-balancing AI</h5>
                 </div>
-                <p class="text-muted small">Algoritmos que analisam a saúde da operação e distribuem a carga para mimetizar o comportamento humano.</p>
+                <p class="text-muted small">Algorithms that monitor operational health and distribute load to mimic human behavior.</p>
             </div>
         </div>
         <div class="col-md-4">
             <div class="card bg-dark border-secondary h-100 p-4 hover-lift">
                 <div class="d-flex align-items-center mb-3">
                     <i class="bi bi-graph-up-arrow text-warning fs-1 me-3"></i>
-                    <h5 class="text-white fw-bold mb-0">Escala Estratégica</h5>
+                    <h5 class="text-white fw-bold mb-0">Strategic scale</h5>
                 </div>
-                <p class="text-muted small">Estrutura preparada para bases massivas e processamento em camadas, garantindo estabilidade absoluta.</p>
+                <p class="text-muted small">Architecture built for massive databases and layered processing with rock-solid stability.</p>
             </div>
         </div>
         <div class="col-md-4">
             <div class="card bg-dark border-secondary h-100 p-4 hover-lift">
                 <div class="d-flex align-items-center mb-3">
                     <i class="bi bi-patch-check text-warning fs-1 me-3"></i>
-                    <h5 class="text-white fw-bold mb-0">Entrega Blindada</h5>
+                    <h5 class="text-white fw-bold mb-0">Hardened delivery</h5>
                 </div>
-                <p class="text-muted small">Protocolos de segurança e roteamento inteligente para assegurar que a sua comunicação chegue ao destino.</p>
+                <p class="text-muted small">Security protocols and smart routing so your messages reach their destination.</p>
             </div>
         </div>
     </div>
@@ -94,39 +94,39 @@
                     <i class="bi bi-pie-chart text-warning fs-1 me-3"></i>
                     <h5 class="text-white fw-bold mb-0">Analytics Real-Time</h5>
                 </div>
-                <p class="text-muted small">Monitore taxas de entrega através de um console centralizado, permitindo ajustes imediatos na sua estratégia.</p>
+                <p class="text-muted small">Monitor delivery rates from a central console and adjust your strategy in real time.</p>
             </div>
         </div>
         <div class="col-md-4">
             <div class="card bg-dark border-secondary h-100 p-4 hover-lift">
                 <div class="d-flex align-items-center mb-3">
                     <i class="bi bi-cloud-arrow-up text-warning fs-1 me-3"></i>
-                    <h5 class="text-white fw-bold mb-0">Proteção de Ativos</h5>
+                    <h5 class="text-white fw-bold mb-0">Asset protection</h5>
                 </div>
-                <p class="text-muted small">Backup cíclico de bases de dados e histórico em camadas redundantes, blindando o seu maior patrimônio.</p>
+                <p class="text-muted small">Cyclic backups of databases and history across redundant layers—protecting your most valuable asset.</p>
             </div>
         </div>
         <div class="col-md-4">
             <div class="card bg-dark border-secondary h-100 p-4 hover-lift">
                 <div class="d-flex align-items-center mb-3">
                     <i class="bi bi-gear-wide-connected text-warning fs-1 me-3"></i>
-                    <h5 class="text-white fw-bold mb-0">Integração Total</h5>
+                    <h5 class="text-white fw-bold mb-0">Full integration</h5>
                 </div>
-                <p class="text-muted small">Conecte o sistema ao seu ecossistema via Webhooks, automatizando o fluxo entre o WhatsApp e seu CRM.</p>
+                <p class="text-muted small">Connect the system to your stack via webhooks and automate the flow between WhatsApp and your CRM.</p>
             </div>
         </div>
     </div>
 </div>
 
-<a href="https://wa.me/5595981115965?text=Olá!+Tenho+dúvidas+sobre+o+Sender+e+gostaria+de+falar+com+um+consultor."
+<a href="https://wa.me/5595981115965?text=Hi!+I+have+questions+about+Sender+and+would+like+to+speak+with+someone."
     target="_blank" class="whatsapp-balloon shadow-lg">
     <div class="balloon-content">
         <div class="online-indicator"><span class="blink-dot"></span></div>
         <i class="bi bi-whatsapp"></i>
     </div>
     <div class="balloon-text-wrapper">
-        <span class="top-text">Dúvidas?</span>
-        <span class="main-text">Fale com a gente</span>
+        <span class="top-text">Questions?</span>
+        <span class="main-text">Talk to us</span>
     </div>
 </a>
 

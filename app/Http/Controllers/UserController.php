@@ -37,7 +37,7 @@ class UserController extends Controller
     {
         $user->active = $user->active  == 1 ? 0 : 1;
         $user->save();
-        return back()->with('success', 'Status do usuário atualizado!');
+        return back()->with('success', 'User status updated.');
     }
 
     // Alterar Role (Admin/User)
@@ -46,7 +46,7 @@ class UserController extends Controller
         $newRole = $user->role === 'admin' ? 'user' : 'admin';
         $user->role = $newRole;
         $user->save();
-        return back()->with('success', 'Permissão alterada com sucesso!');
+        return back()->with('success', 'Role updated successfully.');
     }
 
     // Formulário de Edição
@@ -72,7 +72,7 @@ class UserController extends Controller
         }
 
         $user->update($data);
-        return redirect()->route('users.index')->with('success', 'Usuário atualizado!');
+        return redirect()->route('users.index')->with('success', 'User updated.');
     }
 
     public function editProfile(Request $request)
@@ -113,13 +113,13 @@ class UserController extends Controller
 
         $user->update($data);
 
-        return redirect()->route('profile.edit')->with('success', 'Perfil e configurações de IA atualizados com sucesso.');
+        return redirect()->route('profile.edit')->with('success', 'Profile and AI settings updated successfully.');
     }
 
     // Exclusão (Cuidado aqui)
     public function destroy(User $user)
     {
         $user->delete();
-        return back()->with('success', 'Usuário removido do sistema.');
+        return back()->with('success', 'User removed from the system.');
     }
 }

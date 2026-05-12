@@ -45,7 +45,7 @@ class WhatsappController extends Controller
         if (WhatsappService::isConnected($ins->instance_name)) {
             //                          
             return redirect()->route('instances.index')
-            ->with('success', 'Whatsapp conectado com sucesso.');
+            ->with('success', 'WhatsApp connected successfully.');
         } else {
             
             return view('whatsapp.index_no', [

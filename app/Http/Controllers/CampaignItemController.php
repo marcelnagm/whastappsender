@@ -93,7 +93,7 @@ class CampaignItemController extends Controller
             $campaignItem->update(['image' => Storage::disk('s3')->url($path)]);
         }
 
-        return redirect()->route('campaign-items.index')->with('success', 'Item criado com sucesso.');
+        return redirect()->route('campaign-items.index')->with('success', 'Item created successfully.');
     }
 
     /**
@@ -125,7 +125,7 @@ class CampaignItemController extends Controller
             ->count();
 
         if ($totalContatos === 0) {
-            return redirect()->back()->with('error', 'Nenhum contato validado encontrado para este usuário.');
+            return redirect()->back()->with('error', 'No validated contacts found for this user.');
         }
 
         // 2. Despacha um Job assíncrono na fila default para gerar os registros.
@@ -137,7 +137,7 @@ class CampaignItemController extends Controller
         ));
 
         return redirect()->route('campaign-items.index')
-            ->with('success', "Iniciada a geração de {$totalContatos} disparos em segundo plano.");
+            ->with('success', "Started generation of {$totalContatos} send job(s) in the background.");
     }
 
     public function generate($id)
@@ -207,7 +207,7 @@ class CampaignItemController extends Controller
 
         $campaignItem->update($data);
 
-        return redirect()->route('campaign-items.index')->with('success', 'Item atualizado com sucesso');
+        return redirect()->route('campaign-items.index')->with('success', 'Item updated successfully.');
     }
 
     /**
@@ -224,10 +224,10 @@ class CampaignItemController extends Controller
             $campaignItem->delete();
 
             return redirect()->route('campaign-items.index')
-                ->with('success', 'Item removido com sucesso.');
+                ->with('success', 'Item removed successfully.');
         } catch (\Exception $e) {
             return redirect()->route('campaign-items.index')
-                ->with('error', 'Erro ao deletar: ' . $e->getMessage());
+                ->with('error', 'Delete error: ' . $e->getMessage());
         }
     }
 }

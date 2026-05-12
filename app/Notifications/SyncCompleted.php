@@ -58,8 +58,8 @@ class SyncCompleted extends Notification
     public function toArray($notifiable)
     {
         return [
-            'title' => 'Sincronização Concluída',
-            'message' => "Sincronizamos {$this->count} contatos com sucesso.",
+            'title' => 'Sync completed',
+            'message' => "Successfully synced {$this->count} contacts.",
             'count' => $this->count,
             'icon' => 'fas fa-user-check'
         ];
@@ -68,7 +68,7 @@ class SyncCompleted extends Notification
     public function toDatabase($notifiable)
     {
         return [
-            'message' => "Sincronização de {$this->count} contatos concluída com sucesso.",
+            'message' => "Sync of {$this->count} contacts completed successfully.",
             'finished_at' => now()->toDateTimeString(),
         ];
     }

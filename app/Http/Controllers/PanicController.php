@@ -21,11 +21,11 @@ class PanicController extends Controller
 
         if (Cache::has($panicKey)) {
             Cache::forget($panicKey);
-            $msg = 'Sistema de disparos retomado com sucesso.';
+            $msg = 'Sending system resumed successfully.';
         } else {
             // Define a flag sem tempo de expiração
             Cache::forever($panicKey, true);
-            $msg = 'SISTEMA PAUSADO: Os workers irão ignorar novos processamentos.';
+            $msg = 'SYSTEM PAUSED: Workers will skip new processing.';
         }
 
         return back()->with('success', $msg);
@@ -44,9 +44,9 @@ class PanicController extends Controller
                 '--no-interaction' => true // Garante que o Symfony Console não busque o STDIN
             ]);
 
-            return back()->with('success', 'Fila de disparos limpa. Todos os jobs pendentes foram removidos.');
+            return back()->with('success', 'Send queue cleared. All pending jobs were removed.');
         } catch (\Exception $e) {
-            return back()->with('error', 'Erro ao limpar fila: ' . $e->getMessage());
+            return back()->with('error', 'Failed to clear queue: ' . $e->getMessage());
         }
     }
 
@@ -59,9 +59,9 @@ class PanicController extends Controller
                 '--force' => true,      // Ignora a pergunta de confirmação
                 '--no-interaction' => true // Garante que o Symfony Console não busque o STDIN
             ]);
-            return back()->with('success', 'Fila de disparos limpa. Todos os jobs pendentes foram removidos.');
+            return back()->with('success', 'Warmup queue cleared. All pending jobs were removed.');
         } catch (\Exception $e) {
-            return back()->with('error', 'Erro ao limpar fila: ' . $e->getMessage());
+            return back()->with('error', 'Failed to clear queue: ' . $e->getMessage());
         }
     }
 }

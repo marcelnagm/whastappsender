@@ -29,18 +29,18 @@ class CampaignItemGenerationStatus extends Notification
 
     public function toArray($notifiable): array
     {
-        $title = 'Geração de disparos';
-        $message = "Processo do item {$this->campaignItemName} atualizado.";
+        $title = 'Send job generation';
+        $message = "Item {$this->campaignItemName} process updated.";
 
         if ($this->status === 'started') {
-            $title = 'Geração iniciada';
-            $message = "Iniciamos a geração assíncrona para o item {$this->campaignItemName}.";
+            $title = 'Generation started';
+            $message = "Async generation started for item {$this->campaignItemName}.";
         } elseif ($this->status === 'completed') {
-            $title = 'Geração concluída';
-            $message = "A geração de disparos do item {$this->campaignItemName} foi concluída.";
+            $title = 'Generation completed';
+            $message = "Send job generation for item {$this->campaignItemName} is complete.";
         } elseif ($this->status === 'error') {
-            $title = 'Geração com erro';
-            $message = "Falha ao gerar disparos do item {$this->campaignItemName}.";
+            $title = 'Generation failed';
+            $message = "Failed to generate send jobs for item {$this->campaignItemName}.";
         }
 
         if ($this->details) {

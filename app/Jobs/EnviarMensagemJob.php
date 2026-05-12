@@ -53,21 +53,21 @@ class EnviarMensagemJob implements ShouldQueue
             $user = $job->user()->first();
             $instance = $user->getInstanceActive();
             if (!$user || !$instance) {
-                $this->registrarErro("Usuário ou Phone (Instância) não configurado.", null);
+                $this->registrarErro("User or instance phone not configured.", null);
                 return;
             }
 
 
             $contact = $job->contact()->first();
             if (!$contact) {
-                $this->registrarErro("Contato não encontrado para o job.", $instance);
+                $this->registrarErro("Contact not found for this job.", $instance);
                 return;
             }
             if ($contact->status === "no-whatsapp") {
                 $this->jobModel->update([
                     'status' => 'erro',
                     'tentativas' => -3,
-                    'erro_mensagem' => 'Contato sem Whatsapp - ENCERRANDO'
+                    'erro_mensagem' => 'Contact has no WhatsApp — stopping'
                 ]);
             }
 
@@ -75,7 +75,7 @@ class EnviarMensagemJob implements ShouldQueue
             if (!$payload) {
                 $item = $job->campaignItem()->first();
                 if (!$item) {
-                    $this->registrarErro("CampaignItem não encontrado para o job.", $instance);
+                    $this->registrarErro("CampaignItem not found for this job.", $instance);
                     return;
                 }
                 $payload = $item->generate($job->contact_id);
@@ -123,17 +123,17 @@ class EnviarMensagemJob implements ShouldQueue
                 if ($status === 400) {
 
                     $exists = $body['response']['message'][0]['exists'] ?? true;
-                    Log::warning("Contato ID {$contact->id} desativado: Número não existe no WhatsApp.");
+                    Log::warning("Contact ID {$contact->id} disabled: number does not exist on WhatsApp.");
                     if ($exists === false) {
                         $contact->status = 'no-whatsapp';
                         $contact->save(); // Assume que sua tabela contacts tem coluna 'active' ou similar
-                        Log::warning("Contato ID {$contact->id} desativado: Número não existe no WhatsApp.");
-                        $this->registrarErro("Número Inexistente (Contato Desativado)", $instance);
+                        Log::warning("Contact ID {$contact->id} disabled: number does not exist on WhatsApp.");
+                        $this->registrarErro("Invalid number (contact marked inactive)", $instance);
                         return; // Encerra sem retentar
                     }
                 }
 
-                $this->registrarErro("API Erro: " . $status . " - " . $response->body(), $instance);
+                $this->registrarErro("API error: " . $status . " - " . $response->body(), $instance);
             }
 
             // PASSO 3: COOLDOWN
@@ -154,7 +154,7 @@ class EnviarMensagemJob implements ShouldQueue
             'erro_mensagem' => substr($mensagem, 0, 255)
         ]);
 
-        Log::error("Falha no Job ID {$this->jobModel->id}: {$mensagem}");
+        Log::error("Job ID {$this->jobModel->id} failed: {$mensagem}");
     }
 
     public function isAllowedNow(): bool

@@ -15,6 +15,6 @@ class AdminMiddleware
         }
 
         // Se não for admin, chuta para a home ou login com erro
-        return redirect('/')->with('error', 'Acesso negado. Apenas administradores.');
+        return redirect('/')->with('error', 'Access denied. Administrators only.');
     }
 }

@@ -2,30 +2,29 @@
 
 @section('content')
 @php
-// Mapeamento de Status
+// Status labels (internal keys unchanged)
 $statusMapEvolution = [
-'SENT' => 'Enviado',
-'SERVER_ACK' => 'Enviado (Server)',
-'DELIVERY_ACK' => 'Entregue',
-'READ' => 'Lido',
-'VIEWED' => 'Visualizado'
+'SENT' => 'Sent',
+'SERVER_ACK' => 'Sent (server)',
+'DELIVERY_ACK' => 'Delivered',
+'READ' => 'Read',
+'VIEWED' => 'Viewed'
 ];
 
 $statusMap = [
-'processado' => ['label' => 'Sucesso', 'class' => 'bg-success shadow-sm'],
-'erro' => ['label' => 'Falha', 'class' => 'bg-danger shadow-sm'],
-'pendente' => ['label' => 'Em Fila', 'class' => 'bg-warning text-dark shadow-sm'],
+'processado' => ['label' => 'Success', 'class' => 'bg-success shadow-sm'],
+'erro' => ['label' => 'Failed', 'class' => 'bg-danger shadow-sm'],
+'pendente' => ['label' => 'Queued', 'class' => 'bg-warning text-dark shadow-sm'],
 ];
 
-// Cálculos do Dashboard
+// Dashboard totals
 $errorsCount = $statsStatus['erro'] ?? 0;
 $sentCount = ($statsEvolution['SERVER_ACK'] ?? 0) + ($statsEvolution['SENT'] ?? 0);
 $deliveredCount = $statsEvolution['DELIVERY_ACK'] ?? 0;
 $readCount = ($statsEvolution['READ'] ?? 0) + ($statsEvolution['VIEWED'] ?? 0);
 
-// O total válido para o gráfico é a soma dos estados finais/atuais
 $totalCalculado = $errorsCount + $sentCount + $deliveredCount + $readCount;
-$totalParaDivisao = $totalCalculado ?: 1; // Previne divisão por zero
+$totalParaDivisao = $totalCalculado ?: 1;
 
 $calcPercent = fn($parcial) => round(($parcial / $totalParaDivisao) * 100, 1);
 

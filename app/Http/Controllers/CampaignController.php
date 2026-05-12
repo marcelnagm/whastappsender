@@ -137,17 +137,17 @@ class CampaignController extends Controller
             $campaign->delete();
 
             return redirect()->route('campaigns.index')
-                ->with('success', 'Campanha e todas as mídias associadas foram excluídas.');
+                ->with('success', 'Campaign and all associated media were deleted.');
         } catch (\Exception $e) {
             return redirect()->route('campaigns.index')
-                ->with('error', 'Falha na exclusão: ' . $e->getMessage());
+                ->with('error', 'Deletion failed: ' . $e->getMessage());
         }
     }
 
     private function authorizeOwner(Campaign $campaign)
     {
         if ($campaign->user_id !== Auth::id()) {
-            abort(403, 'Acesso negado a esta instância.');
+            abort(403, 'Access denied for this campaign.');
         }
     }
 }
