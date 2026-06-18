@@ -276,43 +276,217 @@ While amateur scripts crash with 100 messages, SAMA was built under **SOLID** pa
 * **Agent API:** Laravel Sanctum + OpenAI Functions-compatible Tool Registry
 * **Frontend:** Bootstrap & Blade Templates
 * **API Bridge:** Optimized for Evolution API
-* **Infra:** Docker Ready (Includes Dockerfile & Docker Compose)
+* **Infra:** Docker Ready — production stack in `.docker/` (Dockerfile, Compose, Nginx, Supervisor)
 
 ---
 
 ## ⚙️ Installation & Activation
 
-### 1. Initial Setup
+### Option A — Local development (without Docker)
 
 ```bash
 composer install
 cp .env.example .env
 php artisan key:generate
-```
-
-### 2. AI Configuration
-
-Add your `GROQ_API_KEY` to the `.env` file and run migrations:
-
-```bash
 php artisan migrate --seed
-```
-
-### 3. Start the Engines (Supervisor)
-
-To ensure real-time AI response and stable bulk sending, activate the Workers:
-
-```bash
 php artisan queue:work --queue=disparos,atendimento-ia --sleep=3 --tries=3
 ```
+
+Add your `GROQ_API_KEY` to `.env` before running migrations.
+
+### Option B — Production with Docker (`.docker/`)
+
+The `.docker/` folder contains the **full production stack**: PHP-FPM, Nginx (with SSL), MySQL, PostgreSQL, Redis, Evolution API, MinIO and phpMyAdmin. Use it to deploy the entire platform on a VPS.
+
+> **Note:** There is also a `docker-compose.yml` in the project root (simpler variant with Portainer). The `.docker/` folder is the **recommended production setup** with Redis, SSL reverse proxy and the Evolution API v2.3 image.
+
+#### Folder structure
+
+```
+.docker/
+├── Dockerfile                 # PHP 8.3-FPM image (pdo_mysql, redis, gd, opcache…)
+├── docker-compose.yml         # Orchestration of all services
+├── .env.docker                # Environment variables for Evolution API
+├── nginx/
+│   ├── nginx.conf             # Active config: Laravel + SSL + reverse proxies
+│   ├── nginx.conf.ssl         # Alternative SSL template (DuckDNS example)
+│   └── nginx.bk.conf          # Backup of previous Nginx config
+├── supervisor/
+│   ├── supervisord.conf       # Supervisor main config
+│   └── conf.d/
+│       └── laravel-worker.conf  # Queue workers (disparos, default) + scheduler
+└── data/                      # Persistent volumes (created on first run)
+    ├── mysql/
+    ├── postgres/
+    ├── redis/
+    ├── minio/
+    └── evolution_instances/
+```
+
+#### Services and ports
+
+| Service | Container | Description | Exposed ports |
+|---------|-----------|-------------|---------------|
+| `app` | `whatsapp_app_php` | Laravel (PHP 8.3-FPM) | `9000` (internal) |
+| `nginx` | `whatsapp_app_nginx` | Web server + SSL + reverse proxy | `80`, `443`, `8080`, `8081`, `9000` |
+| `mysql` | `whatsapp_app_db` | Laravel database | `3306` |
+| `postgres` | `evolution_db` | Evolution API database | internal |
+| `redis` | `whatsapp_redis` | Cache and Evolution queues | `6379` |
+| `evolution-api` | `evolution_api` | WhatsApp bridge (Evolution v2.3) | `8080` (via Nginx) |
+| `minio` | `minio_storage` | S3-compatible storage (campaign media) | `9001` (console) |
+| `phpmyadmin` | `whatsapp_phpmyadmin` | MySQL web UI | `8082` |
+
+**Nginx routing** (configured in `nginx/nginx.conf`):
+
+| Port | Route | Target |
+|------|-------|--------|
+| `443` | `/` | Laravel (`app:9000` via FastCGI) |
+| `443` on port `9000` | `/` | MinIO (`minio:9000`) |
+| `443` on port `8080` | `/` | Evolution API (`evolution-api:8080`) |
+| `8081` | `/` | Evolution API (HTTP, no SSL) |
+
+#### Step-by-step deployment
+
+**1. Place the Laravel source inside `.docker/app`**
+
+The `docker-compose.yml` mounts `./app` as `/var/www`. Copy or symlink the project:
+
+```bash
+# From the repository root
+ln -s .. .docker/app
+# or
+cp -r . .docker/app
+```
+
+**2. Configure Laravel `.env` (inside `.docker/app`)**
+
+Use Docker service names as hosts:
+
+```env
+DB_HOST=mysql
+DB_DATABASE=whatsapp_sender
+DB_USERNAME=marcel
+DB_PASSWORD=password_mysql_123
+
+REDIS_HOST=redis
+REDIS_PASSWORD=password_redis_123
+
+AWS_ENDPOINT=http://minio:9000
+AWS_ACCESS_KEY_ID=admin
+AWS_SECRET_ACCESS_KEY=sua_senha_forte_123
+AWS_BUCKET=ads
+
+WHATSAPP_URL=evolution-api
+WHATSAPP_PORT=8080
+WHATSAPP_PROTOCOL=http
+WHATSAPP_APIKEY=BQYHJGJHJ
+```
+
+**3. Configure Evolution API (`.docker/.env.docker`)**
+
+Edit `.env.docker` with your domain and webhook URL:
+
+```env
+SERVER_URL=https://your-domain.com:8080
+WEBHOOK_GLOBAL_URL=https://your-domain.com/api/webhook/whatsapp
+AUTHENTICATION_API_KEY=your_api_key_here
+```
+
+The `AUTHENTICATION_API_KEY` must match `WHATSAPP_APIKEY` in the Laravel `.env`.
+
+**4. Configure Nginx SSL (`nginx/nginx.conf`)**
+
+Update `server_name` and Let's Encrypt certificate paths:
+
+```nginx
+server_name your-domain.com;
+ssl_certificate /etc/letsencrypt/live/your-domain.com/fullchain.pem;
+ssl_certificate_key /etc/letsencrypt/live/your-domain.com/privkey.pem;
+```
+
+Certificates are mounted from the host via `/etc/letsencrypt:/etc/letsencrypt:ro` in `docker-compose.yml`. Generate them on the host with Certbot before starting Nginx.
+
+For a quick test without SSL, use `nginx/nginx.bk.conf` or adapt `nginx.conf.ssl`.
+
+**5. Start the stack**
+
+```bash
+cd .docker
+docker compose up -d --build
+```
+
+**6. Run Laravel setup inside the container**
+
+```bash
+docker exec -it whatsapp_app_php bash
+composer install --no-dev --optimize-autoloader
+php artisan key:generate
+php artisan migrate --seed
+php artisan storage:link
+exit
+```
+
+**7. Start queue workers**
+
+**Option A — Supervisor** (recommended for production). The configs in `supervisor/conf.d/laravel-worker.conf` define:
+
+| Program | Queue | Purpose |
+|---------|-------|---------|
+| `worker-disparos` | `disparos` | Outbound WhatsApp message sending |
+| `worker-default` | `default` | Campaign job generation, webhooks |
+| `laravel-schedule` | — | `schedule:work` (autosend, warmup) |
+
+Install Supervisor on the host or in a sidecar container and point it to these configs, with `/var/www` mapped to `.docker/app`.
+
+**Option B — Manual worker** inside the PHP container:
+
+```bash
+docker exec -it whatsapp_app_php php artisan queue:work --queue=disparos,default,atendimento-ia --sleep=3 --tries=3
+```
+
+#### Useful commands
+
+```bash
+# View logs
+docker compose -f .docker/docker-compose.yml logs -f app nginx evolution-api
+
+# Restart a service
+docker compose -f .docker/docker-compose.yml restart evolution-api
+
+# Stop everything
+docker compose -f .docker/docker-compose.yml down
+
+# Rebuild PHP image after Dockerfile changes
+docker compose -f .docker/docker-compose.yml up -d --build app
+```
+
+#### Default credentials (change in production!)
+
+| Service | User | Password |
+|---------|------|----------|
+| MySQL | `marcel` | `password_mysql_123` |
+| MySQL root | `root` | `root_password_456` |
+| PostgreSQL (Evolution) | `admin` | `password123` |
+| Redis | — | `password_redis_123` |
+| MinIO | `admin` | `sua_senha_forte_123` |
+| Evolution API key | — | `BQYHJGJHJ` (set in `.env.docker`) |
+
+#### Persistent data
+
+All data is stored under `.docker/data/`. Back up these folders before redeploying:
+
+- `data/mysql` — Laravel database
+- `data/postgres` — Evolution database
+- `data/redis` — Redis AOF
+- `data/minio` — Uploaded campaign media
+- `data/evolution_instances` — WhatsApp session data
 
 ---
 
 ## 📁 What's in the Box?
 
 * 📂 **Source_Code:** Fully modularized and documented Laravel source code.
-* 📂 **Documentation:** Definitive guide for Docker installation and Supervisor setup.
-* 📂 **AI_Templates:** High-conversion prompts pre-configured for various niches.
+* 📂 **`.docker/`:** Production Docker stack (PHP, Nginx, MySQL, Redis, Evolution API, MinIO).
 * 📂 **Tool Call API:** `app/Services/Api/ToolRegistry.php` — tool definitions for AI agents.
 
 ---
