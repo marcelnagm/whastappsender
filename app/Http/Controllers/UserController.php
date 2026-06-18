@@ -78,7 +78,29 @@ class UserController extends Controller
     public function editProfile(Request $request)
     {
         $user = $request->user();
-        return view('users.profile', compact('user'));
+        $apiTokens = $user->tokens()->get(['id', 'name', 'last_used_at', 'created_at']);
+
+        return view('users.profile', compact('user', 'apiTokens'));
+    }
+
+    public function createApiToken(Request $request)
+    {
+        $data = $request->validate([
+            'token_name' => 'required|string|max:255',
+        ]);
+
+        $token = $request->user()->createToken($data['token_name']);
+
+        return redirect()->route('profile.edit')
+            ->with('api_token', $token->plainTextToken)
+            ->with('success', 'API token created. Copy it now — it will not be shown again.');
+    }
+
+    public function revokeApiToken(Request $request, int $tokenId)
+    {
+        $request->user()->tokens()->where('id', $tokenId)->delete();
+
+        return redirect()->route('profile.edit')->with('success', 'API token revoked.');
     }
 
     public function updateProfile(Request $request)

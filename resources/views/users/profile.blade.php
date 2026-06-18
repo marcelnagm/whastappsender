@@ -137,6 +137,75 @@
                     </button>
                 </div>
             </form>
+
+            <div class="card border-0 shadow-sm rounded-4 mt-4">
+                <div class="card-header bg-white py-3 border-bottom">
+                    <h6 class="m-0 font-weight-bold text-primary">API para agentes de IA</h6>
+                </div>
+                <div class="card-body p-4">
+                    @if (session('api_token'))
+                        <div class="alert alert-success border-0 mb-4">
+                            <strong>Token gerado — copie agora:</strong>
+                            <code class="d-block mt-2 user-select-all">{{ session('api_token') }}</code>
+                        </div>
+                    @endif
+
+                    <p class="text-muted small mb-3">
+                        Use o token Bearer para integrar agentes de IA via REST ou Tool Call Chain.
+                        Base URL: <code>{{ url('/api/v1') }}</code>
+                    </p>
+
+                    <ul class="small text-muted mb-4">
+                        <li><code>GET /api/v1/tools</code> — lista de tools (formato OpenAI Functions)</li>
+                        <li><code>POST /api/v1/tools/call</code> — executa uma tool</li>
+                        <li><code>POST /api/v1/tools/chain</code> — executa cadeia de tools</li>
+                    </ul>
+
+                    <form method="POST" action="{{ route('profile.api-tokens.create') }}" class="row g-2 align-items-end mb-4">
+                        @csrf
+                        <div class="col-md-8">
+                            <label for="token_name" class="form-label small fw-bold text-uppercase">Nome do token</label>
+                            <input type="text" name="token_name" id="token_name" class="form-control" placeholder="ex: cursor-agent" required>
+                        </div>
+                        <div class="col-md-4">
+                            <button type="submit" class="btn btn-outline-primary w-100">
+                                <i class="bi bi-key me-1"></i>Gerar token
+                            </button>
+                        </div>
+                    </form>
+
+                    @if ($apiTokens->isNotEmpty())
+                        <div class="table-responsive">
+                            <table class="table table-sm align-middle mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Nome</th>
+                                        <th>Criado</th>
+                                        <th>Último uso</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach ($apiTokens as $token)
+                                        <tr>
+                                            <td>{{ $token->name }}</td>
+                                            <td>{{ $token->created_at?->format('d/m/Y H:i') }}</td>
+                                            <td>{{ $token->last_used_at?->format('d/m/Y H:i') ?? '—' }}</td>
+                                            <td class="text-end">
+                                                <form method="POST" action="{{ route('profile.api-tokens.revoke', $token->id) }}" class="d-inline">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger">Revogar</button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @endif
+                </div>
+            </div>
         </div>
     </div>
 </div>

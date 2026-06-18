@@ -57,5 +57,7 @@ class Kernel extends HttpKernel
         
         // Keep the admin alias registered here only.
         'admin' => \App\Http\Middleware\AdminMiddleware::class,
+        'admin.api' => \App\Http\Middleware\AdminApiMiddleware::class,
+        'api.active' => \App\Http\Middleware\EnsureUserIsActive::class,
     ];
 }

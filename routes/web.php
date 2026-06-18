@@ -42,6 +42,8 @@ Route::group(['namespace' => 'App\Http\Controllers', 'middleware' => ['auth']], 
 
     Route::get('/me/profile', [UserController::class, 'editProfile'])->name('profile.edit');
     Route::post('/me/profile', [UserController::class, 'updateProfile'])->name('profile.update');
+    Route::post('/me/api-tokens', [UserController::class, 'createApiToken'])->name('profile.api-tokens.create');
+    Route::delete('/me/api-tokens/{tokenId}', [UserController::class, 'revokeApiToken'])->name('profile.api-tokens.revoke');
 
     Route::prefix('whatsapp')->middleware(['auth'])->name('whatsapp.')->group(function () {
         Route::get('/{id}', 'App\Http\Controllers\WhatsappController@index')->name('index');
