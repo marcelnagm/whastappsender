@@ -1,0 +1,25 @@
+[program:worker-disparos]
+command=php /var/www/artisan queue:work --queue=disparos --sleep=3 --tries=3
+user=www-data
+autostart=true
+autorestart=true
+numprocs=1
+stdout_logfile=/var/www/storage/logs/worker_disparos.log
+stderr_logfile=/www/www/stominer.err.log
+
+[program:worker-default]
+command=php /var/www/artisan queue:work --queue=default --sleep=3 --tries=3
+user=www-data
+autostart=true
+autorestart=true
+numprocs=1
+stdout_logfile=/var/www/storage/logs/worker_default.log
+
+[program:laravel-schedule]
+command=php /var/www/artisan schedule:work
+user=www-data
+autostart=true
+autorestart=true
+numprocs=1
+stdout_logfile=/var/www/storage/logs/schedule.log
+

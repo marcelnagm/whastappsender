@@ -1,0 +1,34 @@
+[program:worker-disparos]
+command=php /var/www/artisan queue:work --queue=disparos --sleep=3 --tries=3
+user=www-data
+autostart=true
+autorestart=true
+numprocs=1
+stdout_logfile=/var/www/storage/logs/worker_disparos.log
+stderr_logfile=/www/www/storage/logs/worker_disparos.err.log
+
+[program:worker-default]
+command=php /var/www/artisan queue:work --queue=default --sleep=3 --tries=3
+user=www-data
+autostart=true
+autorestart=true
+numprocs=1
+stdout_logfile=/var/www/storage/logs/worker_default.log
+stderr_logfile=/www/www/storage/logs/worker_defalut.err.log
+[program:laravel-schedule]
+command=php /var/www/artisan schedule:work
+user=www-data
+autostart=true
+autorestart=true
+numprocs=1
+stdout_logfile=/var/www/storage/logs/schedule.log
+stderr_logfile=/www/www/storage/logs/.err.log
+
+[program:php-fpm]
+command=php-fpm
+autostart=true
+autorestart=true
+stdout_logfile=/dev/stdout
+stdout_logfile_maxbytes=0
+stderr_logfile=/dev/stderr
+stderr_logfile_maxbytes=0
