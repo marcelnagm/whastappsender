@@ -39,7 +39,7 @@ class RegisterController extends Controller
 
         // auth()->login($user);
 
-        return redirect('/')->with('success', "Account created. Contact 5595981110695 to activate it.");
+        return redirect('/')->with('success', __('Account created. Contact :phone to activate it.', ['phone' => '5595981110695']));
     }
 
     private function generateFollowUp($data)

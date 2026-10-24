@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="{{ config('languages.supported.' . app()->getLocale() . '.html', 'en') }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -34,6 +34,13 @@
 </head>
 <body>
     
+    {{-- Guests have no navbar, so the language selector floats in the top-right corner --}}
+    @guest
+        <div style="position: fixed; top: 1rem; right: 1rem; z-index: 1050; max-width: 200px;">
+            @include('layouts.partials.language-selector', ['variant' => 'inline'])
+        </div>
+    @endguest
+
     {{-- Navbar is included dynamically --}}
     @include('layouts.partials.navbar')
 

@@ -8,7 +8,7 @@
             <img style="background-color: #dbc5c8; border-radius: 100%;;" src="{{ asset('images/logo.jpg') }}" alt="Logo" width="100%" height="100%" class="me-2 d-inline-block align-text-top">
             
             <h2 class="fw-bold">{{env('APP_NAME ')}}</h2>
-            <p class="text-muted">Sign in to your intelligence hub</p>
+            <p class="text-muted">{{ __('Sign in to your intelligence hub') }}</p>
         </div>
 
         <form method="post" action="{{ route('login.perform') }}">
@@ -18,8 +18,8 @@
 
             <div class="form-floating mb-3">
                 <input type="text" class="form-control border-0 bg-light" id="floatingName" name="username" 
-                       value="{{ old('username') }}" placeholder="Username" required autofocus>
-                <label for="floatingName">Username or email</label>
+                       value="{{ old('username') }}" placeholder="{{ __('Username') }}" required autofocus>
+                <label for="floatingName">{{ __('Username or email') }}</label>
                 @if ($errors->has('username'))
                     <small class="text-danger">{{ $errors->first('username') }}</small>
                 @endif
@@ -27,8 +27,8 @@
             
             <div class="form-floating mb-3">
                 <input type="password" class="form-control border-0 bg-light" id="floatingPassword" name="password" 
-                       placeholder="Password" required>
-                <label for="floatingPassword">Password</label>
+                       placeholder="{{ __('Password') }}" required>
+                <label for="floatingPassword">{{ __('Password') }}</label>
                 @if ($errors->has('password'))
                     <small class="text-danger">{{ $errors->first('password') }}</small>
                 @endif
@@ -38,14 +38,14 @@
                 <div class="form-check">
                     <input class="form-check-input" type="checkbox" name="remember" value="1" id="remember">
                     <label class="form-check-label text-muted" for="remember">
-                        Keep me signed in
+                        {{ __('Keep me signed in') }}
                     </label>
                 </div>
                 {{-- Forgot password link can be added here later --}}
             </div>
 
             <button class="btn btn-primary btn-lg w-100 shadow-sm fw-bold py-3" type="submit">
-                Sign in
+                {{ __('Sign in') }}
             </button>
         </form>
     </div>

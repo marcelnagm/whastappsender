@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="{{ config('languages.supported.' . app()->getLocale() . '.html', 'en') }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -112,7 +112,12 @@
     <link href="signin.css" rel="stylesheet">
 </head>
 <body class="text-center">
-    
+
+    {{-- Language selector (plain <select>: this layout does not load the Bootstrap JS) --}}
+    <div style="position: fixed; top: 1rem; right: 1rem; z-index: 1050; max-width: 200px;">
+        @include('layouts.partials.language-selector', ['variant' => 'inline'])
+    </div>
+
     <main class="form-signin">
 
         @yield('content')

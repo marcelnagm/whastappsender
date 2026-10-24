@@ -36,6 +36,7 @@ class User extends Authenticatable
         'ai_max_tokens',
         'ai_system_prompt',
         'ai_business_hours_only',
+        'locale',
     ];
 
 
