@@ -37,6 +37,9 @@ Route::group(['namespace' => 'App\Http\Controllers', 'middleware' => ['guest']],
 
 Route::get('/', 'App\Http\Controllers\HomeController@index')->name('home.index');
 
+// Language selector (public: guests can choose too)
+Route::get('/language/{locale}', [\App\Http\Controllers\LanguageController::class, 'switch'])->name('language.switch');
+
 
 Route::group(['namespace' => 'App\Http\Controllers', 'middleware' => ['auth']], function () {
 

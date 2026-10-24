@@ -39,7 +39,7 @@ class LoginController extends Controller
 
         $user = Auth::getProvider()->retrieveByCredentials($credentials);
         if(!$user->isActive())return redirect()->to('login')
-        ->withErrors('Account is disabled.');
+        ->withErrors(__('Account is disabled.'));
 
         Auth::login($user, $request->get('remember'));
 

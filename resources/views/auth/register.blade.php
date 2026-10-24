@@ -13,13 +13,13 @@
                     class="mx-auto d-block shadow-sm">
             </div>
 
-            <h1 class="h2 mb-1 fw-bold text-white">Create account</h1>
-            <p class="text-white-50 mb-4">Register to request professional access</p>
+            <h1 class="h2 mb-1 fw-bold text-white">{{ __('Create account') }}</h1>
+            <p class="text-white-50 mb-4">{{ __('Register to request professional access') }}</p>
 
             <div class="form-floating mb-5 text-start">
                 <input type="text" class="form-control form-control-lg {{ $errors->has('name') ? 'is-invalid' : '' }}"
-                    name="name" value="{{ old('name') }}" placeholder="Full name" required autofocus>
-                <label class="ps-3">Full name</label>
+                    name="name" value="{{ old('name') }}" placeholder="{{ __('Full name') }}" required autofocus>
+                <label class="ps-3">{{ __('Full name') }}</label>
                 @if ($errors->has('name'))
                 <div class="invalid-feedback ps-1">{{ $errors->first('name') }}</div>
                 @endif
@@ -28,7 +28,7 @@
             <div class="form-floating mb-3 text-start">
                 <input type="email" class="form-control form-control-lg {{ $errors->has('email') ? 'is-invalid' : '' }}"
                     name="email" value="{{ old('email') }}" placeholder="name@example.com" required>
-                <label class="ps-3">Work email</label>
+                <label class="ps-3">{{ __('Work email') }}</label>
                 @if ($errors->has('email'))
                 <div class="invalid-feedback ps-1">{{ $errors->first('email') }}</div>
                 @endif
@@ -45,7 +45,7 @@
                             <option value="54" {{ old('ddi') == '54' ? 'selected' : '' }}>🇦🇷 +54</option>
                             <option value="595" {{ old('ddi') == '595' ? 'selected' : '' }}>🇵🇾 +595</option>
                         </select>
-                        <label class="ps-3" for="ddiSelect">Country code</label>
+                        <label class="ps-3" for="ddiSelect">{{ __('Country code') }}</label>
                         @if ($errors->has('ddi'))
                         <div class="invalid-feedback ps-1" style="font-size: 0.7rem;">{{ $errors->first('ddi') }}</div>
                         @endif
@@ -56,18 +56,18 @@
                     <div class="form-floating text-start">
                         <input type="text" class="form-control form-control-lg {{ $errors->has('phone') ? 'is-invalid' : '' }}"
                             name="phone" value="{{ old('phone') }}" placeholder="959811..." required>
-                        <label class="ps-3">WhatsApp (area code + number)</label>
+                        <label class="ps-3">{{ __('WhatsApp (area code + number)') }}</label>
                         @if ($errors->has('phone'))
                         <div class="invalid-feedback ps-1">{{ $errors->first('phone') }}</div>
                         @endif
                     </div>
                 </div>
-                <div class="form-text text-white-50 ms-2" style="font-size: 0.7rem;">Example: 95981115965 (without country code)</div>
+                <div class="form-text text-white-50 ms-2" style="font-size: 0.7rem;">{{ __('Example: 95981115965 (without country code)') }}</div>
             </div>
             <div class="form-floating mb-3 text-start">
                 <input type="text" class="form-control form-control-lg {{ $errors->has('username') ? 'is-invalid' : '' }}"
-                    name="username" value="{{ old('username') }}" placeholder="Username" required>
-                <label class="ps-3">Username (login)</label>
+                    name="username" value="{{ old('username') }}" placeholder="{{ __('Username') }}" required>
+                <label class="ps-3">{{ __('Username (login)') }}</label>
                 @if ($errors->has('username'))
                 <div class="invalid-feedback ps-1">{{ $errors->first('username') }}</div>
                 @endif
@@ -75,8 +75,8 @@
 
             <div class="form-floating mb-3 text-start">
                 <input type="password" class="form-control form-control-lg {{ $errors->has('password') ? 'is-invalid' : '' }}"
-                    name="password" placeholder="Password" required>
-                <label class="ps-3">Password</label>
+                    name="password" placeholder="{{ __('Password') }}" required>
+                <label class="ps-3">{{ __('Password') }}</label>
                 @if ($errors->has('password'))
                 <div class="invalid-feedback ps-1">{{ $errors->first('password') }}</div>
                 @endif
@@ -84,16 +84,16 @@
 
             <div class="form-floating mb-4 text-start">
                 <input type="password" class="form-control form-control-lg"
-                    name="password_confirmation" placeholder="Confirm Password" required>
-                <label class="ps-3">Confirm password</label>
+                    name="password_confirmation" placeholder="{{ __('Confirm Password') }}" required>
+                <label class="ps-3">{{ __('Confirm password') }}</label>
             </div>
 
             <button class="w-100 btn btn-lg btn-warning rounded-3 shadow py-3 fw-bold text-dark fs-5" type="submit">
-                REGISTER AND REQUEST ACTIVATION
+                {{ __('REGISTER AND REQUEST ACTIVATION') }}
             </button>
 
             <div class="mt-4 text-white-50">
-                Already have an account? <a href="{{ route('login.perform') }}" class="text-warning text-decoration-none fw-bold">Sign in</a>
+                {{ __('Already have an account?') }} <a href="{{ route('login.perform') }}" class="text-warning text-decoration-none fw-bold">{{ __('Sign in') }}</a>
             </div>
 
             <div class="mt-4 opacity-50">
