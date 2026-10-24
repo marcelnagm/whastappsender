@@ -13,6 +13,7 @@
 |---------|-------|
 | [Tool Call Chain API](#-tool-call-chain-api-ai-agents) | REST + AI agent tools |
 | [System Architecture](#-system-architecture-queues--warmup) | Queues, Warmup, production requirements |
+| [WhatsApp Chat (CRM)](#-whatsapp-chat-crm) | WhatsApp Web-style inbox on top of Evolution API |
 | [Installation](#️-installation--activation) | Local dev + Docker (`.docker/`) |
 
 ---
@@ -487,6 +488,38 @@ Built for massive scale under **SOLID** patterns:
 
 ---
 
+## 💬 WhatsApp Chat (CRM)
+
+A WhatsApp Web clone available at `/chat`. The browser only talks to Laravel; Laravel talks to the **Evolution API v2.3**
+and receives events back through the webhook. Each user works with their own instance, and the instance name is the
+WhatsApp session number (`instances.instance_name`).
+
+```
+Browser ──► Laravel (/chat/api/*) ──► SendChatMessageJob ──► Evolution API ──► WhatsApp
+Browser ◄── polling (since=...) ◄── chats / chat_messages ◄── ProcessEvolutionWebhookJob ◄── Evolution webhook
+```
+
+**Features:** conversation list with unread badges and search, text / image / video / audio / document / sticker,
+voice notes (recorded in the browser), replies, reactions, delete for everyone, delivery and read ticks, typing
+presence, history import, new chat by phone number (Brazilian 9th digit handled by Evolution), and a CRM panel
+(save the person as a contact, opt-out status, pause the AI auto-reply for that contact).
+
+**Setup**
+
+1. Run the migration: `php artisan migrate` (creates `chats` and `chat_messages`).
+2. In Evolution, enable these webhook events (already set in `.docker/.env.docker`):
+   `MESSAGES_UPSERT`, `MESSAGES_UPDATE` and `SEND_MESSAGE`. The last one makes messages sent by campaigns and the AI
+   also appear in the chat.
+3. Keep a worker on the `default` queue running (sends and history imports use it).
+4. Open **Chat** in the menu and click the import button to load existing conversations.
+
+**Optional `.env` settings** (defaults in `config/chat.php`): `CHAT_POLL_MESSAGES_MS`, `CHAT_POLL_CHATS_MS`,
+`CHAT_MAX_UPLOAD_KB`, `CHAT_PAUSE_AI_ON_REPLY`, `CHAT_SEND_READ_RECEIPTS`.
+
+> Groups, broadcasts and channels are intentionally ignored; the chat only handles one-to-one conversations.
+
+* * *
+
 ## 🛠️ Elite Features
 
 * ✅ **AI Agent Manager:** Full control over AI prompts and personality per instance.
@@ -495,6 +528,8 @@ Built for massive scale under **SOLID** patterns:
 * ✅ **Performance Dashboard:** Track success rates, errors, and AI token consumption in real-time.
 * ✅ **Smart Lead Management:** Bulk import via Excel/CSV with dynamic column mapping.
 * ✅ **High-Fidelity Multimedia:** Support for Images, PDFs, Videos, and Audio (OGG format to simulate human recording).
+* ✅ **WhatsApp Chat (CRM):** WhatsApp Web-style inbox with text, media, voice notes, replies, reactions and a CRM side panel.
+* ✅ **Multi-language UI:** English, Portuguese (BR) and Spanish with a language selector (`config/languages.php`).
 * ✅ **Audit Logs:** Full history of every AI interaction and every broadcast attempt.
 
 ---

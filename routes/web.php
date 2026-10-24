@@ -40,6 +40,33 @@ Route::get('/', 'App\Http\Controllers\HomeController@index')->name('home.index')
 // Language selector (public: guests can choose too)
 Route::get('/language/{locale}', [\App\Http\Controllers\LanguageController::class, 'switch'])->name('language.switch');
 
+// WhatsApp Web-style chat (CRM). The browser only talks to Laravel; Laravel talks to the Evolution API.
+Route::middleware('auth')->prefix('chat')->name('chat.')->group(function () {
+    $chat = \App\Http\Controllers\ChatController::class;
+
+    Route::get('/', [$chat, 'index'])->name('index');
+    Route::get('/media/{message}', [$chat, 'media'])->name('media');
+
+    Route::prefix('api')->name('api.')->group(function () use ($chat) {
+        Route::get('/chats', [$chat, 'chats'])->name('chats');
+        Route::post('/chats', [$chat, 'openChat'])->name('open');
+        Route::get('/contacts', [$chat, 'searchContacts'])->name('contacts');
+        Route::post('/instances/{instance}/sync', [$chat, 'syncHistory'])->name('sync');
+
+        Route::get('/chats/{chat}/messages', [$chat, 'messages'])->name('messages');
+        Route::post('/chats/{chat}/send', [$chat, 'send'])->name('send');
+        Route::post('/chats/{chat}/read', [$chat, 'markRead'])->name('read');
+        Route::post('/chats/{chat}/presence', [$chat, 'presence'])->name('presence');
+        Route::get('/chats/{chat}/contact', [$chat, 'contactInfo'])->name('contact');
+        Route::post('/chats/{chat}/contact', [$chat, 'saveContact'])->name('contact.save');
+        Route::post('/chats/{chat}/ai-pause', [$chat, 'aiPause'])->name('ai-pause');
+
+        Route::post('/messages/{message}/retry', [$chat, 'retry'])->name('retry');
+        Route::post('/messages/{message}/react', [$chat, 'react'])->name('react');
+        Route::delete('/messages/{message}', [$chat, 'destroy'])->name('destroy');
+    });
+});
+
 
 Route::group(['namespace' => 'App\Http\Controllers', 'middleware' => ['auth']], function () {
 
