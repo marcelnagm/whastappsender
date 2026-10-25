@@ -19,7 +19,7 @@ class Kernel extends ConsoleKernel
 
         if (env('WHATSAPP_AUTOSEND'))
             $schedule->command('whatsapp:queue')
-                ->hourly()
+                ->cron(config('whatsapp_queue.cron', '0 * * * *'))
                 ->withoutOverlapping();
 
         $schedule->command('warmup:generate')

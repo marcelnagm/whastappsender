@@ -13,6 +13,7 @@
 |---------|-------|
 | [Tool Call Chain API](#-tool-call-chain-api-ai-agents) | REST + AI agent tools |
 | [System Architecture](#-system-architecture-queues--warmup) | Queues, Warmup, production requirements |
+| [WhatsApp Chat (CRM)](#-whatsapp-chat-crm) | WhatsApp Web-style inbox on top of Evolution API |
 | [Installation](#️-installation--activation) | Local dev + Docker (`.docker/`) |
 
 ---
@@ -487,6 +488,76 @@ Built for massive scale under **SOLID** patterns:
 
 ---
 
+## 💬 WhatsApp Chat (CRM)
+
+A WhatsApp Web clone available at `/chat`. The browser only talks to Laravel; Laravel talks to the **Evolution API v2.3**
+and receives events back through the webhook. Each user works with their own instance, and the instance name is the
+WhatsApp session number (`instances.instance_name`).
+
+```
+Browser ──► Laravel (/chat/api/*) ──► SendChatMessageJob ──► Evolution API ──► WhatsApp
+Browser ◄── polling (since=...) ◄── chats / chat_messages ◄── ProcessEvolutionWebhookJob ◄── Evolution webhook
+```
+
+**Features:** conversation list with unread badges and search, text / image / video / audio / document / sticker,
+voice notes (recorded in the browser), replies, reactions, delete for everyone, delivery and read ticks, typing
+presence, history import, new chat by phone number (Brazilian 9th digit handled by Evolution), and a CRM panel
+(save the person as a contact, opt-out status, pause the AI auto-reply for that contact).
+
+**Setup**
+
+1. Run the migration: `php artisan migrate` (creates `chats` and `chat_messages`).
+2. In Evolution, enable these webhook events (already set in `.docker/.env.docker`):
+   `MESSAGES_UPSERT`, `MESSAGES_UPDATE` and `SEND_MESSAGE`. The last one makes messages sent by campaigns and the AI
+   also appear in the chat.
+3. Keep a worker on the `default` queue running (sends and history imports use it).
+4. Open **Chat** in the menu and click the import button to load existing conversations.
+
+**Optional `.env` settings** (defaults in `config/chat.php`): `CHAT_POLL_MESSAGES_MS`, `CHAT_POLL_CHATS_MS`,
+`CHAT_MAX_UPLOAD_KB`, `CHAT_PAUSE_AI_ON_REPLY`, `CHAT_SEND_READ_RECEIPTS`.
+
+**Profile pictures.** WhatsApp CDN links are signed and expire, so the picture is downloaded in the background
+(`FetchChatAvatarJob`, `default` queue), stored in `storage/app/chat-avatars/` and served by Laravel at `/chat/avatar/{chat}`
+(owner only). A contact without a picture is checked again after 7 days; a temporary failure (instance offline, timeout) is
+retried after 30 minutes. Run `php artisan migrate` to add the cache columns. Without a picture the UI shows the initials.
+
+> Groups, broadcasts and channels are intentionally ignored; the chat only handles one-to-one conversations.
+
+* * *
+
+## ⚖️ Fair Send Queue
+
+`php artisan whatsapp:queue` (scheduled hourly) used to take the oldest pending rows of **all** users, so one big campaign
+could take every slot. Each run now takes a **batch of 50** messages (`WHATSAPP_BATCH_SIZE`) shared fairly:
+
+- **Between users** (max-min fairness): every slot goes to the user with the smallest share so far. A user with a small
+  backlog gets all of it; the leftover goes to the others.
+- **By session** (`WHATSAPP_FAIRNESS=session`, default): a user's weight is the number of connected sessions, so 3 numbers
+  get about 3x the slots of 1 number. Use `user` for equal shares per user, or `fifo` for the legacy behaviour.
+- **Already queued messages count**: what a user still has waiting in the queue (last 24h) is subtracted from their share.
+- **Between a user's sessions**: slots go to the session with the shortest queue, so numbers alternate.
+- **Order**: the batch is interleaved (A, B, A, B...), so nobody waits behind a long run of one user.
+
+Each message is bound to the session chosen by the planner (`whatsapp_job.instance_id`); if that session disconnects before
+sending, the job falls back to another connected session of the same user. Users with no connected session are skipped and
+their messages stay `pendente`.
+
+```bash
+php artisan whatsapp:queue --dry-run          # show the split per user/session without dispatching
+php artisan whatsapp:queue --batch=100 --mode=user
+```
+
+`.env`: `WHATSAPP_BATCH_SIZE` (50), `WHATSAPP_FAIRNESS` (session|user|fifo), `WHATSAPP_QUEUE_CRON` (`0 * * * *`).
+Manual retries from the logs screen still dispatch directly and bypass the planner.
+
+* * *
+
+## 🧪 Tests
+
+`vendor/bin/phpunit` (in-memory SQLite, no external services): fair queue planner and command, chat backend and avatar caching.
+
+* * *
+
 ## 🛠️ Elite Features
 
 * ✅ **AI Agent Manager:** Full control over AI prompts and personality per instance.
@@ -495,6 +566,8 @@ Built for massive scale under **SOLID** patterns:
 * ✅ **Performance Dashboard:** Track success rates, errors, and AI token consumption in real-time.
 * ✅ **Smart Lead Management:** Bulk import via Excel/CSV with dynamic column mapping.
 * ✅ **High-Fidelity Multimedia:** Support for Images, PDFs, Videos, and Audio (OGG format to simulate human recording).
+* ✅ **WhatsApp Chat (CRM):** WhatsApp Web-style inbox with text, media, voice notes, replies, reactions and a CRM side panel.
+* ✅ **Multi-language UI:** English, Portuguese (BR) and Spanish with a language selector (`config/languages.php`).
 * ✅ **Audit Logs:** Full history of every AI interaction and every broadcast attempt.
 
 ---

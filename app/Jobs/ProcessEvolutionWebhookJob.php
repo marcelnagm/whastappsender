@@ -9,6 +9,7 @@ use App\Models\WhatsappJob;
 use App\Services\AI\AiAutoReplyService;
 use App\Services\AI\AiInboundMessageRecorder;
 use App\Services\AI\GroqAgentResponder;
+use App\Services\Chat\ChatMessageRecorder;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -34,6 +35,9 @@ class ProcessEvolutionWebhookJob implements ShouldQueue
         $instanceName = $this->payload['instance'] ?? null;
         $data = $this->payload['data'] ?? [];
 
+        // Chat (WhatsApp Web clone): persist messages/statuses. Never blocks the existing flows below.
+        $this->recordChat((string) $event, (string) $instanceName, (array) $data);
+
         try {
             switch ($event) {
                 case 'messages.update':
@@ -52,6 +56,32 @@ class ProcessEvolutionWebhookJob implements ShouldQueue
         } catch (\Exception $e) {
             Log::error("ProcessEvolutionWebhookJob failed: " . $e->getMessage());
             throw $e;
+        }
+    }
+
+    /**
+     * Feeds the chat tables from Evolution events.
+     * "send.message" is emitted for messages sent through the API (campaigns, AI, chat).
+     */
+    private function recordChat(string $event, string $instanceName, array $data): void
+    {
+        if ($instanceName === '' || !in_array($event, ['messages.upsert', 'send.message', 'messages.update'], true)) {
+            return;
+        }
+
+        try {
+            $recorder = app(ChatMessageRecorder::class);
+            $items = isset($data[0]) && is_array($data[0]) ? $data : [$data];
+
+            foreach ($items as $item) {
+                if ($event === 'messages.update') {
+                    $recorder->recordStatus($instanceName, (array) $item);
+                } else {
+                    $recorder->recordUpsert($instanceName, (array) $item);
+                }
+            }
+        } catch (\Throwable $e) {
+            Log::warning('Chat recorder failed: ' . $e->getMessage());
         }
     }
 
