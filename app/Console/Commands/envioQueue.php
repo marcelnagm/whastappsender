@@ -62,7 +62,7 @@ class envioQueue extends Command
             $campaignItem = $job->campaignItem;
             $contact = $job->contact;
 
-            if ($campaignItem && $contact && (bool) ($campaignItem->welcome_enabled ?? false)) {
+            if ($campaignItem && $contact && (bool) ($campaignItem->welcome_enabled ?? false) && $this->planAllowsWelcome((int) $job->user_id)) {
                 $payload = is_array($job->payload) ? $job->payload : null;
 
                 if (!$payload || empty($payload['text'])) {
@@ -85,6 +85,19 @@ class envioQueue extends Command
             \App\Jobs\EnviarMensagemJob::dispatch($job)->onQueue('disparos');
         }
         return Command::SUCCESS;
+    }
+
+    /** Welcome campaigns (AI first contact + reply tracking) are a plan feature; without it the plain message is sent. */
+    private function planAllowsWelcome(int $userId): bool
+    {
+        static $cache = [];
+
+        if (!array_key_exists($userId, $cache)) {
+            $user = \App\Models\User::find($userId);
+            $cache[$userId] = $user ? app(\App\Services\Billing\Entitlements::class)->can($user, 'welcome_campaign') : true;
+        }
+
+        return $cache[$userId];
     }
 
     private function dryRun(FairQueueSelector $selector, int $batch, ?string $mode): int

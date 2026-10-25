@@ -120,6 +120,7 @@ class ContactController extends Controller
     public function store(Request $request)
     {
         request()->validate(Contact::$rules);
+        app(\App\Services\Billing\Entitlements::class)->authorizeUsage(Auth::user(), 'contacts');
         $data = $request->all();
         $data['user_id'] = Auth::user()->id;
         $contact = Contact::create($data);
@@ -201,10 +202,15 @@ class ContactController extends Controller
     {
         if ($request->input('renover'))
             Contact::where('user_id', Auth::user()->id)->delete();
-        Excel::import(new ContactsImport, $request->file('importer'));
+        $import = new ContactsImport;
+        Excel::import($import, $request->file('importer'));
+
+        $note = $import->skipped > 0
+            ? ' ' . __(':n contact(s) were not imported: plan limit reached.', ['n' => $import->skipped])
+            : '';
 
         return redirect()->route('contacts.index')
-            ->with('success', 'Contact imported');
+            ->with('success', 'Contact imported' . $note);
     }
     public function clean(Request $request)
     {

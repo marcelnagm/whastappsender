@@ -52,6 +52,14 @@ class EnviarMensagemJob implements ShouldQueue
 
         try {
             $user = $job->user()->first();
+            $entitlements = app(\App\Services\Billing\Entitlements::class);
+
+            // Plan: account blocked or monthly quota used up after this message was queued -> keep it pending
+            if ($user && !$entitlements->allows($user, 'messages_per_month')) {
+                $job->update(['status' => 'pendente']);
+                return;
+            }
+
             $instance = $user ? $this->resolveInstance($user, $job) : null;
             if (!$user || !$instance) {
                 $this->registrarErro("User or instance phone not configured.", null);
@@ -116,6 +124,7 @@ class EnviarMensagemJob implements ShouldQueue
                     'erro_mensagem' => null,
                     'tentativas' => $job->tentativas + 1
                 ]);
+                $entitlements->consume($user, 'messages');
             } else {
                 $status = $response->status();
                 $body = $response->json();

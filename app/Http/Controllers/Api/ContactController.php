@@ -35,6 +35,8 @@ class ContactController extends ApiController
             'status' => 'nullable|in:ativo,inativo,no-whatsapp',
         ]));
 
+        app(\App\Services\Billing\Entitlements::class)->authorizeUsage(Auth::user(), 'contacts');
+
         $data['user_id'] = Auth::id();
         $contact = Contact::create($data);
 
@@ -81,9 +83,10 @@ class ContactController extends ApiController
             Contact::where('user_id', Auth::id())->delete();
         }
 
-        Excel::import(new ContactsImport, $request->file('file'));
+        $import = new ContactsImport;
+        Excel::import($import, $request->file('file'));
 
-        return $this->success(null, 'Contacts imported.');
+        return $this->success(['skipped_by_plan_limit' => $import->skipped], 'Contacts imported.');
     }
 
     public function clean()

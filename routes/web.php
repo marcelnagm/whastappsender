@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\Mail;
 use App\Http\Controllers\WhatsappController;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\WhatsappJobController;
+use App\Http\Controllers\BillingController;
+use App\Http\Controllers\AdminBillingController;
 
 /*
 |--------------------------------------------------------------------------
@@ -41,7 +43,7 @@ Route::get('/', 'App\Http\Controllers\HomeController@index')->name('home.index')
 Route::get('/language/{locale}', [\App\Http\Controllers\LanguageController::class, 'switch'])->name('language.switch');
 
 // WhatsApp Web-style chat (CRM). The browser only talks to Laravel; Laravel talks to the Evolution API.
-Route::middleware('auth')->prefix('chat')->name('chat.')->group(function () {
+Route::middleware(['auth', 'subscription.writable', 'plan.feature:chat'])->prefix('chat')->name('chat.')->group(function () {
     $chat = \App\Http\Controllers\ChatController::class;
 
     Route::get('/', [$chat, 'index'])->name('index');
@@ -69,11 +71,21 @@ Route::middleware('auth')->prefix('chat')->name('chat.')->group(function () {
 });
 
 
-Route::group(['namespace' => 'App\Http\Controllers', 'middleware' => ['auth']], function () {
+Route::group(['namespace' => 'App\Http\Controllers', 'middleware' => ['auth', 'subscription.writable']], function () {
+
+    // Plans & billing (kept reachable for blocked accounts so they can pay)
+    Route::get('/billing', [BillingController::class, 'index'])->name('billing.index');
+    Route::post('/billing/subscribe', [BillingController::class, 'subscribe'])->name('billing.subscribe');
+    Route::post('/billing/cancel', [BillingController::class, 'cancel'])->name('billing.cancel');
+    Route::post('/billing/resume', [BillingController::class, 'resume'])->name('billing.resume');
+    Route::get('/billing/invoices/{invoice}', [BillingController::class, 'invoice'])->name('billing.invoice');
+    Route::post('/billing/invoices/{invoice}/pay', [BillingController::class, 'pay'])->name('billing.pay');
+    Route::get('/billing/invoices/{invoice}/status', [BillingController::class, 'status'])->name('billing.status');
+    Route::post('/billing/auto-renew/stop', [BillingController::class, 'stopAutoRenew'])->name('billing.autorenew.stop');
 
     Route::get('/me/profile', [UserController::class, 'editProfile'])->name('profile.edit');
     Route::post('/me/profile', [UserController::class, 'updateProfile'])->name('profile.update');
-    Route::post('/me/api-tokens', [UserController::class, 'createApiToken'])->name('profile.api-tokens.create');
+    Route::post('/me/api-tokens', [UserController::class, 'createApiToken'])->name('profile.api-tokens.create')->middleware('plan.feature:api_access');
     Route::delete('/me/api-tokens/{tokenId}', [UserController::class, 'revokeApiToken'])->name('profile.api-tokens.revoke');
 
     Route::prefix('whatsapp')->middleware(['auth'])->name('whatsapp.')->group(function () {
@@ -131,6 +143,14 @@ Route::group(['namespace' => 'App\Http\Controllers', 'middleware' => ['auth']], 
         Route::patch('/users/{user}/toggle-active', 'UserController@toggleActive')->name('users.toggleActive');
         Route::patch('/users/{user}/toggle-admin', 'UserController@toggleAdmin')->name('users.toggleAdmin');
 
+
+        Route::get('/billing', [AdminBillingController::class, 'index'])->name('admin.billing.index');
+        Route::post('/billing/invoices/{invoice}/paid', [AdminBillingController::class, 'markPaid'])->name('admin.billing.paid');
+        Route::post('/billing/grant', [AdminBillingController::class, 'grant'])->name('admin.billing.grant');
+
+        Route::get('/payment-gateway', [\App\Http\Controllers\AdminGatewayController::class, 'edit'])->name('admin.gateway.edit');
+        Route::post('/payment-gateway', [\App\Http\Controllers\AdminGatewayController::class, 'update'])->name('admin.gateway.update');
+        Route::post('/payment-gateway/test', [\App\Http\Controllers\AdminGatewayController::class, 'test'])->name('admin.gateway.test');
 
         Route::get('/panic/', [PanicController::class, 'index'])->name('panic.index');
         Route::post('/panic/clear', [PanicController::class, 'clear'])->name('admin.panic.clear');

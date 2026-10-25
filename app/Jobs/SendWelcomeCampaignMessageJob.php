@@ -47,6 +47,11 @@ class SendWelcomeCampaignMessageJob implements ShouldQueue
             return;
         }
 
+        $entitlements = app(\App\Services\Billing\Entitlements::class);
+        if (!$entitlements->can($user, 'welcome_campaign') || !$entitlements->allows($user, 'messages_per_month')) {
+            return; // plan feature missing, blocked account or monthly quota used up
+        }
+
         $instance = $user->getInstanceActive();
         if (!$instance) {
             return;
@@ -89,6 +94,8 @@ class SendWelcomeCampaignMessageJob implements ShouldQueue
                 ]);
                 return;
             }
+
+            $entitlements->consume($user, 'messages');
 
             Redis::sadd("welcome:pending_reply:user:{$this->userId}", $contact->contact);
             Redis::hset("welcome:contact_campaign:user:{$this->userId}", $contact->contact, (string) $campaignItem->id);

@@ -22,6 +22,9 @@ class Kernel extends ConsoleKernel
                 ->cron(config('whatsapp_queue.cron', '0 * * * *'))
                 ->withoutOverlapping();
 
+        // Renewal invoices, grace period, blocking for non-payment (cheap: only touches live subscriptions)
+        $schedule->command('billing:run')->hourly()->withoutOverlapping();
+
         $schedule->command('warmup:generate')
             ->dailyAt('08:00')
             ->timezone('America/Boa_Vista') // Use local timezone for the schedule

@@ -32,7 +32,11 @@ class GenerateWarmupConversations extends Command
             ->whereHas('user', function ($query) {
                 $query->where('role', '!=', 'admin');
             })
-            ->get();
+            ->with('user')
+            ->get()
+            // Plan: warmup is a paid feature (blocked accounts included)
+            ->filter(fn ($instance) => app(\App\Services\Billing\Entitlements::class)->can($instance->user, 'warmup'))
+            ->values();
 
         if ($admins->isEmpty() || $targets->isEmpty()) {
             $this->error("Missing admin instances or targets in warmup mode.");

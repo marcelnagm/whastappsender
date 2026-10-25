@@ -20,6 +20,11 @@ class HomeController extends Controller
         return view('home.index',compact('contact','read','error','instances'))    ;
     }
 
-        return view('home.guest');
+        // Public pricing on the landing page (skipped until the billing migration has run)
+        $plans = \Illuminate\Support\Facades\Schema::hasTable('plans')
+            ? \App\Models\Plan::where('is_active', true)->orderBy('sort')->get()
+            : collect();
+
+        return view('home.guest', compact('plans'));
     }
 }

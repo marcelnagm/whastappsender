@@ -71,6 +71,9 @@ class CampaignItemController extends Controller
         $data = $request->all();
         $data['user_id'] = Auth::id();
         $data['welcome_enabled'] = $request->boolean('welcome_enabled');
+        if ($data['welcome_enabled']) {
+            app(\App\Services\Billing\Entitlements::class)->authorizeFeature(Auth::user(), 'welcome_campaign');
+        }
 
         // Default image field from URL when no upload
         $data['image'] = $request->input('image_url');
@@ -183,6 +186,9 @@ class CampaignItemController extends Controller
 
         $data = $request->all();
         $data['welcome_enabled'] = $request->boolean('welcome_enabled');
+        if ($data['welcome_enabled']) {
+            app(\App\Services\Billing\Entitlements::class)->authorizeFeature(Auth::user(), 'welcome_campaign');
+        }
 
         if ($request->hasFile('file_upload')) {
             // 1. Remove previous MinIO object when replacing upload

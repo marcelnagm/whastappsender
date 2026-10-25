@@ -3,6 +3,8 @@
 namespace App\Services\Queue;
 
 use App\Models\Instance;
+use App\Models\User;
+use App\Services\Billing\Entitlements;
 use App\Models\WhatsappJob;
 use Illuminate\Support\Collection;
 
@@ -14,7 +16,7 @@ class FairQueueSelector
 {
     public const MODE_FIFO = 'fifo';
 
-    public function __construct(private FairBatchPlanner $planner)
+    public function __construct(private FairBatchPlanner $planner, private Entitlements $entitlements)
     {
     }
 
@@ -128,6 +130,8 @@ class FairQueueSelector
             ->get()
             ->groupBy('user_id');
 
+        $owners = User::whereIn('id', $userIds)->get()->keyBy('id');
+
         $users = [];
         foreach ($demand as $row) {
             $userId = (int) $row->user_id;
@@ -144,9 +148,22 @@ class FairQueueSelector
                 }
             }
 
+            // Plan: blocked accounts send nothing; the monthly message quota caps what can still be queued
+            $pending = (int) $row->pending;
+            $owner = $owners->get($userId);
+            if ($owner) {
+                $remaining = $this->entitlements->remaining($owner, 'messages_per_month');
+                if ($remaining !== null) {
+                    $pending = min($pending, max(0, $remaining - $inflight));
+                }
+            }
+            if ($pending === 0) {
+                continue;
+            }
+
             $users[] = [
                 'user_id' => $userId,
-                'pending' => (int) $row->pending,
+                'pending' => $pending,
                 'oldest_id' => (int) $row->oldest_id,
                 'inflight' => $inflight,
                 'sessions' => $userSessions,

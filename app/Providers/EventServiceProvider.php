@@ -18,6 +18,15 @@ class EventServiceProvider extends ServiceProvider
         Registered::class => [
             SendEmailVerificationNotification::class,
         ],
+        \App\Events\Billing\InvoiceIssued::class => [
+            [\App\Listeners\SyncGatewayRecurrence::class, 'onInvoiceIssued'],
+        ],
+        \App\Events\Billing\InvoicePaid::class => [
+            [\App\Listeners\SyncGatewayRecurrence::class, 'onInvoicePaid'],
+        ],
+        \App\Events\Billing\SubscriptionStopped::class => [
+            [\App\Listeners\SyncGatewayRecurrence::class, 'onSubscriptionStopped'],
+        ],
     ];
 
     /**

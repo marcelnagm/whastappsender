@@ -20,6 +20,7 @@ trait CreatesTestSchema
             $t->string('email')->nullable();
             $t->string('username')->nullable();
             $t->string('password')->nullable();
+            $t->string('role')->nullable();
             $t->boolean('active')->default(true);
             $t->boolean('ai_enabled')->default(false);
             $t->string('locale', 10)->nullable();
@@ -80,7 +81,21 @@ trait CreatesTestSchema
             $t->timestamps();
         });
 
-        foreach (['2026_10_24_100000_create_chat_tables.php', '2026_10_24_120000_add_avatar_cache_to_chats_table.php'] as $file) {
+        Schema::create('notifications', function (Blueprint $t) {
+            $t->uuid('id')->primary();
+            $t->string('type');
+            $t->morphs('notifiable');
+            $t->text('data');
+            $t->timestamp('read_at')->nullable();
+            $t->timestamps();
+        });
+
+        foreach ([
+            '2026_10_24_100000_create_chat_tables.php',
+            '2026_10_24_120000_add_avatar_cache_to_chats_table.php',
+            '2026_10_25_100000_create_billing_tables.php',
+            '2026_10_26_100000_create_payment_gateway_tables.php',
+        ] as $file) {
             (require database_path('migrations/' . $file))->up();
         }
     }

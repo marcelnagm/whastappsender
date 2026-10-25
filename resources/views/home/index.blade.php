@@ -81,6 +81,10 @@
 
         <div class="row">
 
+            <div class="col-md-8">
+                @include('billing.partials.dashboard-card')
+            </div>
+
             <div class="col-md-4">
                 <div class="card border-0 shadow-sm rounded-3 mb-4">
                     <div class="card-header bg-white py-3 text-center">
