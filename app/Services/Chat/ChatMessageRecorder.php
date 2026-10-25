@@ -180,6 +180,9 @@ class ChatMessageRecorder
             $chat->save();
         }
 
+        // Profile picture is fetched in the background (no-op unless never fetched or due for a refresh)
+        app(ChatAvatarService::class)->queueIfDue($chat);
+
         return $chat;
     }
 

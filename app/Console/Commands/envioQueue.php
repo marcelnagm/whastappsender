@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Models\CampaignItem;
 use App\Models\WhatsappJob;
 use App\Services\AI\GroqConversationGenerator;
+use App\Services\Queue\FairQueueSelector;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Redis;
@@ -16,37 +17,43 @@ class envioQueue extends Command
      *
      * @var string
      */
-    protected $signature = 'whatsapp:queue';
+    protected $signature = 'whatsapp:queue
+        {--batch= : Messages to dispatch (default: whatsapp_queue.batch_size)}
+        {--mode= : session | user | fifo (default: whatsapp_queue.fairness)}
+        {--dry-run : Show how the batch would be shared without dispatching anything}';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Dispatch pending WhatsApp send jobs to the queue';
+    protected $description = 'Dispatch a batch of pending WhatsApp send jobs, shared fairly between users and sessions';
 
     /**
      * Execute the console command.
      *
      * @return int
      */
-    public function handle()
+    public function handle(FairQueueSelector $selector)
     {
         if (Cache::has('system_panic_mode')) {
-            
+
             return 1;
         }
 
-        $jobs = WhatsappJob::with(['campaignItem', 'contact'])
-            ->whereIn('status', ['pendente', 'erro'])
-            ->where('tentativas', '<', 3)
-            ->orderBy('id', 'asc')
-             ->limit(env('WHATSAPP_BATCH_SIZE'))
-            ->get();
+        $batch = (int) ($this->option('batch') ?: config('whatsapp_queue.batch_size', 50));
+        $mode = $this->option('mode') ?: null;
+
+        if ($this->option('dry-run')) {
+            return $this->dryRun($selector, $batch, $mode);
+        }
+
+        // Shared fairly between users and sessions, already in dispatch order (see FairBatchPlanner)
+        $jobs = $selector->select($batch, $mode);
 
         if ($jobs->isEmpty()) {
             $this->warn('No pending jobs found in the database.');
-            return;
+            return Command::SUCCESS;
         }
 
         $this->info('Found ' . $jobs->count() . ' job(s). Dispatching...');
@@ -73,9 +80,38 @@ class envioQueue extends Command
                 Redis::expire("welcome:contact_campaign:user:{$job->user_id}", 60 * 60 * 24 * 15);
             }
 
+            // instance_id was chosen by the selector (the session that should send this message)
             $job->update(['status' => 'fila']);
             \App\Jobs\EnviarMensagemJob::dispatch($job)->onQueue('disparos');
         }
+        return Command::SUCCESS;
+    }
+
+    private function dryRun(FairQueueSelector $selector, int $batch, ?string $mode): int
+    {
+        $rows = $selector->describe($batch, $mode);
+
+        if (!$rows) {
+            $this->warn('Nothing to dispatch.');
+
+            return Command::SUCCESS;
+        }
+
+        $names = \App\Models\User::whereIn('id', array_column($rows, 'user_id'))->pluck('name', 'id');
+
+        $this->table(
+            ['User', 'Sessions', 'Pending', 'Already queued', 'Selected', 'Per session'],
+            array_map(fn ($r) => [
+                ($names[$r['user_id']] ?? '?') . " (#{$r['user_id']})",
+                $r['sessions'],
+                $r['pending'],
+                $r['inflight'],
+                $r['selected'],
+                collect($r['per_session'])->map(fn ($n, $id) => "#{$id}: {$n}")->implode(', '),
+            ], $rows)
+        );
+        $this->info('Batch size ' . $batch . ', total selected ' . array_sum(array_column($rows, 'selected')) . '. Nothing was dispatched (--dry-run).');
+
         return Command::SUCCESS;
     }
 

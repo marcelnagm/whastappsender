@@ -516,7 +516,45 @@ presence, history import, new chat by phone number (Brazilian 9th digit handled 
 **Optional `.env` settings** (defaults in `config/chat.php`): `CHAT_POLL_MESSAGES_MS`, `CHAT_POLL_CHATS_MS`,
 `CHAT_MAX_UPLOAD_KB`, `CHAT_PAUSE_AI_ON_REPLY`, `CHAT_SEND_READ_RECEIPTS`.
 
+**Profile pictures.** WhatsApp CDN links are signed and expire, so the picture is downloaded in the background
+(`FetchChatAvatarJob`, `default` queue), stored in `storage/app/chat-avatars/` and served by Laravel at `/chat/avatar/{chat}`
+(owner only). A contact without a picture is checked again after 7 days; a temporary failure (instance offline, timeout) is
+retried after 30 minutes. Run `php artisan migrate` to add the cache columns. Without a picture the UI shows the initials.
+
 > Groups, broadcasts and channels are intentionally ignored; the chat only handles one-to-one conversations.
+
+* * *
+
+## ⚖️ Fair Send Queue
+
+`php artisan whatsapp:queue` (scheduled hourly) used to take the oldest pending rows of **all** users, so one big campaign
+could take every slot. Each run now takes a **batch of 50** messages (`WHATSAPP_BATCH_SIZE`) shared fairly:
+
+- **Between users** (max-min fairness): every slot goes to the user with the smallest share so far. A user with a small
+  backlog gets all of it; the leftover goes to the others.
+- **By session** (`WHATSAPP_FAIRNESS=session`, default): a user's weight is the number of connected sessions, so 3 numbers
+  get about 3x the slots of 1 number. Use `user` for equal shares per user, or `fifo` for the legacy behaviour.
+- **Already queued messages count**: what a user still has waiting in the queue (last 24h) is subtracted from their share.
+- **Between a user's sessions**: slots go to the session with the shortest queue, so numbers alternate.
+- **Order**: the batch is interleaved (A, B, A, B...), so nobody waits behind a long run of one user.
+
+Each message is bound to the session chosen by the planner (`whatsapp_job.instance_id`); if that session disconnects before
+sending, the job falls back to another connected session of the same user. Users with no connected session are skipped and
+their messages stay `pendente`.
+
+```bash
+php artisan whatsapp:queue --dry-run          # show the split per user/session without dispatching
+php artisan whatsapp:queue --batch=100 --mode=user
+```
+
+`.env`: `WHATSAPP_BATCH_SIZE` (50), `WHATSAPP_FAIRNESS` (session|user|fifo), `WHATSAPP_QUEUE_CRON` (`0 * * * *`).
+Manual retries from the logs screen still dispatch directly and bypass the planner.
+
+* * *
+
+## 🧪 Tests
+
+`vendor/bin/phpunit` (in-memory SQLite, no external services): fair queue planner and command, chat backend and avatar caching.
 
 * * *
 

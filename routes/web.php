@@ -46,6 +46,7 @@ Route::middleware('auth')->prefix('chat')->name('chat.')->group(function () {
 
     Route::get('/', [$chat, 'index'])->name('index');
     Route::get('/media/{message}', [$chat, 'media'])->name('media');
+    Route::get('/avatar/{chat}', [$chat, 'avatar'])->name('avatar');
 
     Route::prefix('api')->name('api.')->group(function () use ($chat) {
         Route::get('/chats', [$chat, 'chats'])->name('chats');

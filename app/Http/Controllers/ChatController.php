@@ -9,6 +9,7 @@ use App\Models\Chat;
 use App\Models\ChatMessage;
 use App\Models\Contact;
 use App\Models\Instance;
+use App\Services\Chat\ChatAvatarService;
 use App\Services\Chat\ChatMessageRecorder;
 use App\Services\Chat\EvolutionChatClient;
 use Carbon\Carbon;
@@ -27,7 +28,8 @@ class ChatController extends Controller
 {
     public function __construct(
         private EvolutionChatClient $evolution,
-        private ChatMessageRecorder $recorder
+        private ChatMessageRecorder $recorder,
+        private ChatAvatarService $avatars
     ) {
     }
 
@@ -70,6 +72,9 @@ class ChatController extends Controller
             ->orderByDesc('last_message_at')
             ->limit(100)
             ->get();
+
+        // Pictures are fetched in the background; they show up on the next poll
+        $chats->filter(fn (Chat $c) => $this->avatars->isDue($c))->take(10)->each(fn (Chat $c) => $this->avatars->queueIfDue($c));
 
         return response()->json([
             'chats' => $chats->map(fn (Chat $c) => $this->chatToApi($c))->values(),
@@ -171,7 +176,7 @@ class ChatController extends Controller
         }
 
         if ($initial) {
-            app()->terminating(fn () => $this->refreshAvatar($chat));
+            $this->avatars->queueIfDue($chat);
         }
 
         return response()->json([
@@ -398,6 +403,22 @@ class ChatController extends Controller
     // Media
     // ---------------------------------------------------------------------
 
+    /**
+     * Locally stored profile picture of a conversation.
+     */
+    public function avatar(Chat $chat)
+    {
+        $this->authorizeChat($chat);
+        abort_unless($chat->avatar_path && Storage::exists($chat->avatar_path), 404);
+
+        return response()->file(Storage::path($chat->avatar_path), [
+            'Content-Type' => ChatAvatarService::mimeForPath($chat->avatar_path),
+            'Cache-Control' => 'private, max-age=86400',
+            'X-Content-Type-Options' => 'nosniff',
+            'Content-Security-Policy' => "default-src 'none'; sandbox",
+        ]);
+    }
+
     public function media(ChatMessage $message)
     {
         $this->authorizeMessage($message);
@@ -591,19 +612,6 @@ class ChatController extends Controller
             'sticker' => '🏷️',
             default => '',
         };
-    }
-
-    private function refreshAvatar(Chat $chat): void
-    {
-        if (!$chat->phone) {
-            return;
-        }
-        if ($chat->avatar_checked_at && $chat->avatar_checked_at->gt(now()->subDays(7))) {
-            return;
-        }
-
-        $url = $this->evolution->profilePictureUrl($chat->instance->instance_name, $chat->phone);
-        $chat->update(['avatar_url' => $url, 'avatar_checked_at' => now()]);
     }
 
     private function normalizeMime(?string $mime): string

@@ -160,19 +160,26 @@ class EvolutionChatClient
         }
     }
 
-    public function profilePictureUrl(string $instance, string $number): ?string
+    /**
+     * @return array{status:string,url:?string} status: ok (url given) | none (no picture) | error (try again later)
+     */
+    public function fetchProfilePicture(string $instance, string $number): array
     {
         try {
-            $response = $this->http(6)->post("/chat/fetchProfilePictureUrl/{$instance}", ['number' => $number]);
-            if ($response->failed()) {
-                return null;
-            }
-            $data = $response->json();
-
-            return $data['profilePictureUrl'] ?? $data['url'] ?? null;
+            $response = $this->http(10)->post("/chat/fetchProfilePictureUrl/{$instance}", ['number' => $number]);
         } catch (\Throwable $e) {
-            return null;
+            return ['status' => 'error', 'url' => null];
         }
+
+        if ($response->successful()) {
+            $data = (array) $response->json();
+            $url = $data['profilePictureUrl'] ?? $data['url'] ?? null;
+
+            return $url ? ['status' => 'ok', 'url' => (string) $url] : ['status' => 'none', 'url' => null];
+        }
+
+        // Evolution answers 400 when it cannot resolve a picture for that number
+        return ['status' => $response->status() === 400 ? 'none' : 'error', 'url' => null];
     }
 
     public function findChats(string $instance): array

@@ -14,7 +14,9 @@ class Chat extends Model
         'contact_id',
         'name',
         'avatar_url',
+        'avatar_path',
         'avatar_checked_at',
+        'avatar_next_check_at',
         'unread_count',
         'archived',
         'last_message_id',
@@ -31,6 +33,7 @@ class Chat extends Model
         'unread_count' => 'integer',
         'last_message_at' => 'datetime',
         'avatar_checked_at' => 'datetime',
+        'avatar_next_check_at' => 'datetime',
     ];
 
     public function user()
@@ -74,8 +77,16 @@ class Chat extends Model
         return $this->phone ? '+' . $this->phone : $this->remote_jid;
     }
 
+    /**
+     * URL of the locally stored profile picture (null while there is none: the UI shows initials).
+     * The version query changes whenever the picture is refreshed, so browsers drop their cached copy.
+     */
     public function avatar(): ?string
     {
-        return $this->avatar_url ?: optional($this->contact)->profile_url;
+        if (!$this->avatar_path) {
+            return null;
+        }
+
+        return route('chat.avatar', $this->id) . '?v=' . optional($this->avatar_checked_at)->timestamp;
     }
 }

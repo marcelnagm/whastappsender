@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Models\Instance;
 use App\Models\WhatsappJob;
 use Exception;
 use Illuminate\Bus\Queueable;
@@ -51,7 +52,7 @@ class EnviarMensagemJob implements ShouldQueue
 
         try {
             $user = $job->user()->first();
-            $instance = $user->getInstanceActive();
+            $instance = $user ? $this->resolveInstance($user, $job) : null;
             if (!$user || !$instance) {
                 $this->registrarErro("User or instance phone not configured.", null);
                 return;
@@ -143,6 +144,26 @@ class EnviarMensagemJob implements ShouldQueue
             $this->registrarErro("Exception: " . $e->getMessage(), $instance);
             throw $e;
         }
+    }
+
+    /**
+     * Uses the session the fair queue assigned to this message when it is still connected,
+     * otherwise any connected session of the user.
+     */
+    private function resolveInstance($user, WhatsappJob $job): ?Instance
+    {
+        if ($job->instance_id) {
+            $assigned = Instance::where('id', $job->instance_id)
+                ->where('user_id', $user->id)
+                ->where('status', 'connected')
+                ->first();
+
+            if ($assigned) {
+                return $assigned;
+            }
+        }
+
+        return $user->getInstanceActive();
     }
 
     private function registrarErro($mensagem, $instance)
