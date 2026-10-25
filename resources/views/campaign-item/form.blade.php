@@ -106,6 +106,7 @@ Edit item: {{ $campaignItem->name }}
                                             <span class="input-group-text"><i class="bi bi-file-earmark-image"></i></span>
                                             <input type="file" name="file_upload" id="file_upload" class="form-control" accept="image/*">
                                         </div>
+                                        <div id="file_upload_error" class="small text-danger mt-1 d-none"></div>
                                         @if($campaignItem->image && !filter_var($campaignItem->image, FILTER_VALIDATE_URL))
                                         <div class="mt-2 small text-success">
                                             <i class="bi bi-check-circle"></i> Current file: <code>{{ basename($campaignItem->image) }}</code>
@@ -184,20 +185,60 @@ Edit item: {{ $campaignItem->name }}
     $(document).ready(function() {
         const $msgInput = $('#message_text'),
             $imgInput = $('#image_url'),
+            $fileInput = $('#file_upload'),
+            $toggle = $('#toggle_upload'),
             $previewText = $('#preview_text_content'),
             $previewImg = $('#preview_image_src'),
             $previewImgContainer = $('#preview_image_container'),
-            $charCount = $('#char_count');
+            $charCount = $('#char_count'),
+            MAX_UPLOAD = 5 * 1024 * 1024; // same limit as the server (5 MB)
+
+        let objectUrl = null;
+
+        // The image is shown only once it has loaded, and hidden again if it cannot be displayed
+        $previewImg.on('load', () => $previewImgContainer.removeClass('d-none'))
+                   .on('error', () => $previewImgContainer.addClass('d-none'));
+
+        function releaseObjectUrl() {
+            if (objectUrl) { URL.revokeObjectURL(objectUrl); objectUrl = null; }
+        }
+
+        // What the preview should show: the chosen file (upload mode) or the typed URL (link mode)
+        function mediaSource() {
+            if ($toggle.is(':checked')) {
+                const file = $fileInput[0].files && $fileInput[0].files[0];
+                if (!file || !file.type.startsWith('image/') || file.size > MAX_UPLOAD) return null;
+                if (!objectUrl || $fileInput.data('previewed') !== file) {
+                    releaseObjectUrl();
+                    objectUrl = URL.createObjectURL(file);
+                    $fileInput.data('previewed', file);
+                }
+                return objectUrl;
+            }
+            const url = ($imgInput.val() || '').trim();
+            return url.length > 5 ? url : null;
+        }
+
+        function checkFile() {
+            const file = $fileInput[0].files && $fileInput[0].files[0];
+            let msg = '';
+            if (file && !file.type.startsWith('image/')) msg = 'Only image files are supported.';
+            else if (file && file.size > MAX_UPLOAD) msg = 'The file is larger than 5 MB.';
+            $('#file_upload_error').text(msg).toggleClass('d-none', !msg);
+            $fileInput.toggleClass('is-invalid', !!msg);
+        }
 
         function updatePreview() {
-            let text = $msgInput.val(),
-                url = $imgInput.val();
+            const text = $msgInput.val();
             $previewText.text(text || "Message preview...");
             $charCount.text(text.length + " characters");
 
-            if (url && url.length > 5) {
-                $previewImg.attr('src', url).on('load', () => $previewImgContainer.removeClass('d-none')).on('error', () => $previewImgContainer.addClass('d-none'));
+            const src = mediaSource();
+            if (src) {
+                if ($previewImg.attr('src') !== src) $previewImg.attr('src', src);
+                else $previewImgContainer.removeClass('d-none'); // same image, already loaded
             } else {
+                $previewImg.removeAttr('src');
                 $previewImgContainer.addClass('d-none');
             }
         }
@@ -214,18 +255,24 @@ Edit item: {{ $campaignItem->name }}
 
         $msgInput.on('input propertychange', updatePreview);
         $imgInput.on('input propertychange', updatePreview);
+        $fileInput.on('change', function() { checkFile(); updatePreview(); });
+
+        $toggle.on('change', function() {
+            if ($(this).is(':checked')) {
+                $('#url_container').addClass('d-none');
+                $('#upload_container').removeClass('d-none');
+                $('#image_url').val(''); // Clear URL so upload takes priority
+            } else {
+                $('#url_container').removeClass('d-none');
+                $('#upload_container').addClass('d-none');
+                $fileInput.val('');
+                checkFile();
+            }
+            updatePreview();
+        });
+
+        $(window).on('beforeunload', releaseObjectUrl);
         updatePreview();
-    });
-    $('#toggle_upload').on('change', function() {
-        if ($(this).is(':checked')) {
-            $('#url_container').addClass('d-none');
-            $('#upload_container').removeClass('d-none');
-            $('#image_url').val(''); // Clear URL so upload takes priority
-        } else {
-            $('#url_container').removeClass('d-none');
-            $('#upload_container').addClass('d-none');
-            $('#file_upload').val('');
-        }
     });
 </script>
 
