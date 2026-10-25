@@ -607,6 +607,22 @@ payments manually. `plans.gateway_ids`, `subscriptions.gateway_*` and `invoices.
 
 * * *
 
+
+### Payment gateway (Mercado Pago)
+
+Configure it at **Admin → Payment gateway** (`/admin/payment-gateway`): enable it, paste the **access token** (stored encrypted, shown masked), the **public key** (needed for cards), and optionally the **webhook secret**. Choose which methods are offered (card / Pix), the Pix validity, the card statement name and whether customers can pick **automatic renewal** (and whether the box starts checked). "Test connection" calls Mercado Pago with the saved token.
+
+In Mercado Pago → Your integrations → Webhooks register `https://<APP_URL>/api/webhooks/mercadopago` with the topics `payment`, `subscription_authorized_payment` and `subscription_preapproval`. Notifications are stored in `webhook_events`, answered with 200 immediately and processed by the queue (`ProcessMercadoPagoEventJob`, retried with backoff). The resource is always re-fetched from the API, and a payment only settles an invoice when its `external_reference` is the invoice number and the amount covers it. With a webhook secret set, the `x-signature` header is verified too.
+
+How customers pay (`/billing/invoices/{id}`):
+
+| Method | One-time | "Renew automatically" |
+|---|---|---|
+| Credit card | card token created in the browser (MP.js, the card data never reaches this server) → `POST /v1/payments` | `POST /preapproval` (Mercado Pago charges every cycle; only when the invoice is the full plan price). The amount is kept in sync on plan changes; cancelling the subscription or turning renewal off cancels it |
+| Pix | `POST /v1/payments` → QR code + copy-and-paste, page polls until paid | **Mercado Pago has no automatic Pix debit**, so each renewal invoice gets a new Pix generated automatically and emailed to the customer |
+
+Access is only granted by `SubscriptionService::markInvoicePaid`, called from the webhook (or the immediate card response). Tests: `tests/Feature/PaymentGatewayTest.php` (all HTTP faked; nothing here was run against the real Mercado Pago API, so try it with `TEST-` credentials first).
+
 ## 🧪 Tests
 
 `vendor/bin/phpunit` (in-memory SQLite, no external services): fair queue planner and command, chat backend, avatar caching, billing lifecycle and plan enforcement.

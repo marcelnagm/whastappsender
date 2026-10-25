@@ -18,6 +18,7 @@ class Subscription extends Model
         'user_id', 'plan_id', 'status', 'cycle', 'started_at', 'trial_ends_at', 'current_period_start',
         'current_period_end', 'grace_ends_at', 'suspended_at', 'cancel_at_period_end', 'canceled_at', 'ends_at',
         'pending_plan_id', 'pending_cycle', 'gateway', 'gateway_customer_id', 'gateway_subscription_id',
+        'auto_renew', 'payment_method', 'gateway_status', 'payer_document',
     ];
 
     protected $casts = [
@@ -30,7 +31,11 @@ class Subscription extends Model
         'canceled_at' => 'datetime',
         'ends_at' => 'datetime',
         'cancel_at_period_end' => 'boolean',
+        'auto_renew' => 'boolean',
+        'payer_document' => 'encrypted',
     ];
+
+    protected $hidden = ['payer_document'];
 
     public function user()
     {

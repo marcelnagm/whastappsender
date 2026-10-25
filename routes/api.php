@@ -26,6 +26,7 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::post('/webhook/whatsapp', [WebhookController::class, 'receive']);
+Route::post('/webhooks/mercadopago', [\App\Http\Controllers\MercadoPagoWebhookController::class, 'receive'])->name('webhooks.mercadopago');
 
 Route::prefix('v1')->group(function () {
     Route::post('/auth/login', [AuthController::class, 'login']);

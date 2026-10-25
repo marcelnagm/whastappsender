@@ -79,6 +79,9 @@ Route::group(['namespace' => 'App\Http\Controllers', 'middleware' => ['auth', 's
     Route::post('/billing/cancel', [BillingController::class, 'cancel'])->name('billing.cancel');
     Route::post('/billing/resume', [BillingController::class, 'resume'])->name('billing.resume');
     Route::get('/billing/invoices/{invoice}', [BillingController::class, 'invoice'])->name('billing.invoice');
+    Route::post('/billing/invoices/{invoice}/pay', [BillingController::class, 'pay'])->name('billing.pay');
+    Route::get('/billing/invoices/{invoice}/status', [BillingController::class, 'status'])->name('billing.status');
+    Route::post('/billing/auto-renew/stop', [BillingController::class, 'stopAutoRenew'])->name('billing.autorenew.stop');
 
     Route::get('/me/profile', [UserController::class, 'editProfile'])->name('profile.edit');
     Route::post('/me/profile', [UserController::class, 'updateProfile'])->name('profile.update');
@@ -144,6 +147,10 @@ Route::group(['namespace' => 'App\Http\Controllers', 'middleware' => ['auth', 's
         Route::get('/billing', [AdminBillingController::class, 'index'])->name('admin.billing.index');
         Route::post('/billing/invoices/{invoice}/paid', [AdminBillingController::class, 'markPaid'])->name('admin.billing.paid');
         Route::post('/billing/grant', [AdminBillingController::class, 'grant'])->name('admin.billing.grant');
+
+        Route::get('/payment-gateway', [\App\Http\Controllers\AdminGatewayController::class, 'edit'])->name('admin.gateway.edit');
+        Route::post('/payment-gateway', [\App\Http\Controllers\AdminGatewayController::class, 'update'])->name('admin.gateway.update');
+        Route::post('/payment-gateway/test', [\App\Http\Controllers\AdminGatewayController::class, 'test'])->name('admin.gateway.test');
 
         Route::get('/panic/', [PanicController::class, 'index'])->name('panic.index');
         Route::post('/panic/clear', [PanicController::class, 'clear'])->name('admin.panic.clear');

@@ -94,6 +94,7 @@ trait CreatesTestSchema
             '2026_10_24_100000_create_chat_tables.php',
             '2026_10_24_120000_add_avatar_cache_to_chats_table.php',
             '2026_10_25_100000_create_billing_tables.php',
+            '2026_10_26_100000_create_payment_gateway_tables.php',
         ] as $file) {
             (require database_path('migrations/' . $file))->up();
         }

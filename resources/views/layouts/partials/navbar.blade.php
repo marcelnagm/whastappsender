@@ -59,6 +59,11 @@
                 <i class="bi bi-cash-coin me-2"></i>{{ __('Billing') }}
               </a>
             </li>
+            <li>
+              <a class="dropdown-item {{ request()->is('admin/payment-gateway*') ? 'active' : '' }}" href="{{ route('admin.gateway.edit') }}">
+                <i class="bi bi-credit-card-2-front me-2"></i>{{ __('Payment gateway') }}
+              </a>
+            </li>
             <li><a class="dropdown-item" href="#"><i class="bi bi-hdd-network me-2"></i>{{ __('Global Instances') }}</a></li>
             <li>
               <hr class="dropdown-divider bg-secondary">

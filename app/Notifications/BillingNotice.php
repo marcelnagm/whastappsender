@@ -25,6 +25,9 @@ class BillingNotice extends Notification
             'suspended' => __('Your account was blocked for non-payment'),
             'expired' => __('Your subscription ended'),
             'paid' => __('Payment received, thank you!'),
+            'pix_ready' => __('Your Pix for the next renewal is ready'),
+            'recurrence_canceled' => __('Automatic renewal was canceled'),
+            'payment_failed' => __('We could not charge your card'),
             default => __('Billing notice'),
         };
     }
@@ -43,6 +46,18 @@ class BillingNotice extends Notification
 
         if (!empty($this->data['grace_ends'])) {
             $mail->line(__('Full access continues until :date.', ['date' => $this->data['grace_ends']]));
+        }
+
+        if (!empty($this->data['pix_code'])) {
+            $mail->line(__('Pix copy and paste code:'))->line($this->data['pix_code']);
+        }
+
+        if ($this->type === 'recurrence_canceled') {
+            $mail->line(__('Your next invoice will need to be paid manually to keep your plan.'));
+        }
+
+        if ($this->type === 'payment_failed') {
+            $mail->line(__('The card issuer refused the automatic charge. We will try again; you can also pay the invoice now with another card or Pix.'));
         }
 
         if ($this->type === 'suspended') {

@@ -2,6 +2,9 @@
 
 namespace App\Services\Billing;
 
+use App\Events\Billing\InvoiceIssued;
+use App\Events\Billing\InvoicePaid;
+use App\Events\Billing\SubscriptionStopped;
 use App\Models\Invoice;
 use App\Models\Plan;
 use App\Models\Subscription;
@@ -142,6 +145,7 @@ class SubscriptionService
                 'cancel_at_period_end' => false, 'pending_plan_id' => null, 'pending_cycle' => null,
             ]);
             $this->log($sub, 'canceled', ['immediate' => true]);
+            event(new SubscriptionStopped($sub->fresh()));
 
             return $sub->fresh();
         }
@@ -149,6 +153,7 @@ class SubscriptionService
         $this->voidOpenInvoices($sub); // no renewal wanted
         $sub->update(['cancel_at_period_end' => true, 'canceled_at' => $now, 'pending_plan_id' => null, 'pending_cycle' => null]);
         $this->log($sub, 'cancel_scheduled', ['at' => $sub->current_period_end->toIso8601String()]);
+        event(new SubscriptionStopped($sub->fresh())); // the gateway must not charge the next cycle
 
         return $sub->fresh();
     }
@@ -169,13 +174,15 @@ class SubscriptionService
     public function markInvoicePaid(Invoice $invoice, array $meta = [], ?Carbon $paidAt = null): Invoice
     {
         $paidAt = $paidAt ?? now();
+        $newlyPaid = false;
 
-        return DB::transaction(function () use ($invoice, $meta, $paidAt) {
+        $paid = DB::transaction(function () use ($invoice, $meta, $paidAt, &$newlyPaid) {
             $invoice = Invoice::lockForUpdate()->findOrFail($invoice->id);
 
             if ($invoice->status === Invoice::PAID) {
                 return $invoice;
             }
+            $newlyPaid = true;
             if ($invoice->status === Invoice::VOID) {
                 throw new \LogicException("Invoice {$invoice->number} is void and cannot be paid.");
             }
@@ -219,6 +226,24 @@ class SubscriptionService
 
             return $invoice->fresh();
         });
+
+        // After the commit: listeners may talk to the payment gateway
+        if ($newlyPaid) {
+            event(new InvoicePaid($paid, $paid->subscription));
+        }
+
+        return $paid;
+    }
+
+    /** The invoice a payment received now should settle (issues the renewal invoice if it was not issued yet). */
+    public function openOrIssueRenewal(Subscription $sub): ?Invoice
+    {
+        $open = $sub->openInvoice();
+        if ($open || !$sub->current_period_end) {
+            return $open;
+        }
+
+        return $this->issueRenewal($sub);
     }
 
     /** Courtesy / migration: gives a plan for N days without charging (renewal invoices follow afterwards). */
@@ -337,6 +362,7 @@ class SubscriptionService
                     $sub->update(['status' => Subscription::EXPIRED, 'ends_at' => $until]);
                     $this->log($sub, 'expired');
                     $this->notify($sub, 'expired');
+                    event(new SubscriptionStopped($sub->fresh()));
 
                     return 'expired';
                 }
@@ -381,6 +407,7 @@ class SubscriptionService
         ]);
 
         $this->log($sub, 'invoice_issued', ['invoice' => $invoice->number, 'amount_cents' => $invoice->amount_cents]);
+        event(new InvoiceIssued($invoice, $sub->fresh()));
 
         // Fully covered by credit: nothing to collect
         if ($invoice->amount_cents === 0) {
