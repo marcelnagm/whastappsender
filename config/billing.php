@@ -43,6 +43,7 @@ return [
                 'welcome_campaign' => false,
                 'warmup' => false,
                 'api_access' => false,
+                'mcp_access' => false,
                 'priority_support' => false,
             ],
             'limits' => [
@@ -62,6 +63,7 @@ return [
                 'welcome_campaign' => false,
                 'warmup' => false,
                 'api_access' => false,
+                'mcp_access' => false,
                 'priority_support' => false,
             ],
             'limits' => [
@@ -81,6 +83,7 @@ return [
                 'welcome_campaign' => true,
                 'warmup' => true,
                 'api_access' => true,
+                'mcp_access' => false,
                 'priority_support' => false,
             ],
             'limits' => [
@@ -100,6 +103,7 @@ return [
                 'welcome_campaign' => true,
                 'warmup' => true,
                 'api_access' => true,
+                'mcp_access' => true,
                 'priority_support' => true,
             ],
             'limits' => [

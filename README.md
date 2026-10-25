@@ -569,7 +569,8 @@ Before that, give existing customers time with `php artisan billing:grant all pr
 | WhatsApp Chat (CRM) | - | yes | yes | yes |
 | Welcome campaign (AI first contact) | - | - | yes | yes |
 | Chip warmup | - | - | yes | yes |
-| API and AI agent tools | - | - | yes | yes |
+| REST API | - | - | yes | yes |
+| MCP / AI agent tools (`/api/v1/tools`) | - | - | - | yes |
 | Priority support | - | - | - | yes |
 
 Prices, limits and features live in `config/billing.php` and are copied to the `plans` table (`php artisan billing:sync-plans`,
@@ -596,7 +597,7 @@ active + cancel_at_period_end ── period ends ──► canceled = Free
 
 **Where the plan is enforced:** instances (number limit, warmup), contacts (create and spreadsheet import), the send queue (monthly
 quota is part of the fair queue, blocked users get no slots), `EnviarMensagemJob`, AI auto-replies, welcome campaigns, the chat
-(`plan.feature:chat`) and the API/tokens (`plan.feature:api_access`). Administrators are never limited.
+(`plan.feature:chat`), the API/tokens (`plan.feature:api_access`) and the AI agent tools / MCP endpoints (`plan.feature:mcp_access`, top plan only). Administrators are never limited.
 
 **Screens:** `/billing` (plan, usage, plans, invoices; cancel/resume), `/billing/invoices/{id}`, the dashboard card and the pricing
 section of the public landing page; admins get **Admin → Billing** to see subscriptions, confirm a payment by hand and grant a plan.

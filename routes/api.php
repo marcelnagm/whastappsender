@@ -93,9 +93,12 @@ Route::prefix('v1')->group(function () {
         Route::post('/notifications/read', [NotificationController::class, 'markRead']);
 
         // Tool Call Chain (AI agents)
-        Route::get('/tools', [ToolsController::class, 'index']);
-        Route::post('/tools/call', [ToolsController::class, 'call']);
-        Route::post('/tools/chain', [ToolsController::class, 'chain']);
+        // Highest plan only (feature mcp_access); the rest of the API stays on api_access
+        Route::middleware('plan.feature:mcp_access')->group(function () {
+            Route::get('/tools', [ToolsController::class, 'index']);
+            Route::post('/tools/call', [ToolsController::class, 'call']);
+            Route::post('/tools/chain', [ToolsController::class, 'chain']);
+        });
 
         // Admin
         Route::middleware('admin.api')->prefix('admin')->group(function () {

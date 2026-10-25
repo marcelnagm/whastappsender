@@ -64,7 +64,8 @@ class Plan extends Model
             'ai_auto_reply' => __('AI auto-reply'),
             'welcome_campaign' => __('Welcome campaign (AI first contact)'),
             'warmup' => __('Chip warmup'),
-            'api_access' => __('API and AI agent tools'),
+            'api_access' => __('REST API'),
+            'mcp_access' => __('MCP / AI agent tools'),
             'priority_support' => __('Priority support'),
         ];
     }

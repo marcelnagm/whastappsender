@@ -66,7 +66,7 @@ class BillingEnforcementTest extends TestCase
             }
         }
 
-        return $user;
+        return $user->fresh(); // pick up DB defaults (active = true)
     }
 
     private function connect(User $user, string $name): Instance
@@ -204,6 +204,24 @@ class BillingEnforcementTest extends TestCase
 
         $this->actingAs($starter)->post(route('profile.api-tokens.create'), ['name' => 't'])->assertRedirect(route('billing.index'));
         $this->actingAs($pro)->post(route('profile.api-tokens.create'), ['name' => 't'])->assertSessionMissing('plan_error');
+    }
+
+    public function test_agent_tools_mcp_are_only_for_the_top_plan(): void
+    {
+        $starter = $this->user('st', 'starter');
+        $pro = $this->user('pr', 'pro');
+        $business = $this->user('bu', 'business');
+
+        \Laravel\Sanctum\Sanctum::actingAs($pro);
+        $this->getJson('/api/v1/dashboard')->assertOk(); // REST API stays on Pro
+        $this->getJson('/api/v1/tools')->assertStatus(402)->assertJsonPath('key', 'mcp_access');
+        $this->postJson('/api/v1/tools/call', [])->assertStatus(402);
+
+        \Laravel\Sanctum\Sanctum::actingAs($starter);
+        $this->getJson('/api/v1/tools')->assertStatus(402)->assertJsonPath('key', 'api_access');
+
+        \Laravel\Sanctum\Sanctum::actingAs($business);
+        $this->getJson('/api/v1/tools')->assertOk();
     }
 
     // ---- Limits at creation ------------------------------------------------------------------------

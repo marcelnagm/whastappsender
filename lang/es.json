@@ -229,5 +229,7 @@
     "See plans": "Ver planes",
     "Billing notice": "Aviso de facturación",
     "Cancel subscription": "Cancelar suscripción",
-    "Period ends": "Fin del período"
+    "Period ends": "Fin del período",
+    "REST API": "API REST",
+    "MCP / AI agent tools": "MCP / herramientas para agentes de IA"
 }
