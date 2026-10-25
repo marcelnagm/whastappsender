@@ -4,6 +4,11 @@
 ![Laravel Version](https://img.shields.io/badge/laravel-%5E9.0-ff2d20?style=for-the-badge&logo=laravel&logoColor=white)
 ![AI-Powered](https://img.shields.io/badge/AI-Powered_by_GROQ_LPU-orange?style=for-the-badge&logo=openai)
 ![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white)
+[![GitHub stars](https://img.shields.io/github/stars/marcelnagm/whastappsender?style=for-the-badge&logo=github)](https://github.com/marcelnagm/whastappsender/stargazers)
+[![GitHub followers](https://img.shields.io/github/followers/marcelnagm?style=for-the-badge&logo=github&label=Follow)](https://github.com/marcelnagm)
+
+> ⭐ **Cloned or using this project? Please give it a star and/or follow [@marcelnagm](https://github.com/marcelnagm).**
+> It's free, takes two seconds and is what keeps the project maintained. Thank you! 🙏
 
 **SAMA Envios** is a mission-critical communication infrastructure that merges the power of **Laravel** with the ultra-fast **GROQ LPU** inference. Designed for enterprises that demand stable bulk messaging and **Intelligent AI Customer Service** that mimics human response speeds.
 
@@ -14,6 +19,9 @@
 | [Tool Call Chain API](#-tool-call-chain-api-ai-agents) | REST + AI agent tools |
 | [System Architecture](#-system-architecture-queues--warmup) | Queues, Warmup, production requirements |
 | [WhatsApp Chat (CRM)](#-whatsapp-chat-crm) | WhatsApp Web-style inbox on top of Evolution API |
+| [Fair Send Queue](#️-fair-send-queue) | Balanced batches of 50 across users and sessions |
+| [Plans & Billing](#-plans--billing) | Freemium + 3 plans, due dates, blocking, Mercado Pago (Pix / card, recurrence) |
+| [Tests](#-tests) | PHPUnit suite |
 | [Installation](#️-installation--activation) | Local dev + Docker (`.docker/`) |
 
 ---
@@ -313,6 +321,7 @@ The `.docker/supervisor/conf.d/laravel-worker.conf` file ships with `worker-disp
 |---------|----------|---------|
 | `whatsapp:queue` | Hourly (if `WHATSAPP_AUTOSEND=true`) | Dispatches pending `WhatsappJob` rows to `disparos` |
 | `warmup:generate` | Daily at 08:00 (`America/Boa_Vista`) | Starts cross-chip warmup conversations |
+| `billing:run` | Hourly | Moves subscriptions through trial / past due / suspended / expired and issues renewal invoices |
 
 ---
 
@@ -554,8 +563,9 @@ Manual retries from the logs screen still dispatch directly and bypass the plann
 
 ## 💳 Plans & Billing
 
-Freemium + three paid plans. The foundation (plans, subscriptions, invoices, dates, blocking) is gateway-agnostic: the payment
-gateway integration only has to call `SubscriptionService::markInvoicePaid()` when money arrives.
+Freemium + three paid plans. The core (plans, subscriptions, invoices, dates, blocking) is gateway-agnostic: any payment
+source only has to call `SubscriptionService::markInvoicePaid()` when money arrives. Mercado Pago (Pix and card, with
+automatic renewal) is the integrated gateway, see [Payment gateway](#payment-gateway-mercado-pago).
 
 **Master switch:** `BILLING_ENABLED=false` (default) keeps today's behaviour: nobody is limited or blocked. Turn it on when the plans are announced.
 Before that, give existing customers time with `php artisan billing:grant all pro --days=30` (skips users who already have a subscription).
@@ -600,13 +610,7 @@ quota is part of the fair queue, blocked users get no slots), `EnviarMensagemJob
 (`plan.feature:chat`), the API/tokens (`plan.feature:api_access`) and the AI agent tools / MCP endpoints (`plan.feature:mcp_access`, top plan only). Administrators are never limited.
 
 **Screens:** `/billing` (plan, usage, plans, invoices; cancel/resume), `/billing/invoices/{id}`, the dashboard card and the pricing
-section of the public landing page; admins get **Admin → Billing** to see subscriptions, confirm a payment by hand and grant a plan.
-
-**Next step (not in this change):** the payment gateway. Open invoices currently show "online payment coming soon"; an admin confirms
-payments manually. `plans.gateway_ids`, `subscriptions.gateway_*` and `invoices.gateway_*` columns are ready for it.
-
-* * *
-
+section of the public landing page; admins get **Admin → Billing** to see subscriptions, confirm a payment by hand (e.g. bank transfer) and grant a plan, and **Admin → Payment gateway** for the checkout settings.
 
 ### Payment gateway (Mercado Pago)
 
@@ -621,11 +625,15 @@ How customers pay (`/billing/invoices/{id}`):
 | Credit card | card token created in the browser (MP.js, the card data never reaches this server) → `POST /v1/payments` | `POST /preapproval` (Mercado Pago charges every cycle; only when the invoice is the full plan price). The amount is kept in sync on plan changes; cancelling the subscription or turning renewal off cancels it |
 | Pix | `POST /v1/payments` → QR code + copy-and-paste, page polls until paid | **Mercado Pago has no automatic Pix debit**, so each renewal invoice gets a new Pix generated automatically and emailed to the customer |
 
-Access is only granted by `SubscriptionService::markInvoicePaid`, called from the webhook (or the immediate card response). Tests: `tests/Feature/PaymentGatewayTest.php` (all HTTP faked; nothing here was run against the real Mercado Pago API, so try it with `TEST-` credentials first).
+Access is only granted by `SubscriptionService::markInvoicePaid`, called from the webhook (or the immediate card response). Tests: `tests/Feature/PaymentGatewayTest.php` (all HTTP faked; the integration has not been exercised against the real Mercado Pago API yet, so try it with `TEST-` credentials first).
+
+Requirements: `APP_URL` must be public https (Mercado Pago only accepts such notification URLs), a queue worker must be running, and after pulling these changes run `php artisan migrate` and `php artisan billing:sync-plans --force` (adds the `mcp_access` feature to existing plans).
+
+* * *
 
 ## 🧪 Tests
 
-`vendor/bin/phpunit` (in-memory SQLite, no external services): fair queue planner and command, chat backend, avatar caching, billing lifecycle and plan enforcement.
+`vendor/bin/phpunit` (in-memory SQLite, no external services): fair queue planner and command, chat backend, avatar caching, billing lifecycle and plan enforcement, and the Mercado Pago gateway (admin settings, Pix, card, recurrence, webhook; HTTP faked).
 
 * * *
 
@@ -639,6 +647,9 @@ Access is only granted by `SubscriptionService::markInvoicePaid`, called from th
 * ✅ **High-Fidelity Multimedia:** Support for Images, PDFs, Videos, and Audio (OGG format to simulate human recording).
 * ✅ **WhatsApp Chat (CRM):** WhatsApp Web-style inbox with text, media, voice notes, replies, reactions and a CRM side panel.
 * ✅ **Multi-language UI:** English, Portuguese (BR) and Spanish with a language selector (`config/languages.php`).
+* ✅ **Fair Send Queue:** every batch of 50 messages is balanced across users and sessions, so no campaign starves the others.
+* ✅ **Plans & Billing:** freemium + 3 plans, trial, due dates, grace period and read-only blocking for non-payment.
+* ✅ **Payments (Mercado Pago):** Pix and credit card, one-time or automatic renewal, configured from the admin area.
 * ✅ **Audit Logs:** Full history of every AI interaction and every broadcast attempt.
 
 ---
@@ -659,6 +670,7 @@ Access is only granted by `SubscriptionService::markInvoicePaid`, called from th
 ### Option A — Local development (without Docker)
 
 ```bash
+git clone https://github.com/marcelnagm/whastappsender.git && cd whastappsender   # ⭐ star + follow @marcelnagm, thanks!
 composer install
 cp .env.example .env
 php artisan key:generate
@@ -666,7 +678,9 @@ php artisan migrate --seed
 php artisan queue:work --queue=default,disparos,warmup --sleep=3 --tries=3
 ```
 
-Add your `GROQ_API_KEY` to `.env` before running migrations.
+Add your `GROQ_API_KEY` to `.env` before running migrations. Billing is off by default (`BILLING_ENABLED=false`); the payment gateway is configured in the admin area after logging in (**Admin → Payment gateway**). For the scheduled tasks (queue dispatch, warmup, billing) run `php artisan schedule:work` locally or the cron entry described in [Laravel Scheduler](#c-laravel-scheduler-cron).
+
+> ⭐ Found it useful? Star the repo and/or follow [@marcelnagm](https://github.com/marcelnagm) on GitHub.
 
 ### Option B — Production with Docker (`.docker/`)
 
