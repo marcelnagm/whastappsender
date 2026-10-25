@@ -22,7 +22,7 @@
 | [Fair Send Queue](#️-fair-send-queue) | Balanced batches of 50 across users and sessions |
 | [Plans & Billing](#-plans--billing) | Freemium + 3 plans, due dates, blocking, Mercado Pago (Pix / card, recurrence) |
 | [Tests](#-tests) | PHPUnit suite |
-| [Installation](#️-installation--activation) | Local dev + Docker (`.docker/`) |
+| [Installation](#️-installation--activation) | `install.sh` (local / VPS / update), manual steps, Docker (`.docker/`) |
 
 ---
 
@@ -666,6 +666,31 @@ Requirements: `APP_URL` must be public https (Mercado Pago only accepts such not
 ---
 
 ## ⚙️ Installation & Activation
+
+### Quick install (`install.sh`)
+
+```bash
+git clone https://github.com/marcelnagm/whastappsender.git && cd whastappsender   # ⭐ star + follow @marcelnagm, thanks!
+
+# Local machine (PHP 8.1+, Composer and MySQL already installed)
+./install.sh local --create-db --admin-email you@example.com --start
+
+# Fresh Debian/Ubuntu VPS (as root): Nginx + PHP-FPM + MySQL + Supervisor workers + scheduler + Let's Encrypt SSL
+sudo ./install.sh vps --domain sama.example.com --email you@example.com --admin-email you@example.com
+
+# After every `git pull`
+./install.sh update          # use sudo on the VPS (it also restarts the workers)
+```
+
+Run `./install.sh --help` for every option (`--db-*`, `--evolution-*`, `--groq-key`, `--no-ssl`, `--yes` for no questions...).
+What it does: checks PHP and extensions, installs dependencies, writes `.env` (a **new `APP_KEY` on every fresh install**; production
+settings and a generated database password on the VPS), migrates the database, creates the first administrator
+(`php artisan user:admin you@example.com`, password generated when omitted), and on the VPS configures Nginx, PHP limits, the four
+Supervisor processes (`disparos`, `default`, `warmup`, `schedule`) and HTTPS. It is safe to run again: an existing `.env` keeps its key and
+values. The Evolution API is **not** installed by the script: point `WHATSAPP_*` at your instance (or use the Docker stack below).
+On a VPS clone the project somewhere Nginx can read, e.g. `/var/www/sama`, and point the domain's DNS to the server before running.
+
+The manual steps below do the same by hand.
 
 ### Option A — Local development (without Docker)
 
