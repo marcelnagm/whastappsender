@@ -3,6 +3,7 @@
 namespace App\Exceptions;
 
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
+use App\Exceptions\PlanLimitException;
 use Throwable;
 
 class Handler extends ExceptionHandler
@@ -36,6 +37,21 @@ class Handler extends ExceptionHandler
     {
         $this->reportable(function (Throwable $e) {
             //
+        });
+
+        // Plan limits / blocked account: a clear message instead of a 500
+        $this->renderable(function (PlanLimitException $e, $request) {
+            if ($request->expectsJson() || $request->is('api/*', 'chat/api/*')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $e->getMessage(),
+                    'code' => $e->reason,
+                    'key' => $e->key,
+                    'upgrade_url' => url('/billing'),
+                ], 402);
+            }
+
+            return redirect()->route('billing.index')->with('plan_error', $e->getMessage());
         });
     }
 }

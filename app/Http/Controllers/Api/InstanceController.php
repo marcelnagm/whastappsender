@@ -29,6 +29,8 @@ class InstanceController extends ApiController
             'phone' => 'required|string|max:20',
         ]);
 
+        app(\App\Services\Billing\Entitlements::class)->authorizeUsage(Auth::user(), 'instances');
+
         $instanceName = preg_replace('/[^0-9]/', '', $data['phone']);
 
         $instance = Auth::user()->instances()->create([
@@ -94,6 +96,10 @@ class InstanceController extends ApiController
     public function toggleWarmup(Instance $instance)
     {
         $this->authorizeOwner($instance);
+
+        if ($instance->warmup != 1) {
+            app(\App\Services\Billing\Entitlements::class)->authorizeFeature(Auth::user(), 'warmup');
+        }
 
         $instance->warmup = $instance->warmup == 1 ? 0 : 1;
         $instance->save();

@@ -116,6 +116,41 @@
             </div>
         </div>
     </div>
+
+    @if(isset($plans) && $plans->isNotEmpty())
+    <div class="mt-5 pt-4">
+        <div class="text-center mb-4">
+            <h2 class="text-white fw-bold">{{ __('Plans') }}</h2>
+            <p class="text-muted">{{ __('Start free. Upgrade when you grow.') }}</p>
+        </div>
+        <div class="row g-4">
+            @foreach($plans as $plan)
+                <div class="col-xl-3 col-md-6">
+                    <div class="card bg-dark border-secondary h-100 p-4 hover-lift {{ $plan->slug === 'pro' ? 'border-warning' : '' }}">
+                        <h5 class="text-white fw-bold mb-1">{{ $plan->name }}
+                            @if($plan->slug === 'pro')<span class="badge bg-warning text-dark ms-1">{{ __('Most popular') }}</span>@endif
+                        </h5>
+                        <div class="my-2 text-white">
+                            <span class="fs-2 fw-bold">{{ $plan->isFree() ? __('Free') : 'R$ ' . number_format($plan->price_cents / 100, 0, ',', '.') }}</span>
+                            @unless($plan->isFree())<span class="text-muted small">/ {{ __('month') }}</span>@endunless
+                        </div>
+                        <ul class="list-unstyled small flex-grow-1 text-light">
+                            @foreach(\App\Models\Plan::limitLabels() as $key => $label)
+                                <li class="mb-1"><i class="bi bi-check2 text-warning me-1"></i><strong>{{ $plan->limit($key) === null ? __('Unlimited') : number_format($plan->limit($key), 0, ',', '.') }}</strong> {{ strtolower($label) }}</li>
+                            @endforeach
+                            @foreach(\App\Models\Plan::featureLabels() as $key => $label)
+                                <li class="mb-1 {{ $plan->hasFeature($key) ? '' : 'text-muted' }}"><i class="bi {{ $plan->hasFeature($key) ? 'bi-check2 text-warning' : 'bi-x text-secondary' }} me-1"></i>{{ $label }}</li>
+                            @endforeach
+                        </ul>
+                        <a href="{{ route('register.show') }}" class="btn {{ $plan->slug === 'pro' ? 'btn-warning' : 'btn-outline-light' }} mt-2">
+                            {{ $plan->isFree() ? __('Start free') : ($plan->trial_days > 0 ? __('Try :n days free', ['n' => $plan->trial_days]) : __('Subscribe')) }}
+                        </a>
+                    </div>
+                </div>
+            @endforeach
+        </div>
+    </div>
+    @endif
 </div>
 
 <a href="https://wa.me/5595981115965?text=Hi!+I+have+questions+about+Sender+and+would+like+to+speak+with+someone."

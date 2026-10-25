@@ -28,6 +28,11 @@ class OrchestrateWelcomeCampaignJob implements ShouldQueue
             return;
         }
 
+        $owner = \App\Models\User::find($campaignItem->user_id);
+        if (!$owner || !app(\App\Services\Billing\Entitlements::class)->can($owner, 'welcome_campaign')) {
+            return; // plan does not include welcome campaigns
+        }
+
         $contacts = Contact::where('user_id', $campaignItem->user_id)
             ->whereNull('ignore_me')
             ->where('status', 'ativo')

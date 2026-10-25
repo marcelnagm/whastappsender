@@ -45,6 +45,9 @@
     @include('layouts.partials.navbar')
 
     <main class="container main-content fade-in">
+        @auth
+            @include('billing.partials.banner')
+        @endauth
         @yield('content')
     </main>
 

@@ -63,6 +63,13 @@ class AiAutoReplyService
             return;
         }
 
+        // Plan: AI replies need the feature and monthly quota; blocked accounts get no automatic replies
+        $entitlements = app(\App\Services\Billing\Entitlements::class);
+        if (!$entitlements->can($user, 'ai_auto_reply') || !$entitlements->allows($user, 'ai_replies_per_month')) {
+            $this->debugFlow('Aborted: plan does not allow another AI reply', ['user_id' => $user->id]);
+            return;
+        }
+
         $session = AiSession::firstOrCreate(
             [
                 'user_id' => $user->id,
@@ -120,6 +127,7 @@ class AiAutoReplyService
             'raw_payload' => $result['raw'] ?? null,
         ]);
 
+        $entitlements->consume($user, 'ai_replies');
         SendAiReplyJob::dispatch($outbound->id, $instance->id, $contact->id)->onQueue('disparos');
         $this->debugFlow('AI reply queued successfully', [
             'session_id' => $session->id,

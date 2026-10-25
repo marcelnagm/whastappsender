@@ -31,6 +31,9 @@ class InstanceController extends Controller
             'phone' => 'required|string|max:20', // Phone from the form
         ]);
 
+        // Plan: number of connected numbers (sessions)
+        app(\App\Services\Billing\Entitlements::class)->authorizeUsage(Auth::user(), 'instances');
+
         // Normalize phone into a numeric technical id
         $instanceName = preg_replace('/[^0-9]/', '', $request->phone);
 
@@ -64,6 +67,11 @@ class InstanceController extends Controller
     public function warmup(Instance $instance)
     {
         $this->authorizeOwner($instance);
+
+        // Plan: warmup is a paid feature (turning it off is always allowed)
+        if ($instance->warmup != 1) {
+            app(\App\Services\Billing\Entitlements::class)->authorizeFeature(Auth::user(), 'warmup');
+        }
 
         // Toggle warmup flag (0 or 1)
         $instance->warmup = $instance->warmup == 1 ? 0 : 1;

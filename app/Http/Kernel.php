@@ -61,5 +61,7 @@ class Kernel extends HttpKernel
         'admin' => \App\Http\Middleware\AdminMiddleware::class,
         'admin.api' => \App\Http\Middleware\AdminApiMiddleware::class,
         'api.active' => \App\Http\Middleware\EnsureUserIsActive::class,
+        'subscription.writable' => \App\Http\Middleware\EnsureSubscriptionWritable::class,
+        'plan.feature' => \App\Http\Middleware\RequireFeature::class,
     ];
 }

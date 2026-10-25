@@ -552,9 +552,63 @@ Manual retries from the logs screen still dispatch directly and bypass the plann
 
 * * *
 
+## 💳 Plans & Billing
+
+Freemium + three paid plans. The foundation (plans, subscriptions, invoices, dates, blocking) is gateway-agnostic: the payment
+gateway integration only has to call `SubscriptionService::markInvoicePaid()` when money arrives.
+
+**Master switch:** `BILLING_ENABLED=false` (default) keeps today's behaviour: nobody is limited or blocked. Turn it on when the plans are announced.
+Before that, give existing customers time with `php artisan billing:grant all pro --days=30` (skips users who already have a subscription).
+
+| | Free | Starter (R$ 49) | Pro (R$ 129) | Business (R$ 299) |
+|---|---|---|---|---|
+| Connected numbers | 1 | 2 | 5 | 15 |
+| Contacts | 100 | 2,000 | 20,000 | unlimited |
+| Messages / month | 100 | 2,000 | 10,000 | 50,000 |
+| AI auto-replies / month | - | - | 1,000 | 10,000 |
+| WhatsApp Chat (CRM) | - | yes | yes | yes |
+| Welcome campaign (AI first contact) | - | - | yes | yes |
+| Chip warmup | - | - | yes | yes |
+| API and AI agent tools | - | - | yes | yes |
+| Priority support | - | - | - | yes |
+
+Prices, limits and features live in `config/billing.php` and are copied to the `plans` table (`php artisan billing:sync-plans`,
+add `--force` to overwrite plans that were edited). Yearly = 10 monthly payments. The first paid subscription of a user gets a
+7-day free trial (`BILLING_TRIAL_DAYS`).
+
+**Subscription dates and states**
+
+```
+pending ──paid──► active ◄──paid── past_due ◄── period ends unpaid ── active / trialing
+trialing ─paid─►                      │ BILLING_GRACE_DAYS (3): full access, warning banner
+                                      ▼
+                                  suspended: BLOCKED (read-only) ── BILLING_SUSPENSION_DAYS (30) ──► expired = Free
+active + cancel_at_period_end ── period ends ──► canceled = Free
+```
+
+- The renewal invoice is issued `BILLING_INVOICE_DAYS_BEFORE` (5) days before the period ends and is due on the period end.
+- **Blocked** accounts (overdue past the grace days) are read-only: they can browse data and open the billing screens, but
+  creating/changing anything, sending messages, AI replies and the API are refused (HTTP 402 for JSON, redirect to `/billing` on the web).
+- Paying an invoice always restores access. After a suspension the new period starts on the payment date.
+- Upgrades are charged immediately with credit for the unused time; downgrades and cancellation apply at the end of the paid period.
+- `php artisan billing:run` (scheduled hourly) moves every subscription through these states and issues renewal invoices.
+- Every transition is stored in `subscription_events`; users get an e-mail and an in-app notice for new invoices, overdue, blocked and paid.
+
+**Where the plan is enforced:** instances (number limit, warmup), contacts (create and spreadsheet import), the send queue (monthly
+quota is part of the fair queue, blocked users get no slots), `EnviarMensagemJob`, AI auto-replies, welcome campaigns, the chat
+(`plan.feature:chat`) and the API/tokens (`plan.feature:api_access`). Administrators are never limited.
+
+**Screens:** `/billing` (plan, usage, plans, invoices; cancel/resume), `/billing/invoices/{id}`, the dashboard card and the pricing
+section of the public landing page; admins get **Admin → Billing** to see subscriptions, confirm a payment by hand and grant a plan.
+
+**Next step (not in this change):** the payment gateway. Open invoices currently show "online payment coming soon"; an admin confirms
+payments manually. `plans.gateway_ids`, `subscriptions.gateway_*` and `invoices.gateway_*` columns are ready for it.
+
+* * *
+
 ## 🧪 Tests
 
-`vendor/bin/phpunit` (in-memory SQLite, no external services): fair queue planner and command, chat backend and avatar caching.
+`vendor/bin/phpunit` (in-memory SQLite, no external services): fair queue planner and command, chat backend, avatar caching, billing lifecycle and plan enforcement.
 
 * * *
 

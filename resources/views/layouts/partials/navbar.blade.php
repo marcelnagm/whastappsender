@@ -35,6 +35,9 @@
           <a href="{{route('campaign-items.index')}}" class="nav-link text-white"><i class="bi bi-list-check me-1"></i> {{ __('Items') }}</a>
         </li>
         <li class="nav-item">
+          <a href="{{ route('billing.index') }}" class="nav-link {{ request()->is('billing*') ? 'active text-secondary' : 'text-white' }}"><i class="bi bi-credit-card me-1"></i> {{ __('Plan') }}</a>
+        </li>
+        <li class="nav-item">
           <a href="{{ route('profile.edit') }}" class="nav-link {{ request()->is('me/profile') ? 'active text-secondary' : 'text-white' }}">
             <i class="bi bi-person-lines-fill me-1"></i> {{ __('My Profile') }}
           </a>
@@ -49,6 +52,11 @@
             <li>
               <a class="dropdown-item {{ request()->is('admin/users*') ? 'active' : '' }}" href="{{ route('users.index') }}">
                 <i class="bi bi-person-gear me-2"></i>{{ __('User Management') }}
+              </a>
+            </li>
+            <li>
+              <a class="dropdown-item {{ request()->is('admin/billing*') ? 'active' : '' }}" href="{{ route('admin.billing.index') }}">
+                <i class="bi bi-cash-coin me-2"></i>{{ __('Billing') }}
               </a>
             </li>
             <li><a class="dropdown-item" href="#"><i class="bi bi-hdd-network me-2"></i>{{ __('Global Instances') }}</a></li>

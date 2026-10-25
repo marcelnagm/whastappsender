@@ -9,6 +9,13 @@ use Maatwebsite\Excel\Concerns\WithHeadingRow;
 
 class ContactsImport implements ToModel , WithHeadingRow
 {
+    /** Rows left out because the plan's contact limit was reached */
+    public int $skipped = 0;
+
+    /** Contacts the plan still allows (null = unlimited); read once, on the first valid row */
+    private ?int $room = null;
+    private bool $roomLoaded = false;
+
     /**
      * Maps spreadsheet rows to Contact models.
      * Supports multiple heading aliases (Portuguese/English) for legacy files.
@@ -38,6 +45,19 @@ class ContactsImport implements ToModel , WithHeadingRow
             $data['email'] = $row['e-mail'];
         if (!isset($data['contact']) || !isset($data['name']))
             return null;
+
+        if (!$this->roomLoaded) {
+            $this->room = app(\App\Services\Billing\Entitlements::class)->remaining(Auth::user(), 'contacts');
+            $this->roomLoaded = true;
+        }
+        if ($this->room !== null) {
+            if ($this->room <= 0) {
+                $this->skipped++;
+
+                return null;
+            }
+            $this->room--;
+        }
 
         return new Contact($data);
     }
