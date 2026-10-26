@@ -65,7 +65,7 @@ class CampaignItemController extends Controller
     public function store(Request $request)
     {
         $request->validate(array_merge(CampaignItem::$rules, [
-            'file_upload' => 'nullable|image|max:5120', // Max ~5MB
+            'file_upload' => CampaignItem::uploadRule(),
         ]));
 
         $data = $request->all();
@@ -181,7 +181,7 @@ class CampaignItemController extends Controller
     public function update(Request $request, CampaignItem $campaignItem)
     {
         $request->validate(array_merge(CampaignItem::$rules, [
-            'file_upload' => 'nullable|image|max:5120',
+            'file_upload' => CampaignItem::uploadRule(),
         ]));
 
         $data = $request->all();

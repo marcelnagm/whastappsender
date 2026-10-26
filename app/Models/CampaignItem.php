@@ -36,8 +36,43 @@ class CampaignItem extends Model
     const OPERATION = [
         'text' => '/message/sendText/',
         'image' => '/message/sendMedia/',
-        'video' => '/message/sendMedia/'
+        'video' => '/message/sendMedia/',
+        'document' => '/message/sendMedia/',
+        'audio' => '/message/sendWhatsAppAudio/', // voice note: WhatsApp has no caption for audio
     ];
+
+    /** Largest upload accepted (KB). WhatsApp's own limit for media is 16 MB. */
+    const MAX_UPLOAD_KB = 16384;
+
+    /** extension => [kind, mime type]. Used to validate uploads, pick the Evolution endpoint and build the payload. */
+    const MEDIA_TYPES = [
+        'jpg' => ['image', 'image/jpeg'], 'jpeg' => ['image', 'image/jpeg'], 'png' => ['image', 'image/png'],
+        'gif' => ['image', 'image/gif'], 'webp' => ['image', 'image/webp'], 'bmp' => ['image', 'image/bmp'],
+        'mp4' => ['video', 'video/mp4'], 'webm' => ['video', 'video/webm'], 'mov' => ['video', 'video/quicktime'],
+        'avi' => ['video', 'video/x-msvideo'],
+        'mp3' => ['audio', 'audio/mpeg'], 'ogg' => ['audio', 'audio/ogg'], 'oga' => ['audio', 'audio/ogg'],
+        'opus' => ['audio', 'audio/ogg'], 'm4a' => ['audio', 'audio/mp4'], 'wav' => ['audio', 'audio/wav'],
+        'aac' => ['audio', 'audio/aac'],
+        'pdf' => ['document', 'application/pdf'], 'doc' => ['document', 'application/msword'],
+        'docx' => ['document', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
+        'xls' => ['document', 'application/vnd.ms-excel'],
+        'xlsx' => ['document', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'],
+        'ppt' => ['document', 'application/vnd.ms-powerpoint'],
+        'pptx' => ['document', 'application/vnd.openxmlformats-officedocument.presentationml.presentation'],
+        'txt' => ['document', 'text/plain'], 'csv' => ['document', 'text/csv'],
+    ];
+
+    /** Laravel validation rule for the upload field (same list for the web form and the API). */
+    public static function uploadRule(): string
+    {
+        return 'nullable|file|mimes:' . implode(',', array_keys(self::MEDIA_TYPES)) . '|max:' . self::MAX_UPLOAD_KB;
+    }
+
+    /** ext => kind, for the form's preview script */
+    public static function kindsByExtension(): array
+    {
+        return array_map(fn ($v) => $v[0], self::MEDIA_TYPES);
+    }
 
     protected $perPage = 20;
 
@@ -107,16 +142,30 @@ class CampaignItem extends Model
         $image = $this->image;
         // $client_phone .= '@s.whatsapp.net';
 
-        if (isset($this->image) && URL::isValidUrl($this->image)) {
+        $kind = $this->imageType();
 
-            $data  = [
-                'number' => $contact->contact,
-                "mediatype" => $this->imageType(),
-                "mimetype"  => "image/png",     // Should match the real media type/extension
-                "caption"   => $this->text,
-                "media"     => $this->image,
-                "fileName"  => "teste1.jpg"
-            ];
+        // Unknown extension: plain text, as before (the media endpoints need a known type)
+        if (isset($this->image) && URL::isValidUrl($this->image) && $kind !== 'text') {
+            $ext = $this->mediaExtension();
+            $mime = self::MEDIA_TYPES[$ext][1] ?? 'application/octet-stream';
+
+            if ($kind === 'audio') {
+                // sendWhatsAppAudio: a voice note, converted to OGG/Opus by Evolution (the text cannot go with it)
+                $data = [
+                    'number' => $contact->contact,
+                    'audio' => $this->image,
+                    'encoding' => true,
+                ];
+            } else {
+                $data = [
+                    'number' => $contact->contact,
+                    'mediatype' => $kind,
+                    'mimetype' => $mime,
+                    'caption' => $this->text,
+                    'media' => $this->image,
+                    'fileName' => $this->mediaFileName($kind, $ext),
+                ];
+            }
         } else
             $data = array(
                 'number' => $contact->contact,
@@ -127,36 +176,38 @@ class CampaignItem extends Model
     }
 
 
+    /** Lower-case extension of the media URL (query string ignored), or null */
+    public function mediaExtension(): ?string
+    {
+        if (!isset($this->image) || !filter_var($this->image, FILTER_VALIDATE_URL)) {
+            return null;
+        }
+
+        $path = parse_url($this->image, PHP_URL_PATH);
+
+        return $path ? (strtolower(pathinfo($path, PATHINFO_EXTENSION)) ?: null) : null;
+    }
+
+    /** image | video | audio | document, or 'text' when there is no (recognised) media */
     public function imageType()
     {
-        // 1. Basic check: image set and valid URL?
-        if (!isset($this->image) || !filter_var($this->image, FILTER_VALIDATE_URL)) {
-            return 'text';
+        $ext = $this->mediaExtension();
+
+        // Unknown extension: treat as a plain text payload
+        return ($ext && isset(self::MEDIA_TYPES[$ext])) ? self::MEDIA_TYPES[$ext][0] : 'text';
+    }
+
+    /** Documents arrive under the item's name ("catalogo.pdf"), not under the storage key ("15.pdf") */
+    private function mediaFileName(string $kind, ?string $ext): string
+    {
+        $path = (string) parse_url((string) $this->image, PHP_URL_PATH);
+        $base = rawurldecode(basename($path)) ?: 'file' . ($ext ? ".{$ext}" : '');
+
+        if ($kind === 'document' && $ext && ($slug = \Illuminate\Support\Str::slug((string) $this->name))) {
+            return "{$slug}.{$ext}";
         }
 
-        // 2. URL path only (strips ?width=1280, etc.)
-        $path = parse_url($this->image, PHP_URL_PATH);
-        if (!$path) {
-            return 'text';
-        }
-
-        // 3. Normalize extension to lowercase
-        $extension = strtolower(pathinfo($path, PATHINFO_EXTENSION));
-
-        // 4. Allowed type map
-        $formats = [
-            'image' => ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'],
-            'video' => ['mp4', 'webm', 'ogg', 'mov', 'avi'],
-        ];
-
-        foreach ($formats as $type => $extensions) {
-            if (in_array($extension, $extensions)) {
-                return $type;
-            }
-        }
-
-        // Unknown image/video — treat as plain text payload
-        return 'text';
+        return $base;
     }
 
 

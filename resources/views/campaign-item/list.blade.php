@@ -101,7 +101,15 @@
                             </td>
 
                             <td class="text-center py-3">
-                                @if($campaignItem->image)
+                                @php
+                                    $kind = $campaignItem->imageType();
+                                    $kindIcons = ['video' => 'bi-camera-video', 'audio' => 'bi-mic', 'document' => 'bi-file-earmark-text'];
+                                @endphp
+                                @if($campaignItem->image && !in_array($kind, ['image', 'text'], true))
+                                <a href="{{ $campaignItem->image }}" target="_blank" rel="noopener" class="badge bg-light text-dark border fw-normal px-2 py-1" title="{{ basename(parse_url($campaignItem->image, PHP_URL_PATH)) }}">
+                                    <i class="bi {{ $kindIcons[$kind] }} me-1"></i> {{ ucfirst($kind) }}
+                                </a>
+                                @elseif($campaignItem->image)
                                 <div class="media-tooltip-container">
                                     <div class="avatar-preview shadow-sm border">
                                         <img src="{{ $campaignItem->image }}" alt="Media" style="width: 32px; height: 32px; object-fit: cover; border-radius: 6px;">

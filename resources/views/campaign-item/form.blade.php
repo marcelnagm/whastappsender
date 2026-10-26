@@ -103,10 +103,11 @@ Edit item: {{ $campaignItem->name }}
                                     {{-- Option 2: file upload --}}
                                     <div id="upload_container" class="{{ $campaignItem->image && !filter_var($campaignItem->image, FILTER_VALIDATE_URL) ? '' : 'd-none' }}">
                                         <div class="input-group">
-                                            <span class="input-group-text"><i class="bi bi-file-earmark-image"></i></span>
-                                            <input type="file" name="file_upload" id="file_upload" class="form-control" accept="image/*">
+                                            <span class="input-group-text"><i class="bi bi-paperclip"></i></span>
+                                            <input type="file" name="file_upload" id="file_upload" class="form-control" accept="{{ '.' . implode(',.', array_keys(\App\Models\CampaignItem::MEDIA_TYPES)) }}">
                                         </div>
                                         <div id="file_upload_error" class="small text-danger mt-1 d-none"></div>
+                                        <div class="form-text">Image, video, audio (sent as a voice note, without the text), PDF or Office document, up to 16 MB.</div>
                                         @if($campaignItem->image && !filter_var($campaignItem->image, FILTER_VALIDATE_URL))
                                         <div class="mt-2 small text-success">
                                             <i class="bi bi-check-circle"></i> Current file: <code>{{ basename($campaignItem->image) }}</code>
@@ -150,7 +151,19 @@ Edit item: {{ $campaignItem->name }}
                             <div class="whatsapp-body p-4" style="background-color: #e5ddd5; background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); min-height: 400px;">
                                 <div class="message-bubble bg-white p-2 rounded-3 shadow-sm position-relative" style="max-width: 90%; margin-left: auto; background-color: #dcf8c6 !important;">
                                     <div id="preview_image_container" class="mb-2 d-none">
-                                        <img id="preview_image_src" src="" class="img-fluid rounded-2 w-100 shadow-sm">
+                                        <img id="preview_image_src" src="" class="img-fluid rounded-2 w-100 shadow-sm d-none" alt="">
+                                        <video id="preview_video_src" controls preload="metadata" class="w-100 rounded-2 shadow-sm d-none"></video>
+                                        <audio id="preview_audio_src" controls preload="metadata" class="w-100 d-none"></audio>
+                                        <div id="preview_doc" class="d-none">
+                                            <div class="d-flex align-items-center p-2 rounded-2 border bg-light">
+                                                <i class="bi bi-file-earmark-text fs-1 text-danger me-2"></i>
+                                                <div class="text-truncate">
+                                                    <div id="preview_doc_name" class="fw-bold small text-truncate"></div>
+                                                    <div id="preview_doc_meta" class="text-muted" style="font-size: .75rem;"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div id="preview_audio_note" class="small text-muted mt-1 d-none"><i class="bi bi-mic me-1"></i>Audio is sent as a voice note: the message text is not sent with it.</div>
                                     </div>
                                     <div class="px-2 pt-1 pb-4">
                                         <span id="preview_text_content" class="text-break" style="white-space: pre-wrap; font-size: 0.9rem;"></span>
@@ -183,64 +196,112 @@ Edit item: {{ $campaignItem->name }}
 @section('js')
 <script>
     $(document).ready(function() {
-        const $msgInput = $('#message_text'),
+        const KINDS = @json(\App\Models\CampaignItem::kindsByExtension()),
+            MAX_UPLOAD = {{ \App\Models\CampaignItem::MAX_UPLOAD_KB }} * 1024, // same limit as the server
+            $msgInput = $('#message_text'),
             $imgInput = $('#image_url'),
             $fileInput = $('#file_upload'),
             $toggle = $('#toggle_upload'),
             $previewText = $('#preview_text_content'),
-            $previewImg = $('#preview_image_src'),
-            $previewImgContainer = $('#preview_image_container'),
-            $charCount = $('#char_count'),
-            MAX_UPLOAD = 5 * 1024 * 1024; // same limit as the server (5 MB)
+            $container = $('#preview_image_container'),
+            $img = $('#preview_image_src'),
+            $video = $('#preview_video_src'),
+            $audio = $('#preview_audio_src'),
+            $doc = $('#preview_doc'),
+            $charCount = $('#char_count');
 
-        let objectUrl = null;
-
-        // The image is shown only once it has loaded, and hidden again if it cannot be displayed
-        $previewImg.on('load', () => $previewImgContainer.removeClass('d-none'))
-                   .on('error', () => $previewImgContainer.addClass('d-none'));
+        let objectUrl = null, shown = null;
 
         function releaseObjectUrl() {
             if (objectUrl) { URL.revokeObjectURL(objectUrl); objectUrl = null; }
+        }
+
+        function extOf(name) {
+            const m = /\.([a-z0-9]+)$/i.exec(name || '');
+            return m ? m[1].toLowerCase() : '';
+        }
+
+        function human(bytes) {
+            return bytes >= 1048576 ? (bytes / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(bytes / 1024)) + ' KB';
         }
 
         // What the preview should show: the chosen file (upload mode) or the typed URL (link mode)
         function mediaSource() {
             if ($toggle.is(':checked')) {
                 const file = $fileInput[0].files && $fileInput[0].files[0];
-                if (!file || !file.type.startsWith('image/') || file.size > MAX_UPLOAD) return null;
+                const kind = file && KINDS[extOf(file.name)];
+                if (!file || !kind || file.size > MAX_UPLOAD) return null;
                 if (!objectUrl || $fileInput.data('previewed') !== file) {
                     releaseObjectUrl();
                     objectUrl = URL.createObjectURL(file);
                     $fileInput.data('previewed', file);
                 }
-                return objectUrl;
+                return {kind: kind, src: objectUrl, name: file.name, size: file.size};
             }
             const url = ($imgInput.val() || '').trim();
-            return url.length > 5 ? url : null;
+            if (url.length <= 5) return null;
+            let path = url;
+            try { path = new URL(url).pathname; } catch (e) {}
+            // Unknown extension: assume an image (as the list screen does); the image is hidden if it does not load
+            return {kind: KINDS[extOf(path)] || 'image', src: url, name: decodeURIComponent(path.split('/').pop() || url), size: null};
         }
 
         function checkFile() {
             const file = $fileInput[0].files && $fileInput[0].files[0];
             let msg = '';
-            if (file && !file.type.startsWith('image/')) msg = 'Only image files are supported.';
-            else if (file && file.size > MAX_UPLOAD) msg = 'The file is larger than 5 MB.';
+            if (file && !KINDS[extOf(file.name)]) msg = 'This file type is not supported.';
+            else if (file && file.size > MAX_UPLOAD) msg = 'The file is larger than ' + human(MAX_UPLOAD) + '.';
             $('#file_upload_error').text(msg).toggleClass('d-none', !msg);
             $fileInput.toggleClass('is-invalid', !!msg);
         }
+
+        function hideMedia() {
+            $container.addClass('d-none');
+            $img.add($video).add($audio).add($doc).addClass('d-none');
+            $('#preview_audio_note').addClass('d-none');
+            // stop playback and free the old source
+            $video[0].pause(); $audio[0].pause();
+            $img.removeAttr('src'); $video.removeAttr('src'); $audio.removeAttr('src');
+            $video[0].load(); $audio[0].load();
+            shown = null;
+        }
+
+        function showMedia(m) {
+            const key = m.kind + '|' + m.src;
+            if (shown === key) return;       // already on screen
+            hideMedia();
+            shown = key;
+            if (m.kind === 'image') {
+                $img.removeClass('d-none').attr('src', m.src);
+                $container.addClass('d-none'); // revealed by the load handler, hidden again on error
+            } else if (m.kind === 'video') {
+                $video.removeClass('d-none').attr('src', m.src);
+                $container.removeClass('d-none');
+            } else if (m.kind === 'audio') {
+                $audio.removeClass('d-none').attr('src', m.src);
+                $('#preview_audio_note').removeClass('d-none');
+                $container.removeClass('d-none');
+            } else {
+                $('#preview_doc_name').text(m.name);
+                $('#preview_doc_meta').text((extOf(m.name) || 'file').toUpperCase() + (m.size ? ' · ' + human(m.size) : ''));
+                $doc.removeClass('d-none');
+                $container.removeClass('d-none');
+            }
+        }
+
+        // The image is shown only once it has loaded, and hidden again if it cannot be displayed
+        $img.on('load', () => $container.removeClass('d-none'))
+            .on('error', () => { if ($img.attr('src')) $container.addClass('d-none'); });
+        $video.on('error', () => { if ($video.attr('src')) $container.addClass('d-none'); });
+        $audio.on('error', () => { if ($audio.attr('src')) $container.addClass('d-none'); });
 
         function updatePreview() {
             const text = $msgInput.val();
             $previewText.text(text || "Message preview...");
             $charCount.text(text.length + " characters");
 
-            const src = mediaSource();
-            if (src) {
-                if ($previewImg.attr('src') !== src) $previewImg.attr('src', src);
-                else $previewImgContainer.removeClass('d-none'); // same image, already loaded
-            } else {
-                $previewImg.removeAttr('src');
-                $previewImgContainer.addClass('d-none');
-            }
+            const m = mediaSource();
+            if (m) showMedia(m); else hideMedia();
         }
 
         window.insertFormat = function(char) {

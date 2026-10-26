@@ -32,7 +32,7 @@ class CampaignItemController extends ApiController
         $data = $request->validate(array_merge(CampaignItem::$rules, [
             'campaign_id' => 'required|exists:campaign,id',
             'image_url' => 'nullable|url',
-            'file_upload' => 'nullable|image|max:5120',
+            'file_upload' => \App\Models\CampaignItem::uploadRule(),
             'welcome_enabled' => 'nullable|boolean',
         ]));
 
@@ -74,7 +74,7 @@ class CampaignItemController extends ApiController
 
         $data = $request->validate(array_merge(CampaignItem::$rules, [
             'image_url' => 'nullable|url',
-            'file_upload' => 'nullable|image|max:5120',
+            'file_upload' => \App\Models\CampaignItem::uploadRule(),
             'welcome_enabled' => 'nullable|boolean',
         ]));
 
