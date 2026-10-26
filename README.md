@@ -22,7 +22,7 @@
 | [Fair Send Queue](#️-fair-send-queue) | Balanced batches of 50 across users and sessions |
 | [Plans & Billing](#-plans--billing) | Freemium + 3 plans, due dates, blocking, Mercado Pago (Pix / card, recurrence) |
 | [Tests](#-tests) | PHPUnit suite |
-| [Installation](#️-installation--activation) | `install.sh` (local / VPS / update), manual steps, Docker (`.docker/`) |
+| [Installation](#️-installation--activation) | `install.sh` (local / VPS / update), `start-local.sh` (Docker infra for local dev), manual steps, production Docker (`.docker/`) |
 
 ---
 
@@ -691,6 +691,33 @@ values. The Evolution API is **not** installed by the script: point `WHATSAPP_*`
 On a VPS clone the project somewhere Nginx can read, e.g. `/var/www/sama`, and point the domain's DNS to the server before running.
 
 The manual steps below do the same by hand.
+
+### Local development with Docker (`start-local.sh`)
+
+PHP runs on your machine (`php artisan serve`, queue workers, scheduler, no Supervisor); Docker only provides the infrastructure
+described in `docker-compose.local.yml`: **MySQL 8**, **Evolution API v2.3** (+ its Postgres), **MinIO** (S3 for campaign media) and
+**Mailpit** (catches every e-mail, inbox at http://localhost:8025). Everything is bound to `127.0.0.1`.
+
+```bash
+./start-local.sh                      # checks .env, starts the services, verifies them, migrates
+./start-local.sh --fix-env --admin-email you@example.com   # also rewrites .env values that don't fit the local stack
+php artisan serve --host=0.0.0.0 --port=8000              # 0.0.0.0 so Evolution (in Docker) can post webhooks to your PHP
+php artisan queue:work --queue=default,disparos,warmup --sleep=3 --tries=3
+php artisan schedule:work
+```
+
+`./start-local.sh --php` starts those three for you in the background. Other commands: `check` (verify only), `status`, `logs [service]`,
+`down` (stop, keep data), `reset` (stop **and delete** the local data), `--tools` adds phpMyAdmin (http://localhost:8082).
+
+The credentials live in the Laravel `.env` (docker compose reads the same file). Before starting anything the script refuses values that
+would hurt: a `DB_HOST` that is not your machine (the sample `.env.example` points to the author's server, so migrations would run
+there), sample passwords/API keys, the shared sample `APP_KEY`, and endpoints that don't match the local stack; `--fix-env` repairs them
+(keeping a backup, `.env.backup-*`, which is git-ignored). After starting it **tests the credentials for real**: the MySQL login (inside
+the container and from your PHP), the Evolution API key (and that a wrong key is rejected), the MinIO login/bucket and Mailpit.
+
+Notes: MySQL only reads its user/password the first time its volume is created (if you change them later, run `./start-local.sh reset`).
+Media URLs use `host.docker.internal` so both your browser and the Evolution container can fetch uploads; on Linux add
+`127.0.0.1 host.docker.internal` to `/etc/hosts` if the script warns about it. The production stack (`.docker/`, `install.sh vps`) is separate.
 
 ### Option A — Local development (without Docker)
 

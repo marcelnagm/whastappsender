@@ -13,3 +13,7 @@ yarn-error.log
 /.idea
 /.vscode
 /nbproject/private/
+
+# local dev (start-local.sh)
+.env.backup-*
+/storage/local-dev.pids
