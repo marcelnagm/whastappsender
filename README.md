@@ -663,7 +663,7 @@ Admins are also notified when the Evolution API stops answering and when a queue
 
 ### Chat history and `@lid` contacts
 - The chat imports the conversations Evolution already stores the first time a number is opened (and with the "Import history" button): newest chats first, up to `CHAT_HISTORY_MAX_CHATS` chats and `CHAT_HISTORY_PER_CHAT` messages each, page by page. Evolution can only return what it stored: keep `DATABASE_SAVE_DATA_HISTORIC=true` and the `MESSAGES_SET` / `MESSAGING_HISTORY_SET` webhooks on (already set in `docker-compose.local.yml` and `.docker/`). Messages from before the number was paired only exist if WhatsApp delivered them during pairing (`syncFullHistory`).
-- WhatsApp sometimes identifies a person by an opaque `…@lid` id. The app looks up the real phone (message key, CRM contact, Evolution), turns the chat into `<phone>@s.whatsapp.net`, merges it into the chat of that phone if there is one, and stores the lid on the contact. Repair existing chats with `php artisan chat:fix-lids` (`--no-http` uses local data only).
+- WhatsApp sometimes identifies a person by an opaque `…@lid` id. The app looks up the real phone (message key, CRM contact, Evolution), turns the chat into `<phone>@s.whatsapp.net`, merges it into the chat of that phone if there is one, and stores the lid on the contact. Diagnose/run an import without the queue with `php artisan chat:sync-history <id|instance_name>` (prints what Evolution returns; when it has no chat list the conversations are rebuilt from the stored messages). Repair existing chats with `php artisan chat:fix-lids` (`--no-http` uses local data only).
 
 ## 🧪 Tests
 

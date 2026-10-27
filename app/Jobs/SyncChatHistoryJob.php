@@ -55,7 +55,15 @@ class SyncChatHistoryJob implements ShouldQueue
         usort($chats, fn ($a, $b) => $this->chatTs($b) <=> $this->chatTs($a));
 
         $eligible = array_values(array_filter($chats, fn ($r) => $this->isIndividual($r)));
-        HistorySyncStatus::update($instance->id, ['chats_total' => min(count($eligible), $maxChats), 'chats_done' => 0]);
+        HistorySyncStatus::update($instance->id, ['chats_total' => min(count($eligible), $maxChats), 'chats_done' => 0, 'source' => 'chats', 'raw_chats' => count($chats)]);
+
+        // Evolution kept no chat list (history sync off, or the number was paired before chats were saved):
+        // the stored messages are still there, so rebuild the conversations from them
+        if (!$eligible) {
+            $this->importFromMessages($instance, $client, $recorder, $maxChats * $perChat, $pageSize, count($chats));
+
+            return;
+        }
 
         $imported = 0;
         $messages = 0;
@@ -108,6 +116,46 @@ class SyncChatHistoryJob implements ShouldQueue
         $this->finish($instance, $imported, $messages);
     }
 
+    private function importFromMessages(Instance $instance, EvolutionChatClient $client, ChatMessageRecorder $recorder, int $cap, int $pageSize, int $rawChats): void
+    {
+        HistorySyncStatus::update($instance->id, ['source' => 'messages']);
+        $seen = [];
+        $messages = 0;
+
+        try {
+            for ($page = 1; $messages < $cap; $page++) {
+                $batch = $client->findAllMessages($instance->instance_name, $page, $pageSize);
+                if (!$batch) {
+                    break;
+                }
+
+                foreach ($batch as $record) {
+                    try {
+                        if ($recorder->recordUpsert($instance->instance_name, (array) $record, true)) {
+                            $messages++;
+                            $seen[(string) ($record['key']['remoteJid'] ?? '')] = true;
+                        }
+                    } catch (\Throwable $e) {
+                        Log::warning('SyncChatHistoryJob record failed: ' . $e->getMessage());
+                    }
+                }
+
+                HistorySyncStatus::update($instance->id, ['chats_done' => count($seen), 'chats_total' => count($seen), 'messages' => $messages]);
+
+                if (count($batch) < $pageSize) {
+                    break;
+                }
+            }
+        } catch (\Throwable $e) {
+            Log::error('SyncChatHistoryJob findMessages (all) failed: ' . $e->getMessage());
+            $this->finish($instance, count($seen), $messages, $e->getMessage());
+
+            return;
+        }
+
+        $this->finish($instance, count($seen), $messages);
+    }
+
     public function failed(\Throwable $e): void
     {
         if ($instance = Instance::find($this->instanceId)) {
@@ -130,7 +178,7 @@ class SyncChatHistoryJob implements ShouldQueue
 
     private function jidOf($row): string
     {
-        return (string) ($row['remoteJid'] ?? ($row['id'] ?? ''));
+        return (string) ($row['remoteJid'] ?? ($row['key']['remoteJid'] ?? ($row['id'] ?? '')));
     }
 
     private function isIndividual($row): bool

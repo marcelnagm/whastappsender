@@ -1153,6 +1153,7 @@
       text = st.chats_total ? T.syncRunning + ' ' + fmt(T.syncProgress, { done: st.chats_done, total: st.chats_total, messages: st.messages }) : T.syncRunning;
     } else if (st.state === 'done') {
       text = fmt(T.syncDone, { chats: st.chats_done, messages: st.messages }); cls = 'ok';
+      if (!st.messages) { text = T.syncEmpty; cls = 'warn'; }
     } else {
       text = st.error === 'no_progress' ? T.syncStalled : (T.syncFailed + (st.error ? ': ' + st.error : '')); cls = 'err';
     }
@@ -1173,8 +1174,8 @@
       syncTimer = setTimeout(pollSync, 2000);
     } else if (wasBusy) {
       loadChats();
-      toast(st.state === 'done' ? fmt(T.syncDone, { chats: st.chats_done, messages: st.messages }) : (T.syncFailed + (st.error && st.error !== 'no_progress' ? ': ' + st.error : '')));
-      if (st.state === 'done') setTimeout(function () { $('wa-sync-bar').classList.add('d-none'); }, 8000);
+      toast(st.state === 'done' ? (st.messages ? fmt(T.syncDone, { chats: st.chats_done, messages: st.messages }) : T.syncEmpty) : (T.syncFailed + (st.error && st.error !== 'no_progress' ? ': ' + st.error : '')));
+      if (st.state === 'done' && st.messages) setTimeout(function () { $('wa-sync-bar').classList.add('d-none'); }, 8000);
     } else if (first && st.state === 'done') {
       setTimeout(function () { $('wa-sync-bar').classList.add('d-none'); }, 4000);
     }

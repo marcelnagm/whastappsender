@@ -211,6 +211,29 @@ class EvolutionChatClient
         return self::isList($data) ? $data : [];
     }
 
+    /**
+     * Every stored message of the number, newest page first, whatever the conversation (used when findChats is empty).
+     *
+     * @return array<int, array>
+     */
+    public function findAllMessages(string $instance, int $page = 1, int $limit = 100): array
+    {
+        $data = $this->ensure($this->http(60)->post("/chat/findMessages/{$instance}", [
+            'where' => (object) [],
+            'page' => $page,
+            'offset' => $limit,
+        ]));
+
+        if (isset($data['messages']['records'])) {
+            return $data['messages']['records'];
+        }
+        if (isset($data['records'])) {
+            return $data['records'];
+        }
+
+        return self::isList($data) ? $data : [];
+    }
+
     /** @return array<int, array> contact records for one jid (Evolution findContacts) */
     public function findContacts(string $instance, string $remoteJid): array
     {

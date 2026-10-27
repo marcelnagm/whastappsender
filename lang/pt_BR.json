@@ -706,5 +706,6 @@
     "Chat history import failed": "Falha na importação do histórico do chat",
     ":name: :error": ":name: :error",
     "Chat history imported": "Histórico do chat importado",
-    ":name: :chats conversation(s), :messages message(s).": ":name: :chats conversa(s), :messages mensagem(ns)."
+    ":name: :chats conversation(s), :messages message(s).": ":name: :chats conversa(s), :messages mensagem(ns).",
+    "Nothing to import: Evolution has no stored messages for this number. New messages will appear as they arrive; older ones only exist if WhatsApp delivered them when the number was paired.": "Nada para importar: a Evolution não tem mensagens guardadas deste número. As novas aparecem conforme chegam; as antigas só existem se o WhatsApp as entregou quando o número foi pareado."
 }

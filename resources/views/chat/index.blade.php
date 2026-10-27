@@ -172,6 +172,7 @@
         syncProgress: @json(__(':done of :total conversations · :messages messages')),
         syncDone: @json(__('History imported: :chats conversation(s), :messages message(s).')),
         syncFailed: @json(__('Import failed')),
+        syncEmpty: @json(__('Nothing to import: Evolution has no stored messages for this number. New messages will appear as they arrive; older ones only exist if WhatsApp delivered them when the number was paired.')),
         syncStalled: @json(__('The import stopped without finishing. Check the queue worker and try again.')),
         download: @json(__('Download')),
         fileTooBig: @json(__('File is too large.')),

@@ -258,4 +258,29 @@ class ChatLidAndHistoryTest extends TestCase
 
         $this->actingAs($other)->getJson(route('chat.api.sync-status', $this->instance->id))->assertForbidden();
     }
+
+    public function test_when_evolution_has_no_chat_list_conversations_are_rebuilt_from_stored_messages(): void
+    {
+        $rec = fn ($id, $jid, $ts) => ['key' => ['id' => $id, 'remoteJid' => $jid, 'fromMe' => false], 'message' => ['conversation' => $id], 'messageTimestamp' => $ts];
+        Http::fake([
+            '*findChats*' => Http::response([]),
+            '*findMessages*' => Http::sequence()
+                ->push(['messages' => ['records' => array_merge(
+                    array_map(fn ($i) => $rec("A$i", '5595111@s.whatsapp.net', 1000 + $i), range(1, 30)),
+                    array_map(fn ($i) => $rec("B$i", '5595222@s.whatsapp.net', 2000 + $i), range(1, 15)),
+                    [$rec('G1', '120363@g.us', 3000)]
+                )]])
+                ->push(['messages' => ['records' => []]]),
+        ]);
+        config(['chat.history.page_size' => 50]);
+
+        (new SyncChatHistoryJob($this->instance->id))->handle(app(\App\Services\Chat\EvolutionChatClient::class), app(ChatMessageRecorder::class));
+
+        $st = \App\Services\Chat\HistorySyncStatus::get($this->instance->id);
+        $this->assertSame('done', $st['state']);
+        $this->assertSame('messages', $st['source']);
+        $this->assertSame(2, Chat::count());          // the group is out of scope
+        $this->assertSame(45, ChatMessage::count());
+        $this->assertSame(2, $st['chats_done']);
+    }
 }
