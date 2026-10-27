@@ -29,6 +29,8 @@ class Instance extends Model
     protected $casts = [
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
+        'disconnected_at' => 'datetime',
+        'down_alerted_at' => 'datetime',
     ];
 
     /**

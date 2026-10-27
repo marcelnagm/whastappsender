@@ -41,6 +41,23 @@ class envioQueue extends Command
             return 1;
         }
 
+        // two overlapping runs (several servers, a manual run during the cron) must not queue the same messages
+        $lock = Cache::lock('whatsapp:queue:dispatch', 600);
+        if (!$lock->get()) {
+            $this->warn('Another dispatch is running; skipping.');
+
+            return Command::SUCCESS;
+        }
+
+        try {
+            return $this->dispatchBatch($selector);
+        } finally {
+            $lock->release();
+        }
+    }
+
+    private function dispatchBatch(FairQueueSelector $selector): int
+    {
         $batch = (int) ($this->option('batch') ?: config('whatsapp_queue.batch_size', 50));
         $mode = $this->option('mode') ?: null;
 

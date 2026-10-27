@@ -631,6 +631,36 @@ Requirements: `APP_URL` must be public https (Mercado Pago only accepts such not
 
 * * *
 
+## 🔴 Redis & Instance Alerts
+
+### Where Redis is used
+| Area | What | Redis DB |
+|---|---|---|
+| Queues (`disparos`, `default`, `warmup`) | `QUEUE_CONNECTION=redis` – atomic pop, delayed jobs, `retry_after` | 2 (`queue`) |
+| Per-number send gate | one message at a time per WhatsApp number + pause between sends (`Cache::lock` + `next_send_at`), shared by all workers/servers; a job that must wait is rescheduled, the worker never sleeps | 0 / 1 |
+| Dispatch lock | `whatsapp:queue` cannot run twice at once; scheduler tasks use `onOneServer()` | 0 |
+| Health state | outage debounce, one alert per outage, failure streak counters | 1 |
+| Welcome campaigns | reply tracking and message pool | 0 |
+
+Redis is optional: the default stays `QUEUE_CONNECTION=database` / `CACHE_DRIVER=file`. To switch set in `.env`:
+```
+QUEUE_CONNECTION=redis
+CACHE_DRIVER=redis
+REDIS_CLIENT=predis   # pure PHP, no extension
+REDIS_HOST=127.0.0.1
+```
+then `composer install`, `php artisan config:clear` and restart the workers. Jobs still in the old database queue are not moved: drain them once with `php artisan queue:work database --stop-when-empty`.
+`./start-local.sh` and `./install.sh vps` already configure this (`--no-redis` to opt out).
+
+### Instance-down notification
+When a number goes down **and sending was affected**, its owner gets an in-app notification (bell) and an e-mail:
+1. A disconnect arrives (Evolution webhook, 3 consecutive failed sends, or the `instances:health` check every 5 min that also catches lost webhooks).
+2. After `INSTANCE_ALERT_AFTER_MINUTES` (3) Evolution is asked again – short flaps are ignored.
+3. Alert only if messages are waiting for that number (or it delivered in the last 24 h); an idle number is not reported. If the user has another connected number, only this number's share counts.
+4. One alert per outage, a "connected again" notice on recovery.
+
+Admins are also notified when the Evolution API stops answering and when a queue grows beyond `queue_max_pending` (`queue:monitor`, Redis only). Settings: `config/instance_health.php`. Run `php artisan instances:health` by hand to check now.
+
 ## 🧪 Tests
 
 `vendor/bin/phpunit` (in-memory SQLite, no external services): fair queue planner and command, chat backend, avatar caching, billing lifecycle and plan enforcement, and the Mercado Pago gateway (admin settings, Pix, card, recurrence, webhook; HTTP faked).

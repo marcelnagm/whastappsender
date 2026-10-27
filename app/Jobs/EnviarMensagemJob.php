@@ -4,6 +4,8 @@ namespace App\Jobs;
 
 use App\Models\Instance;
 use App\Models\WhatsappJob;
+use App\Services\Instances\InstanceHealth;
+use App\Services\Instances\InstanceSendGate;
 use Exception;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -50,6 +52,9 @@ class EnviarMensagemJob implements ShouldQueue
         }
 
 
+        $health = app(InstanceHealth::class);
+        $instance = null;
+
         try {
             $user = $job->user()->first();
             $entitlements = app(\App\Services\Billing\Entitlements::class);
@@ -91,6 +96,18 @@ class EnviarMensagemJob implements ShouldQueue
             }
             $numeroDestino = $contact->contact;
 
+            // Per-session pacing shared by all workers (Redis when CACHE_DRIVER=redis): never sleeps inside the worker,
+            // a message that has to wait is simply scheduled again for later
+            $gate = app(InstanceSendGate::class);
+            [$mayEnter, $waitFor, $lock] = $gate->enter($instance->id);
+            if (!$mayEnter) {
+                static::dispatch($job)->onQueue($this->queue ?: 'disparos')->delay(now()->addSeconds($waitFor));
+
+                return;
+            }
+
+            $sent = false;
+            try {
             // STEP 1: Humanize — typing/recording presence
             $presenceType = (rand(0, 10) > 3) ? 'composing' : 'recording';
             Http::withHeaders(['apikey' => $globalApiKey])
@@ -99,8 +116,8 @@ class EnviarMensagemJob implements ShouldQueue
                     "presence" => $presenceType,
                     "delay" => rand(1500, 3000)
                 ]);
-            if (config('app.env') !== 'local')
-                sleep(rand(4, 9));
+            if (($humanize = rand((int) config('whatsapp_queue.pacing.humanize_min'), (int) config('whatsapp_queue.pacing.humanize_max'))) > 0)
+                sleep($humanize);
 
             // STEP 2: Actual API send
             $endpoint = ltrim($job->endpoint, '/');
@@ -125,6 +142,8 @@ class EnviarMensagemJob implements ShouldQueue
                     'tentativas' => $job->tentativas + 1
                 ]);
                 $entitlements->consume($user, 'messages');
+                $sent = true;
+                $health->sendSucceeded($instance);
             } else {
                 $status = $response->status();
                 $body = $response->json();
@@ -144,13 +163,19 @@ class EnviarMensagemJob implements ShouldQueue
                 }
 
                 $this->registrarErro("API error: " . $status . " - " . $response->body(), $instance);
+                if ($status >= 500 || in_array($status, [401, 403, 404], true) || $this->looksDisconnected($response->body())) {
+                    $health->sendFailed($instance, $response->body());
+                }
             }
-
-            // STEP 3: Cool-down between sends
-            if (config('app.env') !== 'local')
-                sleep(rand(25, 50));
+            } finally {
+                // STEP 3: the cool-down before this session's next send is a timestamp, not a sleep
+                $gate->leave($instance->id, $lock, $sent);
+            }
         } catch (\Exception $e) {
             $this->registrarErro("Exception: " . $e->getMessage(), $instance);
+            if ($instance) {
+                $health->sendFailed($instance, $e->getMessage());
+            }
             throw $e;
         }
     }
@@ -173,6 +198,11 @@ class EnviarMensagemJob implements ShouldQueue
         }
 
         return $user->getInstanceActive();
+    }
+
+    private function looksDisconnected(string $body): bool
+    {
+        return (bool) preg_match('/connection closed|not connected|disconnected/i', $body);
     }
 
     private function registrarErro($mensagem, $instance)

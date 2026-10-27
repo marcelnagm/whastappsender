@@ -218,8 +218,17 @@ Log::info(json_encode($data));
     private function handleInstanceUpdate($name, $data)
     {
         $state = $data['state'] ?? null;
-        $status = ($state === 'open') ? 'connected' : 'disconnected';
-        Instance::where('instance_name', $name)->update(['status' => $status]);
+        $instance = Instance::where('instance_name', $name)->first();
+        if (!$instance || $state === null) {
+            return;
+        }
+
+        // 'connecting' is a transient state of a session that is (re)pairing: only 'open' / 'close' decide
+        if ($state === 'connecting') {
+            return;
+        }
+
+        app(\App\Services\Instances\InstanceHealth::class)->report($instance, $state === 'open');
     }
 
     private function syncLidWithContact($lid, $senderPn)

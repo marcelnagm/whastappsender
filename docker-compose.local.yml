@@ -33,6 +33,22 @@ services:
       retries: 30
       start_period: 20s
 
+  # Queues (db 2), cache and locks (db 0/1). The app talks to it with the pure-PHP predis client: no PHP extension needed.
+  redis:
+    image: redis:7-alpine
+    container_name: sama_local_redis
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes", "--maxmemory-policy", "noeviction"]
+    ports:
+      - "127.0.0.1:${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
   evolution-postgres:
     image: postgres:15-alpine
     container_name: sama_local_evolution_db
@@ -176,6 +192,7 @@ services:
         condition: service_healthy
 
 volumes:
+  redis_data:
   mysql_data:
   evolution_pg:
   evolution_instances:

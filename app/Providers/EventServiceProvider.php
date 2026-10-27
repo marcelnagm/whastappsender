@@ -15,6 +15,9 @@ class EventServiceProvider extends ServiceProvider
      * @var array<class-string, array<int, class-string>>
      */
     protected $listen = [
+        \Illuminate\Queue\Events\QueueBusy::class => [
+            \App\Listeners\NotifyQueueBacklog::class,
+        ],
         Registered::class => [
             SendEmailVerificationNotification::class,
         ],

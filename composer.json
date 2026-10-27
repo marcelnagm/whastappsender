@@ -2,7 +2,10 @@
     "name": "laravel/laravel",
     "type": "project",
     "description": "The Laravel Framework.",
-    "keywords": ["framework", "laravel"],
+    "keywords": [
+        "framework",
+        "laravel"
+    ],
     "license": "MIT",
     "require": {
         "php": "^8.0.2",
@@ -13,6 +16,7 @@
         "laravelcollective/html": "*",
         "league/flysystem-aws-s3-v3": "^3.0",
         "maatwebsite/excel": "^3.1",
+        "predis/predis": "^2.2",
         "spatie/laravel-html": "^3.5"
     },
     "require-dev": {

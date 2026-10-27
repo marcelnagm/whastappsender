@@ -20,10 +20,25 @@ class Kernel extends ConsoleKernel
         if (env('WHATSAPP_AUTOSEND'))
             $schedule->command('whatsapp:queue')
                 ->cron(config('whatsapp_queue.cron', '0 * * * *'))
-                ->withoutOverlapping();
+                ->withoutOverlapping()
+                ->onOneServer();
+
+        // Is a session that should be sending still connected? Tells owners when sending stopped, admins when Evolution is down
+        $schedule->command('instances:health')
+            ->cron(config('instance_health.check_cron', '*/5 * * * *'))
+            ->withoutOverlapping()
+            ->onOneServer();
+
+        // Fires QueueBusy (-> admin alert) when a queue is piling up. Only meaningful for the redis driver.
+        if (config('queue.default') === 'redis') {
+            $queues = collect(['disparos', 'default', 'warmup'])->map(fn ($q) => 'redis:' . $q)->implode(',');
+            $schedule->command('queue:monitor', [$queues, '--max=' . (int) config('instance_health.queue_max_pending', 500)])
+                ->everyFiveMinutes()
+                ->onOneServer();
+        }
 
         // Renewal invoices, grace period, blocking for non-payment (cheap: only touches live subscriptions)
-        $schedule->command('billing:run')->hourly()->withoutOverlapping();
+        $schedule->command('billing:run')->hourly()->withoutOverlapping()->onOneServer();
 
         $schedule->command('warmup:generate')
             ->dailyAt('08:00')

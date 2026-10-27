@@ -15,6 +15,7 @@
 #   --create-db                 local: create the database/user (needs the mysql client and root access)
 #   --admin-email E --admin-password PW   first administrator (password generated when omitted)
 #   --evolution-url HOST --evolution-port PORT --evolution-key KEY --evolution-protocol http|https
+#   --no-redis                  VPS: do not install Redis; keep the database queue and file cache
 #   --groq-key KEY              Groq API key for the AI features
 #   --start                     local: start the web server, queue workers and scheduler (./start.sh) at the end
 #   --yes                       never ask questions (use defaults / flags)
@@ -32,7 +33,7 @@ DOMAIN=""; EMAIL=""; SSL=1
 DB_HOST=""; DB_PORT=""; DB_NAME=""; DB_USER=""; DB_PASS=""; DB_ROOT_PASS=""; CREATE_DB=0
 ADMIN_EMAIL=""; ADMIN_PASSWORD=""
 EVO_URL=""; EVO_PORT=""; EVO_KEY=""; EVO_PROTO=""; GROQ_KEY=""
-START=0; ASSUME_YES=0; SKIP_COMPOSER=0; SKIP_MIGRATE=0
+USE_REDIS=1; START=0; ASSUME_YES=0; SKIP_COMPOSER=0; SKIP_MIGRATE=0
 
 usage() { sed -n '3,28p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; }
 
@@ -55,6 +56,7 @@ while [[ $# -gt 0 ]]; do
     --evolution-key) EVO_KEY="$2"; shift 2;;
     --evolution-protocol) EVO_PROTO="$2"; shift 2;;
     --groq-key) GROQ_KEY="$2"; shift 2;;
+    --no-redis) USE_REDIS=0; shift;;
     --start) START=1; shift;;
     --yes|-y|--non-interactive) ASSUME_YES=1; shift;;
     --skip-composer) SKIP_COMPOSER=1; shift;;
@@ -304,12 +306,14 @@ install_vps() {
   apt-get update -qq
   local pkgs=("${APT_PKGS[@]}")
   [[ $SSL -eq 1 ]] && pkgs+=(certbot python3-certbot-nginx)
+  [[ $USE_REDIS -eq 1 ]] && pkgs+=(redis-server)
   # MySQL is only installed when no external database host was given
   if [[ -n "$DB_HOST" && "$DB_HOST" != "127.0.0.1" && "$DB_HOST" != "localhost" ]]; then
     pkgs=("${pkgs[@]/mysql-server/default-mysql-client}")
   fi
   apt-get install -y -qq "${pkgs[@]}" >/dev/null
   systemctl enable --now nginx supervisor cron >/dev/null 2>&1 || true
+  [[ $USE_REDIS -eq 1 ]] && { systemctl enable --now redis-server >/dev/null 2>&1 || true; }
   have mysqld && systemctl enable --now mysql >/dev/null 2>&1 || true
   php_check
   install_composer_vps
@@ -372,8 +376,18 @@ SQL
   set_env DB_DATABASE "$DB_NAME"
   set_env DB_USERNAME "$DB_USER"
   set_env DB_PASSWORD "$DB_PASS"
-  set_env QUEUE_CONNECTION database
-  set_env CACHE_DRIVER file
+  if [[ $USE_REDIS -eq 1 ]]; then
+    # queues, cache and the per-session send locks in Redis (predis client: no PHP extension needed)
+    set_env QUEUE_CONNECTION redis
+    set_env CACHE_DRIVER redis
+    set_env REDIS_CLIENT predis
+    set_env REDIS_HOST 127.0.0.1
+    set_env REDIS_PASSWORD null
+    set_env REDIS_PORT 6379
+  else
+    set_env QUEUE_CONNECTION database
+    set_env CACHE_DRIVER file
+  fi
   set_env SESSION_DRIVER file
   apply_integrations
   generate_key

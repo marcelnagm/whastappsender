@@ -17,6 +17,7 @@
 #   --yes                answer yes to every question
 #   --no-migrate         do not run the migrations
 #   --admin-email E      create / promote this administrator after migrating (password is printed)
+#   --no-redis           keep the database queue / file cache (Redis container is still started, just unused)
 #   --tools              also start phpMyAdmin (http://localhost:8082)
 #   --php                also start `php artisan serve`, the queue workers and the scheduler in the background
 #
@@ -36,13 +37,14 @@ CMD="up"
 if [[ "${1:-}" =~ ^(up|check|status|logs|down|reset)$ ]]; then CMD="$1"; shift; fi
 LOG_SVC=""; [[ "$CMD" == "logs" && "${1:-}" != --* && -n "${1:-}" ]] && { LOG_SVC="$1"; shift; }
 
-FIX_ENV=0; ASSUME_YES=0; MIGRATE=1; ADMIN_EMAIL=""; TOOLS=0; START_PHP=0
+FIX_ENV=0; ASSUME_YES=0; MIGRATE=1; ADMIN_EMAIL=""; TOOLS=0; START_PHP=0; USE_REDIS=1
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --fix-env) FIX_ENV=1; shift;;
     --yes|-y) ASSUME_YES=1; shift;;
     --no-migrate) MIGRATE=0; shift;;
     --admin-email) ADMIN_EMAIL="$2"; shift 2;;
+    --no-redis) USE_REDIS=0; shift;;
     --tools) TOOLS=1; shift;;
     --php) START_PHP=1; shift;;
     -h|--help) sed -n '3,25p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 0;;
@@ -161,8 +163,18 @@ apply_local_env() {
   set_env APP_DEBUG true
   set_env APP_URL "http://localhost:${port}"
   set_env FORCE_HTTPS false
-  set_env QUEUE_CONNECTION database
-  set_env CACHE_DRIVER file
+  if [[ $USE_REDIS -eq 1 ]]; then
+    # queues, cache and the per-session send locks live in Redis (container 'redis')
+    set_env QUEUE_CONNECTION redis
+    set_env CACHE_DRIVER redis
+    set_env REDIS_CLIENT predis
+    set_env REDIS_HOST 127.0.0.1
+    set_env REDIS_PASSWORD null
+    set_env REDIS_PORT 6379
+  else
+    set_env QUEUE_CONNECTION database
+    set_env CACHE_DRIVER file
+  fi
   set_env SESSION_DRIVER file
 
   if [[ "$(env_get APP_KEY)" != base64:?* || "$NEW_ENV" -eq 1 ]]; then
@@ -241,7 +253,7 @@ check_ports() {
   step "3/6  Ports"
   if stack_running; then ok "The local stack is already running: ports are ours"; return; fi
   local busy=0 p name
-  for pair in "$(env_get DB_PORT):MySQL (DB_PORT)" "$(env_get WHATSAPP_PORT):Evolution API (WHATSAPP_PORT)" "9000:MinIO" "9001:MinIO console" "1025:Mailpit SMTP" "8025:Mailpit inbox"; do
+  for pair in "$(env_get DB_PORT):MySQL (DB_PORT)" "$(env_get WHATSAPP_PORT):Evolution API (WHATSAPP_PORT)" "9000:MinIO" "9001:MinIO console" "${REDIS_PORT_CHECK:-6379}:Redis" "1025:Mailpit SMTP" "8025:Mailpit inbox"; do
     p="${pair%%:*}"; name="${pair#*:}"; p="${p:-}"
     [[ -z "$p" ]] && continue
     if port_in_use "$p"; then bad "port $p ($name) is already in use on this machine (a local MySQL / another stack?)"; busy=1; else ok "port $p free ($name)"; fi
@@ -331,6 +343,24 @@ verify_minio() {
   [[ "$(http_code "http://localhost:9000/minio/health/live")" == "200" ]] && ok "MinIO S3 endpoint answers on :9000 (console: http://localhost:9001)" || { bad "MinIO endpoint :9000 does not answer"; FAILED=1; }
 }
 
+verify_redis() {
+  local out
+  out="$(docker exec sama_local_redis redis-cli ping 2>/dev/null || true)"
+  if [[ "$out" == "PONG" ]]; then
+    ok "Redis answers (:6379). Queue driver: $(env_get QUEUE_CONNECTION), cache: $(env_get CACHE_DRIVER)"
+  else
+    bad "Redis does not answer (container sama_local_redis)"; FAILED=1; return
+  fi
+  if [[ "$(env_get QUEUE_CONNECTION)" == "redis" && -d vendor && ! -d vendor/predis/predis ]]; then
+    bad "QUEUE_CONNECTION=redis but predis is not installed: run 'composer install'"; FAILED=1
+  fi
+  if [[ "$(env_get QUEUE_CONNECTION)" == "redis" ]] && have php && [[ -d vendor ]]; then
+    local pending; pending="$(php artisan tinker --execute='echo \DB::table("jobs")->count();' 2>/dev/null | tail -n1 || true)"
+    [[ "$pending" =~ ^[0-9]+$ && "$pending" -gt 0 ]] && warn "$pending job(s) are still in the OLD database queue. Drain them once: php artisan queue:work database --stop-when-empty"
+  fi
+  return 0
+}
+
 verify_mailpit() {
   [[ "$(http_code "http://localhost:8025/api/v1/info")" == "200" ]] && ok "Mailpit: SMTP :1025, inbox http://localhost:8025" || { bad "Mailpit does not answer on :8025"; FAILED=1; }
 }
@@ -339,6 +369,7 @@ verify_all() {
   step "5/6  Verifying the services with your credentials"
   FAILED=0
   verify_mysql
+  verify_redis
   verify_evolution
   verify_minio
   verify_mailpit
