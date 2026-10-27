@@ -282,3 +282,11 @@
 .wa-messages-inner { display: block; }
 /* touch devices have no hover: keep the message menu button reachable */
 @media (hover: none) { .wa-actions { opacity: .7; } }
+
+/* history import progress */
+.wa-sync-bar { padding: 8px 14px; font-size: 12.5px; line-height: 1.35; border-bottom: 1px solid rgba(0,0,0,.06); background: #e7f3ff; color: #0b4a7d; }
+.wa-sync-bar.warn { background: #fff4d6; color: #7a5a00; }
+.wa-sync-bar.ok { background: #e3f7e8; color: #17692f; }
+.wa-sync-bar.err { background: #fde7ea; color: #9b1c2e; }
+.wa-icon-btn.wa-spin i { animation: wa-spin 1s linear infinite; }
+@keyframes wa-spin { to { transform: rotate(360deg); } }

@@ -695,5 +695,16 @@
     "Warmup queue cleared. All pending jobs were removed.": "Cola de calentamiento vaciada. Se eliminaron todos los envíos pendientes.",
     "WhatsApp connected successfully.": "WhatsApp conectado correctamente.",
     "disabled": "desactivado",
-    "enabled": "activado"
+    "enabled": "activado",
+    "Import queued, waiting for a queue worker…": "Importación en cola, esperando un worker…",
+    "Still waiting. The import runs in the queue: start the worker (php artisan queue:work --queue=default,disparos,warmup).": "Sigue esperando. La importación se ejecuta en la cola: inicia el worker (php artisan queue:work --queue=default,disparos,warmup).",
+    "Importing history…": "Importando historial…",
+    ":done of :total conversations · :messages messages": ":done de :total conversaciones · :messages mensajes",
+    "History imported: :chats conversation(s), :messages message(s).": "Historial importado: :chats conversación(es), :messages mensaje(s).",
+    "Import failed": "Falló la importación",
+    "The import stopped without finishing. Check the queue worker and try again.": "La importación se detuvo sin terminar. Revisa el worker de la cola e inténtalo de nuevo.",
+    "Chat history import failed": "Falló la importación del historial del chat",
+    ":name: :error": ":name: :error",
+    "Chat history imported": "Historial del chat importado",
+    ":name: :chats conversation(s), :messages message(s).": ":name: :chats conversación(es), :messages mensaje(s)."
 }

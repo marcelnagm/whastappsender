@@ -13,6 +13,7 @@ use App\Models\Instance;
 use App\Services\Chat\ChatAvatarService;
 use App\Services\Chat\ChatMessageRecorder;
 use App\Services\Chat\EvolutionChatClient;
+use App\Services\Chat\HistorySyncStatus;
 use App\Services\Chat\LidResolver;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -47,6 +48,7 @@ class ChatController extends Controller
 
         // First time this number is opened in the chat: bring in the conversations Evolution already stores
         if ($current && !ChatMessage::where('instance_id', $current->id)->exists() && Cache::add("chat-history-sync:{$current->id}", 1, 3600)) {
+            HistorySyncStatus::queued($current->id);
             SyncChatHistoryJob::dispatch($current->id)->onQueue('default');
         }
 
@@ -167,9 +169,19 @@ class ChatController extends Controller
     {
         abort_unless((int) $instance->user_id === (int) Auth::id(), 403);
 
-        SyncChatHistoryJob::dispatch($instance->id)->onQueue('default');
+        if (!HistorySyncStatus::isBusy($instance->id)) {
+            HistorySyncStatus::queued($instance->id);
+            SyncChatHistoryJob::dispatch($instance->id)->onQueue('default');
+        }
 
-        return response()->json(['status' => 'queued'], 202);
+        return response()->json(HistorySyncStatus::get($instance->id), 202);
+    }
+
+    public function syncStatus(Instance $instance): JsonResponse
+    {
+        abort_unless((int) $instance->user_id === (int) Auth::id(), 403);
+
+        return response()->json(HistorySyncStatus::get($instance->id));
     }
 
     // ---------------------------------------------------------------------

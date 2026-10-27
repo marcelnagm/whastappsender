@@ -4,7 +4,9 @@ namespace App\Jobs;
 
 use App\Models\Instance;
 use App\Services\Chat\ChatMessageRecorder;
+use App\Notifications\ChatHistorySynced;
 use App\Services\Chat\EvolutionChatClient;
+use App\Services\Chat\HistorySyncStatus;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -34,6 +36,8 @@ class SyncChatHistoryJob implements ShouldQueue
             return;
         }
 
+        HistorySyncStatus::update($instance->id, ['state' => 'running', 'error' => null]);
+
         $maxChats = (int) config('chat.history.max_chats', 50);
         $perChat = (int) config('chat.history.per_chat', 200);
         $pageSize = max(10, (int) config('chat.history.page_size', 50));
@@ -42,6 +46,7 @@ class SyncChatHistoryJob implements ShouldQueue
             $chats = $client->findChats($instance->instance_name);
         } catch (\Throwable $e) {
             Log::error('SyncChatHistoryJob findChats failed: ' . $e->getMessage());
+            $this->finish($instance, 0, 0, $e->getMessage());
 
             return;
         }
@@ -49,14 +54,18 @@ class SyncChatHistoryJob implements ShouldQueue
         // newest conversations first: the ones people care about are imported before any limit is hit
         usort($chats, fn ($a, $b) => $this->chatTs($b) <=> $this->chatTs($a));
 
+        $eligible = array_values(array_filter($chats, fn ($r) => $this->isIndividual($r)));
+        HistorySyncStatus::update($instance->id, ['chats_total' => min(count($eligible), $maxChats), 'chats_done' => 0]);
+
         $imported = 0;
+        $messages = 0;
         foreach ($chats as $row) {
             if ($imported >= $maxChats) {
                 break;
             }
 
-            $jid = (string) ($row['remoteJid'] ?? ($row['id'] ?? ''));
-            if (!str_ends_with($jid, '@s.whatsapp.net') && !str_ends_with($jid, '@lid')) {
+            $jid = $this->jidOf($row);
+            if (!$this->isIndividual($row)) {
                 continue;
             }
 
@@ -86,13 +95,49 @@ class SyncChatHistoryJob implements ShouldQueue
             foreach ($records as $record) {
                 try {
                     $recorder->recordUpsert($instance->instance_name, (array) $record, true);
+                    $messages++;
                 } catch (\Throwable $e) {
                     Log::warning('SyncChatHistoryJob record failed: ' . $e->getMessage());
                 }
             }
 
             $imported++;
+            HistorySyncStatus::update($instance->id, ['chats_done' => $imported, 'messages' => $messages]);
         }
+
+        $this->finish($instance, $imported, $messages);
+    }
+
+    public function failed(\Throwable $e): void
+    {
+        if ($instance = Instance::find($this->instanceId)) {
+            $this->finish($instance, 0, 0, $e->getMessage());
+        }
+    }
+
+    private function finish(Instance $instance, int $chats, int $messages, ?string $error = null): void
+    {
+        HistorySyncStatus::update($instance->id, ['state' => $error ? 'failed' : 'done', 'chats_done' => $chats, 'messages' => $messages, 'error' => $error ? mb_substr($error, 0, 200) : null]);
+
+        if ($user = $instance->user) {
+            try {
+                $user->notify(new ChatHistorySynced($instance->name ?: $instance->instance_name, $chats, $messages, $error ? mb_substr($error, 0, 200) : null));
+            } catch (\Throwable $e) {
+                Log::warning('Could not notify history import result: ' . $e->getMessage());
+            }
+        }
+    }
+
+    private function jidOf($row): string
+    {
+        return (string) ($row['remoteJid'] ?? ($row['id'] ?? ''));
+    }
+
+    private function isIndividual($row): bool
+    {
+        $jid = $this->jidOf($row);
+
+        return str_ends_with($jid, '@s.whatsapp.net') || str_ends_with($jid, '@lid');
     }
 
     private function chatTs($row): int

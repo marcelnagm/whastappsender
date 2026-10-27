@@ -55,6 +55,7 @@ Route::middleware(['auth', 'subscription.writable', 'plan.feature:chat'])->prefi
         Route::post('/chats', [$chat, 'openChat'])->name('open');
         Route::get('/contacts', [$chat, 'searchContacts'])->name('contacts');
         Route::post('/instances/{instance}/sync', [$chat, 'syncHistory'])->name('sync');
+        Route::get('/instances/{instance}/sync', [$chat, 'syncStatus'])->name('sync-status');
 
         Route::get('/chats/{chat}/messages', [$chat, 'messages'])->name('messages');
         Route::post('/chats/{chat}/send', [$chat, 'send'])->name('send');

@@ -21,6 +21,7 @@
      data-url-open="{{ route('chat.api.open') }}"
      data-url-contacts="{{ route('chat.api.contacts') }}"
      data-url-sync="{{ route('chat.api.sync', $current->id) }}"
+     data-url-sync-status="{{ route('chat.api.sync-status', $current->id) }}"
      data-url-chat-base="{{ url('chat/api/chats') }}"
      data-url-message-base="{{ url('chat/api/messages') }}"
      data-url-index="{{ route('chat.index') }}">
@@ -59,6 +60,8 @@
             <div id="wa-newchat-results" class="wa-newchat-results"></div>
             <div class="wa-newchat-hint">{{ __('Example: 5595981110695') }}</div>
         </div>
+
+        <div id="wa-sync-bar" class="wa-sync-bar d-none" role="status" aria-live="polite"></div>
 
         <div id="wa-chat-list" class="wa-chat-list" role="list"></div>
         <div id="wa-chat-empty" class="wa-empty-list d-none">{{ __('No conversations yet.') }}</div>
@@ -163,6 +166,13 @@
         confirmDelete: @json(__('Delete this message for everyone?')),
         copy: @json(__('Copy')),
         copied: @json(__('Copied')),
+        syncWaiting: @json(__('Import queued, waiting for a queue worker…')),
+        syncWorkerHint: @json(__('Still waiting. The import runs in the queue: start the worker (php artisan queue:work --queue=default,disparos,warmup).')),
+        syncRunning: @json(__('Importing history…')),
+        syncProgress: @json(__(':done of :total conversations · :messages messages')),
+        syncDone: @json(__('History imported: :chats conversation(s), :messages message(s).')),
+        syncFailed: @json(__('Import failed')),
+        syncStalled: @json(__('The import stopped without finishing. Check the queue worker and try again.')),
         download: @json(__('Download')),
         fileTooBig: @json(__('File is too large.')),
         micDenied: @json(__('Microphone access denied.')),

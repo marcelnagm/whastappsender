@@ -23,6 +23,7 @@
     urlOpen: D.urlOpen,
     urlContacts: D.urlContacts,
     urlSync: D.urlSync,
+    urlSyncStatus: D.urlSyncStatus,
     chatBase: D.urlChatBase,
     messageBase: D.urlMessageBase,
     urlIndex: D.urlIndex
@@ -1129,14 +1130,66 @@
     }
   });
 
+  // ---- history import: visible progress, completion and failure -----------------------------------
+  var syncTimer = null;
+
+  function fmt(tpl, vars) {
+    return String(tpl || '').replace(/:(\w+)/g, function (m, k) { return vars && vars[k] !== undefined ? vars[k] : m; });
+  }
+
+  function renderSync(st) {
+    var bar = $('wa-sync-bar'), btn = $('wa-sync');
+    var busy = st.state === 'queued' || st.state === 'running';
+    btn.classList.toggle('wa-spin', busy);
+    btn.disabled = busy;
+
+    if (st.state === 'idle') { bar.classList.add('d-none'); return; }
+
+    var text, cls = 'info';
+    if (st.state === 'queued') {
+      text = st.waiting_seconds > 12 ? T.syncWorkerHint : T.syncWaiting;
+      if (st.waiting_seconds > 12) cls = 'warn';
+    } else if (st.state === 'running') {
+      text = st.chats_total ? T.syncRunning + ' ' + fmt(T.syncProgress, { done: st.chats_done, total: st.chats_total, messages: st.messages }) : T.syncRunning;
+    } else if (st.state === 'done') {
+      text = fmt(T.syncDone, { chats: st.chats_done, messages: st.messages }); cls = 'ok';
+    } else {
+      text = st.error === 'no_progress' ? T.syncStalled : (T.syncFailed + (st.error ? ': ' + st.error : '')); cls = 'err';
+    }
+    bar.className = 'wa-sync-bar ' + cls;
+    bar.textContent = text;
+  }
+
+  async function pollSync(first) {
+    clearTimeout(syncTimer);
+    var st;
+    try { st = await api(cfg.urlSyncStatus); } catch (e) { return; }
+    var wasBusy = S.syncBusy;
+    S.syncBusy = st.state === 'queued' || st.state === 'running';
+    renderSync(st);
+
+    if (S.syncBusy) {
+      loadChats();                                        // conversations appear while they are imported
+      syncTimer = setTimeout(pollSync, 2000);
+    } else if (wasBusy) {
+      loadChats();
+      toast(st.state === 'done' ? fmt(T.syncDone, { chats: st.chats_done, messages: st.messages }) : (T.syncFailed + (st.error && st.error !== 'no_progress' ? ': ' + st.error : '')));
+      if (st.state === 'done') setTimeout(function () { $('wa-sync-bar').classList.add('d-none'); }, 8000);
+    } else if (first && st.state === 'done') {
+      setTimeout(function () { $('wa-sync-bar').classList.add('d-none'); }, 4000);
+    }
+  }
+
   $('wa-sync').addEventListener('click', async function () {
     try {
-      await api(cfg.urlSync, { method: 'POST' });
-      toast(T.queued);
-      setTimeout(loadChats, 6000);
-      setTimeout(loadChats, 15000);
+      var st = await api(cfg.urlSync, { method: 'POST' });
+      S.syncBusy = true;
+      renderSync(st);
+      pollSync();
     } catch (e) { toast(e.message); }
   });
+
+  pollSync(true);   // resumes the display when the page is opened while an import is running
 
   var instanceSelect = $('wa-instance-select');
   if (instanceSelect) {

@@ -196,4 +196,66 @@ class ChatLidAndHistoryTest extends TestCase
         $this->assertSame(2, ChatMessage::count());
         $this->assertSame(0, (int) Chat::first()->unread_count);
     }
+
+    // ---- visible progress of the import ------------------------------------------------------------------
+
+    public function test_sync_button_returns_a_queued_status_and_does_not_queue_twice(): void
+    {
+        Queue::fake([SyncChatHistoryJob::class, FetchChatAvatarJob::class]);
+
+        $first = $this->actingAs($this->user)->postJson(route('chat.api.sync', $this->instance->id))->assertStatus(202)->json();
+        $this->assertSame('queued', $first['state']);
+        $this->actingAs($this->user)->postJson(route('chat.api.sync', $this->instance->id));
+
+        Queue::assertPushed(SyncChatHistoryJob::class, 1);
+        $this->actingAs($this->user)->getJson(route('chat.api.sync-status', $this->instance->id))->assertJson(['state' => 'queued']);
+    }
+
+    public function test_import_reports_progress_completion_and_notifies_the_user(): void
+    {
+        Http::fake([
+            '*findChats*' => Http::response([['remoteJid' => '5595999@s.whatsapp.net'], ['remoteJid' => '120363@g.us']]),
+            '*findMessages*' => Http::response(['messages' => ['records' => [
+                ['key' => ['id' => 'M1', 'remoteJid' => '5595999@s.whatsapp.net', 'fromMe' => false], 'message' => ['conversation' => 'a'], 'messageTimestamp' => 1000],
+            ]]]),
+        ]);
+        \App\Services\Chat\HistorySyncStatus::queued($this->instance->id);
+
+        (new SyncChatHistoryJob($this->instance->id))->handle(app(\App\Services\Chat\EvolutionChatClient::class), app(ChatMessageRecorder::class));
+
+        $st = \App\Services\Chat\HistorySyncStatus::get($this->instance->id);
+        $this->assertSame('done', $st['state']);
+        $this->assertSame(1, $st['chats_done']);
+        $this->assertSame(1, $st['chats_total']);
+        $this->assertSame(1, $st['messages']);
+        $this->assertSame('Chat history imported', $this->user->notifications()->first()->data['title']);
+    }
+
+    public function test_import_failure_is_reported_instead_of_silent(): void
+    {
+        Http::fake(['*findChats*' => Http::response('boom', 500)]);
+
+        (new SyncChatHistoryJob($this->instance->id))->handle(app(\App\Services\Chat\EvolutionChatClient::class), app(ChatMessageRecorder::class));
+
+        $st = \App\Services\Chat\HistorySyncStatus::get($this->instance->id);
+        $this->assertSame('failed', $st['state']);
+        $this->assertStringContainsString('boom', $st['error']);
+        $this->assertSame('Chat history import failed', $this->user->notifications()->first()->data['title']);
+    }
+
+    public function test_an_import_that_never_started_is_reported_as_stalled(): void
+    {
+        \App\Services\Chat\HistorySyncStatus::queued($this->instance->id);
+        $this->travel(20)->minutes();
+
+        $this->assertSame('failed', \App\Services\Chat\HistorySyncStatus::get($this->instance->id)['state']);
+        $this->assertFalse(\App\Services\Chat\HistorySyncStatus::isBusy($this->instance->id));
+    }
+
+    public function test_other_users_cannot_read_the_import_status(): void
+    {
+        $other = User::create(['name' => 'o', 'email' => 'o@t.dev', 'username' => 'o', 'password' => 'x']);
+
+        $this->actingAs($other)->getJson(route('chat.api.sync-status', $this->instance->id))->assertForbidden();
+    }
 }
