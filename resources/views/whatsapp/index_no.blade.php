@@ -129,7 +129,20 @@
     const session = "{{ $instance }}";
     let qrcod_lido = false;
 
+    // After the scan, WhatsApp pairs for a few seconds: poll until Evolution says "open", store it and leave
+    function watchConnection() {
+        const timer = setInterval(function() {
+            $.getJSON("{{ route('whatsapp.status', ['id' => $instanceId ?? 0]) }}", function(r) {
+                if (r.connected) {
+                    clearInterval(timer);
+                    window.location = "{{ route('instances.index') }}";
+                }
+            });
+        }, 4000);
+    }
+
     $(document).ready(function() {
+        watchConnection();
         getQR();
         if (typeof checkSessionStatus === "function") {
             checkSessionStatus();

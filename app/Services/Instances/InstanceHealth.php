@@ -36,15 +36,14 @@ class InstanceHealth
             return;
         }
 
-        if ($instance->status !== 'disconnected' || !$instance->disconnected_at) {
-            $instance->forceFill(['status' => 'disconnected', 'disconnected_at' => $instance->disconnected_at ?? now()])->save();
-        }
-
         if ($confirmNow) {
             $this->confirmDown($instance->id);
 
             return;
         }
+
+        // An unconfirmed "close" (webhook) changes nothing by itself: connections flap and a session being paired
+        // sends close/connecting before open. The delayed job asks Evolution and only then records the outage.
 
         // one pending confirmation per session, however many disconnect events arrive
         $minutes = max(0, (int) config('instance_health.alert_after_minutes'));

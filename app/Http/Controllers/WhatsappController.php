@@ -43,16 +43,33 @@ class WhatsappController extends Controller
         
         //    dd($result);
         if (WhatsappService::isConnected($ins->instance_name)) {
-            //                          
+            // Evolution is the source of truth: record it (the webhook may not reach this server, e.g. local dev)
+            app(\App\Services\Instances\InstanceHealth::class)->report($ins, true);
+
             return redirect()->route('instances.index')
             ->with('success', 'WhatsApp connected successfully.');
         } else {
             
             return view('whatsapp.index_no', [
                 'res' => WhatsappService::qr($ins->instance_name),
-                'instance' => $ins->instance_name
+                'instance' => $ins->instance_name,
+                'instanceId' => $ins->id,
             ]);
         }
+    }
+
+    /** Polled by the QR page: after the scan, stores "connected" and tells the page to leave. */
+    public function status($id)
+    {
+        $ins = Instance::findOrFail($id);
+        abort_unless($ins->isMine(), 403);
+
+        $connected = app(\App\Services\Instances\EvolutionStatus::class)->state($ins->instance_name) === 'open';
+        if ($connected) {
+            app(\App\Services\Instances\InstanceHealth::class)->report($ins, true);
+        }
+
+        return response()->json(['connected' => $connected]);
     }
 
     public function qr($id)

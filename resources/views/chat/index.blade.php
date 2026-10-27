@@ -43,8 +43,6 @@
                 @endif
             </div>
             <div class="wa-side-actions">
-                <span id="wa-conn" class="wa-conn {{ $current->isConnected() ? 'on' : 'off' }}"
-                      title="{{ $current->isConnected() ? __('Connected') : __('Disconnected') }}"></span>
                 <button type="button" class="wa-icon-btn" id="wa-sync" title="{{ __('Import history') }}"><i class="bi bi-arrow-repeat"></i></button>
                 <button type="button" class="wa-icon-btn" id="wa-new" title="{{ __('New chat') }}"><i class="bi bi-chat-left-text"></i></button>
             </div>
@@ -61,14 +59,6 @@
             <div id="wa-newchat-results" class="wa-newchat-results"></div>
             <div class="wa-newchat-hint">{{ __('Example: 5595981110695') }}</div>
         </div>
-
-        @if (! $current->isConnected())
-            <div class="wa-banner">
-                <i class="bi bi-exclamation-triangle"></i>
-                {{ __('This WhatsApp instance is disconnected. Messages cannot be sent.') }}
-                <a href="{{ route('instances.show', $current->id) }}">{{ __('Reconnect') }}</a>
-            </div>
-        @endif
 
         <div id="wa-chat-list" class="wa-chat-list" role="list"></div>
         <div id="wa-chat-empty" class="wa-empty-list d-none">{{ __('No conversations yet.') }}</div>

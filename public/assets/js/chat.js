@@ -232,7 +232,6 @@
     recording: $('wa-recording'), recTime: $('wa-rec-time'),
     info: $('wa-info'), infoBody: $('wa-info-body'),
     newChat: $('wa-newchat'), newChatQ: $('wa-newchat-q'), newChatResults: $('wa-newchat-results'),
-    conn: $('wa-conn')
   };
 
   // ------------------------------------------------------------------
@@ -285,8 +284,6 @@
       var url = cfg.urlChats + '?instance=' + cfg.instance + (S.query ? '&q=' + encodeURIComponent(S.query) : '');
       var data = await api(url);
       S.chats = data.chats || [];
-      el.conn.classList.toggle('on', !!data.connected);
-      el.conn.classList.toggle('off', !data.connected);
       renderChats();
 
       if (S.active) {

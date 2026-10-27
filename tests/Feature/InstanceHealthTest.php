@@ -113,7 +113,7 @@ class InstanceHealthTest extends TestCase
 
     // ---- alerts ----------------------------------------------------------------------------------------------
 
-    public function test_webhook_close_marks_down_and_schedules_one_confirmation(): void
+    public function test_webhook_close_does_not_flip_the_status_by_itself_and_schedules_one_confirmation(): void
     {
         Queue::fake();
         $u = $this->user();
@@ -123,9 +123,32 @@ class InstanceHealthTest extends TestCase
             (new ProcessEvolutionWebhookJob(['event' => 'connection.update', 'instance' => $i->instance_name, 'data' => ['state' => 'close']]))->handle();
         }
 
-        $this->assertSame('disconnected', $i->fresh()->status);
-        $this->assertNotNull($i->fresh()->disconnected_at);
+        $this->assertSame('connected', $i->fresh()->status);   // only the confirmation (Evolution asked again) records an outage
         Queue::assertPushed(ConfirmInstanceDownJob::class, 1);
+    }
+
+    public function test_close_during_pairing_followed_by_open_never_shows_disconnected(): void
+    {
+        Queue::fake();
+        $u = $this->user();
+        $i = $this->mkInstance($u, 'i1', 'disconnected');   // new session, QR not scanned yet
+        $this->evoState('open');
+
+        $this->actingAs($u)->getJson(route('whatsapp.status', $i->id))->assertOk()->assertJson(['connected' => true]);
+
+        $this->assertSame('connected', $i->fresh()->status);
+    }
+
+    public function test_status_endpoint_stays_disconnected_while_evolution_says_close_and_blocks_other_users(): void
+    {
+        $u = $this->user();
+        $i = $this->mkInstance($u, 'i1', 'disconnected');
+        $this->evoState('close');
+
+        $this->actingAs($u)->getJson(route('whatsapp.status', $i->id))->assertJson(['connected' => false]);
+        $this->assertSame('disconnected', $i->fresh()->status);
+
+        $this->actingAs($this->user('eve'))->getJson(route('whatsapp.status', $i->id))->assertForbidden();
     }
 
     public function test_confirmed_outage_with_waiting_messages_notifies_owner_once(): void

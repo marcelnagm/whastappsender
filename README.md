@@ -654,7 +654,7 @@ then `composer install`, `php artisan config:clear` and restart the workers. Job
 
 ### Instance-down notification
 When a number goes down **and sending was affected**, its owner gets an in-app notification (bell) and an e-mail:
-1. A disconnect arrives (Evolution webhook, 3 consecutive failed sends, or the `instances:health` check every 5 min that also catches lost webhooks).
+1. A disconnect arrives (Evolution webhook – which alone never changes the status –, 3 consecutive failed sends, or the `instances:health` check every 5 min that also catches lost webhooks).
 2. After `INSTANCE_ALERT_AFTER_MINUTES` (3) Evolution is asked again – short flaps are ignored.
 3. Alert only if messages are waiting for that number (or it delivered in the last 24 h); an idle number is not reported. If the user has another connected number, only this number's share counts.
 4. One alert per outage, a "connected again" notice on recovery.
