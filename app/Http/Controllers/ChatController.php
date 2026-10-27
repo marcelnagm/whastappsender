@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\ResolveLidChatJob;
 use App\Jobs\SendChatMessageJob;
 use App\Jobs\SyncChatHistoryJob;
 use App\Models\AiSession;
@@ -12,10 +13,12 @@ use App\Models\Instance;
 use App\Services\Chat\ChatAvatarService;
 use App\Services\Chat\ChatMessageRecorder;
 use App\Services\Chat\EvolutionChatClient;
+use App\Services\Chat\LidResolver;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -42,6 +45,11 @@ class ChatController extends Controller
         $instances = $request->user()->instances()->orderBy('id')->get();
         $current = $instances->firstWhere('id', (int) $request->query('instance')) ?? $instances->first();
 
+        // First time this number is opened in the chat: bring in the conversations Evolution already stores
+        if ($current && !ChatMessage::where('instance_id', $current->id)->exists() && Cache::add("chat-history-sync:{$current->id}", 1, 3600)) {
+            SyncChatHistoryJob::dispatch($current->id)->onQueue('default');
+        }
+
         return view('chat.index', compact('instances', 'current'));
     }
 
@@ -49,11 +57,35 @@ class ChatController extends Controller
     // Chats
     // ---------------------------------------------------------------------
 
+    /**
+     * Chats identified by an opaque "@lid" are converted to the phone number: at once when we already know it,
+     * otherwise in the background (at most one attempt per chat every 10 minutes).
+     */
+    private function fixLidChats(Instance $instance): void
+    {
+        $lids = Chat::where('instance_id', $instance->id)->where('remote_jid', 'like', '%@lid')->limit(10)->get();
+        if ($lids->isEmpty()) {
+            return;
+        }
+
+        $resolver = app(LidResolver::class);
+        foreach ($lids as $chat) {
+            if ($resolver->fixChat($chat, false)) {
+                continue;
+            }
+            if (Cache::add("lid-chat:{$chat->id}", 1, 600)) {
+                ResolveLidChatJob::dispatch($chat->id)->onQueue('default');
+            }
+        }
+    }
+
     public function chats(Request $request): JsonResponse
     {
         $instance = $this->ownedInstance((int) $request->query('instance'));
         $q = trim((string) $request->query('q', ''));
         $digits = preg_replace('/\D/', '', $q);
+
+        $this->fixLidChats($instance);
 
         $chats = Chat::with('contact')
             ->where('user_id', Auth::id())

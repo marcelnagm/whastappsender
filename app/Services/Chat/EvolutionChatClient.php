@@ -211,6 +211,14 @@ class EvolutionChatClient
         return self::isList($data) ? $data : [];
     }
 
+    /** @return array<int, array> contact records for one jid (Evolution findContacts) */
+    public function findContacts(string $instance, string $remoteJid): array
+    {
+        $data = $this->ensure($this->http(15)->post("/chat/findContacts/{$instance}", ['where' => ['remoteJid' => $remoteJid]]));
+
+        return self::isList($data) ? $data : ($data['contacts'] ?? $data['records'] ?? []);
+    }
+
     private static function isList(array $data): bool
     {
         return $data === [] || array_keys($data) === range(0, count($data) - 1);

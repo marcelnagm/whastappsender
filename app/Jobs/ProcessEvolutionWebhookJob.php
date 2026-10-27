@@ -65,7 +65,14 @@ class ProcessEvolutionWebhookJob implements ShouldQueue
      */
     private function recordChat(string $event, string $instanceName, array $data): void
     {
-        if ($instanceName === '' || !in_array($event, ['messages.upsert', 'send.message', 'messages.update'], true)) {
+        if ($instanceName === '' || !in_array($event, ['messages.upsert', 'send.message', 'messages.update', 'messages.set', 'messaging-history.set'], true)) {
+            return;
+        }
+
+        // History delivered by WhatsApp right after pairing ({messages: [...]}, a list, or one record)
+        if (in_array($event, ['messages.set', 'messaging-history.set'], true)) {
+            $this->recordHistory($instanceName, $data);
+
             return;
         }
 
@@ -213,6 +220,20 @@ Log::info(json_encode($data));
     {
         $remoteJid = $data['key']['remoteJid'] ?? '';
         return str_contains($remoteJid, '@g.us');
+    }
+
+    private function recordHistory(string $instanceName, array $data): void
+    {
+        $items = $data['messages'] ?? (isset($data[0]) ? $data : [$data]);
+        $recorder = app(ChatMessageRecorder::class);
+
+        foreach ((array) $items as $item) {
+            try {
+                $recorder->recordUpsert($instanceName, (array) $item, true);
+            } catch (\Throwable $e) {
+                Log::warning('History message not recorded: ' . $e->getMessage());
+            }
+        }
     }
 
     private function handleInstanceUpdate($name, $data)

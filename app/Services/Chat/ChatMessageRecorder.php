@@ -46,6 +46,11 @@ class ChatMessageRecorder
 
         $fromMe = (bool) ($key['fromMe'] ?? false);
         $jid = $this->resolveJid($key);
+
+        // The message itself told us who the lid is: learn it and fix a chat that was opened under the lid
+        if (LidResolver::isLid($remoteJid) && !LidResolver::isLid($jid) && ($learned = LidResolver::phoneFrom($jid))) {
+            app(LidResolver::class)->learn($instance, $remoteJid, $learned);
+        }
         $parsed = $this->parse((array) ($data['message'] ?? []));
 
         if ($parsed['kind'] === 'reaction') {
@@ -143,6 +148,11 @@ class ChatMessageRecorder
 
     public function findOrCreateChat(Instance $instance, string $jid, ?string $pushName = null): Chat
     {
+        // "@lid" -> real phone (known mapping, CRM contact, then Evolution)
+        if (LidResolver::isLid($jid) && ($phoneFound = app(LidResolver::class)->resolve($instance, $jid))) {
+            $jid = $phoneFound . '@s.whatsapp.net';
+        }
+
         $chat = Chat::where('instance_id', $instance->id)->where('remote_jid', $jid)->first();
 
         if (!$chat) {

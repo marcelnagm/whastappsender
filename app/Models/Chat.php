@@ -74,7 +74,12 @@ class Chat extends Model
             return $this->name;
         }
 
-        return $this->phone ? '+' . $this->phone : $this->remote_jid;
+        if ($this->phone) {
+            return '+' . $this->phone;
+        }
+
+        // an unresolved "@lid" is an opaque id, not something to show to a person
+        return str_ends_with($this->remote_jid, '@lid') ? __('Unidentified contact') : $this->remote_jid;
     }
 
     /**

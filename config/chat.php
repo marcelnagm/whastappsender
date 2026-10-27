@@ -29,7 +29,8 @@ return [
 
     // History import (Evolution findChats / findMessages)
     'history' => [
-        'max_chats' => 50,
-        'per_chat' => 30,
+        'max_chats' => (int) env('CHAT_HISTORY_MAX_CHATS', 200),
+        'per_chat' => (int) env('CHAT_HISTORY_PER_CHAT', 200),   // messages kept per conversation
+        'page_size' => 50,                                       // messages asked from Evolution per request
     ],
 ];

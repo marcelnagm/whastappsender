@@ -35,7 +35,8 @@ class SyncChatHistoryJob implements ShouldQueue
         }
 
         $maxChats = (int) config('chat.history.max_chats', 50);
-        $perChat = (int) config('chat.history.per_chat', 30);
+        $perChat = (int) config('chat.history.per_chat', 200);
+        $pageSize = max(10, (int) config('chat.history.page_size', 50));
 
         try {
             $chats = $client->findChats($instance->instance_name);
@@ -44,6 +45,9 @@ class SyncChatHistoryJob implements ShouldQueue
 
             return;
         }
+
+        // newest conversations first: the ones people care about are imported before any limit is hit
+        usort($chats, fn ($a, $b) => $this->chatTs($b) <=> $this->chatTs($a));
 
         $imported = 0;
         foreach ($chats as $row) {
@@ -56,11 +60,24 @@ class SyncChatHistoryJob implements ShouldQueue
                 continue;
             }
 
+            // page by page until the limit or the end of the conversation
+            $records = [];
             try {
-                $records = $client->findMessages($instance->instance_name, $jid, 1, $perChat);
+                for ($page = 1; count($records) < $perChat; $page++) {
+                    $batch = $client->findMessages($instance->instance_name, $jid, $page, $pageSize);
+                    if (!$batch) {
+                        break;
+                    }
+                    $records = array_merge($records, $batch);
+                    if (count($batch) < $pageSize) {
+                        break;
+                    }
+                }
             } catch (\Throwable $e) {
                 Log::warning("SyncChatHistoryJob findMessages failed for {$jid}: " . $e->getMessage());
-                continue;
+                if (!$records) {
+                    continue;
+                }
             }
 
             // Oldest first so the chat preview ends on the latest message
@@ -76,6 +93,16 @@ class SyncChatHistoryJob implements ShouldQueue
 
             $imported++;
         }
+    }
+
+    private function chatTs($row): int
+    {
+        $v = $row['lastMessage']['messageTimestamp'] ?? ($row['updatedAt'] ?? 0);
+        if (is_array($v)) {
+            $v = $v['low'] ?? 0;
+        }
+
+        return is_numeric($v) ? (int) $v : (int) strtotime((string) $v);
     }
 
     private function ts($record): int
