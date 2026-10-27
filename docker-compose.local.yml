@@ -8,8 +8,7 @@
 # Only bound to 127.0.0.1: nothing here is reachable from the network.
 #
 # Not for production: see .docker/ and install.sh vps.
-
-name: sama-local
+version: "3.3"
 
 services:
   mysql:
@@ -147,7 +146,7 @@ services:
   # One-shot: creates the bucket and makes it publicly readable (Evolution downloads media by URL).
   # Exits 0 on success; a wrong access key / secret makes it fail, which ./start-local.sh reports.
   minio-setup:
-    image: minio/mc:latest
+    image: pgsty/silo:RELEASE.2026-09-16T00-00-00Z
     container_name: sama_local_minio_setup
     restart: "no"
     depends_on:
