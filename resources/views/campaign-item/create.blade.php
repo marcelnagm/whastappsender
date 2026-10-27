@@ -1,7 +1,7 @@
 @extends('layouts.app-master')
 
 @section('template_title')
-    Create Campaign Item
+    {{ __('Create Campaign Item') }}
 @endsection
 
 @section('content')
@@ -13,7 +13,7 @@
 
                 <div class="card card-default">
                     <div class="card-header">
-                        <span class="card-title">Create Campaign Item</span>
+                        <span class="card-title">{{ __('Create Campaign Item') }}</span>
                     </div>
                     <div class="card-body">
                         <form method="POST" action="{{ route('campaign-items.store') }}"  role="form" enctype="multipart/form-data">

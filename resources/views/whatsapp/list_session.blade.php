@@ -1,11 +1,11 @@
 
 <thead class="thead-light">
     <tr>
-        <th class="" scope="col">Session</th>
-        <th class="" scope="col">Hardware</th>
-        <th class="" scope="col">Battery</th>
-        <th class="" scope="col">Connection</th>
-        <th class="" scope="col">Actions</th>
+        <th class="" scope="col">{{ __('Session') }}</th>
+        <th class="" scope="col">{{ __('Hardware') }}</th>
+        <th class="" scope="col">{{ __('Battery') }}</th>
+        <th class="" scope="col">{{ __('Connection') }}</th>
+        <th class="" scope="col">{{ __('Actions') }}</th>
     </tr>
 </thead>
 <tbody>    

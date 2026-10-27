@@ -26,14 +26,14 @@
                             ]) }}
                             {!! $errors->first('name', '<div class="invalid-feedback">:message</div>') !!}
                         </div>
-                        <small class="text-muted">Use clear names to identify the contact batch and offer.</small>
+                        <small class="text-muted">{{ __('Use clear names to identify the contact batch and offer.') }}</small>
                     </div>
                 </div>
 
                 <div class="col-md-4 d-flex align-items-center justify-content-center">
                     <div class="text-center p-3 border rounded-3 bg-light w-100">
                         <i class="bi bi-info-circle text-primary fs-3"></i>
-                        <p class="small mb-0 mt-2">Campaigns group your messages and contact lists for parallel processing.</p>
+                        <p class="small mb-0 mt-2">{{ __('Campaigns group your messages and contact lists for parallel processing.') }}</p>
                     </div>
                 </div>
             </div>
@@ -41,7 +41,7 @@
             <hr class="my-4">
 
             <div class="d-flex justify-content-end gap-2">
-                <a href="{{ route('campaigns.index') }}" class="btn btn-light border px-4">Cancel</a>
+                <a href="{{ route('campaigns.index') }}" class="btn btn-light border px-4">{{ __('Cancel') }}</a>
                 <button type="submit" class="btn btn-primary btn-lg px-5 shadow-sm">
                     <i class="bi bi-check-lg"></i> {{ $isEdit ? 'Update campaign' : 'Create campaign' }}
                 </button>

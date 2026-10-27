@@ -1,8 +1,8 @@
 
 <thead class="thead-light">
     <tr>
-        <th class="table-web" scope="col">When the action runs</th>
-        <th class="table-web" scope="col">Message sent</th>
+        <th class="table-web" scope="col">{{ __('When the action runs') }}</th>
+        <th class="table-web" scope="col">{{ __('Message sent') }}</th>
     </tr>
 </thead>
 <tbody>
@@ -24,7 +24,7 @@
     @endforeach
     @else
     <tr>
-        <td colspan='3'>No custom messages</td>
+        <td colspan='3'>{{ __('No custom messages') }}</td>
     </tr>
     @endif
 </tbody>

@@ -6,12 +6,12 @@
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-5 gap-3">
         <div>
             <h2 class="fw-bold text-dark mb-1">
-                <i class="bi bi-whatsapp text-success me-2"></i>My instances
+                <i class="bi bi-whatsapp text-success me-2"></i>{{ __('My instances') }}
             </h2>
-            <p class="text-muted mb-0 small">Manage your connections and SIM warmup.</p>
+            <p class="text-muted mb-0 small">{{ __('Manage your connections and SIM warmup.') }}</p>
         </div>
         <a href="{{ route('instances.create') }}" class="btn btn-primary px-4 shadow-sm fw-bold">
-            <i class="bi bi-plus-lg me-2"></i>New instance
+            <i class="bi bi-plus-lg me-2"></i>{{ __('New instance') }}
         </a>
     </div>
 
@@ -36,7 +36,7 @@
                             </span>
                             @if($instance->warmup)
                             <span class="badge bg-fire text-white border-0 px-2 py-1" style="font-size: 0.65rem;">
-                                <i class="bi bi-fire me-1"></i>WARMUP ON
+                                <i class="bi bi-fire me-1"></i>{{ __('WARMUP ON') }}
                             </span>
                             @endif
                         </div>
@@ -47,12 +47,12 @@
                     <div class="row g-2 mt-2">
                         <div class="col-6">
                             <a href="{{ route('whatsapp.index', $instance->id) }}" class="btn btn-outline-dark btn-sm w-100 py-2 fw-semibold">
-                                <i class="bi bi-qr-code-scan d-block mb-1"></i> Connect
+                                <i class="bi bi-qr-code-scan d-block mb-1"></i> {{ __('Connect') }}
                             </a>
                         </div>
                         <div class="col-6">
                             <a href="{{ route('instances.sync', $instance->id) }}" class="btn btn-light border btn-sm w-100 py-2 fw-semibold text-primary">
-                                <i class="bi bi-arrow-repeat d-block mb-1"></i> Sync
+                                <i class="bi bi-arrow-repeat d-block mb-1"></i> {{ __('Sync') }}
                             </a>
                         </div>
                         <div class="col-12 mt-2">
@@ -69,10 +69,10 @@
                     <form action="{{ route('instances.destroy', $instance->id) }}" method="POST" onsubmit="return confirm('WARNING: Deleting this instance will remove all linked data. Continue?')">
                         @csrf @method('DELETE')
                         <button type="submit" class="btn btn-link text-danger btn-sm p-0 text-decoration-none opacity-75 hover-opacity-100">
-                            <i class="bi bi-trash3 me-1"></i>Remove
+                            <i class="bi bi-trash3 me-1"></i>{{ __('Remove') }}
                         </button>
                     </form>
-                    <small class="text-muted" style="font-size: 0.75rem;">ID: #{{ $instance->id }}</small>
+                    <small class="text-muted" style="font-size: 0.75rem;">{{ __('ID: #') }}{{ $instance->id }}</small>
                 </div>
             </div>
         </div>

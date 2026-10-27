@@ -1,7 +1,7 @@
 @extends('layouts.app-master')
 
 @section('template_title')
-Edit item: {{ $campaignItem->name }}
+{{ __('Edit item:') }} {{ $campaignItem->name }}
 @endsection
 
 @section('content')
@@ -11,16 +11,16 @@ Edit item: {{ $campaignItem->name }}
             {{-- Header & breadcrumb --}}
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <div>
-                    <nav aria-label="breadcrumb">
+                    <nav aria-label="{{ __('breadcrumb') }}">
                         <ol class="breadcrumb mb-1">
-                            <li class="breadcrumb-item"><a href="{{ route('campaigns.index') }}">Campaigns</a></li>
-                            <li class="breadcrumb-item active">Edit item</li>
+                            <li class="breadcrumb-item"><a href="{{ route('campaigns.index') }}">{{ __('Campaigns') }}</a></li>
+                            <li class="breadcrumb-item active">{{ __('Edit item') }}</li>
                         </ol>
                     </nav>
-                    <h1 class="h3 mb-0 text-gray-800 fw-bold">Configure message</h1>
+                    <h1 class="h3 mb-0 text-gray-800 fw-bold">{{ __('Configure message') }}</h1>
                 </div>
                 <a href="{{ route('campaign-items.index') }}" class="btn btn-outline-secondary shadow-sm">
-                    <i class="bi bi-arrow-left"></i> Back
+                    <i class="bi bi-arrow-left"></i> {{ __('Back') }}
                 </a>
             </div>
 
@@ -31,8 +31,8 @@ Edit item: {{ $campaignItem->name }}
             <div class="alert alert-warning border-0 shadow-sm d-flex align-items-center mb-4">
                 <i class="bi bi-exclamation-triangle-fill fs-4 me-3"></i>
                 <div>
-                    <strong>Campaign is running!</strong><br>
-                    This message belongs to an active campaign. Editing now may cause inconsistent sends.
+                    <strong>{{ __('Campaign is running!') }}</strong><br>
+                    {{ __('This message belongs to an active campaign. Editing now may cause inconsistent sends.') }}
                 </div>
             </div>
             @endif
@@ -58,7 +58,7 @@ Edit item: {{ $campaignItem->name }}
                                 <div class="mb-4">
                                     {{ Form::label('name', 'Item name', ['class' => 'form-label fw-bold']) }}
                                     {{ Form::text('name', $campaignItem->name, ['class' => 'form-control' . ($errors->has('name') ? ' is-invalid' : ''), 'required']) }}
-                                    <small class="text-muted">Internal label for batch control.</small>
+                                    <small class="text-muted">{{ __('Internal label for batch control.') }}</small>
                                 </div>
 
                                 <div class="mb-4">
@@ -76,19 +76,19 @@ Edit item: {{ $campaignItem->name }}
                                             value="1"
                                             {{ old('welcome_enabled', $campaignItem->welcome_enabled) ? 'checked' : '' }}>
                                         <label class="form-check-label fw-bold" for="welcome_enabled">
-                                            Welcome message enabled
+                                            {{ __('Welcome message enabled') }}
                                         </label>
                                     </div>
-                                    <small class="text-muted">Enable to mark this item as the welcome message.</small>
+                                    <small class="text-muted">{{ __('Enable to mark this item as the welcome message.') }}</small>
                                 </div>
 
                                 {{-- Media URL vs upload --}}
                                 <div class="mb-4">
                                     <label class="form-label fw-bold d-flex justify-content-between">
-                                        Media source
+                                        {{ __('Media source') }}
                                         <div class="form-check form-switch ms-3">
                                             <input class="form-check-input" type="checkbox" id="toggle_upload" name="use_upload" value="1" {{ $campaignItem->image && !filter_var($campaignItem->image, FILTER_VALIDATE_URL) ? 'checked' : '' }}>
-                                            <label class="form-check-label text-muted" style="font-size: 0.8rem;" for="toggle_upload">Upload (S3)</label>
+                                            <label class="form-check-label text-muted" style="font-size: 0.8rem;" for="toggle_upload">{{ __('Upload (S3)') }}</label>
                                         </div>
                                     </label>
 
@@ -107,10 +107,10 @@ Edit item: {{ $campaignItem->name }}
                                             <input type="file" name="file_upload" id="file_upload" class="form-control" accept="{{ '.' . implode(',.', array_keys(\App\Models\CampaignItem::MEDIA_TYPES)) }}">
                                         </div>
                                         <div id="file_upload_error" class="small text-danger mt-1 d-none"></div>
-                                        <div class="form-text">Image, video, audio (sent as a voice note, without the text), PDF or Office document, up to 16 MB.</div>
+                                        <div class="form-text">{{ __('Image, video, audio (sent as a voice note, without the text), PDF or Office document, up to 16 MB.') }}</div>
                                         @if($campaignItem->image && !filter_var($campaignItem->image, FILTER_VALIDATE_URL))
                                         <div class="mt-2 small text-success">
-                                            <i class="bi bi-check-circle"></i> Current file: <code>{{ basename($campaignItem->image) }}</code>
+                                            <i class="bi bi-check-circle"></i> {{ __('Current file:') }} <code>{{ basename($campaignItem->image) }}</code>
                                         </div>
                                         @endif
                                     </div>
@@ -124,16 +124,16 @@ Edit item: {{ $campaignItem->name }}
                                             <button type="button" class="btn btn-sm btn-light" onclick="insertFormat('*')"><b>B</b></button>
                                             <button type="button" class="btn btn-sm btn-light" onclick="insertFormat('_')"><i>I</i></button>
                                         </div>
-                                        <small id="char_count" class="text-muted fw-bold">0 characters</small>
+                                        <small id="char_count" class="text-muted fw-bold">{{ __('0 characters') }}</small>
                                     </div>
                                 </div>
 
                                 <div class="d-grid gap-2">
                                     <button type="submit" class="btn btn-primary btn-lg shadow" {{ ($campaignItem->campaign && $campaignItem->campaign->status === 'running') ? 'disabled' : '' }}>
-                                        <i class="bi bi-cloud-upload"></i> Save changes
+                                        <i class="bi bi-cloud-upload"></i> {{ __('Save changes') }}
                                     </button>
                                     @if($campaignItem->campaign && $campaignItem->campaign->status === 'running')
-                                    <small class="text-danger text-center font-italic">Stop the campaign to allow editing.</small>
+                                    <small class="text-danger text-center font-italic">{{ __('Stop the campaign to allow editing.') }}</small>
                                     @endif
                                 </div>
                             </form>
@@ -146,7 +146,7 @@ Edit item: {{ $campaignItem->name }}
                         <div class="whatsapp-preview shadow-lg rounded-4 overflow-hidden border">
                             <div class="p-3 text-white d-flex align-items-center" style="background-color: #075e54;">
                                 <i class="bi bi-person-circle fs-4 me-2"></i>
-                                <span class="fw-bold">Preview WhatsApp</span>
+                                <span class="fw-bold">{{ __('Preview WhatsApp') }}</span>
                             </div>
                             <div class="whatsapp-body p-4" style="background-color: #e5ddd5; background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); min-height: 400px;">
                                 <div class="message-bubble bg-white p-2 rounded-3 shadow-sm position-relative" style="max-width: 90%; margin-left: auto; background-color: #dcf8c6 !important;">
@@ -163,7 +163,7 @@ Edit item: {{ $campaignItem->name }}
                                                 </div>
                                             </div>
                                         </div>
-                                        <div id="preview_audio_note" class="small text-muted mt-1 d-none"><i class="bi bi-mic me-1"></i>Audio is sent as a voice note: the message text is not sent with it.</div>
+                                        <div id="preview_audio_note" class="small text-muted mt-1 d-none"><i class="bi bi-mic me-1"></i>{{ __('Audio is sent as a voice note: the message text is not sent with it.') }}</div>
                                     </div>
                                     <div class="px-2 pt-1 pb-4">
                                         <span id="preview_text_content" class="text-break" style="white-space: pre-wrap; font-size: 0.9rem;"></span>

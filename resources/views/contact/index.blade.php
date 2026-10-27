@@ -8,20 +8,20 @@
     <div id="bulkActionsBar" class="card border-0 shadow-lg bg-dark text-white position-fixed bottom-0 start-50 translate-middle-x mb-4 d-none" style="z-index: 1050; min-width: 500px; border-radius: 50px;">
         <div class="card-body d-flex align-items-center justify-content-between py-2 px-4">
             <div class="small">
-                <span id="selectedCount" class="fw-bold text-warning">0</span> selected
+                <span id="selectedCount" class="fw-bold text-warning">0</span> {{ __('selected') }}
             </div>
             <div class="d-flex gap-2">
                 <button type="button" class="btn btn-success btn-sm fw-bold rounded-pill" onclick="submitBulk('ativo')">
-                    <i class="bi bi-check-circle me-1"></i> ACTIVATE
+                    <i class="bi bi-check-circle me-1"></i> {{ __('ACTIVATE') }}
                 </button>
                 <button type="button" class="btn btn-secondary btn-sm fw-bold rounded-pill" onclick="submitBulk('inativo')">
-                    <i class="bi bi-slash-circle me-1"></i> DEACTIVATE
+                    <i class="bi bi-slash-circle me-1"></i> {{ __('DEACTIVATE') }}
                 </button>
                 <button type="button" class="btn btn-danger btn-sm fw-bold rounded-pill" onclick="submitBulk('delete')">
-                    <i class="bi bi-trash me-1"></i> REMOVE
+                    <i class="bi bi-trash me-1"></i> {{ __('REMOVE') }}
                 </button>
                 <button type="button" class="btn btn-link btn-sm text-white text-decoration-none" onclick="toggleSelectAll(false)">
-                    Cancel
+                    {{ __('Cancel') }}
                 </button>
             </div>
         </div>
@@ -38,25 +38,25 @@
         <div class="col-sm-12">
             <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
                 <h1 class="h3 mb-0 text-gray-800 fw-bold">
-                    <i class="bi bi-people-fill text-primary me-2"></i>Contacts
+                    <i class="bi bi-people-fill text-primary me-2"></i>{{ __('Contacts') }}
                 </h1>
                 <div class="d-flex gap-2">
                     <form method="GET" action="{{ route('contacts.index') }}" class="d-flex gap-1 shadow-sm rounded bg-white">
                         <input type="text" name="search" class="form-control form-control-sm border-0 px-3 shadow-none"
-                            placeholder="Name, WhatsApp or email..." value="{{ request('search') }}" style="min-width: 250px;">
+                            placeholder="{{ __('Name, WhatsApp or email...') }}" value="{{ request('search') }}" style="min-width: 250px;">
                         <button type="submit" class="btn btn-primary btn-sm">
                             <i class="bi bi-search"></i>
                         </button>
                     </form>
                     <a href="{{ route('contacts.create') }}" class="btn btn-success btn-sm fw-bold px-3 shadow-sm">
-                        <i class="bi bi-plus-lg"></i> NEW
+                        <i class="bi bi-plus-lg"></i> {{ __('NEW') }}
                     </a>
                 </div>
             </div>
 
             <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
                 <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-bottom">
-                    <h6 class="m-0 font-weight-bold text-primary">Leads ({{ $contacts->total() }})</h6>
+                    <h6 class="m-0 font-weight-bold text-primary">{{ __('Leads (') }}{{ $contacts->total() }})</h6>
                 </div>
 
                 @if ($message = Session::get('success'))
@@ -73,12 +73,12 @@
                                     <th class="ps-4" style="width: 40px;">
                                         <input type="checkbox" class="form-check-input shadow-none" id="selectAll" onclick="toggleSelectAll(this.checked)">
                                     </th>
-                                    <th style="width: 60px;">Photo</th>
-                                    <th>Name / info</th>
+                                    <th style="width: 60px;">{{ __('Photo') }}</th>
+                                    <th>{{ __('Name / info') }}</th>
                                     <th>WhatsApp</th>
-                                    <th class="text-center">Score</th>
-                                    <th class="text-center">Status</th>
-                                    <th class="text-center">Actions</th>
+                                    <th class="text-center">{{ __('Score') }}</th>
+                                    <th class="text-center">{{ __('Status') }}</th>
+                                    <th class="text-center">{{ __('Actions') }}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -126,9 +126,9 @@
                                     </td>
                                     <td class="text-center" id="status-cell-{{ $contact->id }}">
                                         @if($contact->status === 'ativo')
-                                        <span class="badge bg-success-soft text-success rounded-pill px-3">Active</span>
+                                        <span class="badge bg-success-soft text-success rounded-pill px-3">{{ __('Active') }}</span>
                                         @elseif($contact->status === 'no-whatsapp')
-                                        <span class="badge bg-danger-soft text-danger rounded-pill px-3">No-WA</span>
+                                        <span class="badge bg-danger-soft text-danger rounded-pill px-3">{{ __('No-WA') }}</span>
                                         @else
                                         <span class="badge bg-secondary-soft text-secondary rounded-pill px-3">{{ $contact->status }}</span>
                                         @endif
@@ -146,7 +146,7 @@
                                     </td>
                                 </tr>
                                 @empty
-                                <tr><td colspan="7" class="text-center py-5 text-muted">No contacts found.</td></tr>
+                                <tr><td colspan="7" class="text-center py-5 text-muted">{{ __('No contacts found.') }}</td></tr>
                                 @endforelse
                             </tbody>
                         </table>

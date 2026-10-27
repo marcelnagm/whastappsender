@@ -5,8 +5,8 @@
     {{-- Header --}}
     <div class="mb-4 d-flex justify-content-between align-items-end">
         <div>
-            <h2 class="fw-bold mb-1 text-dark">Performance report</h2>
-            <p class="text-muted mb-0">Campaign: <span class="text-primary fw-semibold">{{ $campaign->name }}</span></p>
+            <h2 class="fw-bold mb-1 text-dark">{{ __('Performance report') }}</h2>
+            <p class="text-muted mb-0">{{ __('Campaign:') }} <span class="text-primary fw-semibold">{{ $campaign->name }}</span></p>
         </div>
         <div class="text-end text-muted small">
             <i class="bi bi-calendar3 me-1"></i> {{ $campaign->created_at->format('d/m/H:i') }}
@@ -18,7 +18,7 @@
         <div class="col-lg-4">
             <div class="card border-0 shadow-sm p-3 h-100">
                 <div class="card-header bg-white border-0 text-center pb-0">
-                    <h6 class="fw-bold text-uppercase small text-muted mb-0">Distribution</h6>
+                    <h6 class="fw-bold text-uppercase small text-muted mb-0">{{ __('Distribution') }}</h6>
                 </div>
                 <div class="card-body" style="height: 250px;">
                     <canvas id="campaignPieChart"></canvas>
@@ -57,13 +57,13 @@
             <table class="table align-middle mb-0 text-center table-hover sticky-table">
                 <thead class="bg-light small text-uppercase text-muted">
                     <tr>
-                        <th class="text-start ps-4 py-3">Item ID</th>
-                        <th>Total</th>
-                        <th class="text-danger">Errors</th>
-                        <th class="text-primary">Sent</th>
-                        <th class="text-info">Delivered</th>
-                        <th class="text-success">Read</th>
-                        <th class="text-end pe-4">Action</th>
+                        <th class="text-start ps-4 py-3">{{ __('Item ID') }}</th>
+                        <th>{{ __('Total') }}</th>
+                        <th class="text-danger">{{ __('Errors') }}</th>
+                        <th class="text-primary">{{ __('Sent') }}</th>
+                        <th class="text-info">{{ __('Delivered') }}</th>
+                        <th class="text-success">{{ __('Read') }}</th>
+                        <th class="text-end pe-4">{{ __('Action') }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -84,7 +84,7 @@
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="7" class="py-5 text-muted">No data.</td></tr>
+                        <tr><td colspan="7" class="py-5 text-muted">{{ __('No data.') }}</td></tr>
                     @endforelse
                 </tbody>
             </table>

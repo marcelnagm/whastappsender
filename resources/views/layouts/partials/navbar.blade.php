@@ -3,7 +3,7 @@
   <div class="container">
     <a class="navbar-brand d-flex align-items-center" href="/">
       {{-- Company logo --}}
-      <img src="{{ asset('images/logo.jpg') }}" alt="Logo" width="55" height="55" class="me-2 d-inline-block align-text-top">
+      <img src="{{ asset('images/logo.jpg') }}" alt="{{ __('Logo') }}" width="55" height="55" class="me-2 d-inline-block align-text-top">
       <span class="fw-bold">{{ config('app.name', 'Sender') }}</span>
     </a>
 

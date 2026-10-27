@@ -1,7 +1,7 @@
 @extends('layouts.app-master')
 
 @section('template_title')
-    New campaign - Mining System
+    {{ __('New campaign - Mining System') }}
 @endsection
 
 @section('content')
@@ -9,12 +9,12 @@
         <div class="d-flex align-items-center justify-content-between mb-4">
             <div>
                 <h1 class="h3 mb-0 text-gray-800 fw-bold">
-                    <i class="bi bi-rocket-takeoff text-primary me-2"></i>Launch new campaign
+                    <i class="bi bi-rocket-takeoff text-primary me-2"></i>{{ __('Launch new campaign') }}
                 </h1>
-                <p class="text-muted small mb-0">Set the name and initial parameters for your send strategy.</p>
+                <p class="text-muted small mb-0">{{ __('Set the name and initial parameters for your send strategy.') }}</p>
             </div>
             <a href="{{ route('campaigns.index') }}" class="btn btn-outline-secondary btn-sm shadow-sm">
-                <i class="bi bi-arrow-left"></i> Back to campaigns
+                <i class="bi bi-arrow-left"></i> {{ __('Back to campaigns') }}
             </a>
         </div>
 
@@ -25,7 +25,7 @@
 
                 <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
                     <div class="card-header bg-white border-0 py-3 border-bottom">
-                        <span class="fw-bold text-muted text-uppercase small">Basic settings</span>
+                        <span class="fw-bold text-muted text-uppercase small">{{ __('Basic settings') }}</span>
                     </div>
                     
                     <div class="card-body p-4">
@@ -46,9 +46,9 @@
                                 <i class="bi bi-info-circle fs-4"></i>
                             </div>
                             <div>
-                                <h6 class="fw-bold mb-1">Next steps</h6>
+                                <h6 class="fw-bold mb-1">{{ __('Next steps') }}</h6>
                                 <p class="text-muted small mb-0">
-                                    After creating the campaign you can add <strong>campaign items</strong> (messages/media) and link your <strong>contact</strong> list for sending.
+                                    {{ __('After creating the campaign you can add') }} <strong>{{ __('campaign items') }}</strong> (messages/media) and link your <strong>{{ __('contact') }}</strong> {{ __('list for sending.') }}
                                 </p>
                             </div>
                         </div>

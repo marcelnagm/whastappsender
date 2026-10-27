@@ -15,6 +15,10 @@ $app = new Illuminate\Foundation\Application(
     $_ENV['APP_BASE_PATH'] ?? dirname(__DIR__)
 );
 
+// Translations live in /lang (en, pt_BR, es + the .json files). Laravel 9 silently prefers resources/lang when that
+// folder exists, which would hide every selected language, so the path is pinned.
+$app->useLangPath(dirname(__DIR__) . '/lang');
+
 /*
 |--------------------------------------------------------------------------
 | Bind Important Interfaces

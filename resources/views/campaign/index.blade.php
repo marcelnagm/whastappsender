@@ -10,12 +10,12 @@
             <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
                 <div>
                     <h2 class="fw-bold text-dark mb-1">
-                        <i class="bi bi-megaphone-fill text-primary me-2"></i>Broadcast campaigns
+                        <i class="bi bi-megaphone-fill text-primary me-2"></i>{{ __('Broadcast campaigns') }}
                     </h2>
-                    <p class="text-muted mb-0 small">Monitor performance and health of your bulk sends.</p>
+                    <p class="text-muted mb-0 small">{{ __('Monitor performance and health of your bulk sends.') }}</p>
                 </div>
                 <a href="{{ route('campaigns.create') }}" class="btn btn-primary px-4 shadow-sm fw-bold">
-                    <i class="bi bi-plus-lg me-2"></i>Create campaign
+                    <i class="bi bi-plus-lg me-2"></i>{{ __('Create campaign') }}
                 </a>
             </div>
 
@@ -32,10 +32,10 @@
                             <thead class="bg-light text-muted small text-uppercase">
                                 <tr>
                                     <th class="ps-4 py-3" style="width: 80px;">ID</th>
-                                    <th class="py-3">Campaign / Owner</th>
-                                    <th class="py-3">Performance (success rate)</th>
-                                    <th class="py-3 text-center">Status</th>
-                                    <th class="py-3 text-center pe-4">Actions</th>
+                                    <th class="py-3">{{ __('Campaign / Owner') }}</th>
+                                    <th class="py-3">{{ __('Performance (success rate)') }}</th>
+                                    <th class="py-3 text-center">{{ __('Status') }}</th>
+                                    <th class="py-3 text-center pe-4">{{ __('Actions') }}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -53,7 +53,7 @@
                                     <td style="min-width: 250px;">
                                         @php $rate = $campaign->getSuccessRate(); @endphp
                                         <div class="d-flex justify-content-between mb-2 small">
-                                            <span class="text-muted">Delivery</span>
+                                            <span class="text-muted">{{ __('Delivery') }}</span>
                                             <span class="fw-bold {{ $rate < 50 ? 'text-danger' : 'text-success' }}">{{ $rate }}%</span>
                                         </div>
                                         <div class="progress shadow-sm" style="height: 8px; border-radius: 10px;">
@@ -65,14 +65,14 @@
                                     <td class="text-center">
                                         {{-- Dynamic status logic placeholder --}}
                                         <span class="badge rounded-pill bg-soft-success text-success border border-success px-3 py-2">
-                                            <i class="bi bi-play-fill me-1"></i> ACTIVE
+                                            <i class="bi bi-play-fill me-1"></i> {{ __('ACTIVE') }}
                                         </span>
                                     </td>
                                     <td class="text-center pe-4">
                                         <div class="btn-group shadow-sm border rounded">
                                             {{-- Detailed report route --}}
                                             <a class="btn btn-sm btn-primary px-3" href="{{ route('campaigns.report', $campaign->id) }}" title="Full report">
-                                                <i class="bi bi-bar-chart-line-fill me-1"></i> Report
+                                                <i class="bi bi-bar-chart-line-fill me-1"></i> {{ __('Report') }}
                                             </a>
 
                                             <a class="btn btn-sm btn-white text-dark border-start" href="{{ route('campaigns.show', $campaign->id) }}" title="View">
@@ -85,7 +85,7 @@
                                             <form action="{{ route('campaigns.destroy', $campaign->id) }}" method="POST" class="d-inline" onsubmit="return confirm('WARNING: Deleting this campaign will remove all send logs. Continue?')">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="submit" class="btn btn-sm btn-white text-danger border-start" title="Delete">
+                                                <button type="submit" class="btn btn-sm btn-white text-danger border-start" title="{{ __('Delete') }}">
                                                     <i class="bi bi-trash3"></i>
                                                 </button>
                                             </form>

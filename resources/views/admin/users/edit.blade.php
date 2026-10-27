@@ -11,13 +11,13 @@
                     <i class="bi bi-arrow-left"></i>
                 </a>
                 <h1 class="h3 mb-0 text-gray-800 fw-bold">
-                    <i class="bi bi-person-gear text-primary me-2"></i>Edit user profile
+                    <i class="bi bi-person-gear text-primary me-2"></i>{{ __('Edit user profile') }}
                 </h1>
             </div>
 
             <div class="card border-0 shadow-sm rounded-4">
                 <div class="card-header bg-white py-3 border-bottom">
-                    <h6 class="m-0 font-weight-bold text-primary">Account details: {{ $user->name }}</h6>
+                    <h6 class="m-0 font-weight-bold text-primary">{{ __('Account details:') }} {{ $user->name }}</h6>
                 </div>
 
                 <div class="card-body p-4">
@@ -37,12 +37,12 @@
 
                         <div class="row g-3">
                             <div class="col-md-12">
-                                <label for="name" class="form-label small fw-bold text-uppercase">Full name</label>
+                                <label for="name" class="form-label small fw-bold text-uppercase">{{ __('Full name') }}</label>
                                 <input type="text" name="name" id="name" class="form-control" value="{{ old('name', $user->name) }}" placeholder="e.g. Jane Smith">
                             </div>
 
                             <div class="col-md-6">
-                                <label for="username" class="form-label small fw-bold text-uppercase">Username (login)</label>
+                                <label for="username" class="form-label small fw-bold text-uppercase">{{ __('Username (login)') }}</label>
                                 <div class="input-group">
                                     <span class="input-group-text bg-light">@</span>
                                     <input type="text" name="username" id="username" class="form-control" value="{{ old('username', $user->username) }}">
@@ -50,7 +50,7 @@
                             </div>
 
                             <div class="col-md-6">
-                                <label for="email" class="form-label small fw-bold text-uppercase">Official email</label>
+                                <label for="email" class="form-label small fw-bold text-uppercase">{{ __('Official email') }}</label>
                                 <input type="email" name="email" id="email" class="form-control" value="{{ old('email', $user->email) }}">
                             </div>
 
@@ -59,26 +59,26 @@
                             <div class="col-md-12">
                                 <div class="alert alert-light border-0 small mb-3">
                                     <i class="bi bi-info-circle me-2 text-primary"></i> 
-                                    Leave the password fields <strong>blank</strong> if you do not want to change the password.
+                                    {{ __('Leave the password fields') }} <strong>{{ __('blank') }}</strong> {{ __('if you do not want to change the password.') }}
                                 </div>
                             </div>
 
                             <div class="col-md-6">
-                                <label for="password" class="form-label small fw-bold text-uppercase">New password</label>
+                                <label for="password" class="form-label small fw-bold text-uppercase">{{ __('New password') }}</label>
                                 <input type="password" name="password" id="password" class="form-control" placeholder="••••••••">
                             </div>
 
                             <div class="col-md-6">
-                                <label for="password_confirmation" class="form-label small fw-bold text-uppercase">Confirm new password</label>
+                                <label for="password_confirmation" class="form-label small fw-bold text-uppercase">{{ __('Confirm new password') }}</label>
                                 <input type="password" name="password_confirmation" id="password_confirmation" class="form-control" placeholder="••••••••">
                             </div>
 
                             <div class="col-md-12 mt-5 d-flex justify-content-between">
                                 <button type="button" class="btn btn-link text-danger fw-bold text-decoration-none" onclick="window.history.back()">
-                                    Cancel
+                                    {{ __('Cancel') }}
                                 </button>
                                 <button type="submit" class="btn btn-primary px-5 shadow-sm fw-bold">
-                                    <i class="bi bi-check2-circle me-2"></i>Save changes
+                                    <i class="bi bi-check2-circle me-2"></i>{{ __('Save changes') }}
                                 </button>
                             </div>
                         </div>
@@ -88,7 +88,7 @@
             
             <div class="mt-4 text-center">
                 <small class="text-muted">
-                    User created: <strong>{{ $user->created_at->format('d/m/Y H:i') }}</strong> | 
+                    {{ __('User created:') }} <strong>{{ $user->created_at->format('d/m/Y H:i') }}</strong> | 
                     Last updated: <strong>{{ $user->updated_at->format('d/m/Y H:i') }}</strong>
                 </small>
             </div>

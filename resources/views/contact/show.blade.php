@@ -1,7 +1,7 @@
 @extends('layouts.app-master')
 
 @section('template_title')
-    Profile: {{ $contact->name }}
+    {{ __('Profile:') }} {{ $contact->name }}
 @endsection
 
 @section('content')
@@ -9,20 +9,20 @@
     <div class="d-flex align-items-center justify-content-between mb-4">
         <div>
             <h1 class="h3 mb-0 text-gray-800 fw-bold">
-                <i class="bi bi-person-badge text-primary me-2"></i>Lead profile
+                <i class="bi bi-person-badge text-primary me-2"></i>{{ __('Lead profile') }}
             </h1>
-            <p class="text-muted small mb-0">Profile and send history.</p>
+            <p class="text-muted small mb-0">{{ __('Profile and send history.') }}</p>
         </div>
         <div class="d-flex gap-2">
             <a class="btn btn-outline-secondary btn-sm fw-bold shadow-sm px-3" href="{{ route('contacts.index') }}">
-                <i class="bi bi-arrow-left me-1"></i> BACK
+                <i class="bi bi-arrow-left me-1"></i> {{ __('BACK') }}
             </a>
             {{-- Manual sync --}}
             <button class="btn btn-info btn-sm fw-bold shadow-sm px-3 text-white" onclick="syncProfile({{ $contact->id }})" id="btnSync">
-                <i class="bi bi-arrow-clockwise me-1" id="syncIcon"></i> SYNC
+                <i class="bi bi-arrow-clockwise me-1" id="syncIcon"></i> {{ __('SYNC') }}
             </button>
             <a class="btn btn-primary btn-sm fw-bold shadow-sm px-3" href="{{ route('contacts.edit', $contact->id) }}">
-                <i class="bi bi-pencil me-1"></i> EDIT
+                <i class="bi bi-pencil me-1"></i> {{ __('EDIT') }}
             </a>
         </div>
     </div>
@@ -61,11 +61,11 @@
                     </div>
 
                     <h4 class="fw-bold mt-3 mb-0 text-dark">{{ $contact->name }}</h4>
-                    <p class="text-muted small mb-3">Internal ID: #{{ $contact->id }}</p>
+                    <p class="text-muted small mb-3">{{ __('Internal ID: #') }}{{ $contact->id }}</p>
                     
                     <div class="d-flex justify-content-center gap-2">
                         <span class="badge bg-primary-soft text-primary px-3 py-2 rounded-pill shadow-sm">
-                            <i class="bi bi-star-fill me-1"></i> SCORE: {{ $contact->score }}
+                            <i class="bi bi-star-fill me-1"></i> {{ __('SCORE:') }} {{ $contact->score }}
                         </span>
                     </div>
 
@@ -90,7 +90,7 @@
             <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
                 <div class="card-header bg-white py-3 border-bottom">
                     <h6 class="m-0 font-weight-bold text-dark text-uppercase small">
-                        <i class="bi bi-clock-history me-2 text-primary"></i>Recent sends
+                        <i class="bi bi-clock-history me-2 text-primary"></i>{{ __('Recent sends') }}
                     </h6>
                 </div>
                 <div class="card-body p-0">
@@ -98,10 +98,10 @@
                         <table class="table table-hover align-middle mb-0">
                             <thead class="bg-light x-small text-muted text-uppercase fw-bold">
                                 <tr>
-                                    <th class="ps-4">Job ID</th>
-                                    <th>Job status</th>
-                                    <th>Status WhatsApp</th>
-                                    <th class="text-end pe-4">Action</th>
+                                    <th class="ps-4">{{ __('Job ID') }}</th>
+                                    <th>{{ __('Job status') }}</th>
+                                    <th>{{ __('Status WhatsApp') }}</th>
+                                    <th class="text-end pe-4">{{ __('Action') }}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -118,13 +118,13 @@
                                         @if($job->status == 'erro')
                                             <form action="{{ route('whatsapp-jobs.retry', $job->id) }}" method="POST">
                                                 @csrf
-                                                <button type="submit" class="btn btn-xs btn-outline-danger fw-bold rounded-pill">RESEND</button>
+                                                <button type="submit" class="btn btn-xs btn-outline-danger fw-bold rounded-pill">{{ __('RESEND') }}</button>
                                             </form>
                                         @endif
                                     </td>
                                 </tr>
                                 @empty
-                                <tr><td colspan="4" class="text-center py-4 text-muted">No history yet.</td></tr>
+                                <tr><td colspan="4" class="text-center py-4 text-muted">{{ __('No history yet.') }}</td></tr>
                                 @endforelse
                             </tbody>
                         </table>

@@ -5,7 +5,7 @@
     <div class="card-body p-5">
         <div class="text-center mb-4">
             {{-- Optional: replace with a radar/data themed icon --}}
-            <img style="background-color: #dbc5c8; border-radius: 100%;;" src="{{ asset('images/logo.jpg') }}" alt="Logo" width="100%" height="100%" class="me-2 d-inline-block align-text-top">
+            <img style="background-color: #dbc5c8; border-radius: 100%;;" src="{{ asset('images/logo.jpg') }}" alt="{{ __('Logo') }}" width="100%" height="100%" class="me-2 d-inline-block align-text-top">
             
             <h2 class="fw-bold">{{env('APP_NAME ')}}</h2>
             <p class="text-muted">{{ __('Sign in to your intelligence hub') }}</p>

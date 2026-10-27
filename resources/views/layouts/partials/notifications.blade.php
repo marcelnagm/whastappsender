@@ -5,12 +5,12 @@
         @if($unreadCount > 0)
             <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.6rem;">
                 {{ $unreadCount }}
-                <span class="visually-hidden">unread notifications</span>
+                <span class="visually-hidden">{{ __('unread notifications') }}</span>
             </span>
         @endif
     </a>
     <ul class="dropdown-menu dropdown-menu-end shadow border-0" aria-labelledby="notifDropdown" style="width: 300px; max-height: 400px; overflow-y: auto;">
-        <li class="dropdown-header border-bottom pb-2 mb-2">Recent notifications</li>
+        <li class="dropdown-header border-bottom pb-2 mb-2">{{ __('Recent notifications') }}</li>
         
         @forelse(auth()->user()->unreadNotifications as $notification)
             <li>
@@ -30,7 +30,7 @@
         @empty
             <li class="p-4 text-center">
                 <i class="bi bi-bell-slash text-muted d-block mb-2 fs-3"></i>
-                <span class="small text-muted">You are all caught up.</span>
+                <span class="small text-muted">{{ __('You are all caught up.') }}</span>
             </li>
         @endforelse
 
@@ -39,7 +39,7 @@
                 <form action="{{ route('notifications.clear') }}" method="POST">
                     @csrf
                     <button type="submit" class="dropdown-item text-center small text-primary fw-bold py-2">
-                        Mark all as read
+                        {{ __('Mark all as read') }}
                     </button>
                 </form>
             </li>

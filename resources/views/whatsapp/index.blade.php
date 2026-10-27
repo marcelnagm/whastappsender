@@ -12,7 +12,7 @@
             <div class="card-header bg-white border-0 col-12" style="width: 1024px" >
                 <div class="row align-items-center">
                     <div class="col-8">
-                        <h3 class="mb-0">Whatsapp</h3>                            
+                        <h3 class="mb-0">{{ __('Whatsapp') }}</h3>                            
                     </div>                       
                 </div>
             </div>

@@ -15,6 +15,6 @@ class AdminMiddleware
         }
 
         // Otherwise redirect home with an error
-        return redirect('/')->with('error', 'Access denied. Administrators only.');
+        return redirect('/')->with('error', __('Access denied. Administrators only.'));
     }
 }

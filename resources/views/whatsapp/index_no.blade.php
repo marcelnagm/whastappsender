@@ -19,46 +19,46 @@
                                 <div class="icon icon-shape bg-success text-white rounded-circle shadow me-3">
                                     <i class="fab fa-whatsapp"></i>
                                 </div>
-                                <h2 class="mb-0 fw-bold">Connect WhatsApp</h2>
+                                <h2 class="mb-0 fw-bold">{{ __('Connect WhatsApp') }}</h2>
                             </div>
 
-                            <h4 class="text-muted mb-4">Follow these steps to pair your device:</h4>
+                            <h4 class="text-muted mb-4">{{ __('Follow these steps to pair your device:') }}</h4>
 
                             <ul class="list-unstyled mb-5">
                                 <li class="mb-4 d-flex align-items-start">
                                     <span
                                         class="badge badge-primary rounded-circle me-3 d-flex align-items-center justify-content-center"
                                         style="width:28px; height:28px;">1</span>
-                                    <div class="text-dark">Open <strong>WhatsApp</strong> on your phone.</div>
+                                    <div class="text-dark">{{ __('Open') }} <strong>WhatsApp</strong> {{ __('on your phone.') }}</div>
                                 </li>
                                 <li class="mb-4 d-flex align-items-start">
                                     <span
                                         class="badge badge-primary rounded-circle me-3 d-flex align-items-center justify-content-center"
                                         style="width:28px; height:28px;">2</span>
                                     <div>
-                                        Tap <strong>More options</strong> ( <i class="fas fa-ellipsis-v small"></i>
+                                        {{ __('Tap') }} <strong>{{ __('More options') }}</strong> ( <i class="fas fa-ellipsis-v small"></i>
                                         ) or
-                                        <strong>Settings</strong> ( <i class="fas fa-cog small"></i> ).
+                                        <strong>{{ __('Settings') }}</strong> ( <i class="fas fa-cog small"></i> ).
                                     </div>
                                 </li>
                                 <li class="mb-4 d-flex align-items-start">
                                     <span
                                         class="badge badge-primary rounded-circle me-3 d-flex align-items-center justify-content-center"
                                         style="width:28px; height:28px;">3</span>
-                                    <div>Select <strong>Linked devices</strong> and tap <strong>Link a device</strong>.</div>
+                                    <div>{{ __('Select') }} <strong>{{ __('Linked devices') }}</strong> {{ __('and tap') }} <strong>{{ __('Link a device') }}</strong>.</div>
                                 </li>
                                 <li class="d-flex align-items-start">
                                     <span
                                         class="badge badge-primary rounded-circle me-3 d-flex align-items-center justify-content-center"
                                         style="width:28px; height:28px;">4</span>
-                                    <div>Point your camera at this screen to scan the <strong>QR code</strong>.</div>
+                                    <div>{{ __('Point your camera at this screen to scan the') }} <strong>{{ __('QR code') }}</strong>.</div>
                                 </li>
                             </ul>
 
                             <div class="alert alert-secondary border-0 shadow-none rounded-3">
                                 <div class="d-flex align-items-center text-dark small">
                                     <i class="fas fa-info-circle text-info me-2 fs-4"></i>
-                                    <span><strong>Important:</strong> Keep the phone online so mining and sending jobs can run in real time.</span>
+                                    <span><strong>{{ __('Important:') }}</strong> {{ __('Keep the phone online so mining and sending jobs can run in real time.') }}</span>
                                 </div>
                             </div>
                         </div>
@@ -71,12 +71,12 @@
                                     <div id="qr" class="d-flex align-items-center justify-content-center"
                                         style="min-height: 260px; min-width: 260px;">
                                         @if(is_array($res) && isset($res['base64']))
-                                        <img src="{{ $res['base64'] }}" class="img-fluid" alt="QR Code"
+                                        <img src="{{ $res['base64'] }}" class="img-fluid" alt="{{ __('QR Code') }}"
                                             id="current_qr_img">
                                         @else
                                         <div class="text-center text-muted py-5" id="qr_placeholder">
                                             <i class="fas fa-sync fa-spin fa-3x mb-3 text-lighter"></i>
-                                            <p class="small fw-bold">Starting session...</p>
+                                            <p class="small fw-bold">{{ __('Starting session...') }}</p>
                                         </div>
                                         @endif
                                     </div>
@@ -84,10 +84,10 @@
 
                                 <div class="d-grid">
                                     <button type="button" onclick="getQR();" class="btn btn-primary btn-lg shadow-sm">
-                                        <i class="fas fa-sync-alt me-2"></i> Refresh QR code
+                                        <i class="fas fa-sync-alt me-2"></i> {{ __('Refresh QR code') }}
                                     </button>
                                 </div>
-                                <p class="text-muted mt-3 x-small"><i class="fas fa-lock me-1"></i> End-to-end encrypted connection.</p>
+                                <p class="text-muted mt-3 x-small"><i class="fas fa-lock me-1"></i> {{ __('End-to-end encrypted connection.') }}</p>
                             </div>
                         </div>
                     </div>

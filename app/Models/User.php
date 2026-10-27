@@ -8,7 +8,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
-class User extends Authenticatable
+class User extends Authenticatable implements \Illuminate\Contracts\Translation\HasLocalePreference
 {
     use HasApiTokens, HasFactory, Notifiable;
 
@@ -124,5 +124,11 @@ class User extends Authenticatable
     public function aiRules()
     {
         return $this->hasMany('App\Models\AiRule', 'user_id', 'id');
+    }
+
+    /** E-mails and notifications (also when sent from a queue worker) use the language the person picked. */
+    public function preferredLocale()
+    {
+        return $this->locale ?: config('languages.default');
     }
 }

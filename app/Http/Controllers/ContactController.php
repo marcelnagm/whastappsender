@@ -24,13 +24,13 @@ class ContactController extends Controller
         $novoStatus = $request->input('status_value'); // e.g. ativo, inativo
 
         if (!$ids || !is_array($ids)) {
-            return redirect()->back()->with('error', 'No contacts selected.');
+            return redirect()->back()->with('error', __('No contacts selected.'));
         }
 
         // Allowed statuses only (prevents invalid injected values)
         $statusPermitidos = ['ativo', 'inativo', 'no-whatsapp'];
         if (!in_array($novoStatus, $statusPermitidos)) {
-            return redirect()->back()->with('error', 'Invalid status requested.');
+            return redirect()->back()->with('error', __('Invalid status requested.'));
         }
 
         try {
@@ -43,10 +43,10 @@ class ContactController extends Controller
 
             $afetados = $query->update(['status' => $novoStatus]);
 
-            return redirect()->back()->with('success', "Status updated for {$afetados} contact(s) to '{$novoStatus}'.");
+            return redirect()->back()->with('success', __('Status updated for :count contact(s) to \':status\'.', ['count' => $afetados, 'status' => $novoStatus]));
         } catch (\Exception $e) {
             \Log::error("Bulk status error: " . $e->getMessage());
-            return redirect()->back()->with('error', 'Failed to update contact status.');
+            return redirect()->back()->with('error', __('Failed to update contact status.'));
         }
     }
 
@@ -59,7 +59,7 @@ class ContactController extends Controller
         $ids = json_decode($request->input('ids'), true);
 
         if (!$ids || !is_array($ids)) {
-            return redirect()->back()->with('error', 'Invalid selection for removal.');
+            return redirect()->back()->with('error', __('Invalid selection for removal.'));
         }
 
         try {
@@ -72,10 +72,10 @@ class ContactController extends Controller
 
             $deletados = $query->delete();
 
-            return redirect()->back()->with('success', "{$deletados} contact(s) removed from your database.");
+            return redirect()->back()->with('success', __(':count contact(s) removed from your database.', ['count' => $deletados]));
         } catch (\Exception $e) {
             \Log::error("Bulk delete error: " . $e->getMessage());
-            return redirect()->back()->with('error', 'Internal error while processing bulk delete.');
+            return redirect()->back()->with('error', __('Internal error while processing bulk delete.'));
         }
     }
 
@@ -126,7 +126,7 @@ class ContactController extends Controller
         $contact = Contact::create($data);
 
         return redirect()->route('contacts.index')
-            ->with('success', 'Contact created successfully.');
+            ->with('success', __('Contact created successfully.'));
     }
 
     /**
@@ -181,7 +181,7 @@ class ContactController extends Controller
         $contact->update($request->all());
 
         return redirect()->route('contacts.index')
-            ->with('success', 'Contact updated successfully');
+            ->with('success', __('Contact updated successfully'));
     }
 
     /**
@@ -194,7 +194,7 @@ class ContactController extends Controller
         $contact = Contact::find($id)->delete();
 
         return redirect()->route('contacts.index')
-            ->with('success', 'Contact deleted successfully');
+            ->with('success', __('Contact deleted successfully'));
     }
 
 
@@ -210,7 +210,7 @@ class ContactController extends Controller
             : '';
 
         return redirect()->route('contacts.index')
-            ->with('success', 'Contact imported' . $note);
+            ->with('success', __('Contact imported') . $note);
     }
     public function clean(Request $request)
     {
@@ -218,6 +218,6 @@ class ContactController extends Controller
         Contact::where('user_id', Auth::user()->id)->delete();
 
         return redirect()->route('contacts.index')
-            ->with('success', 'Contacts Cleared');
+            ->with('success', __('Contacts Cleared'));
     }
 }

@@ -1,7 +1,7 @@
 @extends('layouts.app-master')
 
 @section('template_title')
-    Update Campaign Item
+    {{ __('Update Campaign Item') }}
 @endsection
 
 @section('content')
@@ -13,7 +13,7 @@
 
                 <div class="card card-default">
                     <div class="card-header">
-                        <span class="card-title">Update Campaign Item</span>
+                        <span class="card-title">{{ __('Update Campaign Item') }}</span>
                     </div>
                     <div class="card-body">
                         <form method="POST" id="my_form" action="{{ route('campaign-items.update', $campaignItem->id) }}"  role="form" enctype="multipart/form-data">

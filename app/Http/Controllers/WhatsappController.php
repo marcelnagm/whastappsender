@@ -47,7 +47,7 @@ class WhatsappController extends Controller
             app(\App\Services\Instances\InstanceHealth::class)->report($ins, true);
 
             return redirect()->route('instances.index')
-            ->with('success', 'WhatsApp connected successfully.');
+            ->with('success', __('WhatsApp connected successfully.'));
         } else {
             
             return view('whatsapp.index_no', [

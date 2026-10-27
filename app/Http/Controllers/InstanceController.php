@@ -43,7 +43,7 @@ class InstanceController extends Controller
             'status' => 'disconnected'
         ]);
 
-        return redirect()->route('instances.index')->with('success', 'Instance registered.');
+        return redirect()->route('instances.index')->with('success', __('Instance registered.'));
     }
 
     public function show(Instance $instance)
@@ -61,7 +61,7 @@ class InstanceController extends Controller
         WhatsappService::delete($instance->instance_name);
 
         return redirect()->route('instances.index')
-            ->with('success', 'Instance removed locally.');
+            ->with('success', __('Instance removed locally.'));
     }
 
     public function warmup(Instance $instance)
@@ -80,7 +80,7 @@ class InstanceController extends Controller
         $statusMsg = $instance->warmup ? 'enabled' : 'disabled';
 
         return redirect()->route('instances.index')
-            ->with('success', "Warmup {$statusMsg} successfully.");
+            ->with('success', __('Warmup :status successfully.', ['status' => __($statusMsg)]));
     }
 
     private function authorizeOwner(Instance $instance)
@@ -99,7 +99,7 @@ class InstanceController extends Controller
         if ($ins->isMine())
             \App\Jobs\SyncContactsJob::dispatch(auth()->id(), $ins->instance_name);
         else redirect()->route('instances.index')
-            ->with('error', 'This instance does not belong to you.');
-        return back()->with('success', "Instance {$id} sync started.");
+            ->with('error', __('This instance does not belong to you.'));
+        return back()->with('success', __('Instance :id sync started.', ['id' => $id]));
     }
 }

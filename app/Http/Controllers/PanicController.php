@@ -43,9 +43,9 @@ class PanicController extends Controller
                 '--no-interaction' => true // Avoid Symfony waiting on STDIN
             ]);
 
-            return back()->with('success', 'Send queue cleared. All pending jobs were removed.');
+            return back()->with('success', __('Send queue cleared. All pending jobs were removed.'));
         } catch (\Exception $e) {
-            return back()->with('error', 'Failed to clear queue: ' . $e->getMessage());
+            return back()->with('error', __('Failed to clear queue:') . ' ' . $e->getMessage());
         }
     }
 
@@ -57,9 +57,9 @@ class PanicController extends Controller
                 '--force' => true,
                 '--no-interaction' => true
             ]);
-            return back()->with('success', 'Warmup queue cleared. All pending jobs were removed.');
+            return back()->with('success', __('Warmup queue cleared. All pending jobs were removed.'));
         } catch (\Exception $e) {
-            return back()->with('error', 'Failed to clear queue: ' . $e->getMessage());
+            return back()->with('error', __('Failed to clear queue:') . ' ' . $e->getMessage());
         }
     }
 }

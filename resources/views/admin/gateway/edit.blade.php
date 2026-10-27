@@ -8,7 +8,7 @@
     @if(session('warning'))<div class="alert alert-warning">{{ session('warning') }}</div>@endif
 
     <h2 class="fw-bold mb-1"><i class="bi bi-credit-card-2-front text-primary me-2"></i>{{ __('Payment gateway') }}</h2>
-    <p class="text-muted">Mercado Pago · {{ $gateway->isReady() ? __('active') : __('inactive') }}
+    <p class="text-muted">{{ __('Mercado Pago ·') }} {{ $gateway->isReady() ? __('active') : __('inactive') }}
         @if($gateway->isConfigured())<span class="badge {{ $gateway->isSandbox() ? 'bg-warning text-dark' : 'bg-success' }}">{{ $gateway->isSandbox() ? __('test mode') : __('production') }}</span>@endif
     </p>
 
@@ -84,7 +84,7 @@
                 <button type="button" class="btn btn-sm btn-outline-secondary" onclick="navigator.clipboard.writeText(document.getElementById('webhookUrl').value)"><i class="bi bi-clipboard"></i></button>
             </div>
             <ul class="small mb-3">
-                <li><code>payment</code> — Pix / {{ __('card') }}</li>
+                <li><code>payment</code> {{ __('— Pix /') }} {{ __('card') }}</li>
                 <li><code>subscription_authorized_payment</code> — {{ __('recurring card charges') }}</li>
                 <li><code>subscription_preapproval</code> — {{ __('recurring card authorization') }}</li>
             </ul>

@@ -37,7 +37,7 @@ class UserController extends Controller
     {
         $user->active = $user->active  == 1 ? 0 : 1;
         $user->save();
-        return back()->with('success', 'User status updated.');
+        return back()->with('success', __('User status updated.'));
     }
 
     // Toggle role (admin / user)
@@ -46,7 +46,7 @@ class UserController extends Controller
         $newRole = $user->role === 'admin' ? 'user' : 'admin';
         $user->role = $newRole;
         $user->save();
-        return back()->with('success', 'Role updated successfully.');
+        return back()->with('success', __('Role updated successfully.'));
     }
 
     // Edit form
@@ -72,7 +72,7 @@ class UserController extends Controller
         }
 
         $user->update($data);
-        return redirect()->route('users.index')->with('success', 'User updated.');
+        return redirect()->route('users.index')->with('success', __('User updated.'));
     }
 
     public function editProfile(Request $request)
@@ -93,14 +93,14 @@ class UserController extends Controller
 
         return redirect()->route('profile.edit')
             ->with('api_token', $token->plainTextToken)
-            ->with('success', 'API token created. Copy it now — it will not be shown again.');
+            ->with('success', __('API token created. Copy it now — it will not be shown again.'));
     }
 
     public function revokeApiToken(Request $request, int $tokenId)
     {
         $request->user()->tokens()->where('id', $tokenId)->delete();
 
-        return redirect()->route('profile.edit')->with('success', 'API token revoked.');
+        return redirect()->route('profile.edit')->with('success', __('API token revoked.'));
     }
 
     public function updateProfile(Request $request)
@@ -135,13 +135,13 @@ class UserController extends Controller
 
         $user->update($data);
 
-        return redirect()->route('profile.edit')->with('success', 'Profile and AI settings updated successfully.');
+        return redirect()->route('profile.edit')->with('success', __('Profile and AI settings updated successfully.'));
     }
 
     // Deletion (destructive)
     public function destroy(User $user)
     {
         $user->delete();
-        return back()->with('success', 'User removed from the system.');
+        return back()->with('success', __('User removed from the system.'));
     }
 }

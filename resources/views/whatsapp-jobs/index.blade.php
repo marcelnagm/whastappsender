@@ -42,17 +42,17 @@ $cards = [
     <div id="bulkActionsBar" class="card border-0 shadow-lg bg-dark text-white position-fixed bottom-0 start-50 translate-middle-x mb-4 d-none" style="z-index: 1050; min-width: 450px; border-radius: 50px;">
         <div class="card-body d-flex align-items-center justify-content-between py-2 px-4">
             <div class="small">
-                <span id="selectedCount" class="fw-bold text-warning">0</span> selected
+                <span id="selectedCount" class="fw-bold text-warning">0</span> {{ __('selected') }}
             </div>
             <div class="d-flex gap-2">
                 <button type="button" class="btn btn-warning btn-sm fw-bold rounded-pill" onclick="submitBulk('retry')">
-                    <i class="bi bi-arrow-repeat me-1"></i> RETRY
+                    <i class="bi bi-arrow-repeat me-1"></i> {{ __('RETRY') }}
                 </button>
                 <button type="button" class="btn btn-danger btn-sm fw-bold rounded-pill" onclick="submitBulk('delete')">
-                    <i class="bi bi-trash me-1"></i> REMOVE
+                    <i class="bi bi-trash me-1"></i> {{ __('REMOVE') }}
                 </button>
                 <button type="button" class="btn btn-link btn-sm text-white text-decoration-none" onclick="toggleSelectAll(false)">
-                    Cancel
+                    {{ __('Cancel') }}
                 </button>
             </div>
         </div>
@@ -69,15 +69,15 @@ $cards = [
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h1 class="h3 mb-0 text-gray-800 fw-bold">
-                <i class="bi bi-terminal-split text-primary me-2"></i>Operations monitor
+                <i class="bi bi-terminal-split text-primary me-2"></i>{{ __('Operations monitor') }}
             </h1>
-            <p class="text-muted small mb-0">Send jobs and contact delivery health.</p>
+            <p class="text-muted small mb-0">{{ __('Send jobs and contact delivery health.') }}</p>
         </div>
         <div>
             <a href="{{ route('campaign-items.index') }}" class="btn btn-sm btn-secondary  fw-bold ms-2 shadow-sm">
-                <i class="bi bi-arrow-left me-1"></i> BACK
+                <i class="bi bi-arrow-left me-1"></i> {{ __('BACK') }}
             </a>
-            <span class="badge bg-dark px-3 py-2 ms-2 shadow-sm">LOTE #{{ $id }}</span>
+            <span class="badge bg-dark px-3 py-2 ms-2 shadow-sm">{{ __('LOTE #') }}{{ $id }}</span>
         </div>
     </div>
 
@@ -88,7 +88,7 @@ $cards = [
         <div class="col-lg-4">
             <div class="card border-0 shadow-sm p-3 h-100" style="border-radius: 15px;">
                 <div class="card-header bg-white border-0 text-center pb-0">
-                    <h6 class="fw-bold text-uppercase small text-muted mb-0">Evolution API distribution</h6>
+                    <h6 class="fw-bold text-uppercase small text-muted mb-0">{{ __('Evolution API distribution') }}</h6>
                 </div>
                 <div class="card-body position-relative" style="height: 250px;">
                     <canvas id="jobsPieChart"></canvas>
@@ -123,7 +123,7 @@ $cards = [
         </div>
         <div>
             <button class="btn btn-outline-primary btn-sm fw-bold shadow-sm" type="button" data-bs-toggle="collapse" data-bs-target="#filterCollapse">
-                <i class="bi bi-funnel-fill me-1"></i> FILTERS
+                <i class="bi bi-funnel-fill me-1"></i> {{ __('FILTERS') }}
             </button>
         </div>
     </div>
@@ -133,30 +133,30 @@ $cards = [
         <div class="card border-0 shadow-sm card-body bg-white border-start border-primary border-4">
             <form method="GET" action="{{ route('whatsapp-jobs.index', $id) }}" class="row g-3">
                 <div class="col-md-4">
-                    <label class="x-small fw-bold text-uppercase text-muted mb-1">Contact search</label>
-                    <input type="text" name="contact" class="form-control form-control-sm" value="{{ request('contact') }}" placeholder="Name or number...">
+                    <label class="x-small fw-bold text-uppercase text-muted mb-1">{{ __('Contact search') }}</label>
+                    <input type="text" name="contact" class="form-control form-control-sm" value="{{ request('contact') }}" placeholder="{{ __('Name or number...') }}">
                 </div>
                 <div class="col-md-3">
-                    <label class="x-small fw-bold text-uppercase text-muted mb-1">Internal status</label>
+                    <label class="x-small fw-bold text-uppercase text-muted mb-1">{{ __('Internal status') }}</label>
                     <select name="status" class="form-select form-select-sm">
-                        <option value="">All</option>
-                        <option value="processado" {{ request('status') == 'processado' ? 'selected' : '' }}>Success</option>
-                        <option value="erro" {{ request('status') == 'erro' ? 'selected' : '' }}>Failed</option>
-                        <option value="pendente" {{ request('status') == 'pendente' ? 'selected' : '' }}>Queued</option>
+                        <option value="">{{ __('All') }}</option>
+                        <option value="processado" {{ request('status') == 'processado' ? 'selected' : '' }}>{{ __('Success') }}</option>
+                        <option value="erro" {{ request('status') == 'erro' ? 'selected' : '' }}>{{ __('Failed') }}</option>
+                        <option value="pendente" {{ request('status') == 'pendente' ? 'selected' : '' }}>{{ __('Queued') }}</option>
                     </select>
                 </div>
                 <div class="col-md-3">
-                    <label class="x-small fw-bold text-uppercase text-muted mb-1">WhatsApp status</label>
+                    <label class="x-small fw-bold text-uppercase text-muted mb-1">{{ __('WhatsApp status') }}</label>
                     <select name="evolution_status" class="form-select form-select-sm">
-                        <option value="">All</option>
+                        <option value="">{{ __('All') }}</option>
                         @foreach($statusMapEvolution as $key => $label)
                         <option value="{{ $key }}" {{ request('evolution_status') == $key ? 'selected' : '' }}>{{ $label }}</option>
                         @endforeach
                     </select>
                 </div>
                 <div class="col-md-2 d-flex align-items-end gap-2">
-                    <button type="submit" class="btn btn-primary btn-sm w-100 fw-bold shadow-sm">FILTER</button>
-                    <a href="{{ route('whatsapp-jobs.index', $id) }}" class="btn btn-light btn-sm w-100 fw-bold border">CLEAR</a>
+                    <button type="submit" class="btn btn-primary btn-sm w-100 fw-bold shadow-sm">{{ __('FILTER') }}</button>
+                    <a href="{{ route('whatsapp-jobs.index', $id) }}" class="btn btn-light btn-sm w-100 fw-bold border">{{ __('CLEAR') }}</a>
                 </div>
             </form>
         </div>
@@ -172,13 +172,13 @@ $cards = [
                         <th class="ps-4" style="width: 40px;">
                             <input type="checkbox" class="form-check-input shadow-none" id="selectAll" onclick="toggleSelectAll(this.checked)">
                         </th>
-                        <th>Recipient</th>
-                        <th>Internal status</th>
-                        <th>WhatsApp status</th>
-                        <th>Actions</th>
+                        <th>{{ __('Recipient') }}</th>
+                        <th>{{ __('Internal status') }}</th>
+                        <th>{{ __('WhatsApp status') }}</th>
+                        <th>{{ __('Actions') }}</th>
                         @if(Auth::user()->role === 'admin')
-                        <th class="text-center">Error log</th>
-                        <th class="text-center">DevTools</th>
+                        <th class="text-center">{{ __('Error log') }}</th>
+                        <th class="text-center">{{ __('DevTools') }}</th>
                         @endif
                     </tr>
                 </thead>
@@ -207,7 +207,7 @@ $cards = [
                                     <div class="x-small {{ !$isAtivo ? 'text-danger fw-bold' : 'text-muted' }}">
                                         {{ $contact->contact ?? '---' }}
                                         @if(!$isAtivo && $contact->status === 'no-whatsapp')
-                                        <span class="ms-1 border-start ps-1 text-uppercase" style="font-size: 0.6rem;">[No-WA]</span>
+                                        <span class="ms-1 border-start ps-1 text-uppercase" style="font-size: 0.6rem;">{{ __('[No-WA]') }}</span>
                                         @endif
                                     </div>
                                 </div>
@@ -224,21 +224,21 @@ $cards = [
                                 <i class="bi bi-whatsapp me-1"></i>{{ $statusMapEvolution[$job->evolution_status] ?? $job->evolution_status }}
                             </span>
                             @else
-                            <span class="text-muted opacity-50 italic small">Waiting...</span>
+                            <span class="text-muted opacity-50 italic small">{{ __('Waiting...') }}</span>
                             @endif
                         </td>
                         <td>
                             <div class="btn-group">
                                 <button type="button" class="btn btn-xs btn-outline-secondary"
                                     onclick="window.copyToClipboard(this.getAttribute('data-content'), 'JSON copied to clipboard')"
-                                    data-content='{!! $payloadJson !!}' title="Copy payload">
+                                    data-content='{!! $payloadJson !!}' title="{{ __('Copy payload') }}">
                                     <i class="bi bi-filetype-json"></i>
                                 </button>
 
                                 @if($job->status == 'erro')
                                 <form action="{{ route('whatsapp-jobs.retry', $job->id) }}" method="POST" class="d-inline">
                                     @csrf
-                                    <button type="submit" class="btn btn-xs btn-outline-danger shadow-none" title="Retry">
+                                    <button type="submit" class="btn btn-xs btn-outline-danger shadow-none" title="{{ __('Retry') }}">
                                         <i class="bi bi-arrow-repeat"></i>
                                     </button>
                                 </form>
@@ -252,7 +252,7 @@ $cards = [
                             <button type="button" class="btn btn-xs btn-danger"
                                 onclick="window.copyToClipboard(this.getAttribute('data-content'), 'Error copied to clipboard')"
                                 data-content="{{ $job->erro_mensagem }}">
-                                <i class="bi bi-bug-fill me-1"></i> Log
+                                <i class="bi bi-bug-fill me-1"></i> {{ __('Log') }}
                             </button>
                             @else
                             <span class="text-muted small opacity-50">---</span>
@@ -262,7 +262,7 @@ $cards = [
                             <button type="button" class="btn btn-sm btn-dark fw-mono"
                                 onclick="window.copyToClipboard(this.getAttribute('data-content'), 'cURL copied to clipboard')"
                                 data-content="{{ $curlCommand }}">
-                                <i class="bi bi-terminal-fill me-1"></i> cURL
+                                <i class="bi bi-terminal-fill me-1"></i> {{ __('cURL') }}
                             </button>
                         </td>
                         @endif
@@ -271,7 +271,7 @@ $cards = [
                     <tr>
                         <td colspan="100%" class="text-center py-5 text-muted border-0">
                             <i class="bi bi-inbox fs-2 d-block mb-2"></i>
-                            No records found for the current filters.
+                            {{ __('No records found for the current filters.') }}
                         </td>
                     </tr>
                     @endforelse

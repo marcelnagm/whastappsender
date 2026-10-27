@@ -33,7 +33,7 @@
                 @if ($instances->count() > 1)
                     <select id="wa-instance-select" class="form-select form-select-sm" aria-label="{{ __('Instance') }}">
                         @foreach ($instances as $ins)
-                            <option value="{{ $ins->id }}" @if($ins->id === $current->id) selected @endif>
+                            <option value="{{ $ins->id }}" @if($ins->id === $current->id) {{ __('selected') }} @endif>
                                 {{ $ins->name }} · {{ $ins->instance_name }}
                             </option>
                         @endforeach

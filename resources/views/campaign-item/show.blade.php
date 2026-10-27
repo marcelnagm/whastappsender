@@ -1,7 +1,7 @@
 @extends('layouts.app-master')
 
 @section('template_title')
-Details: {{ $campaignItem->name }}
+{{ __('Details:') }} {{ $campaignItem->name }}
 @endsection
 
 @section('content')
@@ -10,10 +10,10 @@ Details: {{ $campaignItem->name }}
         <div class="col-md-12">
             <div class="d-flex justify-content-between align-items-end mb-4">
                 <div>
-                    <nav aria-label="breadcrumb">
+                    <nav aria-label="{{ __('breadcrumb') }}">
                         <ol class="breadcrumb mb-1">
-                            <li class="breadcrumb-item small text-uppercase fw-bold"><a href="{{ route('campaign-items.index') }}" class="text-decoration-none">Campaign items</a></li>
-                            <li class="breadcrumb-item small text-uppercase fw-bold active">Details</li>
+                            <li class="breadcrumb-item small text-uppercase fw-bold"><a href="{{ route('campaign-items.index') }}" class="text-decoration-none">{{ __('Campaign items') }}</a></li>
+                            <li class="breadcrumb-item small text-uppercase fw-bold active">{{ __('Details') }}</li>
                         </ol>
                     </nav>
                     <h1 class="h3 mb-0 text-gray-800 fw-bold">
@@ -25,10 +25,10 @@ Details: {{ $campaignItem->name }}
                 </div>
                 <div class="d-flex gap-2">
                     <a class="btn btn-light border px-3 fw-bold shadow-sm" href="{{ route('campaign-items.index') }}">
-                        <i class="bi bi-arrow-left me-1"></i> Back
+                        <i class="bi bi-arrow-left me-1"></i> {{ __('Back') }}
                     </a>
                     <a class="btn btn-success px-3 fw-bold shadow-sm" href="{{ route('campaign-items.edit', $campaignItem->id) }}">
-                        <i class="bi bi-pencil me-1"></i> Edit
+                        <i class="bi bi-pencil me-1"></i> {{ __('Edit') }}
                     </a>
                 </div>
             </div>
@@ -37,13 +37,13 @@ Details: {{ $campaignItem->name }}
                 <div class="col-lg-5">
                     <div class="card border-0 shadow-sm mb-4" style="border-radius: 15px;">
                         <div class="card-header bg-white py-3 border-bottom-0">
-                            <h6 class="m-0 fw-bold text-primary text-uppercase small" style="letter-spacing: 1px;">Item details</h6>
+                            <h6 class="m-0 fw-bold text-primary text-uppercase small" style="letter-spacing: 1px;">{{ __('Item details') }}</h6>
                         </div>
                         <div class="card-body p-0">
                             <table class="table table-hover mb-0">
                                 <tbody class="align-middle">
                                     <tr>
-                                        <td class="ps-4 fw-bold text-muted small" style="width: 35%;">Campaign:</td>
+                                        <td class="ps-4 fw-bold text-muted small" style="width: 35%;">{{ __('Campaign:') }}</td>
                                         <td class="pe-4">
                                             <span class="badge bg-soft-primary text-primary fw-bold">
                                                 {{ $campaignItem->campaign->name ?? 'No campaign' }}
@@ -51,23 +51,23 @@ Details: {{ $campaignItem->name }}
                                         </td>
                                     </tr>
                                     <tr>
-                                        <td class="ps-4 fw-bold text-muted small">Created by:</td>
+                                        <td class="ps-4 fw-bold text-muted small">{{ __('Created by:') }}</td>
                                         <td class="pe-4 text-dark small">{{ $campaignItem->user->name ?? 'N/A' }}</td>
                                     </tr>
                                     <tr>
-                                        <td class="ps-4 fw-bold text-muted small">Media:</td>
+                                        <td class="ps-4 fw-bold text-muted small">{{ __('Media:') }}</td>
                                         <td class="pe-4">
                                             @if($campaignItem->image)
                                             <a href="{{ $campaignItem->image }}" target="_blank" class="btn btn-xs btn-outline-info rounded-pill px-3 py-1 fw-bold" style="font-size: 0.7rem;">
-                                                <i class="bi bi-box-arrow-up-right me-1"></i> Open original link
+                                                <i class="bi bi-box-arrow-up-right me-1"></i> {{ __('Open original link') }}
                                             </a>
                                             @else
-                                            <span class="text-muted italic small">Text only</span>
+                                            <span class="text-muted italic small">{{ __('Text only') }}</span>
                                             @endif
                                         </td>
                                     </tr>
                                     <tr>
-                                        <td class="ps-4 fw-bold text-muted small">Delivery rate:</td>
+                                        <td class="ps-4 fw-bold text-muted small">{{ __('Delivery rate:') }}</td>
                                         <td class="pe-4">
                                             @php $rate = $campaignItem->getDeliveryRate(); @endphp
                                             <span class="fw-bold text-{{ $rate >= 80 ? 'success' : ($rate >= 50 ? 'warning' : 'danger') }}">
@@ -85,30 +85,30 @@ Details: {{ $campaignItem->name }}
                             <div class="col-8">
                                 <div class="btn-group w-100 shadow-sm">
                                     <a href="{{ route('campaign-items.send', $campaignItem->id) }}" class="btn btn-primary btn-lg fw-bold flex-grow-1">
-                                        <i class="bi bi-send-check-fill me-2"></i> START SENDING
+                                        <i class="bi bi-send-check-fill me-2"></i> {{ __('START SENDING') }}
                                     </a>
                                     <button type="button" class="btn btn-primary btn-lg dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
-                                        <span class="visually-hidden">Toggle Dropdown</span>
+                                        <span class="visually-hidden">{{ __('Toggle Dropdown') }}</span>
                                     </button>
                                     <ul class="dropdown-menu dropdown-menu-end shadow border-0 p-2" style="border-radius: 12px;">
                                         <li>
-                                            <h6 class="dropdown-header text-uppercase x-small fw-bold">Prep</h6>
+                                            <h6 class="dropdown-header text-uppercase x-small fw-bold">{{ __('Prep') }}</h6>
                                         </li>
-                                        <li><a class="dropdown-item rounded-2" href="{{ route('campaign-items.generateAll',$campaignItem->id) }}"><i class="bi bi-layers me-2 text-muted"></i> Generate for all</a></li>
+                                        <li><a class="dropdown-item rounded-2" href="{{ route('campaign-items.generateAll',$campaignItem->id) }}"><i class="bi bi-layers me-2 text-muted"></i> {{ __('Generate for all') }}</a></li>
                                         @if(Auth::user()->role === 'admin')
-                                        <li><a class="dropdown-item rounded-2" href="{{ route('campaign-items.generate',$campaignItem->id) }}"><i class="bi bi-lightning-charge me-2 text-muted"></i> Generate test</a></li>
+                                        <li><a class="dropdown-item rounded-2" href="{{ route('campaign-items.generate',$campaignItem->id) }}"><i class="bi bi-lightning-charge me-2 text-muted"></i> {{ __('Generate test') }}</a></li>
                                         @endif
                                     </ul>
                                 </div>
                             </div>
                             <div class="col-4">
                                 <a href="{{ route('whatsapp-jobs.index', $campaignItem->id) }}" class="btn btn-dark btn-lg w-100 fw-bold shadow-sm">
-                                    <i class="bi bi-terminal-fill me-1"></i> LOGS
+                                    <i class="bi bi-terminal-fill me-1"></i> {{ __('LOGS') }}
                                 </a>
                             </div>
                         </div>
                         <p class="text-center text-muted x-small mt-3 mb-0 italic">
-                            <i class="bi bi-info-circle me-1"></i> Generate queue items before starting sends.
+                            <i class="bi bi-info-circle me-1"></i> {{ __('Generate queue items before starting sends.') }}
                         </p>
                     </div>
                 </div>
@@ -122,8 +122,8 @@ Details: {{ $campaignItem->name }}
                                     <i class="bi bi-person-fill text-white fs-4"></i>
                                 </div>
                                 <div>
-                                    <h6 class="mb-0 fw-bold">Your contact</h6>
-                                    <span class="x-small opacity-75">online</span>
+                                    <h6 class="mb-0 fw-bold">{{ __('Your contact') }}</h6>
+                                    <span class="x-small opacity-75">{{ __('online') }}</span>
                                 </div>
                             </div>
                             <div class="d-flex gap-3 fs-5 opacity-75">
@@ -158,7 +158,7 @@ Details: {{ $campaignItem->name }}
 
                         <div class="p-2 bg-light d-flex align-items-center border-top">
                             <i class="bi bi-emoji-smile fs-4 mx-2 text-muted"></i>
-                            <div class="flex-grow-1 bg-white rounded-pill py-2 px-3 text-muted small">Message</div>
+                            <div class="flex-grow-1 bg-white rounded-pill py-2 px-3 text-muted small">{{ __('Message') }}</div>
                             <i class="bi bi-mic-fill fs-4 mx-3 text-muted"></i>
                         </div>
                     </div>

@@ -1,7 +1,7 @@
 <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
     <div class="card-header bg-white border-0 py-3 border-bottom">
         <h5 class="mb-0 fw-bold text-dark">
-            <i class="bi bi-person-plus me-2 text-primary"></i>Contact details
+            <i class="bi bi-person-plus me-2 text-primary"></i>{{ __('Contact details') }}
         </h5>
     </div>
     
@@ -94,7 +94,7 @@
 
     <div class="card-footer bg-white border-0 p-4 pt-0 d-flex justify-content-end gap-2">
         <button type="submit" class="btn btn-primary px-5 py-2 fw-bold shadow-sm rounded-3 text-uppercase" style="letter-spacing: 0.5px;">
-            <i class="bi bi-check2-circle me-1"></i> Save contact
+            <i class="bi bi-check2-circle me-1"></i> {{ __('Save contact') }}
         </button>
     </div>
 </div>

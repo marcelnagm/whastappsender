@@ -21,7 +21,7 @@ class WhatsappJobController extends Controller
         $ids = json_decode($request->input('ids'), true);
 
         if (!$ids || !is_array($ids)) {
-            return redirect()->back()->with('error', 'No items selected for removal.');
+            return redirect()->back()->with('error', __('No items selected for removal.'));
         }
 
         try {
@@ -34,10 +34,10 @@ class WhatsappJobController extends Controller
 
             $count = $query->delete();
 
-            return redirect()->back()->with('success', "{$count} record(s) removed successfully.");
+            return redirect()->back()->with('success', __(':count record(s) removed successfully.', ['count' => $count]));
         } catch (\Exception $e) {
             Log::error("Bulk delete error: " . $e->getMessage());
-            return redirect()->back()->with('error', 'Failed to remove selected records.');
+            return redirect()->back()->with('error', __('Failed to remove selected records.'));
         }
     }
 
@@ -50,7 +50,7 @@ class WhatsappJobController extends Controller
         $ids = json_decode($request->input('ids'), true);
 
         if (!$ids || !is_array($ids)) {
-            return redirect()->back()->with('error', 'No items selected for retry.');
+            return redirect()->back()->with('error', __('No items selected for retry.'));
         }
 
         try {
@@ -59,7 +59,7 @@ class WhatsappJobController extends Controller
                 ->get();
 
             if ($jobs->isEmpty()) {
-                return redirect()->back()->with('warning', 'No jobs in error state were found in your selection.');
+                return redirect()->back()->with('warning', __('No jobs in error state were found in your selection.'));
             }
 
             foreach ($jobs as $job) {
@@ -74,10 +74,10 @@ class WhatsappJobController extends Controller
                 \App\Jobs\EnviarMensagemJob::dispatch($job)->onQueue('disparos');
             }
 
-            return redirect()->back()->with('success', "{$jobs->count()} job(s) re-queued for processing.");
+            return redirect()->back()->with('success', __(':count job(s) re-queued for processing.', ['count' => $jobs->count()]));
         } catch (\Exception $e) {
             Log::error("Bulk retry error: " . $e->getMessage());
-            return redirect()->back()->with('error', 'Failed to process bulk retry.');
+            return redirect()->back()->with('error', __('Failed to process bulk retry.'));
         }
     }
 
@@ -138,10 +138,10 @@ class WhatsappJobController extends Controller
             // 3. Dispatch to workers
             EnviarMensagemJob::dispatch($job)->onQueue('disparos');
 
-            return redirect()->back()->with('success', "Retry for job #{$id} has been queued.");
+            return redirect()->back()->with('success', __('Retry for job #:id has been queued.', ['id' => $id]));
         } catch (Exception $e) {
             // Job missing or not in a retryable state
-            return redirect()->back()->with('error', "Could not reprocess this record. Make sure it is still in 'erro' status.");
+            return redirect()->back()->with('error', __("Could not reprocess this record. Make sure it is still in 'erro' status."));
         }
     }
 }

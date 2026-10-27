@@ -76,7 +76,7 @@ class CampaignController extends Controller
         $campaign = Campaign::create($data);
 
         return redirect()->route('campaigns.index')
-            ->with('success', 'Campaign created successfully.');
+            ->with('success', __('Campaign created successfully.'));
     }
 
     /**
@@ -120,7 +120,7 @@ class CampaignController extends Controller
         $campaign->update($request->all());
 
         return redirect()->route('campaigns.index')
-            ->with('success', 'Campaign updated successfully');
+            ->with('success', __('Campaign updated successfully'));
     }
 
     /**
@@ -137,10 +137,10 @@ class CampaignController extends Controller
             $campaign->delete();
 
             return redirect()->route('campaigns.index')
-                ->with('success', 'Campaign and all associated media were deleted.');
+                ->with('success', __('Campaign and all associated media were deleted.'));
         } catch (\Exception $e) {
             return redirect()->route('campaigns.index')
-                ->with('error', 'Deletion failed: ' . $e->getMessage());
+                ->with('error', __('Deletion failed:') . ' ' . $e->getMessage());
         }
     }
 

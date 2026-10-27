@@ -8,12 +8,12 @@
         <div class="col-sm-12">
             <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
                 <h1 class="h3 mb-0 text-gray-800 fw-bold">
-                    <i class="bi bi-shield-lock-fill text-primary me-2"></i>Access control
+                    <i class="bi bi-shield-lock-fill text-primary me-2"></i>{{ __('Access control') }}
                 </h1>
                 <div class="d-flex gap-2">
                     <form method="GET" action="{{ route('users.index') }}" class="d-flex gap-1 shadow-sm rounded">
                         <input type="text" name="search" class="form-control form-control-sm border-0 px-3"
-                            placeholder="Name, email or username..." value="{{ request('search') }}" style="min-width: 250px;">
+                            placeholder="{{ __('Name, email or username...') }}" value="{{ request('search') }}" style="min-width: 250px;">
                         <button type="submit" class="btn btn-primary btn-sm">
                             <i class="bi bi-search"></i>
                         </button>
@@ -24,7 +24,7 @@
 
             <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
                 <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-bottom">
-                    <h6 class="m-0 font-weight-bold text-primary">Registered users ({{ $users->total() }})</h6>
+                    <h6 class="m-0 font-weight-bold text-primary">{{ __('Registered users (') }}{{ $users->total() }})</h6>
                 </div>
 
                 @if ($message = Session::get('success'))
@@ -39,11 +39,11 @@
                             <thead class="table-light small text-uppercase fw-bold">
                                 <tr>
                                     <th class="ps-4">ID</th>
-                                    <th>User</th>
+                                    <th>{{ __('User') }}</th>
                                     <th>Email</th>
-                                    <th class="text-center">Role</th>
-                                    <th class="text-center">Status</th>
-                                    <th class="text-center">Actions</th>
+                                    <th class="text-center">{{ __('Role') }}</th>
+                                    <th class="text-center">{{ __('Status') }}</th>
+                                    <th class="text-center">{{ __('Actions') }}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -80,7 +80,7 @@
                                             
                                             <form action="{{ route('users.toggleAdmin', $user->id) }}" method="POST" style="display:inline">
                                                 @csrf @method('PATCH')
-                                                <button type="submit" class="btn btn-white text-orange-500" title="Toggle admin / user">
+                                                <button type="submit" class="btn btn-white text-orange-500" title="{{ __('Toggle admin / user') }}">
                                                     <i class="bi bi-person-badge"></i>
                                                 </button>
                                             </form>
@@ -98,7 +98,7 @@
                                 @empty
                                 <tr>
                                     <td colspan="6" class="text-center py-5 text-muted">
-                                        No users found.
+                                        {{ __('No users found.') }}
                                     </td>
                                 </tr>
                                 @endforelse

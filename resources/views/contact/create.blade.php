@@ -1,7 +1,7 @@
 @extends('layouts.app-master')
 
 @section('template_title')
-    New contact - Mining System
+    {{ __('New contact - Mining System') }}
 @endsection
 
 @section('content')
@@ -9,12 +9,12 @@
         <div class="d-flex align-items-center justify-content-between mb-4">
             <div>
                 <h1 class="h3 mb-0 text-gray-800 fw-bold">
-                    <i class="bi bi-person-plus text-primary me-2"></i>Add contact
+                    <i class="bi bi-person-plus text-primary me-2"></i>{{ __('Add contact') }}
                 </h1>
-                <p class="text-muted small mb-0">Manually add a new lead to your database.</p>
+                <p class="text-muted small mb-0">{{ __('Manually add a new lead to your database.') }}</p>
             </div>
             <a href="{{ route('contacts.index') }}" class="btn btn-outline-secondary btn-sm shadow-sm">
-                <i class="bi bi-arrow-left"></i> Back to list
+                <i class="bi bi-arrow-left"></i> {{ __('Back to list') }}
             </a>
         </div>
 
@@ -25,7 +25,7 @@
 
                 <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
                     <div class="card-header bg-white border-0 py-3">
-                        <span class="fw-bold text-muted text-uppercase small">Registration form</span>
+                        <span class="fw-bold text-muted text-uppercase small">{{ __('Registration form') }}</span>
                     </div>
                     
                     <div class="card-body p-4 pt-0">
@@ -42,7 +42,7 @@
                     <div class="d-flex">
                         <i class="bi bi-lightbulb text-primary me-2 fs-5"></i>
                         <small class="text-dark">
-                            <strong>Tip:</strong> Include country code and area code in the phone number for reliable WhatsApp delivery.
+                            <strong>{{ __('Tip:') }}</strong> {{ __('Include country code and area code in the phone number for reliable WhatsApp delivery.') }}
                         </small>
                     </div>
                 </div>

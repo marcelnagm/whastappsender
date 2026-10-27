@@ -46,7 +46,7 @@
                     @if($pix)
                         <div class="border rounded p-3 mb-4 text-center" id="pixBox">
                             <h6 class="fw-bold"><i class="bi bi-qr-code me-1"></i>{{ __('Pay with Pix') }}</h6>
-                            @if(!empty($pix['qr_base64']))<img alt="Pix QR code" class="img-fluid mb-2" style="max-width: 220px;" src="data:image/png;base64,{{ $pix['qr_base64'] }}">@endif
+                            @if(!empty($pix['qr_base64']))<img alt="{{ __('Pix QR code') }}" class="img-fluid mb-2" style="max-width: 220px;" src="data:image/png;base64,{{ $pix['qr_base64'] }}">@endif
                             @if(!empty($pix['qr_code']))
                                 <div class="input-group input-group-sm mb-2">
                                     <input type="text" readonly class="form-control" id="pixCode" value="{{ $pix['qr_code'] }}">
@@ -86,8 +86,8 @@
                                 <div class="row g-2">
                                     <div class="col-12"><input type="text" class="form-control" id="cardNumber" placeholder="{{ __('Card number') }}" inputmode="numeric" autocomplete="cc-number"></div>
                                     <div class="col-12"><input type="text" class="form-control" id="cardHolder" placeholder="{{ __('Name on the card') }}" autocomplete="cc-name"></div>
-                                    <div class="col-6"><input type="text" class="form-control" id="cardExp" placeholder="MM/AA" inputmode="numeric" autocomplete="cc-exp"></div>
-                                    <div class="col-6"><input type="text" class="form-control" id="cardCvv" placeholder="CVV" inputmode="numeric" autocomplete="cc-csc"></div>
+                                    <div class="col-6"><input type="text" class="form-control" id="cardExp" placeholder="{{ __('MM/AA') }}" inputmode="numeric" autocomplete="cc-exp"></div>
+                                    <div class="col-6"><input type="text" class="form-control" id="cardCvv" placeholder="{{ __('CVV') }}" inputmode="numeric" autocomplete="cc-csc"></div>
                                 </div>
                                 <div class="small text-danger mt-2" id="cardError"></div>
                                 <div class="form-text"><i class="bi bi-lock me-1"></i>{{ __('Card data goes straight to Mercado Pago and never touches our servers.') }}</div>
