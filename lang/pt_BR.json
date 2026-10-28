@@ -715,5 +715,12 @@
     "Phone with country code, e.g. 5595981110695": "Telefone com DDI, ex.: 5595981110695",
     "Link to this number": "Vincular a este número",
     "Conversation linked.": "Conversa vinculada.",
-    "disconnected": "desconectada"
+    "disconnected": "desconectada",
+    "Signature": "Assinatura",
+    "Signature on messages sent from the CRM": "Assinatura nas mensagens enviadas pelo CRM",
+    "Your name (empty = no signature)": "Seu nome (vazio = sem assinatura)",
+    "Signature: :name": "Assinatura: :name",
+    "No signature": "Sem assinatura",
+    "Signature saved.": "Assinatura salva.",
+    "Customers will see:": "O cliente verá:"
 }

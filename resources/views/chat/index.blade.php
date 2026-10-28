@@ -23,6 +23,9 @@
      data-url-sync="{{ route('chat.api.sync', $current->id) }}"
      data-url-sync-status="{{ route('chat.api.sync-status', $current->id) }}"
      data-url-instances="{{ url('chat/api/instances') }}"
+     data-url-signature="{{ route('chat.api.signature') }}"
+     data-signature="{{ $signature }}"
+     data-signature-suffix="{{ config('chat.signature_suffix') }}"
      data-url-chat-base="{{ url('chat/api/chats') }}"
      data-url-message-base="{{ url('chat/api/messages') }}"
      data-url-index="{{ route('chat.index') }}">
@@ -45,6 +48,15 @@
                 @endif
             </div>
             <div class="wa-side-actions">
+                <div class="wa-sync-wrap">
+                    <button type="button" class="wa-icon-btn {{ $signature ? 'wa-on' : '' }}" id="wa-sign" title="{{ __('Signature') }}" aria-haspopup="true"><i class="bi bi-person-badge"></i></button>
+                    <div id="wa-sign-menu" class="wa-sync-menu wa-sign-menu d-none">
+                        <div class="wa-sync-menu-title">{{ __('Signature on messages sent from the CRM') }}</div>
+                        <input type="text" id="wa-sign-input" class="form-control form-control-sm" maxlength="40" value="{{ $signature }}" placeholder="{{ __('Your name (empty = no signature)') }}">
+                        <div id="wa-sign-preview" class="wa-sign-preview"></div>
+                        <button type="button" id="wa-sign-save" class="btn btn-sm btn-success mt-2 w-100">{{ __('Save') }}</button>
+                    </div>
+                </div>
                 <div class="wa-sync-wrap">
                     <button type="button" class="wa-icon-btn" id="wa-sync" title="{{ __('Import history') }}" aria-haspopup="true"><i class="bi bi-arrow-repeat"></i></button>
                     <div id="wa-sync-menu" class="wa-sync-menu d-none" role="menu">
@@ -179,6 +191,10 @@
         confirmDelete: @json(__('Delete this message for everyone?')),
         copy: @json(__('Copy')),
         copied: @json(__('Copied')),
+        signOn: @json(__('Signature: :name')),
+        signOff: @json(__('No signature')),
+        signSaved: @json(__('Signature saved.')),
+        signPreview: @json(__('Customers will see:')),
         syncFrom: @json(__('Import history from')),
         linkTitle: @json(__('Unidentified contact')),
         linkHelp: @json(__('WhatsApp did not reveal the phone number of this conversation. Enter it to merge the conversation with that contact; later messages follow automatically.')),

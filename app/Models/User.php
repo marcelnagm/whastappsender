@@ -37,6 +37,7 @@ class User extends Authenticatable implements \Illuminate\Contracts\Translation\
         'ai_system_prompt',
         'ai_business_hours_only',
         'locale',
+        'chat_signature',
     ];
 
 

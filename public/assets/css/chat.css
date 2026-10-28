@@ -297,3 +297,8 @@
 .wa-sync-menu-title { font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: #667781; padding: 4px 8px; }
 .wa-sync-item { display: flex; gap: 8px; align-items: center; width: 100%; text-align: left; border: 0; background: transparent; padding: 8px; border-radius: 6px; font-size: 13px; }
 .wa-sync-item:hover { background: rgba(17,27,33,.06); }
+
+/* signature */
+.wa-icon-btn.wa-on { color: #00a884; }
+.wa-sign-menu { min-width: 260px; padding: 10px; }
+.wa-sign-preview { font-size: 12px; color: #667781; margin-top: 6px; word-break: break-word; }

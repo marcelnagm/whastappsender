@@ -27,6 +27,9 @@ return [
     // Mark messages as read on WhatsApp (blue ticks for the customer) when the agent opens the chat
     'send_read_receipts' => (bool) env('CHAT_SEND_READ_RECEIPTS', true),
 
+    // Written after the agent's name when a signature is set: "*Ana (CRM):*"
+    'signature_suffix' => env('CHAT_SIGNATURE_SUFFIX', '(CRM)'),
+
     // History import (Evolution findChats / findMessages)
     'history' => [
         'max_chats' => (int) env('CHAT_HISTORY_MAX_CHATS', 200),

@@ -12,6 +12,7 @@ use App\Models\Contact;
 use App\Models\Instance;
 use App\Services\Chat\ChatAvatarService;
 use App\Services\Chat\ChatMessageRecorder;
+use App\Services\Chat\ChatSignature;
 use App\Services\Chat\EvolutionChatClient;
 use App\Services\Chat\HistorySyncStatus;
 use App\Services\Chat\LidResolver;
@@ -52,7 +53,9 @@ class ChatController extends Controller
             SyncChatHistoryJob::dispatch($current->id)->onQueue('default');
         }
 
-        return view('chat.index', compact('instances', 'current'));
+        $signature = ChatSignature::normalize($request->user()->chat_signature);
+
+        return view('chat.index', compact('instances', 'current', 'signature'));
     }
 
     // ---------------------------------------------------------------------
@@ -165,6 +168,20 @@ class ChatController extends Controller
         ]);
     }
 
+    /** The name written in front of messages sent from the CRM. Empty / only spaces turns it off. */
+    public function saveSignature(Request $request): JsonResponse
+    {
+        $data = $request->validate(['name' => 'nullable|string|max:200']);
+        $name = ChatSignature::normalize($data['name'] ?? null);
+
+        $request->user()->forceFill(['chat_signature' => $name])->save();
+
+        return response()->json([
+            'name' => $name,
+            'header' => ChatSignature::header($name),
+        ]);
+    }
+
     public function syncHistory(Request $request, Instance $instance): JsonResponse
     {
         abort_unless((int) $instance->user_id === (int) Auth::id(), 403);
@@ -250,13 +267,16 @@ class ChatController extends Controller
             return response()->json(['message' => __('Type a message')], 422);
         }
 
+        $signature = $request->user()->chat_signature;
+
         $attributes = [
             'chat_id' => $chat->id,
             'instance_id' => $chat->instance_id,
             'user_id' => $chat->user_id,
             'from_me' => true,
             'type' => 'text',
-            'body' => $text !== '' ? $text : null,
+            // stored exactly as the customer receives it (signature included), so the echo from WhatsApp matches
+            'body' => ChatSignature::apply($signature, $text),
             'status' => 'pending',
             'client_id' => $data['client_id'] ?? null,
             'message_timestamp' => now(),
@@ -272,6 +292,9 @@ class ChatController extends Controller
                 config('chat.media_path', 'chat-media') . '/' . $chat->instance_id,
                 Str::uuid() . '.' . $extension
             );
+
+            // voice notes carry no text; every other media can carry the signature as (part of) its caption
+            $attributes['body'] = $type === 'audio' ? null : ChatSignature::apply($signature, $text, true);
 
             $attributes = array_merge($attributes, [
                 'type' => $type,

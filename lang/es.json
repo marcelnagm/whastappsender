@@ -715,5 +715,12 @@
     "Phone with country code, e.g. 5595981110695": "Teléfono con código de país, p. ej.: 5595981110695",
     "Link to this number": "Vincular a este número",
     "Conversation linked.": "Conversación vinculada.",
-    "disconnected": "desconectada"
+    "disconnected": "desconectada",
+    "Signature": "Firma",
+    "Signature on messages sent from the CRM": "Firma en los mensajes enviados desde el CRM",
+    "Your name (empty = no signature)": "Tu nombre (vacío = sin firma)",
+    "Signature: :name": "Firma: :name",
+    "No signature": "Sin firma",
+    "Signature saved.": "Firma guardada.",
+    "Customers will see:": "El cliente verá:"
 }

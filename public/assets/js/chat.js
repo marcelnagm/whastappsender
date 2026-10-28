@@ -25,6 +25,8 @@
     urlSync: D.urlSync,
     urlSyncStatus: D.urlSyncStatus,
     urlInstances: D.urlInstances,
+    urlSignature: D.urlSignature,
+    signatureSuffix: D.signatureSuffix || '(CRM)',
     chatBase: D.urlChatBase,
     messageBase: D.urlMessageBase,
     urlIndex: D.urlIndex
@@ -166,6 +168,20 @@
   }
 
   var URL_RE = /(https?:\/\/[^\s<]+)/g;
+  var BOLD_RE = /\*([^*\n]+)\*/g;
+
+  // WhatsApp-style *bold* (the CRM signature header) without touching innerHTML
+  function appendText(frag, text) {
+    var last = 0, m;
+    BOLD_RE.lastIndex = 0;
+    while ((m = BOLD_RE.exec(text)) !== null) {
+      if (m.index > last) frag.appendChild(document.createTextNode(text.slice(last, m.index)));
+      frag.appendChild(h('strong', null, m[1]));
+      last = m.index + m[0].length;
+    }
+    if (last < text.length) frag.appendChild(document.createTextNode(text.slice(last)));
+  }
+
   function linkify(text) {
     var frag = document.createDocumentFragment();
     String(text || '').split(URL_RE).forEach(function (part, i) {
@@ -178,7 +194,7 @@
           return;
         }
       }
-      frag.appendChild(document.createTextNode(part));
+      appendText(frag, part);
     });
     return frag;
   }
@@ -1203,6 +1219,45 @@
       setTimeout(function () { $('wa-sync-bar').classList.add('d-none'); }, 4000);
     }
   }
+
+  // ---- signature: "Name (CRM):" in front of what customers receive -----------------------------------
+  var signMenu = $('wa-sign-menu'), signInput = $('wa-sign-input'), signBtn = $('wa-sign');
+
+  function cleanSignature(v) { return String(v || '').replace(/[*_~`\u0000-\u001f]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 40); }
+  function signHeader(name) { return name ? '*' + name + ' ' + cfg.signatureSuffix + ':*' : ''; }
+
+  function paintSignature(name) {
+    cfg.signature = name;
+    signBtn.classList.toggle('wa-on', !!name);
+    signBtn.title = name ? fmt(T.signOn, { name: name + ' ' + cfg.signatureSuffix }) : T.signOff;
+  }
+
+  function previewSignature() {
+    var name = cleanSignature(signInput.value);
+    $('wa-sign-preview').textContent = name ? T.signPreview + ' ' + signHeader(name).replace(/\*/g, '') : T.signOff;
+  }
+
+  signBtn.addEventListener('click', function (ev) {
+    ev.stopPropagation();
+    syncMenu.classList.add('d-none');
+    signMenu.classList.toggle('d-none');
+    if (!signMenu.classList.contains('d-none')) { previewSignature(); signInput.focus(); }
+  });
+  signMenu.addEventListener('click', function (ev) { ev.stopPropagation(); });
+  signInput.addEventListener('input', previewSignature);
+  signInput.addEventListener('keydown', function (ev) { if (ev.key === 'Enter') $('wa-sign-save').click(); });
+  $('wa-sign-save').addEventListener('click', async function () {
+    try {
+      var r = await api(cfg.urlSignature, { method: 'PUT', body: { name: signInput.value } });
+      signInput.value = r.name || '';
+      paintSignature(r.name || '');
+      signMenu.classList.add('d-none');
+      toast(T.signSaved);
+    } catch (e) { toast(e.message); }
+  });
+  document.addEventListener('click', function () { signMenu.classList.add('d-none'); });
+  cfg.signature = D.signature || '';
+  paintSignature(cfg.signature);
 
   // the sync button opens a menu: any of the user's numbers can be imported, not only the one on screen
   var syncMenu = $('wa-sync-menu');
