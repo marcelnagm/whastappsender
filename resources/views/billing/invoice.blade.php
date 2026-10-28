@@ -58,8 +58,27 @@
                         </div>
                     @endif
 
+                    @if($cardUrl)
+                        <div class="alert alert-info small d-flex justify-content-between align-items-center gap-2">
+                            <span><i class="bi bi-credit-card me-1"></i>{{ __('A card payment page was opened for this invoice. If you did not finish, you can go back to it.') }}</span>
+                            <a href="{{ $cardUrl }}" class="btn btn-sm btn-outline-primary text-nowrap">{{ __('Open card page') }}</a>
+                        </div>
+                    @endif
+
+                    @if(count($available) > 1)
+                        <div class="mb-3">
+                            <div class="small fw-bold mb-1">{{ __('Pay with') }}</div>
+                            <div class="d-flex flex-wrap gap-2">
+                                @foreach($available as $key => $label)
+                                    <a href="{{ route('billing.invoice', ['invoice' => $invoice, 'gateway' => $key]) }}" class="btn btn-sm {{ $key === $selected ? 'btn-primary' : 'btn-outline-primary' }}">{{ $label }}</a>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
+
                     <form method="POST" action="{{ route('billing.pay', $invoice) }}" id="payForm" novalidate>
                         @csrf
+                        <input type="hidden" name="gateway" value="{{ $selected }}">
                         @if($errors->any() && !$errors->has('payment'))
                             <div class="alert alert-warning small"><ul class="mb-0 list-unstyled">@foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul></div>
                         @endif
@@ -81,7 +100,13 @@
                             <input type="text" class="form-control" id="document" name="document" inputmode="numeric" value="{{ old('document') }}" required>
                         </div>
 
-                        @if(in_array('card', $methods))
+                        @if(in_array('card', $methods) && $cardMode === 'redirect')
+                            <div id="cardRedirect" class="border rounded p-3 mb-3 small text-muted" style="display:none;">
+                                <i class="bi bi-lock me-1"></i>{{ __('You will be taken to the provider\'s secure page to enter the card. The card data never touches our servers.') }}
+                            </div>
+                        @endif
+
+                        @if(in_array('card', $methods) && $cardMode === 'token')
                             <div id="cardFields" class="border rounded p-3 mb-3" style="display:none;">
                                 <div class="row g-2">
                                     <div class="col-12"><input type="text" class="form-control" id="cardNumber" placeholder="{{ __('Card number') }}" inputmode="numeric" autocomplete="cc-number"></div>
@@ -90,7 +115,7 @@
                                     <div class="col-6"><input type="text" class="form-control" id="cardCvv" placeholder="{{ __('CVV') }}" inputmode="numeric" autocomplete="cc-csc"></div>
                                 </div>
                                 <div class="small text-danger mt-2" id="cardError"></div>
-                                <div class="form-text"><i class="bi bi-lock me-1"></i>{{ __('Card data goes straight to Mercado Pago and never touches our servers.') }}</div>
+                                <div class="form-text"><i class="bi bi-lock me-1"></i>{{ __('Card data goes straight to the payment provider and never touches our servers.') }}</div>
                                 <input type="hidden" name="card_token" id="cardToken">
                                 <input type="hidden" name="payment_method_id" id="cardBrand">
                                 <input type="hidden" name="issuer_id" id="cardIssuer">
@@ -126,16 +151,18 @@
 
 @if($invoice->isOpen() && $gateway)
 @section('js')
-@if(in_array('card', $methods))<script src="https://sdk.mercadopago.com/js/v2"></script>@endif
+@if(in_array('card', $methods) && $cardMode === 'token')<script src="https://sdk.mercadopago.com/js/v2"></script>@endif
 <script>
 (function () {
     var form = document.getElementById('payForm');
     var cardFields = document.getElementById('cardFields');
+    var cardRedirect = document.getElementById('cardRedirect');
+    var cardRecurrenceSupported = @json($cardRecurrenceSupported);
     var recurring = document.getElementById('recurring');
     var help = document.getElementById('recurringHelp');
     var recurringCardOk = @json($recurringCardOk);
     var mp = null;
-    @if(in_array('card', $methods) && $publicKey)
+    @if(in_array('card', $methods) && $cardMode === 'token' && $publicKey)
     try { mp = new MercadoPago(@json($publicKey), {locale: 'pt-BR'}); } catch (e) {}
     @endif
 
@@ -144,11 +171,13 @@
     function refresh() {
         var m = method();
         if (cardFields) cardFields.style.display = m === 'card' ? '' : 'none';
+        if (cardRedirect) cardRedirect.style.display = m === 'card' ? '' : 'none';
         if (!recurring) return;
         var blocked = m === 'card' && !recurringCardOk;
         recurring.disabled = blocked;
         if (blocked) recurring.checked = false;
-        help.textContent = blocked ? @json(__('Automatic card renewal needs the full plan price; this invoice is prorated, so pay it once.'))
+        help.textContent = blocked && !cardRecurrenceSupported ? @json(__('This provider does not charge the card automatically. Choose Pix to renew automatically, or pay this invoice by card now.'))
+            : blocked ? @json(__('Automatic card renewal needs the full plan price; this invoice is prorated, so pay it once.'))
             : (m === 'pix' ? @json(__('Pix has no automatic debit: before each due date we generate a new Pix code and email it to you.'))
             : @json(__('The card is charged automatically every cycle. You can turn it off at any time.')));
     }
@@ -156,7 +185,7 @@
     refresh();
 
     form.addEventListener('submit', async function (ev) {
-        if (method() !== 'card') return;
+        if (method() !== 'card' || !document.getElementById('cardToken')) return;
         if (document.getElementById('cardToken').value) return;
         ev.preventDefault();
         var btn = document.getElementById('payBtn'), err = document.getElementById('cardError');
@@ -189,7 +218,7 @@
         }
     });
 
-    @php $waiting = !empty($pix) || (($invoice->gateway_payload['recurring'] ?? false) === true); @endphp
+    @php $waiting = !empty($pix) || !empty($cardUrl) || (($invoice->gateway_payload['recurring'] ?? false) === true); @endphp
     @if($waiting)
     setInterval(function () {
         fetch(@json(route('billing.status', $invoice)), {headers: {'Accept': 'application/json'}, credentials: 'same-origin'})

@@ -21,7 +21,7 @@
 | [System Architecture](#-system-architecture-queues--warmup) | Queues, Warmup, production requirements |
 | [WhatsApp Chat (CRM)](#-whatsapp-chat-crm) | WhatsApp Web-style inbox on top of Evolution API |
 | [Fair Send Queue](#️-fair-send-queue) | Balanced batches of 50 across users and sessions |
-| [Plans & Billing](#-plans--billing) | Freemium + 3 plans, due dates, blocking, Mercado Pago (Pix / card, recurrence) |
+| [Plans & Billing](#-plans--billing) | Freemium + 3 plans, due dates, blocking, Asaas · Efí · AbacatePay · Mercado Pago (Pix / card, customer chooses) |
 | [Tests](#-tests) | PHPUnit suite |
 | [Installation](#️-installation--activation) | `install.sh` (local / VPS / update), `start-local.sh` (Docker infra for local dev), manual steps, production Docker (`.docker/`) |
 
@@ -627,7 +627,20 @@ quota is part of the fair queue, blocked users get no slots), `EnviarMensagemJob
 **Screens:** `/billing` (plan, usage, plans, invoices; cancel/resume), `/billing/invoices/{id}`, the dashboard card and the pricing
 section of the public landing page; admins get **Admin → Billing** to see subscriptions, confirm a payment by hand (e.g. bank transfer) and grant a plan, and **Admin → Payment gateway** for the checkout settings.
 
-### Payment gateway (Mercado Pago)
+### Payment gateways (choose and combine)
+
+Four providers are built in, picked for their low public fees (Sep/2026; list prices, **confirm them with each provider**, they change and can be negotiated):
+
+| Provider | Pix | Card (one payment) | Card checkout | Card recurrence |
+|---|---|---|---|---|
+| **Asaas** | R$ 1,99 | 2,99% + R$ 0,49 | provider's hosted page | no (Pix renewal) |
+| **Efí** | 1,19% | 3,49% | provider's hosted page (payment link) | no (Pix renewal) |
+| **AbacatePay** | R$ 0,80 | 3,50% + R$ 0,60 | provider's hosted page | no (Pix renewal) |
+| **Mercado Pago** | 0,99% | 4,98% (immediate) · 3,98% (30 days) | card tokenised in the browser, paid here | yes (`/preapproval`) |
+
+Enable one or several at **Admin → Payment gateway** (one tab each). With more than one active the customer picks the provider on the invoice page. With Asaas / Efí / AbacatePay the card is always entered on the provider's secure page (card data never touches this server); Pix shows a QR code on the invoice and "renew automatically" generates a new Pix per renewal invoice. Webhooks: `/api/webhooks/asaas` (header `asaas-access-token` = the webhook secret), `/api/webhooks/efi` (Efí appends `/pix`; the secret travels as `?secret=`; the admin button registers the Pix URL, the card URL is sent per charge) and `/api/webhooks/abacatepay?secret=…`. Every notification is stored, then the resource is **re-read from the provider's API** before an invoice is settled, and the amount must cover the invoice. Efí Pix needs the account's mTLS certificate converted to `.pem` on the server plus the receiving Pix key. These three integrations were written from the providers' public docs and tested with faked HTTP only: try each in its sandbox before going live.
+
+#### Mercado Pago
 
 Configure it at **Admin → Payment gateway** (`/admin/payment-gateway`): enable it, paste the **access token** (stored encrypted, shown masked), the **public key** (needed for cards), and optionally the **webhook secret**. Choose which methods are offered (card / Pix), the Pix validity, the card statement name and whether customers can pick **automatic renewal** (and whether the box starts checked). "Test connection" calls Mercado Pago with the saved token.
 
@@ -685,7 +698,7 @@ In the chat header (badge icon) each user can set a name. Anything sent from the
 
 ## 🧪 Tests
 
-`vendor/bin/phpunit` (in-memory SQLite, no external services): fair queue planner and command, chat backend, avatar caching, billing lifecycle and plan enforcement, and the Mercado Pago gateway (admin settings, Pix, card, recurrence, webhook; HTTP faked).
+`vendor/bin/phpunit` (in-memory SQLite, no external services): fair queue planner and command, chat backend, avatar caching, billing lifecycle and plan enforcement, the Mercado Pago gateway (admin settings, Pix, card, recurrence, webhook) and the Asaas / Efí / AbacatePay gateways (HTTP faked).
 
 * * *
 
@@ -701,7 +714,7 @@ In the chat header (badge icon) each user can set a name. Anything sent from the
 * ✅ **Multi-language UI:** English, Portuguese (BR) and Spanish with a language selector (`config/languages.php`).
 * ✅ **Fair Send Queue:** every batch of 50 messages is balanced across users and sessions, so no campaign starves the others.
 * ✅ **Plans & Billing:** freemium + 3 plans, trial, due dates, grace period and read-only blocking for non-payment.
-* ✅ **Payments (Mercado Pago):** Pix and credit card, one-time or automatic renewal, configured from the admin area.
+* ✅ **Payments (Asaas, Efí, AbacatePay, Mercado Pago):** Pix and credit card, one-time or automatic renewal, several providers at once, configured from the admin area.
 * ✅ **Audit Logs:** Full history of every AI interaction and every broadcast attempt.
 
 ---

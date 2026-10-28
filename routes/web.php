@@ -167,6 +167,7 @@ Route::group(['namespace' => 'App\Http\Controllers', 'middleware' => ['auth', 's
 
         Route::get('/payment-gateway', [\App\Http\Controllers\AdminGatewayController::class, 'edit'])->name('admin.gateway.edit');
         Route::post('/payment-gateway', [\App\Http\Controllers\AdminGatewayController::class, 'update'])->name('admin.gateway.update');
+        Route::post('/payment-gateway/webhook', [\App\Http\Controllers\AdminGatewayController::class, 'registerWebhook'])->name('admin.gateway.webhook');
         Route::post('/payment-gateway/test', [\App\Http\Controllers\AdminGatewayController::class, 'test'])->name('admin.gateway.test');
 
         Route::get('/panic/', [PanicController::class, 'index'])->name('panic.index');

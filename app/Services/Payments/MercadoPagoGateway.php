@@ -49,6 +49,16 @@ class MercadoPagoGateway implements PaymentGateway
         return $this->config->recurrenceAllowed();
     }
 
+    public function supportsCardRecurrence(): bool
+    {
+        return $this->config->recurrenceAllowed();
+    }
+
+    public function cardMode(): string
+    {
+        return 'token';
+    }
+
     // ---- Charges ----------------------------------------------------------------------------------
 
     public function charge(Invoice $invoice, PayRequest $request): PaymentResult

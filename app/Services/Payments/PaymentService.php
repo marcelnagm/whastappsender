@@ -20,17 +20,24 @@ class PaymentService
     {
     }
 
-    public function gateway(): ?PaymentGateway
+    /** The provider asked for (when it is ready), else the first ready one. */
+    public function gateway(?string $provider = null): ?PaymentGateway
     {
-        return $this->gateways->active();
+        return $this->gateways->active($provider);
+    }
+
+    /** @return array<string, PaymentGateway> every provider the customer can choose from */
+    public function available(): array
+    {
+        return $this->gateways->ready();
     }
 
     /**
      * @throws ValidationException when the request cannot be honoured (field => message)
      */
-    public function pay(User $user, Invoice $invoice, PayRequest $request): PaymentResult
+    public function pay(User $user, Invoice $invoice, PayRequest $request, ?string $provider = null): PaymentResult
     {
-        $gateway = $this->gateway();
+        $gateway = $this->gateway($provider);
 
         $fail = fn (string $field, string $message) => throw ValidationException::withMessages([$field => $message]);
 
@@ -49,15 +56,18 @@ class PaymentService
         if ($request->recurring && !$gateway->supportsRecurrence()) {
             $fail('recurring', __('Automatic renewal is not available.'));
         }
-        if ($request->method === 'card' && !$request->cardToken) {
+        if ($request->recurring && $request->method === 'card' && !$gateway->supportsCardRecurrence()) {
+            $fail('recurring', __('Automatic card renewal is not available with this payment provider. Pay by Pix to renew automatically.'));
+        }
+        if ($request->method === 'card' && $gateway->cardMode() === 'token' && !$request->cardToken) {
             $fail('card', __('Enter the card data again.'));
         }
 
         $subscription = $invoice->subscription;
 
         // Pix already issued and still valid: show the same QR code instead of creating another charge
-        if ($request->method === 'pix' && ($existing = $this->validPix($invoice))) {
-            $this->rememberRecurrence($subscription, $request);
+        if ($request->method === 'pix' && ($existing = $this->validPix($invoice, $gateway->name()))) {
+            $this->rememberRecurrence($subscription, $request, null, $gateway->name());
 
             return new PaymentResult(PaymentResult::PENDING, '', $invoice->gateway_invoice_id, $existing);
         }
@@ -68,8 +78,8 @@ class PaymentService
 
         $result = $gateway->charge($invoice, $request);
 
-        $this->recordCharge($invoice, $request, $result);
-        $this->rememberRecurrence($subscription, $request, $result);
+        $this->recordCharge($invoice, $request, $result, $gateway->name());
+        $this->rememberRecurrence($subscription, $request, $result, $gateway->name());
 
         return $result;
     }
@@ -77,12 +87,13 @@ class PaymentService
     /** Pix for a renewal invoice of a customer who chose Pix + automatic renewal. Called by the billing events. */
     public function autoPix(Invoice $invoice): ?PaymentResult
     {
-        $gateway = $this->gateway();
         $subscription = $invoice->subscription;
+        // renewals go through the provider the customer used for the automatic Pix, when it is still ready
+        $gateway = $this->gateway($subscription?->gateway);
 
         if (!$gateway || !$subscription || !$subscription->auto_renew || $subscription->payment_method !== 'pix'
             || !$invoice->isOpen() || !in_array('pix', $gateway->methods(), true)
-            || !$subscription->payer_document || $this->validPix($invoice)) {
+            || !$subscription->payer_document || $this->validPix($invoice, $gateway->name())) {
             return null;
         }
 
@@ -90,7 +101,7 @@ class PaymentService
         $request = new PayRequest('pix', true, (string) $user->email, (string) $user->name, (string) $subscription->payer_document);
 
         $result = $gateway->charge($invoice, $request);
-        $this->recordCharge($invoice, $request, $result);
+        $this->recordCharge($invoice, $request, $result, $gateway->name());
 
         if ($result->status === PaymentResult::PENDING && $result->pix) {
             $user->notify(new BillingNotice('pix_ready', [
@@ -121,7 +132,7 @@ class PaymentService
         }
 
         try {
-            $this->gateways->mercadopago()->cancelRecurring($subscription->gateway_subscription_id);
+            $this->gateways->driver($subscription->gateway ?: 'mercadopago')->cancelRecurring($subscription->gateway_subscription_id);
         } catch (\Throwable $e) {
             Log::warning("Could not cancel recurring authorization of subscription {$subscription->id}: " . $e->getMessage());
         }
@@ -137,17 +148,17 @@ class PaymentService
         }
 
         try {
-            $this->gateways->mercadopago()->updateRecurringAmount($subscription->gateway_subscription_id, $amountCents);
+            $this->gateways->driver($subscription->gateway ?: 'mercadopago')->updateRecurringAmount($subscription->gateway_subscription_id, $amountCents);
         } catch (\Throwable $e) {
             Log::warning("Could not update recurring amount of subscription {$subscription->id}: " . $e->getMessage());
         }
     }
 
     /** Approved payment confirmed by the gateway (response or webhook). Idempotent. */
-    public function settle(Invoice $invoice, string $gatewayId, ?string $paymentType, array $payload = []): Invoice
+    public function settle(Invoice $invoice, string $gatewayId, ?string $paymentType, array $payload = [], string $provider = 'mercadopago'): Invoice
     {
         return $this->subscriptions->markInvoicePaid($invoice, [
-            'gateway' => 'mercadopago',
+            'gateway' => $provider,
             'gateway_invoice_id' => $gatewayId,
             'payment_method' => $this->methodLabel($paymentType),
             'payload' => $payload ?: null,
@@ -174,7 +185,7 @@ class PaymentService
         }
 
         $subscription->update([
-            'gateway' => 'mercadopago',
+            'gateway' => $gateway->name(),
             'gateway_subscription_id' => $result->recurringId,
             'gateway_status' => 'authorized',
             'auto_renew' => true,
@@ -183,7 +194,7 @@ class PaymentService
         ]);
 
         $invoice->update([
-            'gateway' => 'mercadopago',
+            'gateway' => $gateway->name(),
             'payment_method' => 'card',
             'gateway_payload' => ['method' => 'card', 'recurring' => true] + ($invoice->gateway_payload ?? []),
         ]);
@@ -195,7 +206,7 @@ class PaymentService
         );
     }
 
-    private function recordCharge(Invoice $invoice, PayRequest $request, PaymentResult $result): void
+    private function recordCharge(Invoice $invoice, PayRequest $request, PaymentResult $result, string $provider = 'mercadopago'): void
     {
         $payload = $invoice->gateway_payload ?? [];
         $payload['method'] = $request->method;
@@ -207,6 +218,10 @@ class PaymentService
         if ($result->pix) {
             $payload['pix'] = $result->pix;
         }
+        if ($result->redirectUrl) {
+            $payload['redirect_url'] = $result->redirectUrl;   // hosted card page; the customer may come back to it
+            $payload['pending_card'] = true;
+        }
 
         if (in_array($result->status, [PaymentResult::REJECTED, PaymentResult::ERROR], true)) {
             $payload['last_error'] = $result->message;
@@ -215,19 +230,19 @@ class PaymentService
         }
 
         $invoice->update([
-            'gateway' => 'mercadopago',
+            'gateway' => $provider,
             'payment_method' => $request->method,
             'gateway_invoice_id' => $result->gatewayId ?: $invoice->gateway_invoice_id,
             'gateway_payload' => $payload,
         ]);
 
         if ($result->isPaid() && $result->gatewayId) {
-            $this->settle($invoice, $result->gatewayId, $result->paymentType);
+            $this->settle($invoice, $result->gatewayId, $result->paymentType, [], $provider);
         }
     }
 
     /** Recurrence choice for methods that have no provider-side authorization (Pix) or are paid once (card). */
-    private function rememberRecurrence(Subscription $subscription, PayRequest $request, ?PaymentResult $result = null): void
+    private function rememberRecurrence(Subscription $subscription, PayRequest $request, ?PaymentResult $result = null, string $provider = 'mercadopago'): void
     {
         if ($result && in_array($result->status, [PaymentResult::REJECTED, PaymentResult::ERROR], true)) {
             return;
@@ -238,7 +253,7 @@ class PaymentService
             if ($subscription->gateway_subscription_id && $subscription->payment_method === 'card') {
                 $this->cancelAtGateway($subscription);
             }
-            $subscription->update(['auto_renew' => true, 'payment_method' => 'pix', 'gateway' => 'mercadopago', 'payer_document' => $request->document]);
+            $subscription->update(['auto_renew' => true, 'payment_method' => 'pix', 'gateway' => $provider, 'payer_document' => $request->document]);
         } elseif (!$request->recurring) {
             // One-time payment: no automatic renewal after this one
             if ($subscription->auto_renew) {
@@ -248,11 +263,12 @@ class PaymentService
     }
 
     /** @return array|null the stored Pix of the invoice while it can still be paid */
-    private function validPix(Invoice $invoice): ?array
+    private function validPix(Invoice $invoice, ?string $provider = null): ?array
     {
         $pix = ($invoice->gateway_payload ?? [])['pix'] ?? null;
 
-        if (!$pix || empty($pix['qr_code']) || !$invoice->gateway_invoice_id) {
+        // a code issued by another provider is not reused when the customer switches provider
+        if (!$pix || empty($pix['qr_code']) || !$invoice->gateway_invoice_id || ($provider && $invoice->gateway && $invoice->gateway !== $provider)) {
             return null;
         }
 

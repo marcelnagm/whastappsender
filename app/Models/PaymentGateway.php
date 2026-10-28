@@ -8,6 +8,12 @@ use Illuminate\Database\Eloquent\Model;
 class PaymentGateway extends Model
 {
     public const MERCADOPAGO = 'mercadopago';
+    public const ASAAS = 'asaas';
+    public const EFI = 'efi';
+    public const ABACATEPAY = 'abacatepay';
+
+    /** Providers the customer can be offered, in the order shown to admins/customers (see config/payments.php) */
+    public const PROVIDERS = [self::ASAAS, self::EFI, self::ABACATEPAY, self::MERCADOPAGO];
 
     protected $fillable = ['provider', 'enabled', 'access_token', 'public_key', 'webhook_secret', 'settings'];
 
@@ -27,11 +33,21 @@ class PaymentGateway extends Model
         'recurrence_default' => true,   // ...and the box starts checked
         'pix_expiration_minutes' => 1440,
         'statement_descriptor' => '',
+        'sandbox' => false,             // Asaas / Efí / AbacatePay (Mercado Pago detects TEST- tokens)
+        'certificate_path' => '',       // Efí: .pem certificate used for the Pix API (mTLS)
+        'pix_key' => '',                // Efí: the Pix key that receives the money
     ];
 
     public static function mercadopago(): self
     {
         return static::firstOrCreate(['provider' => self::MERCADOPAGO], ['enabled' => false, 'settings' => self::DEFAULTS]);
+    }
+
+    public static function for(string $provider): self
+    {
+        abort_unless(in_array($provider, self::PROVIDERS, true), 404);
+
+        return static::firstOrCreate(['provider' => $provider], ['enabled' => false, 'settings' => self::DEFAULTS]);
     }
 
     public function setting(string $key, $default = null)
@@ -41,6 +57,10 @@ class PaymentGateway extends Model
 
     public function isConfigured(): bool
     {
+        if ($this->provider === self::EFI) {
+            return filled($this->access_token) && filled($this->public_key); // client secret + client id
+        }
+
         return filled($this->access_token);
     }
 
@@ -53,6 +73,10 @@ class PaymentGateway extends Model
     /** Mercado Pago test credentials start with TEST- */
     public function isSandbox(): bool
     {
+        if ($this->provider !== self::MERCADOPAGO) {
+            return (bool) $this->setting('sandbox');
+        }
+
         return str_starts_with((string) $this->access_token, 'TEST-');
     }
 
@@ -60,10 +84,25 @@ class PaymentGateway extends Model
     public function methods(): array
     {
         $methods = [];
-        if ($this->setting('card_enabled') && filled($this->public_key)) {
-            $methods[] = 'card'; // card tokens are created in the browser with the public key
+
+        if ($this->provider === self::MERCADOPAGO) {
+            if ($this->setting('card_enabled') && filled($this->public_key)) {
+                $methods[] = 'card'; // card tokens are created in the browser with the public key
+            }
+            if ($this->setting('pix_enabled')) {
+                $methods[] = 'pix';
+            }
+
+            return $methods;
         }
-        if ($this->setting('pix_enabled')) {
+
+        // Asaas / Efí / AbacatePay: the card is paid on the provider's hosted page (card data never reaches us)
+        if ($this->setting('card_enabled')) {
+            $methods[] = 'card';
+        }
+        // Efí's Pix API needs the mTLS certificate and the receiving Pix key
+        $pixReady = $this->provider !== self::EFI || (filled($this->setting('certificate_path')) && filled($this->setting('pix_key')));
+        if ($this->setting('pix_enabled') && $pixReady) {
             $methods[] = 'pix';
         }
 

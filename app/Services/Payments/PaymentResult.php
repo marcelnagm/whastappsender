@@ -19,6 +19,7 @@ class PaymentResult
         public ?array $pix = null,
         public ?string $recurringId = null,
         public ?string $paymentType = null,   // credit_card | debit_card | bank_transfer ...
+        public ?string $redirectUrl = null,   // hosted card page of the provider: the browser is sent there
     ) {
     }
 
@@ -33,6 +34,7 @@ class PaymentResult
             'status' => $this->status,
             'message' => $this->message,
             'pix' => $this->pix,
+            'redirect_url' => $this->redirectUrl,
         ], fn ($v) => $v !== null);
     }
 }

@@ -4,7 +4,7 @@ namespace App\Services\Payments;
 
 use App\Models\PaymentGateway as GatewayConfig;
 
-/** Resolves the configured provider. Only Mercado Pago exists today; others can be added here. */
+/** Resolves the payment providers. Several can be enabled at once; the customer picks one at checkout. */
 class GatewayManager
 {
     public function mercadopago(): MercadoPagoGateway
@@ -12,11 +12,44 @@ class GatewayManager
         return new MercadoPagoGateway(GatewayConfig::mercadopago()->fresh());
     }
 
-    /** The gateway customers pay with, or null while nothing is enabled and configured. */
-    public function active(): ?PaymentGateway
+    public function driver(string $provider): PaymentGateway
     {
-        $gateway = $this->mercadopago();
+        $config = GatewayConfig::for($provider)->fresh();
 
-        return $gateway->isReady() ? $gateway : null;
+        return match ($provider) {
+            GatewayConfig::ASAAS => new AsaasGateway($config),
+            GatewayConfig::EFI => new EfiGateway($config),
+            GatewayConfig::ABACATEPAY => new AbacatePayGateway($config),
+            default => new MercadoPagoGateway($config),
+        };
+    }
+
+    /** @return array<string, PaymentGateway> ready providers (enabled + configured + at least one method), by name */
+    public function ready(): array
+    {
+        $out = [];
+        foreach (GatewayConfig::PROVIDERS as $provider) {
+            $gateway = $this->driver($provider);
+            if ($gateway->isReady() && $gateway->methods()) {
+                $out[$provider] = $gateway;
+            }
+        }
+
+        return $out;
+    }
+
+    /**
+     * The gateway a customer pays with: the one asked for (when ready), else the first ready one,
+     * or null while nothing is enabled and configured.
+     */
+    public function active(?string $provider = null): ?PaymentGateway
+    {
+        $ready = $this->ready();
+
+        if ($provider !== null && isset($ready[$provider])) {
+            return $ready[$provider];
+        }
+
+        return $ready ? reset($ready) : null;
     }
 }

@@ -70,21 +70,28 @@ class BillingController extends Controller
         return redirect()->route('billing.index')->with('success', __('Subscription resumed.'));
     }
 
-    public function invoice(Invoice $invoice)
+    public function invoice(Request $request, Invoice $invoice)
     {
         abort_unless((int) $invoice->user_id === (int) Auth::id(), 403);
 
-        $gateway = $this->payments->gateway();
+        // Several providers can be active: the customer picks one (?gateway=asaas); default = first ready
+        $gateway = $this->payments->gateway($request->query('gateway'));
+        $available = collect($this->payments->available())->map(fn ($g) => config("payments.providers.{$g->name()}.label", $g->name()))->all();
         $subscription = $invoice->subscription;
 
         return view('billing.invoice', [
             'invoice' => $invoice->load('plan'),
             'gateway' => $gateway,
+            'available' => $available,
+            'selected' => $gateway?->name(),
+            'cardMode' => $gateway ? $gateway->cardMode() : 'token',
             'methods' => $gateway ? $gateway->methods() : [],
             'recurrenceAllowed' => $gateway && $gateway->supportsRecurrence(),
             'recurrenceDefault' => $gateway ? (bool) $gateway->config()->setting('recurrence_default') : false,
-            'recurringCardOk' => $this->recurringCardAllowed($invoice),
-            'publicKey' => $gateway ? $gateway->config()->public_key : null,
+            'recurringCardOk' => $gateway && $gateway->supportsCardRecurrence() && $this->recurringCardAllowed($invoice),
+            'cardRecurrenceSupported' => $gateway ? $gateway->supportsCardRecurrence() : false,
+            'publicKey' => $gateway && $gateway->name() === 'mercadopago' ? $gateway->config()->public_key : null,
+            'cardUrl' => $invoice->isOpen() ? (($invoice->gateway_payload ?? [])['redirect_url'] ?? null) : null,
             'pix' => $invoice->isOpen() ? (($invoice->gateway_payload ?? [])['pix'] ?? null) : null,
             'subscription' => $subscription,
             'lastError' => ($invoice->gateway_payload ?? [])['last_error'] ?? null,
@@ -97,6 +104,7 @@ class BillingController extends Controller
 
         $data = $request->validate([
             'method' => 'required|in:card,pix',
+            'gateway' => 'nullable|in:' . implode(',', \App\Models\PaymentGateway::PROVIDERS),
             'recurring' => 'nullable|boolean',
             'document' => 'required|string|max:20',
             'card_token' => 'nullable|string|max:255',
@@ -111,6 +119,11 @@ class BillingController extends Controller
         $user = Auth::user();
         $recurring = $request->boolean('recurring');
 
+        $chosen = $this->payments->gateway($data['gateway'] ?? null);
+        if ($data['method'] === 'card' && $recurring && $chosen && !$chosen->supportsCardRecurrence()) {
+            return $this->payResponse($request, $invoice, ['recurring' => __('Automatic card renewal is not available with this payment provider. Pay by Pix to renew automatically.')], 422);
+        }
+
         if ($data['method'] === 'card' && $recurring && !$this->recurringCardAllowed($invoice)) {
             return $this->payResponse($request, $invoice, ['recurring' => __('Automatic renewal on the card is only available when paying the full plan price. Pay this invoice once; renewal can be set up on the next one.')], 422);
         }
@@ -121,9 +134,13 @@ class BillingController extends Controller
         );
 
         try {
-            $result = $this->payments->pay($user, $invoice, $payRequest);
+            $result = $this->payments->pay($user, $invoice, $payRequest, $data['gateway'] ?? null);
         } catch (\Illuminate\Validation\ValidationException $e) {
             return $this->payResponse($request, $invoice, collect($e->errors())->map(fn ($m) => $m[0])->all(), 422);
+        }
+
+        if ($result->redirectUrl && $result->status === PaymentResult::PENDING && !$request->wantsJson()) {
+            return redirect()->away($result->redirectUrl); // the provider's secure card page
         }
 
         if ($request->wantsJson()) {

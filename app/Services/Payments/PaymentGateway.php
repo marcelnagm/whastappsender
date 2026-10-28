@@ -20,7 +20,14 @@ interface PaymentGateway
     /** @return list<string> enabled methods: card, pix */
     public function methods(): array;
 
+    /** "Renew automatically" is offered (Pix: a new code per renewal; card: only when supportsCardRecurrence()). */
     public function supportsRecurrence(): bool;
+
+    /** The provider itself charges the card every cycle (Mercado Pago). Hosted-page gateways pay the card once per invoice. */
+    public function supportsCardRecurrence(): bool;
+
+    /** token: card data is tokenised in the browser with the gateway's JS. redirect: the card is paid on the provider's hosted page. */
+    public function cardMode(): string;
 
     /** One payment for one invoice (card with token, or Pix). */
     public function charge(Invoice $invoice, PayRequest $request): PaymentResult;
