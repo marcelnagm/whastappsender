@@ -47,6 +47,12 @@ class ChatMessageRecorder
         $fromMe = (bool) ($key['fromMe'] ?? false);
         $jid = $this->resolveJid($key);
 
+        // No phone in the key: the echo of a message WE sent (chat, campaign) tells us which phone this lid is
+        if (LidResolver::isLid($remoteJid) && LidResolver::isLid($jid) && ($known = $this->phoneOfSentMessage($instance, (string) $messageId))) {
+            $jid = $known . '@s.whatsapp.net';
+            app(LidResolver::class)->learn($instance, $remoteJid, $known, 'echo');
+        }
+
         // The message itself told us who the lid is: learn it and fix a chat that was opened under the lid
         if (LidResolver::isLid($remoteJid) && !LidResolver::isLid($jid) && ($learned = LidResolver::phoneFrom($jid))) {
             app(LidResolver::class)->learn($instance, $remoteJid, $learned);
@@ -456,6 +462,22 @@ class ChatMessageRecorder
         }
 
         return $pending;
+    }
+
+    /** Phone of the person a message we sent went to (chat message or campaign send), by WhatsApp message id. */
+    private function phoneOfSentMessage(Instance $instance, string $messageId): ?string
+    {
+        $sent = ChatMessage::with('chat')->where('instance_id', $instance->id)->where('message_id', $messageId)->where('from_me', true)->first();
+        if ($sent && $sent->chat && $sent->chat->phone) {
+            return $sent->chat->phone;
+        }
+
+        $job = \App\Models\WhatsappJob::where('message_id', $messageId)->where('user_id', $instance->user_id)->first();
+        if ($job && $job->contact_id && ($contact = Contact::find($job->contact_id))) {
+            return LidResolver::phoneFrom($contact->contact);
+        }
+
+        return null;
     }
 
     private function resolveJid(array $key): string

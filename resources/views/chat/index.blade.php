@@ -22,6 +22,7 @@
      data-url-contacts="{{ route('chat.api.contacts') }}"
      data-url-sync="{{ route('chat.api.sync', $current->id) }}"
      data-url-sync-status="{{ route('chat.api.sync-status', $current->id) }}"
+     data-url-instances="{{ url('chat/api/instances') }}"
      data-url-chat-base="{{ url('chat/api/chats') }}"
      data-url-message-base="{{ url('chat/api/messages') }}"
      data-url-index="{{ route('chat.index') }}">
@@ -34,7 +35,7 @@
                 @if ($instances->count() > 1)
                     <select id="wa-instance-select" class="form-select form-select-sm" aria-label="{{ __('Instance') }}">
                         @foreach ($instances as $ins)
-                            <option value="{{ $ins->id }}" @if($ins->id === $current->id) {{ __('selected') }} @endif>
+                            <option value="{{ $ins->id }}" @if($ins->id === $current->id) selected @endif>
                                 {{ $ins->name }} · {{ $ins->instance_name }}
                             </option>
                         @endforeach
@@ -44,7 +45,19 @@
                 @endif
             </div>
             <div class="wa-side-actions">
-                <button type="button" class="wa-icon-btn" id="wa-sync" title="{{ __('Import history') }}"><i class="bi bi-arrow-repeat"></i></button>
+                <div class="wa-sync-wrap">
+                    <button type="button" class="wa-icon-btn" id="wa-sync" title="{{ __('Import history') }}" aria-haspopup="true"><i class="bi bi-arrow-repeat"></i></button>
+                    <div id="wa-sync-menu" class="wa-sync-menu d-none" role="menu">
+                        <div class="wa-sync-menu-title">{{ __('Import history from') }}</div>
+                        @foreach ($instances as $ins)
+                            <button type="button" class="wa-sync-item" role="menuitem" data-instance="{{ $ins->id }}">
+                                <i class="bi bi-whatsapp"></i>
+                                <span>{{ $ins->name }} · {{ $ins->instance_name }}</span>
+                                @if (! $ins->isConnected())<small class="text-muted">{{ __('disconnected') }}</small>@endif
+                            </button>
+                        @endforeach
+                    </div>
+                </div>
                 <button type="button" class="wa-icon-btn" id="wa-new" title="{{ __('New chat') }}"><i class="bi bi-chat-left-text"></i></button>
             </div>
         </header>
@@ -166,6 +179,12 @@
         confirmDelete: @json(__('Delete this message for everyone?')),
         copy: @json(__('Copy')),
         copied: @json(__('Copied')),
+        syncFrom: @json(__('Import history from')),
+        linkTitle: @json(__('Unidentified contact')),
+        linkHelp: @json(__('WhatsApp did not reveal the phone number of this conversation. Enter it to merge the conversation with that contact; later messages follow automatically.')),
+        linkPlaceholder: @json(__('Phone with country code, e.g. 5595981110695')),
+        linkButton: @json(__('Link to this number')),
+        linkDone: @json(__('Conversation linked.')),
         syncWaiting: @json(__('Import queued, waiting for a queue worker…')),
         syncWorkerHint: @json(__('Still waiting. The import runs in the queue: start the worker (php artisan queue:work --queue=default,disparos,warmup).')),
         syncRunning: @json(__('Importing history…')),

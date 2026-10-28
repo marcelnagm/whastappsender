@@ -62,6 +62,7 @@ Route::middleware(['auth', 'subscription.writable', 'plan.feature:chat'])->prefi
         Route::post('/chats/{chat}/read', [$chat, 'markRead'])->name('read');
         Route::post('/chats/{chat}/presence', [$chat, 'presence'])->name('presence');
         Route::get('/chats/{chat}/contact', [$chat, 'contactInfo'])->name('contact');
+        Route::post('/chats/{chat}/link-phone', [$chat, 'linkPhone'])->name('link-phone');
         Route::post('/chats/{chat}/contact', [$chat, 'saveContact'])->name('contact.save');
         Route::post('/chats/{chat}/ai-pause', [$chat, 'aiPause'])->name('ai-pause');
 

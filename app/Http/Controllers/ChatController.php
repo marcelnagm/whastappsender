@@ -598,6 +598,27 @@ class ChatController extends Controller
     // Helpers
     // ---------------------------------------------------------------------
 
+    /**
+     * Manual merge: the agent tells which phone an unidentified (@lid) chat belongs to. The pair is stored, so the
+     * chat is merged into the phone chat of the same number and every later message of that lid lands there.
+     */
+    public function linkPhone(Request $request, Chat $chat): JsonResponse
+    {
+        $this->authorizeChat($chat);
+        abort_unless(LidResolver::isLid($chat->remote_jid), 422, __('This conversation is already identified.'));
+
+        $data = $request->validate(['phone' => 'required|string|max:30']);
+        $phone = LidResolver::phoneFrom(preg_replace('/\D/', '', $data['phone']));
+        if (!$phone) {
+            return response()->json(['message' => __('Enter the phone number with country code and area code.')], 422);
+        }
+
+        $instance = Instance::findOrFail($chat->instance_id);
+        $target = app(LidResolver::class)->learn($instance, $chat->remote_jid, $phone, 'manual');
+
+        return response()->json(['chat' => $target ? $this->chatToApi($target) : null]);
+    }
+
     private function ownedInstance(int $id): Instance
     {
         return Instance::where('id', $id)->where('user_id', Auth::id())->firstOrFail();
@@ -622,6 +643,7 @@ class ChatController extends Controller
             'avatar' => $chat->avatar(),
             'unread' => (int) $chat->unread_count,
             'in_crm' => (bool) $chat->contact_id,
+            'unidentified' => LidResolver::isLid($chat->remote_jid),
             'last' => [
                 'type' => $chat->last_message_type,
                 'text' => $chat->last_message_preview,

@@ -24,6 +24,7 @@
     urlContacts: D.urlContacts,
     urlSync: D.urlSync,
     urlSyncStatus: D.urlSyncStatus,
+    urlInstances: D.urlInstances,
     chatBase: D.urlChatBase,
     messageBase: D.urlMessageBase,
     urlIndex: D.urlIndex
@@ -1021,6 +1022,28 @@
     top.appendChild(h('div', 'wa-info-phone', d.phone ? '+' + d.phone : ''));
     body.appendChild(top);
 
+    if (chat.unidentified) {
+      var lk = h('div', 'wa-info-card');
+      lk.appendChild(h('h6', null, T.linkTitle));
+      lk.appendChild(h('p', 'small text-muted', T.linkHelp));
+      var phoneIn = h('input', 'form-control'); phoneIn.placeholder = T.linkPlaceholder; phoneIn.inputMode = 'tel'; phoneIn.maxLength = 30;
+      lk.appendChild(phoneIn);
+      var lkBtn = h('button', 'btn btn-sm btn-success mt-2', T.linkButton);
+      lkBtn.type = 'button';
+      lkBtn.addEventListener('click', async function () {
+        lkBtn.disabled = true;
+        try {
+          var r = await api(cfg.chatBase + '/' + chat.id + '/link-phone', { method: 'POST', body: { phone: phoneIn.value } });
+          toast(T.linkDone);
+          S.active = r.chat || null;
+          await loadChats();
+          if (r.chat) { openChat(S.chats.find(function (c) { return c.id === r.chat.id; }) || r.chat); } else { closeChat(); }
+        } catch (e) { toast(e.message); lkBtn.disabled = false; }
+      });
+      lk.appendChild(lkBtn);
+      body.appendChild(lk);
+    }
+
     var crm = h('div', 'wa-info-card');
     crm.appendChild(h('h6', null, 'CRM'));
 
@@ -1164,7 +1187,7 @@
   async function pollSync(first) {
     clearTimeout(syncTimer);
     var st;
-    try { st = await api(cfg.urlSyncStatus); } catch (e) { return; }
+    try { st = await api(cfg.urlInstances + '/' + (S.syncInstance || cfg.instance) + '/sync'); } catch (e) { return; }
     var wasBusy = S.syncBusy;
     S.syncBusy = st.state === 'queued' || st.state === 'running';
     renderSync(st);
@@ -1181,14 +1204,31 @@
     }
   }
 
-  $('wa-sync').addEventListener('click', async function () {
+  // the sync button opens a menu: any of the user's numbers can be imported, not only the one on screen
+  var syncMenu = $('wa-sync-menu');
+
+  async function startSync(instanceId) {
+    syncMenu.classList.add('d-none');
+    S.syncInstance = instanceId;
     try {
-      var st = await api(cfg.urlSync, { method: 'POST' });
+      var st = await api(cfg.urlInstances + '/' + instanceId + '/sync', { method: 'POST' });
       S.syncBusy = true;
       renderSync(st);
       pollSync();
     } catch (e) { toast(e.message); }
+  }
+
+  $('wa-sync').addEventListener('click', function (ev) {
+    ev.stopPropagation();
+    var items = syncMenu.querySelectorAll('.wa-sync-item');
+    if (items.length <= 1) { startSync(cfg.instance); return; }
+    syncMenu.classList.toggle('d-none');
   });
+  syncMenu.addEventListener('click', function (ev) {
+    var b = ev.target.closest('.wa-sync-item');
+    if (b) startSync(parseInt(b.getAttribute('data-instance'), 10));
+  });
+  document.addEventListener('click', function () { syncMenu.classList.add('d-none'); });
 
   pollSync(true);   // resumes the display when the page is opened while an import is running
 

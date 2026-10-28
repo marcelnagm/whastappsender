@@ -6,6 +6,7 @@ use App\Models\Chat;
 use App\Models\ChatMessage;
 use App\Models\Contact;
 use App\Models\Instance;
+use App\Models\LidMapping;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
@@ -78,25 +79,43 @@ class LidResolver
         return null;
     }
 
-    /** A lid -> phone pair is certain: remember it and convert the chat that was opened under the lid, if any. */
-    public function learn(Instance $instance, string $lid, string $phone): void
+    /**
+     * A lid -> phone pair is certain: keep it for good and convert every chat of this user that was opened under the lid
+     * (each instance keeps its own chats; they are only merged with the phone chat of the SAME instance).
+     *
+     * @return Chat|null the chat of $instance that now carries the phone, when there was one
+     */
+    public function learn(Instance $instance, string $lid, string $phone, string $source = 'message'): ?Chat
     {
-        if (Cache::get("lid-map:{$instance->id}:{$lid}") === $phone) {
-            return;
+        $phone = (string) self::phoneFrom($phone);
+        if ($phone === '' || !self::isLid($lid)) {
+            return null;
         }
 
+        LidMapping::updateOrCreate(['lid' => $lid], ['phone' => $phone, 'source' => $source]);
         Cache::put("lid-map:{$instance->id}:{$lid}", $phone, now()->addDays(30));
 
-        $chat = Chat::where('instance_id', $instance->id)->where('remote_jid', $lid)->first();
-        if ($chat) {
-            $this->convert($chat, $phone);
-        }
+        $result = null;
+        Chat::where('remote_jid', $lid)->where('user_id', $instance->user_id)->get()->each(function (Chat $chat) use ($phone, $instance, &$result) {
+            $converted = $this->convert($chat, $phone);
+            if ((int) $chat->instance_id === (int) $instance->id) {
+                $result = $converted;
+            }
+        });
+
+        return $result;
     }
 
     public function resolve(Instance $instance, string $lid, bool $allowHttp = true): ?string
     {
         if ($mapped = Cache::get("lid-map:{$instance->id}:{$lid}")) {
             return $mapped;
+        }
+
+        if ($stored = LidMapping::where('lid', $lid)->value('phone')) {
+            Cache::put("lid-map:{$instance->id}:{$lid}", $stored, now()->addDays(30));
+
+            return $stored;
         }
 
         if ($phone = $this->fromDatabase((int) $instance->user_id, $lid)) {
@@ -115,7 +134,7 @@ class LidResolver
 
         $phone = $this->fromEvolution($instance, $lid);
         if ($phone) {
-            Cache::put("lid-map:{$instance->id}:{$lid}", $phone, now()->addDays(30));
+            $this->learn($instance, $lid, $phone, 'evolution');
         } else {
             Cache::put($key, 1, now()->addMinutes(10));
         }

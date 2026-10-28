@@ -283,4 +283,111 @@ class ChatLidAndHistoryTest extends TestCase
         $this->assertSame(45, ChatMessage::count());
         $this->assertSame(2, $st['chats_done']);
     }
+
+    // ---- merging, persistence and instance choice ----------------------------------------------------------
+
+    public function test_learned_pair_is_stored_for_good_and_used_by_later_messages(): void
+    {
+        Http::fake(['*' => Http::response([], 404)]);
+        app(LidResolver::class)->learn($this->instance, self::LID, '5595981110695', 'manual');
+        $this->assertSame('5595981110695', \App\Models\LidMapping::where('lid', self::LID)->value('phone'));
+
+        Cache::flush();                                  // cache gone: the table still knows
+        $this->record('A1', self::LID);                  // no remoteJidAlt, no contact, Evolution knows nothing
+
+        $this->assertSame(1, Chat::count());
+        $this->assertSame('5595981110695@s.whatsapp.net', Chat::first()->remote_jid);
+    }
+
+    public function test_echo_of_a_message_we_sent_teaches_the_lid(): void
+    {
+        Http::fake(['*' => Http::response([], 404)]);
+        $chat = Chat::create(['user_id' => $this->user->id, 'instance_id' => $this->instance->id, 'remote_jid' => '5595981110695@s.whatsapp.net', 'phone' => '5595981110695']);
+        ChatMessage::create(['chat_id' => $chat->id, 'instance_id' => $this->instance->id, 'user_id' => $this->user->id, 'message_id' => 'SENT1', 'from_me' => true, 'type' => 'text', 'body' => 'oi', 'status' => 'sent', 'message_timestamp' => now()]);
+
+        $this->record('SENT1', self::LID, [], false, 'oi', true);       // Evolution echoes it under the lid
+
+        $this->assertSame(1, Chat::count());
+        $this->assertSame('5595981110695', \App\Models\LidMapping::where('lid', self::LID)->value('phone'));
+        $this->record('R1', self::LID, [], false, 'resposta');           // the customer's reply now lands in the same chat
+        $this->assertSame(1, Chat::count());
+        $this->assertSame(3 - 1, ChatMessage::count());
+    }
+
+    public function test_echo_of_a_campaign_send_teaches_the_lid(): void
+    {
+        Http::fake(['*' => Http::response([], 404)]);
+        $contact = Contact::create(['name' => 'Maria', 'contact' => '5595981110695', 'user_id' => $this->user->id]);
+        \App\Models\WhatsappJob::create(['user_id' => $this->user->id, 'contact_id' => $contact->id, 'endpoint' => 'x', 'status' => 'processado', 'tentativas' => 1, 'payload' => [], 'message_id' => 'CAMP1']);
+
+        $this->record('CAMP1', self::LID, [], false, 'promo', true);
+
+        $this->assertSame('5595981110695@s.whatsapp.net', Chat::first()->remote_jid);
+    }
+
+    public function test_lids_are_merged_per_instance_and_never_across_instances(): void
+    {
+        Http::fake(['*' => Http::response([], 404)]);
+        $other = Instance::create(['user_id' => $this->user->id, 'name' => 'o', 'instance_name' => '5595222', 'status' => 'connected']);
+        $this->record('A1', self::LID);
+        app(ChatMessageRecorder::class)->recordUpsert('5595222', ['key' => ['id' => 'B1', 'remoteJid' => self::LID, 'fromMe' => false], 'message' => ['conversation' => 'x'], 'messageTimestamp' => now()->timestamp]);
+        $this->assertSame(2, Chat::count());
+
+        app(LidResolver::class)->learn($this->instance, self::LID, '5595981110695');
+
+        $this->assertSame(2, Chat::count());   // one chat per instance, both converted, none merged into the other
+        $this->assertSame([$this->instance->id, $other->id], Chat::orderBy('instance_id')->pluck('instance_id')->map(fn ($i) => (int) $i)->sort()->values()->all());
+        $this->assertSame(0, Chat::where('remote_jid', 'like', '%@lid')->count());
+    }
+
+    public function test_agent_can_link_an_unidentified_chat_to_a_phone_and_it_merges(): void
+    {
+        Http::fake(['*' => Http::response([], 404)]);
+        $this->record('P1', '5595981110695@s.whatsapp.net', [], false, 'from phone');
+        $this->record('L1', self::LID, [], false, 'from lid');
+        $lidChat = Chat::where('remote_jid', self::LID)->first();
+
+        $this->actingAs($this->user)->postJson(route('chat.api.link-phone', $lidChat->id), ['phone' => '+55 (95) 98111-0695'])->assertOk()
+            ->assertJsonPath('chat.phone', '5595981110695')->assertJsonPath('chat.unidentified', false);
+
+        $this->assertSame(1, Chat::count());
+        $this->assertSame(2, ChatMessage::count());
+        $this->actingAs($this->user)->postJson(route('chat.api.link-phone', Chat::first()->id), ['phone' => '5595'])->assertStatus(422);
+    }
+
+    public function test_link_phone_is_private_and_validated(): void
+    {
+        Http::fake(['*' => Http::response([], 404)]);
+        $this->record('L1', self::LID);
+        $chat = Chat::first();
+        $other = User::create(['name' => 'o', 'email' => 'o@t.dev', 'username' => 'o', 'password' => 'x']);
+
+        $this->actingAs($other)->postJson(route('chat.api.link-phone', $chat->id), ['phone' => '5595981110695'])->assertForbidden();
+        $this->actingAs($this->user)->postJson(route('chat.api.link-phone', $chat->id), ['phone' => 'abc'])->assertStatus(422);
+    }
+
+    public function test_message_is_sent_through_the_instance_of_the_chat_that_is_open(): void
+    {
+        Queue::fake([FetchChatAvatarJob::class]);
+        Http::fake(['*' => Http::response(['key' => ['id' => 'WA1']])]);
+        $second = Instance::create(['user_id' => $this->user->id, 'name' => 'b', 'instance_name' => '5595333', 'status' => 'connected']);
+        $chat = Chat::create(['user_id' => $this->user->id, 'instance_id' => $second->id, 'remote_jid' => '5595981110695@s.whatsapp.net', 'phone' => '5595981110695']);
+
+        $this->actingAs($this->user)->postJson(route('chat.api.send', $chat->id), ['text' => 'ola', 'client_id' => 'c1'])->assertSuccessful();
+
+        Http::assertSent(fn ($r) => str_contains($r->url(), '/message/sendText/5595333'));
+        Http::assertNotSent(fn ($r) => str_contains($r->url(), '/5595111'));
+    }
+
+    public function test_history_can_be_imported_for_any_of_the_users_instances(): void
+    {
+        Queue::fake([SyncChatHistoryJob::class, FetchChatAvatarJob::class]);
+        $second = Instance::create(['user_id' => $this->user->id, 'name' => 'b', 'instance_name' => '5595333', 'status' => 'connected']);
+
+        $this->actingAs($this->user)->postJson(route('chat.api.sync', $second->id))->assertStatus(202);
+
+        Queue::assertPushed(SyncChatHistoryJob::class, fn ($j) => $j->instanceId === $second->id);
+        $this->actingAs($this->user)->getJson(route('chat.api.sync-status', $second->id))->assertJson(['state' => 'queued']);
+        $this->actingAs($this->user)->getJson(route('chat.api.sync-status', $this->instance->id))->assertJson(['state' => 'idle']);
+    }
 }

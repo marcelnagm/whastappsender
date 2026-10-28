@@ -96,6 +96,7 @@ trait CreatesTestSchema
             '2026_10_25_100000_create_billing_tables.php',
             '2026_10_26_100000_create_payment_gateway_tables.php',
             '2026_10_27_100000_add_health_columns_to_instances_table.php',
+            '2026_10_28_100000_create_lid_mappings_table.php',
         ] as $file) {
             (require database_path('migrations/' . $file))->up();
         }

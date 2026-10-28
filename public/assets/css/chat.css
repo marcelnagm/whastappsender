@@ -290,3 +290,10 @@
 .wa-sync-bar.err { background: #fde7ea; color: #9b1c2e; }
 .wa-icon-btn.wa-spin i { animation: wa-spin 1s linear infinite; }
 @keyframes wa-spin { to { transform: rotate(360deg); } }
+
+/* import menu */
+.wa-sync-wrap { position: relative; display: inline-block; }
+.wa-sync-menu { position: absolute; right: 0; top: 100%; z-index: 30; min-width: 230px; background: #fff; border-radius: 8px; box-shadow: 0 6px 24px rgba(0,0,0,.18); padding: 6px; }
+.wa-sync-menu-title { font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: #667781; padding: 4px 8px; }
+.wa-sync-item { display: flex; gap: 8px; align-items: center; width: 100%; text-align: left; border: 0; background: transparent; padding: 8px; border-radius: 6px; font-size: 13px; }
+.wa-sync-item:hover { background: rgba(17,27,33,.06); }

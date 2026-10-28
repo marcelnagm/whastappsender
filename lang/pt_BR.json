@@ -707,5 +707,13 @@
     ":name: :error": ":name: :error",
     "Chat history imported": "Histórico do chat importado",
     ":name: :chats conversation(s), :messages message(s).": ":name: :chats conversa(s), :messages mensagem(ns).",
-    "Nothing to import: Evolution has no stored messages for this number. New messages will appear as they arrive; older ones only exist if WhatsApp delivered them when the number was paired.": "Nada para importar: a Evolution não tem mensagens guardadas deste número. As novas aparecem conforme chegam; as antigas só existem se o WhatsApp as entregou quando o número foi pareado."
+    "Nothing to import: Evolution has no stored messages for this number. New messages will appear as they arrive; older ones only exist if WhatsApp delivered them when the number was paired.": "Nada para importar: a Evolution não tem mensagens guardadas deste número. As novas aparecem conforme chegam; as antigas só existem se o WhatsApp as entregou quando o número foi pareado.",
+    "Import history from": "Importar histórico de",
+    "This conversation is already identified.": "Esta conversa já está identificada.",
+    "Enter the phone number with country code and area code.": "Informe o telefone com código do país e DDD.",
+    "WhatsApp did not reveal the phone number of this conversation. Enter it to merge the conversation with that contact; later messages follow automatically.": "O WhatsApp não revelou o telefone desta conversa. Informe-o para mesclar com esse contato; as próximas mensagens seguem automaticamente.",
+    "Phone with country code, e.g. 5595981110695": "Telefone com DDI, ex.: 5595981110695",
+    "Link to this number": "Vincular a este número",
+    "Conversation linked.": "Conversa vinculada.",
+    "disconnected": "desconectada"
 }
