@@ -63,6 +63,17 @@ class AiAutoReplyService
             return;
         }
 
+        // Which agent (provider, model, prompt) answers on THIS number: the one assigned to it, else the "any instance" one
+        $profile = app(AiProfileResolver::class)->forInstance($user, $instance);
+        if (!$profile) {
+            $this->debugFlow('Aborted: no enabled AI agent for this instance', ['instance_id' => $instance->id]);
+            return;
+        }
+        if ($profile->business_hours_only && !AiBusinessHours::isOpen($profile)) {
+            $this->debugFlow('Aborted: outside business hours', ['profile_id' => $profile->id]);
+            return;
+        }
+
         // Plan: AI replies need the feature and monthly quota; blocked accounts get no automatic replies
         $entitlements = app(\App\Services\Billing\Entitlements::class);
         if (!$entitlements->can($user, 'ai_auto_reply') || !$entitlements->allows($user, 'ai_replies_per_month')) {
@@ -105,12 +116,22 @@ class AiAutoReplyService
             ->values()
             ->all();
 
-        $result = app(GroqAgentResponder::class)->generateReply($user, $history);
+        $result = app(AgentResponder::class)->generateReply($profile, $history);
         $reply = trim((string) ($result['reply'] ?? ''));
+
         if ($reply === '') {
-            $this->debugFlow('Aborted: GROQ returned empty reply', [
-                'session_id' => $session->id,
+            // keep the failure visible in the AI section instead of answering with something made up
+            AiMessage::create([
+                'ai_session_id' => $session->id,
+                'direction' => 'outbound',
+                'role' => 'assistant',
+                'content' => '',
+                'provider' => $result['provider'],
+                'model' => $result['model'],
+                'status' => 'error',
+                'error' => mb_substr((string) ($result['error'] ?? 'empty reply'), 0, 600),
             ]);
+            $this->debugFlow('Aborted: AI provider returned no reply', ['session_id' => $session->id, 'error' => $result['error'] ?? null]);
             return;
         }
 
@@ -119,7 +140,7 @@ class AiAutoReplyService
             'direction' => 'outbound',
             'role' => 'assistant',
             'content' => $reply,
-            'provider' => 'groq',
+            'provider' => $result['provider'],
             'model' => $result['model'] ?? null,
             'tokens_in' => $result['tokens_in'] ?? null,
             'tokens_out' => $result['tokens_out'] ?? null,
@@ -128,6 +149,7 @@ class AiAutoReplyService
         ]);
 
         $entitlements->consume($user, 'ai_replies');
+        // the answer leaves through the number that received the message ($instance), never through another one
         SendAiReplyJob::dispatch($outbound->id, $instance->id, $contact->id)->onQueue('disparos');
         $this->debugFlow('AI reply queued successfully', [
             'session_id' => $session->id,
@@ -181,6 +203,11 @@ class AiAutoReplyService
             $contactByLid = Contact::where('user_id', $userId)
                 ->where('lid', $remoteJid)
                 ->first();
+
+            // pair learned by the chat (message echo, manual link): lid -> phone -> CRM contact
+            if (!$contactByLid && ($phone = \App\Models\LidMapping::where('lid', $remoteJid)->value('phone'))) {
+                $contactByLid = app(\App\Services\Chat\ChatMessageRecorder::class)->findContact($userId, $phone);
+            }
 
             if ($contactByLid) {
                 $this->debugFlow('Contact resolved by LID', [

@@ -104,9 +104,15 @@ class AiInboundMessageRecorder
                 return $contact;
             }
 
-            return Contact::where('user_id', $userId)
+            $byLid = Contact::where('user_id', $userId)
                 ->where('lid', $remoteJid)
                 ->first();
+
+            if (!$byLid && ($phone = \App\Models\LidMapping::where('lid', $remoteJid)->value('phone'))) {
+                $byLid = app(\App\Services\Chat\ChatMessageRecorder::class)->findContact($userId, $phone);
+            }
+
+            return $byLid;
         }
 
         $contactNumber = $this->resolveContactNumber($data);

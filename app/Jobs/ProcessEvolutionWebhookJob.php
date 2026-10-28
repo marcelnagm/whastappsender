@@ -8,7 +8,8 @@ use App\Models\User;
 use App\Models\WhatsappJob;
 use App\Services\AI\AiAutoReplyService;
 use App\Services\AI\AiInboundMessageRecorder;
-use App\Services\AI\GroqAgentResponder;
+use App\Services\AI\AgentResponder;
+use App\Services\AI\AiProfileResolver;
 use App\Services\Chat\ChatMessageRecorder;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -301,7 +302,7 @@ Log::info(json_encode($data));
         }
 
         $campaignItemId = Redis::hget("welcome:contact_campaign:user:{$instance->user_id}", $whatsappId) ?: null;
-        $reply = $this->generateWelcomeReply($user, $text);
+        $reply = $this->generateWelcomeReply($user, $instance, $text);
 
         $job = WhatsappJob::create([
             'endpoint' => '/message/sendText/',
@@ -313,6 +314,8 @@ Log::info(json_encode($data));
             'campaign_item_id' => $campaignItemId,
             'user_id' => $instance->user_id,
             'contact_id' => $contact->id,
+            // answer through the number the lead wrote to
+            'instance_id' => $instance->id,
             'tentativas' => 0,
         ]);
 
@@ -324,21 +327,23 @@ Log::info(json_encode($data));
         return true;
     }
 
-    private function generateWelcomeReply(User $user, string $text): string
+    private function generateWelcomeReply(User $user, Instance $instance, string $text): string
     {
-        $result = app(GroqAgentResponder::class)->generateReply($user, [
+        $fallback = 'Perfect — thanks for replying. Can I walk you through the next details now?';
+
+        $profile = app(AiProfileResolver::class)->forInstance($user, $instance);
+        if (!$profile) {
+            return $fallback;
+        }
+
+        $result = app(AgentResponder::class)->generateReply($profile, [
             [
                 'role' => 'user',
                 'content' => "Inbound message from lead after first contact: {$text}. Generate a short, friendly reply that moves the conversation forward.",
             ],
         ]);
 
-        $reply = trim((string) ($result['reply'] ?? ''));
-        if ($reply === '') {
-            $reply = 'Perfect — thanks for replying. Can I walk you through the next details now?';
-        }
-
-        return $reply;
+        return trim((string) ($result['reply'] ?? '')) ?: $fallback;
     }
 
     private function debugWebhook(string $message, array $context = []): void

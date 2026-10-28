@@ -86,6 +86,19 @@ Route::group(['namespace' => 'App\Http\Controllers', 'middleware' => ['auth', 's
     Route::get('/billing/invoices/{invoice}/status', [BillingController::class, 'status'])->name('billing.status');
     Route::post('/billing/auto-renew/stop', [BillingController::class, 'stopAutoRenew'])->name('billing.autorenew.stop');
 
+    // AI agents: provider/model/prompt and which WhatsApp number each one answers for
+    Route::prefix('ai')->name('ai.')->group(function () {
+        $ai = \App\Http\Controllers\AiSettingsController::class;
+        Route::get('/', [$ai, 'index'])->name('index');
+        Route::post('/toggle', [$ai, 'toggle'])->name('toggle');
+        Route::get('/agents/create', [$ai, 'create'])->name('create');
+        Route::post('/agents', [$ai, 'store'])->name('store');
+        Route::post('/agents/test', [$ai, 'test'])->name('test')->middleware('throttle:15,1');
+        Route::get('/agents/{profile}/edit', [$ai, 'edit'])->name('edit');
+        Route::put('/agents/{profile}', [$ai, 'update'])->name('update');
+        Route::delete('/agents/{profile}', [$ai, 'destroy'])->name('destroy');
+    });
+
     Route::get('/me/profile', [UserController::class, 'editProfile'])->name('profile.edit');
     Route::post('/me/profile', [UserController::class, 'updateProfile'])->name('profile.update');
     Route::post('/me/api-tokens', [UserController::class, 'createApiToken'])->name('profile.api-tokens.create')->middleware('plan.feature:api_access');

@@ -23,6 +23,12 @@ trait CreatesTestSchema
             $t->string('role')->nullable();
             $t->boolean('active')->default(true);
             $t->boolean('ai_enabled')->default(false);
+            $t->string('ai_mode')->default('off');
+            $t->string('ai_model')->nullable();
+            $t->decimal('ai_temperature', 3, 2)->nullable();
+            $t->unsignedInteger('ai_max_tokens')->nullable();
+            $t->text('ai_system_prompt')->nullable();
+            $t->boolean('ai_business_hours_only')->default(false);
             $t->string('locale', 10)->nullable();
             $t->rememberToken();
             $t->timestamps();
@@ -98,6 +104,9 @@ trait CreatesTestSchema
             '2026_10_27_100000_add_health_columns_to_instances_table.php',
             '2026_10_28_100000_create_lid_mappings_table.php',
             '2026_10_29_100000_add_chat_signature_to_users_table.php',
+            '2026_04_23_100100_create_ai_sessions_table.php',
+            '2026_04_23_100200_create_ai_messages_table.php',
+            '2026_10_30_100000_create_ai_profiles_table.php',
         ] as $file) {
             (require database_path('migrations/' . $file))->up();
         }

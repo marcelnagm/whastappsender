@@ -61,6 +61,7 @@ class ProfileController extends ApiController
         }
 
         $user->update($data);
+        \App\Models\AiProfile::syncFromUser($user->fresh());
 
         return $this->success($user->fresh(), 'Profile updated.');
     }

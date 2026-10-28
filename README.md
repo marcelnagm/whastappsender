@@ -2,7 +2,7 @@
 
 ![PHP Version](https://img.shields.io/badge/php-%5E8.0-777bb4?style=for-the-badge&logo=php&logoColor=white)
 ![Laravel Version](https://img.shields.io/badge/laravel-%5E9.0-ff2d20?style=for-the-badge&logo=laravel&logoColor=white)
-![AI-Powered](https://img.shields.io/badge/AI-Powered_by_GROQ_LPU-orange?style=for-the-badge&logo=openai)
+![AI-Powered](https://img.shields.io/badge/AI-Groq_%C2%B7_OpenAI_%C2%B7_Claude_%C2%B7_Gemini_%C2%B7_Ollama-orange?style=for-the-badge&logo=openai)
 ![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white)
 [![GitHub stars](https://img.shields.io/github/stars/marcelnagm/whastappsender?style=for-the-badge&logo=github)](https://github.com/marcelnagm/whastappsender/stargazers)
 [![GitHub followers](https://img.shields.io/github/followers/marcelnagm?style=for-the-badge&logo=github&label=Follow)](https://github.com/marcelnagm)
@@ -10,12 +10,13 @@
 > ⭐ **Cloned or using this project? Please give it a star and/or follow [@marcelnagm](https://github.com/marcelnagm).**
 > It's free, takes two seconds and is what keeps the project maintained. Thank you! 🙏
 
-**SAMA Envios** is a mission-critical communication infrastructure that merges the power of **Laravel** with the ultra-fast **GROQ LPU** inference. Designed for enterprises that demand stable bulk messaging and **Intelligent AI Customer Service** that mimics human response speeds.
+**SAMA Envios** is a mission-critical communication infrastructure that merges the power of **Laravel** with the LLM of your choice (**Groq, OpenAI, Claude, Gemini, DeepSeek, Mistral, OpenRouter, Ollama or any OpenAI-compatible endpoint**). Designed for teams that demand stable bulk messaging and **Intelligent AI Customer Service** on WhatsApp, answering through the very number the customer wrote to.
 
 **Documentation map**
 
 | Section | Topic |
 |---------|-------|
+| [AI Agents](#-ai-agents-multi-provider) | Providers, model choice, prompt, per-instance agents, working hours |
 | [Tool Call Chain API](#-tool-call-chain-api-ai-agents) | REST + AI agent tools |
 | [System Architecture](#-system-architecture-queues--warmup) | Queues, Warmup, production requirements |
 | [WhatsApp Chat (CRM)](#-whatsapp-chat-crm) | WhatsApp Web-style inbox on top of Evolution API |
@@ -26,13 +27,27 @@
 
 ---
 
-## 🤖 The New Era: AI Employee Powered by GROQ (Included)
+## 🤖 AI Agents (multi-provider)
 
-Forget slow and rigid bots. SAMA natively integrates with the **GROQ** infrastructure, allowing you to create virtual agents that:
+Open the **AI** menu to create one or more agents. Each agent defines:
 
-* **Respond Instantly:** Natural Language Processing in milliseconds (LPU technology), eliminating typical AI delays.
-* **Consultative Sales:** Configure *System Prompts* to make the AI act as your Sales Director, handling objections and qualifying leads 24/7.
-* **Brand Context:** The AI understands your company, products, and offers, maintaining a consistent brand voice on WhatsApp.
+* **Provider and model** — Groq, OpenAI (ChatGPT), Anthropic (Claude), Google Gemini, DeepSeek, Mistral, OpenRouter, **Ollama** and **Custom** (any OpenAI-compatible URL). The model lists are only suggestions: type any model id your provider supports.
+* **Your own API key** (stored encrypted, never shown again) — or leave it empty to use a platform key set in `.env`. Ollama needs no key. A **Test connection** button checks provider, model and key before saving.
+* **Behaviour prompt** — the system prompt that shapes how the agent talks and sells.
+* **Which number it answers for** — one specific instance, or *any instance*. An instance-specific agent wins over the "any instance" agent; a disabled instance agent keeps the AI silent on that number.
+* **Working hours** — optional days, start/end time and timezone; outside the window the AI stays silent. Set per agent, so the same rule covers every instance the agent covers.
+* **Reply path** — the answer always leaves through the **instance that received the message**.
+
+Failures (bad key, quota, timeout) never send anything to the customer; they appear under *Recent AI errors* in the AI section.
+
+| `.env` (all optional) | Purpose |
+|---|---|
+| `GROQ_API_KEY`, `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GEMINI_API_KEY`, `DEEPSEEK_API_KEY`, `MISTRAL_API_KEY`, `OPENROUTER_API_KEY` | Platform keys used when an agent has no key of its own |
+| `AI_ALLOW_PRIVATE_HOSTS` | Let Ollama/custom point to localhost or LAN hosts (default: only when `APP_ENV=local`). Keep it `false` on a shared host (SSRF protection; `169.254.*` is always blocked) |
+| `AI_TIMEOUT` | Provider timeout in seconds (default 40) |
+| `AI_BUSINESS_TZ`, `AI_BUSINESS_START`, `AI_BUSINESS_END` | Default working hours for agents that do not set their own |
+
+> After updating run `php artisan migrate`: existing AI settings are copied into a default "any instance" Groq agent, so nothing changes until you edit it. The legacy `ai_*` API fields keep working.
 
 ---
 

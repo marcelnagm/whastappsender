@@ -26,6 +26,9 @@
           <a href="{{ route('chat.index') }}" class="nav-link {{ request()->is('chat*') ? 'active text-secondary' : 'text-white' }}"><i class="bi bi-chat-dots me-1"></i> {{ __('Chat') }}</a>
         </li>
         <li class="nav-item">
+          <a href="{{ route('ai.index') }}" class="nav-link {{ request()->is('ai*') ? 'active text-secondary' : 'text-white' }}"><i class="bi bi-robot me-1"></i> {{ __('AI') }}</a>
+        </li>
+        <li class="nav-item">
           <a href="/campaigns" class="nav-link text-white"><i class="bi bi-megaphone me-1"></i> {{ __('Campaign') }}</a>
         </li>
         <li class="nav-item">
