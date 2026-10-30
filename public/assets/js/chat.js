@@ -255,7 +255,7 @@
   // ------------------------------------------------------------------
   // chat list
   // ------------------------------------------------------------------
-  var CHANNELS = { whatsapp: ['WhatsApp', 'bi-whatsapp'], telegram: ['Telegram', 'bi-telegram'], instagram: ['Instagram', 'bi-instagram'] };
+  var CHANNELS = { whatsapp: ['WhatsApp', 'bi-whatsapp'], telegram: ['Telegram', 'bi-telegram'], instagram: ['Instagram', 'bi-instagram'], tiktok: ['TikTok', 'bi-tiktok'] };
   function channelTag(chat) {
     var c = CHANNELS[chat.channel || 'whatsapp'] || CHANNELS.whatsapp;
     var tag = h('span', 'wa-ch wa-ch-' + (chat.channel || 'whatsapp'));
@@ -1140,6 +1140,108 @@
       }
     }
     body.appendChild(ai);
+
+    var linked = h('div', 'wa-info-card');
+    body.appendChild(linked);
+    renderLinked(chat, linked);
+  }
+
+  // ------------------------------------------------------------------
+  // same person on other channels (linked contacts)
+  // ------------------------------------------------------------------
+  function chIcon(channel) {
+    var c = CHANNELS[channel] || CHANNELS.whatsapp;
+    var i = h('i', 'bi ' + c[1] + ' wa-ch wa-ch-' + channel);
+    i.title = c[0];
+    return i;
+  }
+
+  async function renderLinked(chat, host) {
+    host.replaceChildren(h('h6', null, T.linkedTitle), h('p', 'small text-muted', T.linkedHelp));
+    var data;
+    try { data = await api(cfg.chatBase + '/' + chat.id + '/links'); } catch (e) { host.appendChild(h('div', 'small text-muted', e.message)); return; }
+    if (!data.linkable) { host.appendChild(h('div', 'small text-muted', T.linkedSaveFirst)); return; }
+
+    var sendable = [];
+    data.items.forEach(function (it) {
+      var row = h('div', 'd-flex align-items-center gap-2 mb-2');
+      row.appendChild(chIcon(it.channel));
+      row.appendChild(h('span', 'flex-fill small text-truncate', it.name + (it.current ? ' •' : '')));
+      if (!it.current) {
+        var open = h('button', 'btn btn-sm btn-outline-secondary', T.linkedOpen);
+        open.type = 'button';
+        open.addEventListener('click', function () {
+          window.location.href = cfg.urlIndex + '?instance=' + it.instance_id + '&chat=' + it.chat_id;
+        });
+        row.appendChild(open);
+      }
+      if (it.unlinkable) {
+        var un = h('button', 'btn btn-sm btn-outline-danger', T.linkedUnlink);
+        un.type = 'button';
+        un.addEventListener('click', async function () {
+          un.disabled = true;
+          try { await api(cfg.chatBase + '/' + chat.id + '/links/' + it.contact_id, { method: 'DELETE' }); renderLinked(chat, host); loadChats(); }
+          catch (e) { toast(e.message); un.disabled = false; }
+        });
+        row.appendChild(un);
+      }
+      host.appendChild(row);
+      sendable.push(it);
+    });
+
+    // send through any channel of the person
+    if (sendable.length > 1) {
+      var sel = h('select', 'form-select form-select-sm mt-2');
+      sendable.forEach(function (it) {
+        var o = h('option', null, (CHANNELS[it.channel] || CHANNELS.whatsapp)[0] + ' · ' + it.name + (it.window_open ? '' : ' (' + T.linkedClosed + ')'));
+        o.value = it.chat_id; o.disabled = !it.window_open;
+        if (it.current && it.window_open) o.selected = true;
+        sel.appendChild(o);
+      });
+      var txt = h('textarea', 'form-control form-control-sm mt-2'); txt.rows = 2; txt.maxLength = 4000; txt.placeholder = T.linkedSendPlaceholder;
+      var go = h('button', 'btn btn-sm btn-success mt-2', T.linkedSend); go.type = 'button';
+      go.addEventListener('click', async function () {
+        if (!txt.value.trim() || !sel.value) return;
+        go.disabled = true;
+        try {
+          var form = new FormData(); form.append('text', txt.value.trim());
+          await api(cfg.chatBase + '/' + sel.value + '/send', { method: 'POST', form: form });
+          txt.value = ''; toast(T.linkedSent); loadChats();
+        } catch (e) { toast(e.message); }
+        go.disabled = false;
+      });
+      host.appendChild(h('div', 'small fw-semibold mt-3', T.linkedSendVia));
+      host.appendChild(sel); host.appendChild(txt); host.appendChild(go);
+    }
+
+    // link another contact
+    var search = h('input', 'form-control form-control-sm mt-3'); search.placeholder = T.linkedSearch; search.type = 'search';
+    var results = h('div', 'mt-1');
+    var timer = null;
+    search.addEventListener('input', function () {
+      clearTimeout(timer);
+      timer = setTimeout(async function () {
+        results.replaceChildren();
+        try {
+          var r = await api(cfg.chatBase + '/' + chat.id + '/links/search?q=' + encodeURIComponent(search.value));
+          if (!r.items.length) results.appendChild(h('div', 'small text-muted', T.linkedNone));
+          r.items.forEach(function (c) {
+            var line = h('div', 'd-flex align-items-center gap-2 mb-1');
+            line.appendChild(chIcon(c.channel));
+            line.appendChild(h('span', 'flex-fill small text-truncate', c.name + (c.sub ? ' · ' + c.sub : '')));
+            var b = h('button', 'btn btn-sm btn-outline-success', T.linkedLink); b.type = 'button';
+            b.addEventListener('click', async function () {
+              b.disabled = true;
+              try { await api(cfg.chatBase + '/' + chat.id + '/links', { method: 'POST', body: { contact_id: c.id } }); renderLinked(chat, host); loadChats(); }
+              catch (e) { toast(e.message); b.disabled = false; }
+            });
+            line.appendChild(b);
+            results.appendChild(line);
+          });
+        } catch (e) { toast(e.message); }
+      }, 300);
+    });
+    host.appendChild(search); host.appendChild(results);
   }
 
   function saveButton(chat, nameIn, mailIn, creating) {

@@ -110,9 +110,9 @@ class InstagramClient
      *
      * @return string[]
      */
-    public static function chunk(string $text): array
+    public static function chunk(string $text, ?int $max = null): array
     {
-        $max = (int) config('instagram.max_text', 950);
+        $max ??= (int) config('instagram.max_text', 950);
         $text = trim($text);
         $parts = [];
         while (mb_strlen($text) > $max) {

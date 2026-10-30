@@ -26,6 +26,7 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::post('/webhook/whatsapp', [WebhookController::class, 'receive']);
+Route::post('/webhooks/tiktok', [\App\Http\Controllers\TikTokWebhookController::class, 'receive'])->name('webhooks.tiktok');
 Route::get('/webhooks/instagram', [\App\Http\Controllers\InstagramWebhookController::class, 'verify'])->name('webhooks.instagram.verify');
 Route::post('/webhooks/instagram', [\App\Http\Controllers\InstagramWebhookController::class, 'receive'])->name('webhooks.instagram');
 Route::post('/webhooks/telegram/{instance}', [\App\Http\Controllers\TelegramWebhookController::class, 'receive'])->whereNumber('instance')->name('webhooks.telegram');

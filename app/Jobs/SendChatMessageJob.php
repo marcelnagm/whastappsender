@@ -51,6 +51,11 @@ class SendChatMessageJob implements ShouldQueue
 
             return;
         }
+        if ($message->instance->isTiktok()) {
+            $this->sendViaTikTok($message, $chat);
+
+            return;
+        }
 
         $instance = $message->instance->instance_name;
         $number = $chat->sendNumber();
@@ -137,6 +142,39 @@ class SendChatMessageJob implements ShouldQueue
             $this->markSent($message, $chat, \App\Services\Instagram\InstagramInbound::msgId($ids[0] ?? ''));
         } catch (\Throwable $e) {
             Log::error('SendChatMessageJob (instagram) failed: ' . $e->getMessage(), ['chat_message_id' => $message->id]);
+
+            $message->update(['status' => 'error', 'error' => mb_substr($e->getMessage(), 0, 600)]);
+            Chat::where('id', $chat->id)->where('last_message_id', $message->id)->update(['last_message_status' => 'error']);
+        }
+    }
+
+    /** Same TikTok account that received the conversation answers it: text or one image, inside the reply window. */
+    private function sendViaTikTok(ChatMessage $message, Chat $chat): void
+    {
+        try {
+            if (!\App\Services\Channels\ReplyWindow::isOpen($chat)) {
+                throw new \RuntimeException(\App\Services\Channels\ReplyWindow::closedMessage('tiktok'));
+            }
+
+            $client = \App\Services\TikTok\TikTokClient::for($message->instance);
+            $conversation = substr((string) $chat->remote_jid, 3);
+            $ids = [];
+
+            if ($message->type === 'image') {
+                $ids[] = $client->sendImage($conversation, $this->readBinary($message), $message->file_name ?: 'image');
+                if ($message->body) {
+                    $ids = array_merge($ids, $client->sendText($conversation, (string) $message->body));
+                }
+            } elseif ($message->type === 'text') {
+                $ids = $client->sendText($conversation, (string) $message->body);
+            } else {
+                throw new \RuntimeException(__('TikTok only accepts text and one image per message.'));
+            }
+
+            \App\Services\TikTok\TikTokInbound::rememberSent($ids);
+            $this->markSent($message, $chat, \App\Services\Instagram\InstagramInbound::msgId($ids[0] ?? ''));
+        } catch (\Throwable $e) {
+            Log::error('SendChatMessageJob (tiktok) failed: ' . $e->getMessage(), ['chat_message_id' => $message->id]);
 
             $message->update(['status' => 'error', 'error' => mb_substr($e->getMessage(), 0, 600)]);
             Chat::where('id', $chat->id)->where('last_message_id', $message->id)->update(['last_message_status' => 'error']);

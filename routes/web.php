@@ -63,6 +63,10 @@ Route::middleware(['auth', 'subscription.writable', 'plan.feature:chat'])->prefi
         Route::post('/chats/{chat}/read', [$chat, 'markRead'])->name('read');
         Route::post('/chats/{chat}/presence', [$chat, 'presence'])->name('presence');
         Route::get('/chats/{chat}/contact', [$chat, 'contactInfo'])->name('contact');
+        Route::get('/chats/{chat}/links', [$chat, 'links'])->name('links');
+        Route::get('/chats/{chat}/links/search', [$chat, 'linkSearch'])->name('links.search');
+        Route::post('/chats/{chat}/links', [$chat, 'linkStore'])->name('links.store');
+        Route::delete('/chats/{chat}/links/{contact}', [$chat, 'linkDestroy'])->name('links.destroy');
         Route::post('/chats/{chat}/link-phone', [$chat, 'linkPhone'])->name('link-phone');
         Route::post('/chats/{chat}/contact', [$chat, 'saveContact'])->name('contact.save');
         Route::post('/chats/{chat}/ai-pause', [$chat, 'aiPause'])->name('ai-pause');
@@ -93,6 +97,18 @@ Route::group(['namespace' => 'App\Http\Controllers', 'middleware' => ['auth', 's
         Route::post('/', [$tg, 'store'])->name('store')->middleware('throttle:10,1');
         Route::post('/{instance}/reconnect', [$tg, 'reconnect'])->name('reconnect');
         Route::delete('/{instance}', [$tg, 'destroy'])->name('destroy');
+    });
+
+    Route::get('/stats', [\App\Http\Controllers\ChannelStatsController::class, 'index'])->name('stats.index');
+
+    // TikTok Business accounts (channel = tiktok instances, OAuth)
+    Route::prefix('tiktok')->name('tiktok.')->group(function () {
+        $tt = \App\Http\Controllers\TikTokController::class;
+        Route::get('/', [$tt, 'index'])->name('index');
+        Route::get('/connect', [$tt, 'connect'])->name('connect');
+        Route::get('/callback', [$tt, 'callback'])->name('callback');
+        Route::post('/{instance}/refresh', [$tt, 'refresh'])->name('refresh');
+        Route::delete('/{instance}', [$tt, 'destroy'])->name('destroy');
     });
 
     // Instagram accounts (channel = instagram instances)

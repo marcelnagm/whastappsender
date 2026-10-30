@@ -1,7 +1,7 @@
 @extends('layouts.app-master')
 
 @section('content')
-<link rel="stylesheet" href="{{ url('assets/css/chat.css') }}?v=2">
+<link rel="stylesheet" href="{{ url('assets/css/chat.css') }}?v=3">
 
 @if ($instances->isEmpty())
     <div class="alert alert-warning">
@@ -39,7 +39,7 @@
                     <select id="wa-instance-select" class="form-select form-select-sm" aria-label="{{ __('Instance') }}">
                         @foreach ($instances as $ins)
                             <option value="{{ $ins->id }}" @if($ins->id === $current->id) selected @endif>
-                                {{ ucfirst($ins->channelKey()) }} · {{ $ins->name }}@if($ins->isWhatsapp()) · {{ $ins->instance_name }}@endif
+                                {{ $ins->channelLabel() }} · {{ $ins->name }}@if($ins->isWhatsapp()) · {{ $ins->instance_name }}@endif
                             </option>
                         @endforeach
                     </select>
@@ -196,6 +196,19 @@
         signSaved: @json(__('Signature saved.')),
         signPreview: @json(__('Customers will see:')),
         syncFrom: @json(__('Import history from')),
+        linkedTitle: @json(__('Same person on other channels')),
+        linkedHelp: @json(__('Link this contact to its Telegram, Instagram or TikTok conversation to see them together and reply through any channel.')),
+        linkedOpen: @json(__('Open')),
+        linkedUnlink: @json(__('Unlink')),
+        linkedSearch: @json(__('Search contact by name or number')),
+        linkedLink: @json(__('Link')),
+        linkedSendVia: @json(__('Send a message through')),
+        linkedSendPlaceholder: @json(__('Message')),
+        linkedSend: @json(__('Send')),
+        linkedSent: @json(__('Message queued.')),
+        linkedClosed: @json(__('reply window closed')),
+        linkedSaveFirst: @json(__('Save the person as a contact first.')),
+        linkedNone: @json(__('No contact found.')),
         linkTitle: @json(__('Unidentified contact')),
         linkHelp: @json(__('WhatsApp did not reveal the phone number of this conversation. Enter it to merge the conversation with that contact; later messages follow automatically.')),
         linkPlaceholder: @json(__('Phone with country code, e.g. 5595981110695')),

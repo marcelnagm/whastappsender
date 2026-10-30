@@ -35,7 +35,7 @@ class Contact extends Model
      *
      * @var array
      */
-    protected $fillable = ['name', 'contact', 'email', 'user_id', 'ignore_me', 'lid', 'status', 'score', 'profile_url'];
+    protected $fillable = ['name', 'contact', 'email', 'user_id', 'ignore_me', 'lid', 'status', 'score', 'profile_url', 'linked_contact_id'];
 
 
     /**

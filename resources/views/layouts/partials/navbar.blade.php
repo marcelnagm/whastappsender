@@ -26,10 +26,16 @@
           <a href="{{ route('telegram.index') }}" class="nav-link {{ request()->is('telegram*') ? 'active text-secondary' : 'text-white' }}"><i class="bi bi-telegram me-1"></i> {{ __('Telegram') }}</a>
         </li>
         <li class="nav-item">
+          <a href="{{ route('tiktok.index') }}" class="nav-link {{ request()->is('tiktok*') ? 'active text-secondary' : 'text-white' }}"><i class="bi bi-tiktok me-1"></i> {{ __('TikTok') }}</a>
+        </li>
+        <li class="nav-item">
           <a href="{{ route('instagram.index') }}" class="nav-link {{ request()->is('instagram*') ? 'active text-secondary' : 'text-white' }}"><i class="bi bi-instagram me-1"></i> {{ __('Instagram') }}</a>
         </li>
         <li class="nav-item">
           <a href="{{ route('chat.index') }}" class="nav-link {{ request()->is('chat*') ? 'active text-secondary' : 'text-white' }}"><i class="bi bi-chat-dots me-1"></i> {{ __('Chat') }}</a>
+        </li>
+        <li class="nav-item">
+          <a href="{{ route('stats.index') }}" class="nav-link {{ request()->is('stats*') ? 'active text-secondary' : 'text-white' }}"><i class="bi bi-bar-chart-line me-1"></i> {{ __('Statistics') }}</a>
         </li>
         <li class="nav-item">
           <a href="{{ route('ai.index') }}" class="nav-link {{ request()->is('ai*') ? 'active text-secondary' : 'text-white' }}"><i class="bi bi-robot me-1"></i> {{ __('AI') }}</a>

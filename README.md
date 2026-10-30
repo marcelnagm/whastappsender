@@ -10,7 +10,7 @@
 > ⭐ **Cloned or using this project? Please give it a star and/or follow [@marcelnagm](https://github.com/marcelnagm).**
 > It's free, takes two seconds and is what keeps the project maintained. Thank you! 🙏
 
-**SAMA Envios** is a mission-critical communication infrastructure that merges the power of **Laravel** with the LLM of your choice (**Groq, OpenAI, Claude, Gemini, DeepSeek, Mistral, OpenRouter, Ollama or any OpenAI-compatible endpoint**). Designed for teams that demand stable bulk messaging and **Intelligent AI Customer Service** on WhatsApp, Telegram and Instagram in one omnichannel inbox, answering through the very number, bot or account the customer wrote to.
+**SAMA Envios** is a mission-critical communication infrastructure that merges the power of **Laravel** with the LLM of your choice (**Groq, OpenAI, Claude, Gemini, DeepSeek, Mistral, OpenRouter, Ollama or any OpenAI-compatible endpoint**). Designed for teams that demand stable bulk messaging and **Intelligent AI Customer Service** on WhatsApp, Telegram, Instagram and TikTok in one omnichannel inbox with per-channel statistics, answering through the very number, bot or account the customer wrote to.
 
 **Documentation map**
 
@@ -22,6 +22,8 @@
 | [WhatsApp Chat (CRM)](#-whatsapp-chat-crm) | WhatsApp Web-style inbox on top of Evolution API |
 | [Telegram](#-telegram) | Connect Telegram bots; same chat, AI agents and plan limits; always answers through the bot the message came in |
 | [Instagram](#-instagram-direct) | Instagram DMs in the same omnichannel chat; AI answers through the account that received the message |
+| [TikTok](#-tiktok-business-messaging) | TikTok Business DMs in the same chat, step-by-step setup (developer app, approval, OAuth, webhook) |
+| [Channel statistics & linked contacts](#-channel-statistics--linked-contacts) | Per-channel numbers, and one person's WhatsApp / Telegram / Instagram / TikTok conversations tied together |
 | [Fair Send Queue](#️-fair-send-queue) | Balanced batches of 50 across users and sessions |
 | [Plans & Billing](#-plans--billing) | Freemium + 3 plans, due dates, blocking, Asaas · Efí · AbacatePay · Stone (Pagar.me) · Stripe · PagBank · Mercado Pago (Pix / card, customer chooses) |
 | [Tests](#-tests) | PHPUnit suite |
@@ -634,6 +636,74 @@ opt-out with `/stop` or `#sair`, long answers split automatically (Instagram lim
 
 * * *
 
+## 🎵 TikTok (Business Messaging)
+
+A TikTok Business Account is a **channel of the same instance structure** as WhatsApp, Telegram and Instagram: its DMs appear in the
+omnichannel **Chat** (badge "TikTok"), the **AI agents** answer them and **every reply leaves through the account that received the message**.
+Messages the business sends from the TikTok app itself also show up in the chat.
+
+```
+Customer ──► TikTok ──► POST /api/webhooks/tiktok (Tiktok-Signature) ──► ProcessTikTokEventJob ──► chats / chat_messages ──► AI agent
+Customer ◄── TikTok ◄── Business Messaging API (message send) ◄── SendAiReplyJob · SendChatMessageJob (same account)
+```
+
+### Step by step
+
+> TikTok only gives this API to **approved apps**. Plan for a few days of review (it can take longer) before step 4.
+
+1. **Check the account.** It must be a **TikTok Business Account** (personal accounts do not work), signed up in an eligible region (**not** the EEA, UK or Switzerland; US accounts also need the platform to pass TikTok's extra data-security review), and it must accept direct messages from everyone.
+2. **Create the developer app.** Sign up at [developers.tiktok.com](https://developers.tiktok.com), then create an app at [business-api.tiktok.com/portal/apps](https://business-api.tiktok.com/portal/apps) with a name, description, icon, **Terms of Service URL** and **Privacy Policy URL**. Copy the **App ID** (client key) and **App Secret**.
+3. **Apply for the Business Messaging API.** In the developer portal open the *Business Messaging API* product and submit your use case, how you handle data and your organization details. Wait for approval; you cannot continue before it.
+4. **Set permissions and redirect URL.** Enable the **TikTok Accounts** permission under *Scope of permission* and set the authorization **Redirect URL** to exactly `https://YOUR-DOMAIN/tiktok/callback` (the TikTok menu in the app shows the exact value).
+5. **Configure `.env`** and make sure `APP_URL` is your **public https** address:
+
+   ```
+   TIKTOK_APP_ID=your-app-id
+   TIKTOK_APP_SECRET=your-app-secret
+   #TIKTOK_WINDOW_HOURS=48
+   #TIKTOK_SIGNATURE_TOLERANCE=300
+   #TIKTOK_TIMEOUT=30
+   #TIKTOK_MAX_DOWNLOAD_BYTES=26214400
+   ```
+
+6. **Register the webhook (once per app).** Set the callback URL to `https://YOUR-DOMAIN/api/webhooks/tiktok` in the developer portal, or run `php artisan tiktok:register-webhook`. Re-run it if the domain changes. The endpoint answers HTTP 200 fast, as TikTok requires; it retries failed deliveries, and duplicates are ignored.
+7. **Migrate:** `php artisan migrate` (adds the `tiktok_*` columns to `instances`).
+8. **Connect the account.** Open **TikTok** in the menu, click **Connect with TikTok** and authorize. The account becomes an instance (counts toward the plan's *instances* limit).
+9. **Keep workers running** on `default` (incoming events, chat sends) and `disparos` (AI replies), and keep the **server clock synced** (webhook signatures are time-checked).
+10. In **AI** you can assign an agent just to the account, like to any other instance.
+
+**Tokens.** The access token lasts about a day and is renewed automatically (the refresh token rotates and is stored encrypted); the refresh token lasts about 30 days. If the account stays inactive until both expire, the TikTok page shows **Expired: connect again**: click *Connect with TikTok* once more. **Renew connection** forces a refresh.
+
+**Limits (TikTok, not the app):**
+
+* **Reply window:** replies are accepted for `TIKTOK_WINDOW_HOURS` (48 h) after the customer's last message. For people who do not follow each other with the business, TikTok also caps how many messages you can send before the customer replies (up to 10 within 48 h after their first message, then up to 3 more after the window until they write again).
+* The account **cannot start a conversation**; the customer writes first. Number-based bulk campaigns, new chat by phone, history import and warm-up remain **WhatsApp-only** (TikTok contacts have status `tiktok`).
+* **Outgoing messages are text (up to 6000 characters) or one image** (JPG/PNG up to 3 MB); video, audio and documents are refused with a clear error. Incoming text, images, video, shared posts and stickers are stored.
+* Not available for accounts signed up in the EEA, UK or Switzerland. No reactions or deleting from the chat.
+
+> **Verify in the TikTok sandbox before production.** TikTok publishes the full API reference only to approved developers. The endpoint paths, the webhook signature scheme (`t=<time>,s=<HMAC-SHA256 of "t.body" with the app secret>`) and the event field names were assembled from public documentation and partner implementations, are covered by tests against that contract, and every path can be overridden in `.env` (`TIKTOK_PATH_TOKEN`, `TIKTOK_PATH_REFRESH`, `TIKTOK_PATH_SEND`, `TIKTOK_PATH_MESSAGES`, `TIKTOK_PATH_UPLOAD`, `TIKTOK_PATH_DOWNLOAD`, `TIKTOK_PATH_WEBHOOK`, `TIKTOK_API_URL`, `TIKTOK_AUTH_URL`). If TikTok's portal shows something different, adjust there; the code should not need changes for a path or URL difference.
+
+* * *
+
+## 📊 Channel statistics & linked contacts
+
+### Statistics
+
+**Statistics** in the menu shows, per channel (WhatsApp, Telegram, Instagram, TikTok) over the last 7, 30 or 90 days: connections, conversations (total, new, active, **waiting for reply**), messages received and sent, **AI replies**, **average first-response time** of conversations started in the period, and contacts (with how many are linked). It also has a **messages-per-day chart** (last 30 days at most, stacked by channel) and a table **by connection**. Numbers only include the signed-in account.
+
+### Linking a person's contacts across channels
+
+The same person often writes on several channels. In the **Chat**, open the contact panel (click the name) → **Same person on other channels**:
+
+* **Link:** search the person's Telegram / Instagram / TikTok contact (from the WhatsApp conversation) or their WhatsApp contact (from a Telegram / Instagram / TikTok conversation). A channel contact is linked to **one WhatsApp contact**; the person must already be saved as a contact in the CRM.
+* **See everything together:** the panel lists the person's conversations in every channel; **Open** jumps to the conversation (switching the connection for you).
+* **Send through any channel:** pick the channel and write; the message goes through **that channel's own account** (never through another one), using the same limits as a normal reply: Instagram and TikTok need the customer's last message inside the reply window (the option shows *reply window closed* otherwise), Telegram works as long as the person wrote to the bot once.
+* **Unlink** at any time. Links live in `contacts.linked_contact_id` (run `php artisan migrate`).
+
+Sending still needs the person to have written first on that channel: linking does not let you start a conversation on Telegram, Instagram or TikTok.
+
+* * *
+
 ## ⚖️ Fair Send Queue
 
 `php artisan whatsapp:queue` (scheduled hourly) used to take the oldest pending rows of **all** users, so one big campaign
@@ -800,7 +870,7 @@ In the chat header (badge icon) each user can set a name. Anything sent from the
 
 ## 🧪 Tests
 
-`vendor/bin/phpunit` (in-memory SQLite, no external services): fair queue planner and command, chat backend, Telegram and Instagram channels (webhook secret/signature, inbound, AI reply through the same bot/account, reply window, settings), avatar caching, billing lifecycle and plan enforcement, the Mercado Pago gateway (admin settings, Pix, card, recurrence, webhook) and the Asaas / Efí / AbacatePay / Stone (Pagar.me) / Stripe / PagBank gateways (HTTP faked).
+`vendor/bin/phpunit` (in-memory SQLite, no external services): fair queue planner and command, chat backend, Telegram, Instagram and TikTok channels (webhook secret/signature, OAuth, token refresh, inbound, AI reply through the same bot/account, reply window, settings), channel statistics and cross-channel contact links, avatar caching, billing lifecycle and plan enforcement, the Mercado Pago gateway (admin settings, Pix, card, recurrence, webhook) and the Asaas / Efí / AbacatePay / Stone (Pagar.me) / Stripe / PagBank gateways (HTTP faked).
 
 * * *
 

@@ -267,8 +267,12 @@ class ChatController extends Controller
         $text = trim((string) ($data['text'] ?? ''));
         $file = $request->file('file');
 
-        if ($chat->instance->isInstagram() && !\App\Services\Instagram\InstagramWindow::isOpen($chat)) {
-            return response()->json(['message' => \App\Services\Instagram\InstagramWindow::closedMessage()], 422);
+        if (!\App\Services\Channels\ReplyWindow::isOpen($chat)) {
+            return response()->json(['message' => \App\Services\Channels\ReplyWindow::closedMessage($chat->instance->channelKey())], 422);
+        }
+
+        if ($chat->instance->isTiktok() && $file && !str_starts_with((string) $file->getMimeType(), 'image/')) {
+            return response()->json(['message' => __('TikTok only accepts text and one image per message.')], 422);
         }
 
         if ($text === '' && !$file) {
@@ -462,9 +466,11 @@ class ChatController extends Controller
 
         if (!$chat->instance->isWhatsapp()) {
             $other = substr((string) $chat->remote_jid, 3); // "tg:<id>" / "ig:<id>"
-            $client = $chat->instance->isInstagram()
-                ? \App\Services\Instagram\InstagramClient::for($chat->instance)
-                : \App\Services\Telegram\TelegramClient::for($chat->instance);
+            $client = match (true) {
+                $chat->instance->isInstagram() => \App\Services\Instagram\InstagramClient::for($chat->instance),
+                $chat->instance->isTiktok() => \App\Services\TikTok\TikTokClient::for($chat->instance),
+                default => \App\Services\Telegram\TelegramClient::for($chat->instance),
+            };
             app()->terminating(fn () => $client->typing($other));
 
             return response()->json(null, 204);
@@ -588,6 +594,98 @@ class ChatController extends Controller
         ]);
     }
 
+    // ---------------------------------------------------------------------
+    // Linked channels: the same person on WhatsApp / Telegram / Instagram / TikTok
+    // ---------------------------------------------------------------------
+
+    /** Conversations of the same person in every channel, with the reply window of each. */
+    public function links(Chat $chat): JsonResponse
+    {
+        $this->authorizeChat($chat);
+        $contact = $chat->contact;
+        if (!$contact) {
+            return response()->json(['linkable' => false, 'items' => []]);
+        }
+
+        $items = \App\Services\Channels\ContactLinks::chats($contact)->map(function (Chat $c) use ($chat) {
+            $cc = $c->contact;
+
+            return [
+                'chat_id' => $c->id,
+                'instance_id' => $c->instance_id,
+                'channel' => $c->instance ? $c->instance->channelKey() : 'whatsapp',
+                'name' => $c->displayName(),
+                'current' => $c->id === $chat->id,
+                'window_open' => \App\Services\Channels\ReplyWindow::isOpen($c),
+                'contact_id' => $cc ? $cc->id : null,
+                'unlinkable' => $cc && \App\Services\Channels\ContactLinks::isChannelContact($cc) && $cc->linked_contact_id,
+            ];
+        })->values();
+
+        return response()->json(['linkable' => true, 'items' => $items]);
+    }
+
+    public function linkSearch(Request $request, Chat $chat): JsonResponse
+    {
+        $this->authorizeChat($chat);
+        $contact = $chat->contact;
+        abort_unless($contact, 422, __('Save the person as a contact first.'));
+        $q = trim((string) $request->query('q', ''));
+
+        $query = Contact::where('user_id', Auth::id())->where('id', '!=', $contact->id);
+        if (\App\Services\Channels\ContactLinks::isChannelContact($contact)) {
+            // looking for the WhatsApp contact of this person
+            $query->where(fn ($w) => $w->where('contact', 'not like', 'tg:%')->where('contact', 'not like', 'ig:%')->where('contact', 'not like', 'tt:%'));
+        } else {
+            // looking for the Telegram / Instagram / TikTok contact still unlinked
+            $query->whereNull('linked_contact_id')->where(fn ($w) => $w->where('contact', 'like', 'tg:%')->orWhere('contact', 'like', 'ig:%')->orWhere('contact', 'like', 'tt:%'));
+        }
+        if ($q !== '') {
+            $digits = preg_replace('/\D/', '', $q);
+            $query->where(function ($w) use ($q, $digits) {
+                $w->where('name', 'like', "%{$q}%");
+                if ($digits !== '') {
+                    $w->orWhere('contact', 'like', "%{$digits}%");
+                }
+            });
+        }
+
+        return response()->json(['items' => $query->orderBy('name')->limit(10)->get()->map(fn (Contact $c) => [
+            'id' => $c->id,
+            'name' => $c->name ?: $c->contact,
+            'channel' => \App\Services\Channels\ContactLinks::channelOf($c),
+            'sub' => \App\Services\Channels\ContactLinks::isChannelContact($c) ? '' : $c->contact,
+        ])->values()]);
+    }
+
+    public function linkStore(Request $request, Chat $chat): JsonResponse
+    {
+        $this->authorizeChat($chat);
+        $contact = $chat->contact;
+        abort_unless($contact, 422, __('Save the person as a contact first.'));
+        $data = $request->validate(['contact_id' => 'required|integer']);
+        $other = Contact::where('user_id', Auth::id())->findOrFail($data['contact_id']);
+
+        try {
+            \App\Services\Channels\ContactLinks::link($contact, $other);
+        } catch (\InvalidArgumentException $e) {
+            return response()->json(['message' => __('Link one WhatsApp contact to one Telegram, Instagram or TikTok contact.')], 422);
+        }
+
+        return $this->links($chat);
+    }
+
+    public function linkDestroy(Chat $chat, Contact $contact): JsonResponse
+    {
+        $this->authorizeChat($chat);
+        abort_unless((int) $contact->user_id === (int) Auth::id() && $chat->contact, 404);
+        abort_unless(\App\Services\Channels\ContactLinks::group($chat->contact)->contains('id', $contact->id), 404);
+
+        \App\Services\Channels\ContactLinks::unlink($contact);
+
+        return $this->links($chat);
+    }
+
     public function saveContact(Request $request, Chat $chat): JsonResponse
     {
         $this->authorizeChat($chat);
@@ -646,7 +744,7 @@ class ChatController extends Controller
     public function linkPhone(Request $request, Chat $chat): JsonResponse
     {
         $this->authorizeChat($chat);
-        abort_unless(!preg_match('/^(tg|ig):/', (string) $chat->remote_jid) && LidResolver::isLid($chat->remote_jid), 422, __('This conversation is already identified.'));
+        abort_unless(!preg_match('/^(tg|ig|tt):/', (string) $chat->remote_jid) && LidResolver::isLid($chat->remote_jid), 422, __('This conversation is already identified.'));
 
         $data = $request->validate(['phone' => 'required|string|max:30']);
         $phone = LidResolver::phoneFrom(preg_replace('/\D/', '', $data['phone']));

@@ -48,6 +48,12 @@ trait CreatesTestSchema
             $t->text('instagram_token')->nullable();
             $t->string('instagram_id', 40)->nullable();
             $t->string('instagram_username', 64)->nullable();
+            $t->text('tiktok_token')->nullable();
+            $t->text('tiktok_refresh_token')->nullable();
+            $t->string('tiktok_open_id', 80)->nullable();
+            $t->string('tiktok_username', 80)->nullable();
+            $t->timestamp('tiktok_token_expires_at')->nullable();
+            $t->timestamp('tiktok_refresh_expires_at')->nullable();
             $t->timestamps();
         });
 
@@ -62,6 +68,7 @@ trait CreatesTestSchema
             $t->string('status')->nullable();
             $t->integer('score')->nullable();
             $t->string('profile_url')->nullable();
+            $t->unsignedBigInteger('linked_contact_id')->nullable();
             $t->timestamps();
         });
 
