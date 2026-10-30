@@ -20,6 +20,9 @@ class GatewayManager
             GatewayConfig::ASAAS => new AsaasGateway($config),
             GatewayConfig::EFI => new EfiGateway($config),
             GatewayConfig::ABACATEPAY => new AbacatePayGateway($config),
+            GatewayConfig::PAGARME => new PagarMeGateway($config),
+            GatewayConfig::STRIPE => new StripeGateway($config),
+            GatewayConfig::PAGBANK => new PagBankGateway($config),
             default => new MercadoPagoGateway($config),
         };
     }

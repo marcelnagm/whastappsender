@@ -3,7 +3,7 @@
 @section('content')
 @php
     $s = fn ($k) => old($k, $gateway->setting($k)); $chk = fn ($k) => old('_token') ? old($k) : $gateway->setting($k);
-    $isMp = $provider === 'mercadopago'; $isEfi = $provider === 'efi'; $label = $info['label'];
+    $isMp = $provider === 'mercadopago'; $isEfi = $provider === 'efi'; $isStripe = $provider === 'stripe'; $isKeyEnv = in_array($provider, ['stripe', 'pagarme']); $hasSecretQuery = in_array($provider, ['efi', 'abacatepay', 'pagarme', 'pagbank']); $label = $info['label'];
 @endphp
 <div class="container py-4" style="max-width: 860px;">
     @include('layouts.partials.messages')
@@ -39,7 +39,7 @@
             <h6 class="fw-bold">{{ __('Credentials') }}</h6>
             <div class="mb-3">
                 <label class="form-label small" for="access_token">
-                    @if($isEfi){{ __('Client secret') }}@elseif($isMp){{ __('Access token') }}@else{{ __('API key') }}@endif
+                    @if($isEfi){{ __('Client secret') }}@elseif($isMp){{ __('Access token') }}@elseif($isStripe || $provider === 'pagarme'){{ __('Secret key') }}@elseif($provider === 'pagbank'){{ __('Token') }}@else{{ __('API key') }}@endif
                 </label>
                 <input type="password" class="form-control" id="access_token" name="access_token" placeholder="{{ $maskedToken ?: ($isMp ? 'APP_USR-… / TEST-…' : '') }}" autocomplete="new-password">
                 <div class="form-text">{{ __('Stored encrypted. Leave blank to keep the current one.') }} <a href="{{ $info['keys'] }}" target="_blank" rel="noopener">{{ __('Where do I find it?') }}</a></div>
@@ -51,7 +51,7 @@
                 @if($isMp)<div class="form-text">{{ __('Used in the browser to turn the card data into a token. Required for card payments.') }}</div>@endif
             </div>
             @endif
-            @unless($isMp)
+            @unless($isMp || $isKeyEnv)
             <div class="form-check mb-3">
                 <input class="form-check-input" type="checkbox" id="sandbox" name="sandbox" value="1" @checked($chk('sandbox'))>
                 <label class="form-check-label" for="sandbox">{{ __('Test mode (sandbox)') }}@if($provider === 'abacatepay') — {{ __('AbacatePay uses the key type: a dev-mode key already creates test charges') }}@endif</label>
@@ -71,12 +71,12 @@
             </div>
             @endif
             <div class="mb-4">
-                <label class="form-label small" for="webhook_secret">{{ $isMp ? __('Webhook secret (signature)') : __('Webhook secret') }}</label>
+                <label class="form-label small" for="webhook_secret">{{ $isMp ? __('Webhook secret (signature)') : ($isStripe ? __('Signing secret (whsec_…)') : __('Webhook secret')) }}</label>
                 <div class="input-group">
                     <input type="password" class="form-control" id="webhook_secret" name="webhook_secret" placeholder="{{ $maskedSecret }}" autocomplete="new-password">
-                    @unless($isMp)<button type="button" class="btn btn-outline-secondary" onclick="var i=document.getElementById('webhook_secret');i.value=Array.from(crypto.getRandomValues(new Uint8Array(24))).map(function(b){return b.toString(16).padStart(2,'0')}).join('');i.type='text';">{{ __('Generate') }}</button>@endunless
+                    @if($hasSecretQuery || $provider === 'asaas')<button type="button" class="btn btn-outline-secondary" onclick="var i=document.getElementById('webhook_secret');i.value=Array.from(crypto.getRandomValues(new Uint8Array(24))).map(function(b){return b.toString(16).padStart(2,'0')}).join('');i.type='text';">{{ __('Generate') }}</button>@endif
                 </div>
-                @unless($isMp)<div class="form-text">{{ $provider === 'asaas' ? __('Asaas: paste this same value as the "Auth token" of the webhook in the Asaas panel (32+ characters).') : __('Sent back to us in the webhook URL (?secret=…) so only the provider can notify. Use Generate, then save.') }}</div>@endunless
+                @if($isStripe)<div class="form-text">{{ __('Stripe signs every notification: paste the signing secret of the webhook endpoint (Stripe → Developers → Webhooks). Without it all notifications are rejected.') }}</div>@elseif(!$isMp)<div class="form-text">{{ $provider === 'asaas' ? __('Asaas: paste this same value as the "Auth token" of the webhook in the Asaas panel (32+ characters).') : __('Sent back to us in the webhook URL (?secret=…) so only the provider can notify. Use Generate, then save.') }}</div>@endif
                 <div class="form-check mt-1">
                     <input class="form-check-input" type="checkbox" id="clear_webhook_secret" name="clear_webhook_secret" value="1">
                     <label class="form-check-label small" for="clear_webhook_secret">{{ __('Remove the stored secret') }}</label>
@@ -132,6 +132,12 @@
             <p class="small text-muted mb-2">{{ __('In Asaas > Integrations > Webhooks, create a webhook with this URL, the same auth token as above, and the events PAYMENT_CONFIRMED and PAYMENT_RECEIVED.') }}</p>
             @elseif($isEfi)
             <p class="small text-muted mb-2">{{ __('Pix: use the button below to register the URL at Efí. Card: the notification URL is sent with each charge automatically.') }}</p>
+            @elseif($isStripe)
+            <p class="small text-muted mb-2">{{ __('In Stripe → Developers → Webhooks add an endpoint with this URL and the events checkout.session.completed and checkout.session.async_payment_succeeded, then paste its signing secret above.') }}</p>
+            @elseif($provider === 'pagarme')
+            <p class="small text-muted mb-2">{{ __('In Pagar.me → Settings → Webhooks add this URL with ?secret= followed by the webhook secret above, and the events order.paid and charge.paid.') }}</p>
+            @elseif($provider === 'pagbank')
+            <p class="small text-muted mb-2">{{ __('PagBank: the notification URL (with ?secret=) is sent with every order and checkout automatically; just generate and save the webhook secret above.') }}</p>
             @else
             <p class="small text-muted mb-2">{{ __('In the AbacatePay dashboard, register this URL as the webhook, adding ?secret= followed by the webhook secret above.') }}</p>
             @endif

@@ -46,7 +46,8 @@
                     @if($pix)
                         <div class="border rounded p-3 mb-4 text-center" id="pixBox">
                             <h6 class="fw-bold"><i class="bi bi-qr-code me-1"></i>{{ __('Pay with Pix') }}</h6>
-                            @if(!empty($pix['qr_base64']))<img alt="{{ __('Pix QR code') }}" class="img-fluid mb-2" style="max-width: 220px;" src="data:image/png;base64,{{ $pix['qr_base64'] }}">@endif
+                            @if(!empty($pix['qr_base64']))<img alt="{{ __('Pix QR code') }}" class="img-fluid mb-2" style="max-width: 220px;" src="data:image/png;base64,{{ $pix['qr_base64'] }}">
+                            @elseif(!empty($pix['qr_image_url']) && str_starts_with($pix['qr_image_url'], 'https://'))<img alt="{{ __('Pix QR code') }}" class="img-fluid mb-2" style="max-width: 220px;" src="{{ $pix['qr_image_url'] }}" referrerpolicy="no-referrer">@endif
                             @if(!empty($pix['qr_code']))
                                 <div class="input-group input-group-sm mb-2">
                                     <input type="text" readonly class="form-control" id="pixCode" value="{{ $pix['qr_code'] }}">

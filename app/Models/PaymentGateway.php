@@ -11,9 +11,12 @@ class PaymentGateway extends Model
     public const ASAAS = 'asaas';
     public const EFI = 'efi';
     public const ABACATEPAY = 'abacatepay';
+    public const PAGARME = 'pagarme';     // Stone's online gateway
+    public const STRIPE = 'stripe';
+    public const PAGBANK = 'pagbank';
 
     /** Providers the customer can be offered, in the order shown to admins/customers (see config/payments.php) */
-    public const PROVIDERS = [self::ASAAS, self::EFI, self::ABACATEPAY, self::MERCADOPAGO];
+    public const PROVIDERS = [self::ASAAS, self::EFI, self::ABACATEPAY, self::PAGARME, self::STRIPE, self::PAGBANK, self::MERCADOPAGO];
 
     protected $fillable = ['provider', 'enabled', 'access_token', 'public_key', 'webhook_secret', 'settings'];
 
@@ -73,6 +76,10 @@ class PaymentGateway extends Model
     /** Mercado Pago test credentials start with TEST- */
     public function isSandbox(): bool
     {
+        // the key itself tells the environment on these
+        if (in_array($this->provider, [self::STRIPE, self::PAGARME], true)) {
+            return str_starts_with((string) $this->access_token, 'sk_test');
+        }
         if ($this->provider !== self::MERCADOPAGO) {
             return (bool) $this->setting('sandbox');
         }

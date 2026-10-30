@@ -508,4 +508,203 @@ class PaymentProvidersTest extends TestCase
         $this->actingAs($this->user('boss', 'admin'))->post('/admin/payment-gateway/test', ['provider' => 'abacatepay'])
             ->assertSessionHas('success');
     }
+
+    // ---- Stone (Pagar.me) ------------------------------------------------------------------------------
+
+    public function test_pagarme_pix_order_carries_invoice_code_and_returns_qr(): void
+    {
+        $this->setup_provider('pagarme', ['access_token' => 'sk_test_abc']);
+        $this->fakeHttp(['api.pagar.me/core/v5/orders' => Http::response(['id' => 'or_1', 'status' => 'pending', 'charges' => [['last_transaction' => [
+            'qr_code' => '000201PAGARME', 'qr_code_url' => 'https://api.pagar.me/qr/1.png', 'expires_at' => '2026-11-03T15:00:00Z']]]])]);
+
+        [$user, , $invoice] = $this->checkout();
+        $r = app(PaymentService::class)->pay($user, $invoice, $this->req('pix'), 'pagarme');
+
+        $this->assertSame('000201PAGARME', $r->pix['qr_code']);
+        $this->assertSame('https://api.pagar.me/qr/1.png', $r->pix['qr_image_url']);
+        Http::assertSent(fn ($q) => $q['code'] === $invoice->number && $q['items'][0]['amount'] === $invoice->amount_cents
+            && $q['payments'][0]['payment_method'] === 'pix' && $q['customer']['document'] === self::CPF
+            && $q->hasHeader('Authorization', 'Basic ' . base64_encode('sk_test_abc:')));
+        $this->assertTrue(app(GatewayManager::class)->driver('pagarme')->config()->isSandbox(), 'sk_test key = test environment');
+        $this->actingAs($user)->get(route('billing.invoice', $invoice))->assertSee('https://api.pagar.me/qr/1.png', false);
+    }
+
+    public function test_pagarme_card_uses_hosted_checkout_and_order_paid_webhook_settles(): void
+    {
+        $this->setup_provider('pagarme', ['webhook_secret' => 'pm-secret']);
+        [$user, , $invoice] = $this->checkout();
+        $this->fakeHttp([
+            'api.pagar.me/core/v5/orders/or_9' => Http::response(['id' => 'or_9', 'code' => $invoice->number, 'status' => 'paid',
+                'charges' => [['status' => 'paid', 'payment_method' => 'credit_card', 'paid_amount' => $invoice->amount_cents]]]),
+            'api.pagar.me/core/v5/orders' => Http::response(['id' => 'or_9', 'checkouts' => [['payment_url' => 'https://pagar.me/checkout/abc']]]),
+        ]);
+
+        $this->actingAs($user)->post(route('billing.pay', $invoice), ['method' => 'card', 'gateway' => 'pagarme', 'document' => self::CPF, 'recurring' => 0])
+            ->assertRedirect('https://pagar.me/checkout/abc');
+        Http::assertSent(fn ($q) => $q->method() === 'POST' && isset($q['checkouts']) && $q['checkouts'][0]['accepted_payment_methods'] === ['credit_card'] && !isset($q['payments']));
+
+        $this->postJson('/api/webhooks/pagarme?secret=pm-secret', ['type' => 'order.paid', 'data' => ['id' => 'or_9', 'code' => $invoice->number]])->assertOk();
+        $this->assertSame(Invoice::PAID, $invoice->fresh()->status);
+        $this->assertSame('pagarme', $invoice->fresh()->gateway);
+
+        $this->postJson('/api/webhooks/pagarme?secret=nope', ['type' => 'order.paid', 'data' => ['id' => 'or_9']])->assertStatus(401);
+        $this->postJson('/api/webhooks/pagarme?secret=pm-secret', ['type' => 'charge.paid', 'data' => ['id' => 'ch_1', 'order' => ['id' => 'or_9']]])->assertOk();
+    }
+
+    public function test_pagarme_order_not_paid_or_underpaid_does_not_settle(): void
+    {
+        $this->setup_provider('pagarme', ['webhook_secret' => 'pm-secret']);
+        [, , $invoice] = $this->checkout();
+        $this->fakeHttp(['api.pagar.me/core/v5/orders/or_1' => Http::response(['id' => 'or_1', 'code' => $invoice->number, 'status' => 'pending', 'charges' => []]),
+            'api.pagar.me/core/v5/orders/or_2' => Http::response(['id' => 'or_2', 'code' => $invoice->number, 'status' => 'paid', 'charges' => [['status' => 'paid', 'paid_amount' => 100]]])]);
+
+        $this->postJson('/api/webhooks/pagarme?secret=pm-secret', ['type' => 'order.paid', 'data' => ['id' => 'or_1']])->assertOk();
+        $this->postJson('/api/webhooks/pagarme?secret=pm-secret', ['type' => 'order.paid', 'data' => ['id' => 'or_2']])->assertOk();
+
+        $this->assertTrue($invoice->fresh()->isOpen());
+    }
+
+    // ---- Stripe -----------------------------------------------------------------------------------------
+
+    private function stripeSignature(string $body, string $secret = 'whsec_test', ?int $t = null): array
+    {
+        $t ??= now()->timestamp;
+
+        return ['Stripe-Signature' => "t={$t},v1=" . hash_hmac('sha256', "{$t}.{$body}", $secret)];
+    }
+
+    private function stripeEvent(string $sessionId, string $type = 'checkout.session.completed'): array
+    {
+        return ['id' => 'evt_1', 'type' => $type, 'data' => ['object' => ['id' => $sessionId, 'object' => 'checkout.session']]];
+    }
+
+    private function postStripe(array $event, array $headers)
+    {
+        return $this->call('POST', '/api/webhooks/stripe', [], [], [], $this->transformHeadersToServerVars($headers + ['Content-Type' => 'application/json']), json_encode($event));
+    }
+
+    public function test_stripe_checkout_session_for_card_and_pix_redirects(): void
+    {
+        $this->setup_provider('stripe', ['access_token' => 'sk_test_123', 'webhook_secret' => 'whsec_test']);
+        [$user, , $invoice] = $this->checkout();
+        $this->fakeHttp(['api.stripe.com/v1/checkout/sessions' => Http::response(['id' => 'cs_test_1', 'url' => 'https://checkout.stripe.com/c/pay/cs_test_1'])]);
+
+        $this->actingAs($user)->post(route('billing.pay', $invoice), ['method' => 'pix', 'gateway' => 'stripe', 'document' => self::CPF, 'recurring' => 0])
+            ->assertRedirect('https://checkout.stripe.com/c/pay/cs_test_1');
+        $this->actingAs($user)->post(route('billing.pay', $invoice), ['method' => 'card', 'gateway' => 'stripe', 'document' => self::CPF, 'recurring' => 0])
+            ->assertRedirect('https://checkout.stripe.com/c/pay/cs_test_1');
+
+        Http::assertSent(fn ($q) => $q->hasHeader('Authorization', 'Basic ' . base64_encode('sk_test_123:'))
+            && str_contains($q->body(), 'payment_method_types%5B0%5D=pix') && str_contains($q->body(), 'currency%5D=brl')
+            && str_contains($q->body(), 'client_reference_id=' . $invoice->number) && str_contains($q->body(), 'unit_amount%5D=' . $invoice->amount_cents));
+        Http::assertSent(fn ($q) => str_contains($q->body(), 'payment_method_types%5B0%5D=card'));
+        $this->assertTrue(app(GatewayManager::class)->driver('stripe')->config()->isSandbox());
+        $this->assertFalse(app(GatewayManager::class)->driver('stripe')->supportsRecurrence(), 'Pix is paid on Stripe\'s page: no automatic Pix renewal');
+    }
+
+    public function test_stripe_webhook_requires_a_valid_fresh_signature_then_rereads_the_session(): void
+    {
+        $this->setup_provider('stripe', ['access_token' => 'sk_test_123', 'webhook_secret' => 'whsec_test']);
+        [, , $invoice] = $this->checkout();
+        $this->fakeHttp(['api.stripe.com/v1/checkout/sessions/cs_1' => Http::response([
+            'id' => 'cs_1', 'payment_status' => 'paid', 'client_reference_id' => $invoice->number, 'amount_total' => $invoice->amount_cents,
+            'currency' => 'brl', 'payment_method_types' => ['pix']])]);
+        $event = $this->stripeEvent('cs_1');
+        $body = json_encode($event);
+
+        $this->postStripe($event, $this->stripeSignature($body, 'wrong'))->assertStatus(401);
+        $this->postStripe($event, [])->assertStatus(401);
+        $this->postStripe($event, $this->stripeSignature($body, 'whsec_test', now()->timestamp - 4000))->assertStatus(401);
+        $this->assertTrue($invoice->fresh()->isOpen());
+
+        $this->postStripe($event, $this->stripeSignature($body))->assertOk()->assertJson(['status' => 'queued']);
+
+        $invoice->refresh();
+        $this->assertSame(Invoice::PAID, $invoice->status);
+        $this->assertSame('stripe', $invoice->gateway);
+        $this->assertSame('pix', $invoice->payment_method);
+    }
+
+    public function test_stripe_without_signing_secret_rejects_everything_and_unpaid_or_foreign_currency_does_not_settle(): void
+    {
+        $this->setup_provider('stripe', ['access_token' => 'sk_test_123', 'webhook_secret' => null]);
+        $event = $this->stripeEvent('cs_1');
+        $this->postStripe($event, $this->stripeSignature(json_encode($event), ''))->assertStatus(401);
+
+        $this->setup_provider('stripe', ['access_token' => 'sk_test_123', 'webhook_secret' => 'whsec_test']);
+        [, , $invoice] = $this->checkout();
+        $this->fakeHttp([
+            'api.stripe.com/v1/checkout/sessions/cs_unpaid' => Http::response(['id' => 'cs_unpaid', 'payment_status' => 'unpaid', 'client_reference_id' => $invoice->number, 'amount_total' => $invoice->amount_cents, 'currency' => 'brl']),
+            'api.stripe.com/v1/checkout/sessions/cs_usd' => Http::response(['id' => 'cs_usd', 'payment_status' => 'paid', 'client_reference_id' => $invoice->number, 'amount_total' => 99999999, 'currency' => 'usd']),
+        ]);
+        foreach (['cs_unpaid', 'cs_usd'] as $id) {
+            $e = $this->stripeEvent($id);
+            $this->postStripe($e, $this->stripeSignature(json_encode($e)))->assertOk();
+        }
+
+        $this->assertTrue($invoice->fresh()->isOpen());
+    }
+
+    // ---- PagBank ----------------------------------------------------------------------------------------
+
+    public function test_pagbank_pix_order_with_qr_and_sandbox_host(): void
+    {
+        $this->setup_provider('pagbank', ['webhook_secret' => 'pb-secret'], ['sandbox' => true]);
+        $this->fakeHttp(['sandbox.api.pagseguro.com/orders' => Http::response(['id' => 'ORDE_1', 'qr_codes' => [[
+            'id' => 'QRCO_1', 'text' => '000201PAGBANK', 'expiration_date' => '2026-11-03T12:00:00-03:00',
+            'links' => [['rel' => 'QRCODE.PNG', 'media' => 'image/png', 'href' => 'https://api.pagseguro.com/qrcode/QRCO_1/png'], ['media' => 'text/plain', 'href' => 'https://x/txt']]]]])]);
+
+        [$user, , $invoice] = $this->checkout();
+        $r = app(PaymentService::class)->pay($user, $invoice, $this->req('pix'), 'pagbank');
+
+        $this->assertSame('000201PAGBANK', $r->pix['qr_code']);
+        $this->assertSame('https://api.pagseguro.com/qrcode/QRCO_1/png', $r->pix['qr_image_url']);
+        Http::assertSent(fn ($q) => $q['reference_id'] === $invoice->number && $q['qr_codes'][0]['amount']['value'] === $invoice->amount_cents
+            && $q['customer']['tax_id'] === self::CPF && $q['notification_urls'] === ['https://painel.test/api/webhooks/pagbank?secret=pb-secret']
+            && $q->hasHeader('Authorization', 'Bearer secret-key-1234'));
+    }
+
+    public function test_pagbank_card_checkout_and_paid_notification(): void
+    {
+        $this->setup_provider('pagbank', ['webhook_secret' => 'pb-secret']);
+        [$user, , $invoice] = $this->checkout();
+        $this->fakeHttp([
+            'api.pagseguro.com/checkouts' => Http::response(['id' => 'CHEC_1', 'links' => [['rel' => 'SELF', 'href' => 'https://x/self'], ['rel' => 'PAY', 'href' => 'https://pagseguro.uol.com.br/checkout/v2/payment.html?code=ABC']]]),
+            'api.pagseguro.com/orders/ORDE_5' => Http::response(['id' => 'ORDE_5', 'reference_id' => $invoice->number, 'charges' => [
+                ['status' => 'PAID', 'amount' => ['value' => $invoice->amount_cents], 'payment_method' => ['type' => 'CREDIT_CARD']]]]),
+        ]);
+
+        $this->actingAs($user)->post(route('billing.pay', $invoice), ['method' => 'card', 'gateway' => 'pagbank', 'document' => self::CPF, 'recurring' => 0])
+            ->assertRedirect('https://pagseguro.uol.com.br/checkout/v2/payment.html?code=ABC');
+        Http::assertSent(fn ($q) => str_ends_with($q->url(), '/checkouts') && $q['payment_methods'] === [['type' => 'CREDIT_CARD']] && $q['reference_id'] === $invoice->number);
+
+        // a checkout-level notification (no paid charge) is ignored; the order notification settles
+        $this->postJson('/api/webhooks/pagbank?secret=pb-secret', ['id' => 'CHEC_1', 'status' => 'INACTIVE'])->assertOk()->assertJson(['status' => 'ignored']);
+        $this->postJson('/api/webhooks/pagbank?secret=pb-secret', ['id' => 'ORDE_5', 'reference_id' => $invoice->number, 'charges' => [['status' => 'PAID']]])->assertOk();
+
+        $this->assertSame(Invoice::PAID, $invoice->fresh()->status);
+        $this->assertSame('pagbank', $invoice->fresh()->gateway);
+        $this->postJson('/api/webhooks/pagbank?secret=bad', ['id' => 'ORDE_5', 'charges' => [['status' => 'PAID']]])->assertStatus(401);
+    }
+
+    public function test_pagbank_connection_test_distinguishes_bad_token(): void
+    {
+        $this->setup_provider('pagbank');
+        $this->fakeHttp(['api.pagseguro.com/orders/*' => Http::response(['error_messages' => [['description' => 'invalid']]], 401)]);
+        $this->assertFalse(app(GatewayManager::class)->driver('pagbank')->testConnection()['ok']);
+
+        $this->fakeHttp(['api.pagseguro.com/orders/*' => Http::response([], 404)]);
+        $this->assertTrue(app(GatewayManager::class)->driver('pagbank')->testConnection()['ok']);
+    }
+
+    public function test_all_seven_providers_have_an_admin_tab(): void
+    {
+        $page = $this->actingAs($this->user('boss', 'admin'))->get('/admin/payment-gateway?provider=stripe')->assertOk();
+        foreach (['Asaas', 'Efí', 'AbacatePay', 'Stone (Pagar.me)', 'Stripe', 'PagBank', 'Mercado Pago'] as $label) {
+            $page->assertSee($label, false);
+        }
+        foreach (['pagarme', 'stripe', 'pagbank'] as $p) {
+            $this->actingAs($this->user("a$p", 'admin'))->get("/admin/payment-gateway?provider=$p")->assertOk();
+        }
+    }
 }

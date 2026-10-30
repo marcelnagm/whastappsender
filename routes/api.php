@@ -29,7 +29,7 @@ Route::post('/webhook/whatsapp', [WebhookController::class, 'receive']);
 Route::post('/webhooks/mercadopago', [\App\Http\Controllers\MercadoPagoWebhookController::class, 'receive'])->name('webhooks.mercadopago');
 // Asaas / Efí (appends /pix to the registered URL) / AbacatePay
 Route::post('/webhooks/{provider}/{path?}', [\App\Http\Controllers\GatewayWebhookController::class, 'receive'])
-    ->where('provider', 'asaas|efi|abacatepay')->where('path', '.*')->name('webhooks.gateway');
+    ->where('provider', 'asaas|efi|abacatepay|pagarme|stripe|pagbank')->where('path', '.*')->name('webhooks.gateway');
 
 Route::prefix('v1')->group(function () {
     Route::post('/auth/login', [AuthController::class, 'login']);

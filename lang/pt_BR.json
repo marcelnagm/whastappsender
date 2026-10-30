@@ -835,5 +835,15 @@
     "Pay with": "Pagar com",
     "You will be taken to the provider's secure page to enter the card. The card data never touches our servers.": "Você será levado à página segura do provedor para informar o cartão. Os dados do cartão nunca passam pelos nossos servidores.",
     "Card data goes straight to the payment provider and never touches our servers.": "Os dados do cartão vão direto ao provedor de pagamento e nunca passam pelos nossos servidores.",
-    "This provider does not charge the card automatically. Choose Pix to renew automatically, or pay this invoice by card now.": "Este provedor não cobra o cartão automaticamente. Escolha Pix para renovar automaticamente, ou pague esta fatura no cartão agora."
+    "This provider does not charge the card automatically. Choose Pix to renew automatically, or pay this invoice by card now.": "Este provedor não cobra o cartão automaticamente. Escolha Pix para renovar automaticamente, ou pague esta fatura no cartão agora.",
+    "PagBank rejected the token.": "O PagBank recusou o token.",
+    "Pagar.me rejected the secret key.": "O Pagar.me recusou a chave secreta.",
+    "Stripe rejected the secret key.": "A Stripe recusou a chave secreta.",
+    "Secret key": "Chave secreta",
+    "Token": "Token",
+    "Signing secret (whsec_…)": "Segredo de assinatura (whsec_…)",
+    "Stripe signs every notification: paste the signing secret of the webhook endpoint (Stripe → Developers → Webhooks). Without it all notifications are rejected.": "A Stripe assina todas as notificações: cole o segredo de assinatura do endpoint de webhook (Stripe → Developers → Webhooks). Sem ele todas as notificações são rejeitadas.",
+    "In Stripe → Developers → Webhooks add an endpoint with this URL and the events checkout.session.completed and checkout.session.async_payment_succeeded, then paste its signing secret above.": "Na Stripe → Developers → Webhooks adicione um endpoint com esta URL e os eventos checkout.session.completed e checkout.session.async_payment_succeeded, e cole acima o segredo de assinatura dele.",
+    "In Pagar.me → Settings → Webhooks add this URL with ?secret= followed by the webhook secret above, and the events order.paid and charge.paid.": "No Pagar.me → Configurações → Webhooks adicione esta URL com ?secret= seguido do segredo do webhook acima, e os eventos order.paid e charge.paid.",
+    "PagBank: the notification URL (with ?secret=) is sent with every order and checkout automatically; just generate and save the webhook secret above.": "PagBank: a URL de notificação (com ?secret=) é enviada automaticamente em cada pedido e checkout; basta gerar e salvar o segredo do webhook acima."
 }

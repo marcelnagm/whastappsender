@@ -25,6 +25,24 @@ return [
             'docs' => 'https://docs.abacatepay.com',
             'keys' => 'https://abacatepay.com',
         ],
+        'pagarme' => [
+            'label' => 'Stone (Pagar.me)',
+            'fees' => ['pix' => 'sob negociação', 'card' => '~3,19% (tabela) / negociável', 'settlement' => 'conforme contrato'],
+            'docs' => 'https://docs.pagar.me',
+            'keys' => 'https://dash.pagar.me',
+        ],
+        'stripe' => [
+            'label' => 'Stripe',
+            'fees' => ['pix' => '1,19% (sob convite)', 'card' => '3,99% + R$ 0,39', 'settlement' => 'conforme a conta'],
+            'docs' => 'https://docs.stripe.com/payments/pix',
+            'keys' => 'https://dashboard.stripe.com/apikeys',
+        ],
+        'pagbank' => [
+            'label' => 'PagBank',
+            'fees' => ['pix' => 'até 1,89%', 'card' => '4,99% + R$ 0,40 (14 dias) · 3,99% + R$ 0,40 (30 dias)', 'settlement' => '14 ou 30 dias'],
+            'docs' => 'https://developer.pagbank.com.br',
+            'keys' => 'https://minhaconta.pagbank.com.br',
+        ],
         'mercadopago' => [
             'label' => 'Mercado Pago',
             'fees' => ['pix' => '0,99%', 'card' => '4,98% (na hora) · 3,98% (30 dias)', 'settlement' => 'na hora, 14 ou 30 dias'],

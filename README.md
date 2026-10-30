@@ -21,7 +21,7 @@
 | [System Architecture](#-system-architecture-queues--warmup) | Queues, Warmup, production requirements |
 | [WhatsApp Chat (CRM)](#-whatsapp-chat-crm) | WhatsApp Web-style inbox on top of Evolution API |
 | [Fair Send Queue](#️-fair-send-queue) | Balanced batches of 50 across users and sessions |
-| [Plans & Billing](#-plans--billing) | Freemium + 3 plans, due dates, blocking, Asaas · Efí · AbacatePay · Mercado Pago (Pix / card, customer chooses) |
+| [Plans & Billing](#-plans--billing) | Freemium + 3 plans, due dates, blocking, Asaas · Efí · AbacatePay · Stone (Pagar.me) · Stripe · PagBank · Mercado Pago (Pix / card, customer chooses) |
 | [Tests](#-tests) | PHPUnit suite |
 | [Installation](#️-installation--activation) | `install.sh` (local / VPS / update), `start-local.sh` (Docker infra for local dev), manual steps, production Docker (`.docker/`) |
 
@@ -629,16 +629,19 @@ section of the public landing page; admins get **Admin → Billing** to see subs
 
 ### Payment gateways (choose and combine)
 
-Four providers are built in, picked for their low public fees (Sep/2026; list prices, **confirm them with each provider**, they change and can be negotiated):
+Seven providers are built in, picked for their low public fees or for being the best known (Sep/2026; list prices, **confirm them with each provider**, they change and can be negotiated):
 
 | Provider | Pix | Card (one payment) | Card checkout | Card recurrence |
 |---|---|---|---|---|
 | **Asaas** | R$ 1,99 | 2,99% + R$ 0,49 | provider's hosted page | no (Pix renewal) |
 | **Efí** | 1,19% | 3,49% | provider's hosted page (payment link) | no (Pix renewal) |
 | **AbacatePay** | R$ 0,80 | 3,50% + R$ 0,60 | provider's hosted page | no (Pix renewal) |
+| **Stone (Pagar.me)** | under negotiation | ~3,19% (list) / negotiable | hosted checkout (order with `checkouts`) | no (Pix renewal) |
+| **Stripe** | 1,19% (invite only) | 3,99% + R$ 0,39 | Stripe Checkout page (card **and** Pix) | no |
+| **PagBank** | up to 1,89% | 4,99% + R$ 0,40 (14 days) · 3,99% + R$ 0,40 (30 days) | hosted Checkout | no (Pix renewal) |
 | **Mercado Pago** | 0,99% | 4,98% (immediate) · 3,98% (30 days) | card tokenised in the browser, paid here | yes (`/preapproval`) |
 
-Enable one or several at **Admin → Payment gateway** (one tab each). With more than one active the customer picks the provider on the invoice page. With Asaas / Efí / AbacatePay the card is always entered on the provider's secure page (card data never touches this server); Pix shows a QR code on the invoice and "renew automatically" generates a new Pix per renewal invoice. Webhooks: `/api/webhooks/asaas` (header `asaas-access-token` = the webhook secret), `/api/webhooks/efi` (Efí appends `/pix`; the secret travels as `?secret=`; the admin button registers the Pix URL, the card URL is sent per charge) and `/api/webhooks/abacatepay?secret=…`. Every notification is stored, then the resource is **re-read from the provider's API** before an invoice is settled, and the amount must cover the invoice. Efí Pix needs the account's mTLS certificate converted to `.pem` on the server plus the receiving Pix key. These three integrations were written from the providers' public docs and tested with faked HTTP only: try each in its sandbox before going live.
+Enable one or several at **Admin → Payment gateway** (one tab each). With more than one active the customer picks the provider on the invoice page. With Asaas / Efí / AbacatePay the card is always entered on the provider's secure page (card data never touches this server); Pix shows a QR code on the invoice and "renew automatically" generates a new Pix per renewal invoice. Webhooks: `/api/webhooks/{asaas|efi|abacatepay|pagarme|stripe|pagbank}` — `/api/webhooks/asaas` (header `asaas-access-token` = the webhook secret), `/api/webhooks/efi` (Efí appends `/pix`; the secret travels as `?secret=`; the admin button registers the Pix URL, the card URL is sent per charge) and `/api/webhooks/abacatepay?secret=…`. Every notification is stored, then the resource is **re-read from the provider's API** before an invoice is settled, and the amount must cover the invoice. Efí Pix needs the account's mTLS certificate converted to `.pem` on the server plus the receiving Pix key. These three integrations were written from the providers' public docs and tested with faked HTTP only: try each in its sandbox before going live.
 
 #### Before going live: setup checklist per provider
 
@@ -647,6 +650,9 @@ Common to all: `APP_URL` must be a public **https** address (providers only acce
 * **Asaas** — Admin → Payment gateway → *Asaas*: paste the **API key**, tick *Test mode* only for the sandbox key. Click *Generate* in *Webhook secret* (32+ characters) and save. In Asaas → Integrations → Webhooks create a webhook with the URL shown in the admin, paste **the same value** as its *Auth token*, and select the events `PAYMENT_CONFIRMED` and `PAYMENT_RECEIVED`.
 * **Efí** — create an application in Efí with the Pix scopes (`cob.write`, `cob.read`, webhook scopes) and the Cobranças API enabled. In the admin fill the **Client ID**, **Client secret**, the **Pix key** that receives the money and the **certificate path**. Convert the certificate downloaded from Efí (it can only be downloaded once) with `openssl pkcs12 -in cert.p12 -out efi.pem -nodes`, store the `.pem` outside the public folder and readable by the PHP user. Save, then click **Register Pix webhook** (the card notification URL is sent with every charge automatically). Without certificate and Pix key only card is offered.
 * **AbacatePay** — paste the **API key** (a dev-mode key creates test charges). Generate a *Webhook secret*, save, and register in the AbacatePay dashboard the URL shown in the admin with `?secret=<the secret>` appended. This is the integration most likely to need small adjustments (status-check endpoints and webhook payload were written from the public docs): watch *Latest notifications* in the admin while testing.
+* **Stone (Pagar.me)** — Stone's online gateway (API v5). Paste the **secret key** (`sk_…`; a `sk_test_…` key is the test environment). Generate a *Webhook secret*, save, and in Pagar.me → Settings → Webhooks register the URL shown with `?secret=<the secret>` appended and the events `order.paid` and `charge.paid`. Pix is created through `POST /orders` (QR code on the invoice); the card opens the hosted checkout (`checkouts` in the order). Fees are negotiated with Stone, so the figures shown are only a reference. The hosted-checkout request shape was written from partial documentation: test the card flow in the test environment first.
+* **Stripe** — paste the **secret key** (`sk_live_…`/`sk_test_…`) and, after creating a webhook endpoint in Stripe → Developers → Webhooks with the URL shown and the events `checkout.session.completed` and `checkout.session.async_payment_succeeded`, its **signing secret** (`whsec_…`). Card and Pix both go to Stripe's Checkout page (Pix must be enabled in Stripe → Settings → Payment methods; Pix needs BRL). Every notification must carry a valid `Stripe-Signature` (5 min tolerance); without the signing secret all are rejected. Automatic renewal is not offered with Stripe (Pix is paid on Stripe's page, so there is no code to email).
+* **PagBank** — paste the **token** (Bearer) and tick *Test mode* for the sandbox token. Generate a *Webhook secret* and save: the notification URL (with `?secret=`) is sent with every Pix order and card checkout. Pix uses `POST /orders` with a QR code; card uses the hosted Checkout. The payment-page link of the card checkout is read from the response `links` (`rel: PAY`), which was not confirmed in the docs I could read: test it in the sandbox.
 * **Mercado Pago** — see below.
 
 Every notification appears under *Latest notifications* in each provider's tab (`processed`, `ignored`, `rejected`, `failed`) with a note explaining why, which is the first place to look when a payment does not release access.
@@ -709,7 +715,7 @@ In the chat header (badge icon) each user can set a name. Anything sent from the
 
 ## 🧪 Tests
 
-`vendor/bin/phpunit` (in-memory SQLite, no external services): fair queue planner and command, chat backend, avatar caching, billing lifecycle and plan enforcement, the Mercado Pago gateway (admin settings, Pix, card, recurrence, webhook) and the Asaas / Efí / AbacatePay gateways (HTTP faked).
+`vendor/bin/phpunit` (in-memory SQLite, no external services): fair queue planner and command, chat backend, avatar caching, billing lifecycle and plan enforcement, the Mercado Pago gateway (admin settings, Pix, card, recurrence, webhook) and the Asaas / Efí / AbacatePay / Stone (Pagar.me) / Stripe / PagBank gateways (HTTP faked).
 
 * * *
 
@@ -725,7 +731,7 @@ In the chat header (badge icon) each user can set a name. Anything sent from the
 * ✅ **Multi-language UI:** English, Portuguese (BR) and Spanish with a language selector (`config/languages.php`).
 * ✅ **Fair Send Queue:** every batch of 50 messages is balanced across users and sessions, so no campaign starves the others.
 * ✅ **Plans & Billing:** freemium + 3 plans, trial, due dates, grace period and read-only blocking for non-payment.
-* ✅ **Payments (Asaas, Efí, AbacatePay, Mercado Pago):** Pix and credit card, one-time or automatic renewal, several providers at once, configured from the admin area.
+* ✅ **Payments (Asaas, Efí, AbacatePay, Stone, Stripe, PagBank, Mercado Pago):** Pix and credit card, one-time or automatic renewal, several providers at once, configured from the admin area.
 * ✅ **Audit Logs:** Full history of every AI interaction and every broadcast attempt.
 
 ---
