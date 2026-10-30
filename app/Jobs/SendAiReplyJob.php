@@ -61,6 +61,12 @@ class SendAiReplyJob implements ShouldQueue
             return;
         }
 
+        if ($instance->isTelegram()) {
+            $this->sendViaTelegram($aiMessage, $instance, $contact);
+
+            return;
+        }
+
         $config = config('services.whatsapp');
         $baseUrl = "{$config['protocol']}://{$config['url']}:{$config['port']}";
         $globalApiKey = $config['apikey'];
@@ -109,6 +115,40 @@ class SendAiReplyJob implements ShouldQueue
                 'status' => 'error',
                 'error' => mb_substr($e->getMessage(), 0, 600),
             ]);
+        }
+    }
+
+    /** Answers through the bot that received the message and records it in the CRM chat. */
+    private function sendViaTelegram(AiMessage $aiMessage, Instance $instance, Contact $contact): void
+    {
+        try {
+            $chatId = substr((string) $contact->contact, 3); // "tg:<id>"
+            if (!str_starts_with((string) $contact->contact, 'tg:') || $chatId === '') {
+                throw new \RuntimeException('Contact is not a Telegram chat.');
+            }
+
+            $client = \App\Services\Telegram\TelegramClient::for($instance);
+            $client->typing($chatId);
+            $id = $client->sendMessage($chatId, (string) $aiMessage->content);
+            $messageId = $chatId . ':' . $id;
+
+            $aiMessage->update(['status' => 'sent', 'channel_message_id' => $messageId]);
+            if ($aiMessage->session) {
+                $aiMessage->session->update(['last_outbound_at' => now()]);
+            }
+
+            $chat = \App\Models\Chat::where('instance_id', $instance->id)->where('remote_jid', $contact->contact)->first();
+            if ($chat) {
+                $message = \App\Models\ChatMessage::create([
+                    'chat_id' => $chat->id, 'instance_id' => $instance->id, 'user_id' => $instance->user_id,
+                    'message_id' => $messageId, 'from_me' => true, 'type' => 'text', 'body' => $aiMessage->content,
+                    'status' => 'sent', 'message_timestamp' => now(),
+                ]);
+                app(\App\Services\Chat\ChatMessageRecorder::class)->touchChat($chat, $message, true);
+            }
+        } catch (\Throwable $e) {
+            Log::error('SendAiReplyJob (telegram) failed: ' . $e->getMessage());
+            $aiMessage->update(['status' => 'error', 'error' => mb_substr($e->getMessage(), 0, 600)]);
         }
     }
 }

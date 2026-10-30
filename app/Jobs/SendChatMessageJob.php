@@ -40,6 +40,13 @@ class SendChatMessageJob implements ShouldQueue
         }
 
         $chat = $message->chat;
+
+        if ($message->instance->isTelegram()) {
+            $this->sendViaTelegram($message, $chat);
+
+            return;
+        }
+
         $instance = $message->instance->instance_name;
         $number = $chat->sendNumber();
         $quoted = $this->quotedPayload($message, $chat);
@@ -67,6 +74,40 @@ class SendChatMessageJob implements ShouldQueue
             $message->update(['status' => 'error', 'error' => mb_substr($e->getMessage(), 0, 600)]);
             Chat::where('id', $chat->id)->where('last_message_id', $message->id)->update(['last_message_status' => 'error']);
         }
+    }
+
+    /** Same bot that received the conversation answers it. */
+    private function sendViaTelegram(ChatMessage $message, Chat $chat): void
+    {
+        try {
+            $client = \App\Services\Telegram\TelegramClient::for($message->instance);
+            $chatId = substr((string) $chat->remote_jid, 3); // "tg:<id>"
+            $replyTo = $message->quoted_message_id ? (int) substr(strrchr((string) $message->quoted_message_id, ':') ?: '', 1) : null;
+
+            $id = match ($message->type) {
+                'image', 'video', 'audio', 'document' => $client->sendFile(
+                    $message->type, $chatId, $this->readBinary($message), $message->file_name ?: 'file',
+                    $message->body, $message->mimetype, $replyTo ?: null
+                ),
+                default => $client->sendMessage($chatId, (string) $message->body, $replyTo ?: null),
+            };
+
+            $this->markSent($message, $chat, $chatId . ':' . $id);
+        } catch (\Throwable $e) {
+            Log::error('SendChatMessageJob (telegram) failed: ' . $e->getMessage(), ['chat_message_id' => $message->id]);
+
+            $message->update(['status' => 'error', 'error' => mb_substr($e->getMessage(), 0, 600)]);
+            Chat::where('id', $chat->id)->where('last_message_id', $message->id)->update(['last_message_status' => 'error']);
+        }
+    }
+
+    private function readBinary(ChatMessage $message): string
+    {
+        if (!$message->media_path || !Storage::exists($message->media_path)) {
+            throw new \RuntimeException('Attachment file not found.');
+        }
+
+        return Storage::get($message->media_path);
     }
 
     private function markSent(ChatMessage $message, Chat $chat, ?string $waId): void

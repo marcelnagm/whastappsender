@@ -182,6 +182,7 @@ class InstanceHealth
         $recentIds = WhatsappJob::where('status', 'processado')->where('updated_at', '>=', $recentSince)->whereNotNull('instance_id')->distinct()->pluck('instance_id');
 
         Instance::where('status', 'connected')
+            ->where('channel', 'whatsapp')
             ->where(fn ($q) => $q->whereIn('user_id', $busyUsers)->orWhereIn('id', $recentIds))
             ->get()
             ->each(function (Instance $instance) use (&$result) {
@@ -194,7 +195,7 @@ class InstanceHealth
             });
 
         // 2) outages whose confirmation never ran (queue was down): confirm them now
-        Instance::where('status', 'disconnected')->whereNotNull('disconnected_at')->whereNull('down_alerted_at')
+        Instance::where('status', 'disconnected')->where('channel', 'whatsapp')->whereNotNull('disconnected_at')->whereNull('down_alerted_at')
             ->where('disconnected_at', '<=', now()->subMinutes(max(1, (int) config('instance_health.alert_after_minutes'))))
             ->get()
             ->each(function (Instance $instance) use (&$result) {

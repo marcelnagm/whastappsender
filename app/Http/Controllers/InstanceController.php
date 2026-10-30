@@ -13,8 +13,8 @@ class InstanceController extends Controller
     {
         // Only instances for the signed-in user (admins see all)
         if (auth()->user()->isAdmin())
-            $instances = Instance::paginate(10);
-        else $instances = auth()->user()->instances()->latest()->paginate(10);
+            $instances = Instance::where('channel', 'whatsapp')->paginate(10);
+        else $instances = auth()->user()->instances()->where('channel', 'whatsapp')->latest()->paginate(10);
 
         return view('instances.index', compact('instances'));
     }

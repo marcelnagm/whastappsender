@@ -48,7 +48,7 @@ class ChatController extends Controller
         $current = $instances->firstWhere('id', (int) $request->query('instance')) ?? $instances->first();
 
         // First time this number is opened in the chat: bring in the conversations Evolution already stores
-        if ($current && !ChatMessage::where('instance_id', $current->id)->exists() && Cache::add("chat-history-sync:{$current->id}", 1, 3600)) {
+        if ($current && !$current->isTelegram() && !ChatMessage::where('instance_id', $current->id)->exists() && Cache::add("chat-history-sync:{$current->id}", 1, 3600)) {
             HistorySyncStatus::queued($current->id);
             SyncChatHistoryJob::dispatch($current->id)->onQueue('default');
         }
@@ -130,6 +130,9 @@ class ChatController extends Controller
         ]);
 
         $instance = $this->ownedInstance((int) $data['instance_id']);
+        if ($instance->isTelegram()) {
+            return response()->json(['message' => __('Telegram bots cannot start conversations. The customer must message the bot first.')], 422);
+        }
         $phone = preg_replace('/\D/', '', $data['phone']);
 
         if (strlen($phone) < 8 || strlen($phone) > 15) {
@@ -185,6 +188,7 @@ class ChatController extends Controller
     public function syncHistory(Request $request, Instance $instance): JsonResponse
     {
         abort_unless((int) $instance->user_id === (int) Auth::id(), 403);
+        abort_if($instance->isTelegram(), 422, __('Telegram has no history to sync.'));
 
         if (!HistorySyncStatus::isBusy($instance->id)) {
             HistorySyncStatus::queued($instance->id);
@@ -348,7 +352,7 @@ class ChatController extends Controller
         $this->authorizeMessage($message);
         $data = $request->validate(['emoji' => 'nullable|string|max:16']);
 
-        if (!$message->message_id || $message->deleted) {
+        if (!$message->message_id || $message->deleted || $message->instance->isTelegram()) {
             return response()->json(['message' => __('Message not available for reactions.')], 422);
         }
 
@@ -384,7 +388,7 @@ class ChatController extends Controller
     {
         $this->authorizeMessage($message);
 
-        if (!$message->from_me || !$message->message_id || $message->deleted) {
+        if (!$message->from_me || !$message->message_id || $message->deleted || $message->instance->isTelegram()) {
             return response()->json(['message' => __('This message cannot be deleted.')], 422);
         }
 
@@ -427,7 +431,7 @@ class ChatController extends Controller
         if ($unread->isNotEmpty()) {
             ChatMessage::whereIn('id', $unread->pluck('id'))->update(['status' => 'read']);
 
-            if (config('chat.send_read_receipts', true)) {
+            if (config('chat.send_read_receipts', true) && !$chat->instance->isTelegram()) {
                 $keys = $unread->map(fn ($m) => [
                     'remoteJid' => $chat->remote_jid,
                     'fromMe' => false,
@@ -451,6 +455,14 @@ class ChatController extends Controller
     public function presence(Chat $chat): JsonResponse
     {
         $this->authorizeChat($chat);
+
+        if ($chat->instance->isTelegram()) {
+            $client = \App\Services\Telegram\TelegramClient::for($chat->instance);
+            $tgChat = substr((string) $chat->remote_jid, 3);
+            app()->terminating(fn () => $client->typing($tgChat));
+
+            return response()->json(null, 204);
+        }
 
         $instanceName = $chat->instance->instance_name;
         $number = $chat->sendNumber();
@@ -492,7 +504,7 @@ class ChatController extends Controller
         abort_unless($message->hasMedia(), 404);
 
         if (!$message->media_path || !Storage::exists($message->media_path)) {
-            abort_unless($message->message_id, 404);
+            abort_unless($message->message_id && !$message->instance->isTelegram(), 404);
 
             try {
                 $data = $this->evolution->mediaBase64($message->instance->instance_name, $message->message_id);
@@ -628,7 +640,7 @@ class ChatController extends Controller
     public function linkPhone(Request $request, Chat $chat): JsonResponse
     {
         $this->authorizeChat($chat);
-        abort_unless(LidResolver::isLid($chat->remote_jid), 422, __('This conversation is already identified.'));
+        abort_unless(!str_starts_with((string) $chat->remote_jid, 'tg:') && LidResolver::isLid($chat->remote_jid), 422, __('This conversation is already identified.'));
 
         $data = $request->validate(['phone' => 'required|string|max:30']);
         $phone = LidResolver::phoneFrom(preg_replace('/\D/', '', $data['phone']));

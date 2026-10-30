@@ -115,6 +115,7 @@ class FairQueueSelector
 
         // Sessions able to send right now
         $sessions = Instance::where('status', 'connected')
+            ->where('channel', 'whatsapp')
             ->whereIn('user_id', $userIds)
             ->orderBy('id')
             ->get(['id', 'user_id'])

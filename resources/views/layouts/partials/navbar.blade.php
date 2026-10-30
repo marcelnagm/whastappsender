@@ -23,6 +23,9 @@
           <a href="/instances" class="nav-link text-white"><i class="bi bi-whatsapp me-1"></i> {{ __('Whatsapp') }}</a>
         </li>
         <li class="nav-item">
+          <a href="{{ route('telegram.index') }}" class="nav-link {{ request()->is('telegram*') ? 'active text-secondary' : 'text-white' }}"><i class="bi bi-telegram me-1"></i> {{ __('Telegram') }}</a>
+        </li>
+        <li class="nav-item">
           <a href="{{ route('chat.index') }}" class="nav-link {{ request()->is('chat*') ? 'active text-secondary' : 'text-white' }}"><i class="bi bi-chat-dots me-1"></i> {{ __('Chat') }}</a>
         </li>
         <li class="nav-item">

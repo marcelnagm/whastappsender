@@ -41,6 +41,10 @@ trait CreatesTestSchema
             $t->string('instance_name')->unique();
             $t->string('status')->default('disconnected');
             $t->boolean('warmup')->default(false);
+            $t->string('channel', 20)->default('whatsapp');
+            $t->text('telegram_token')->nullable();
+            $t->string('telegram_username', 64)->nullable();
+            $t->string('telegram_secret', 64)->nullable();
             $t->timestamps();
         });
 

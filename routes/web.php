@@ -86,6 +86,15 @@ Route::group(['namespace' => 'App\Http\Controllers', 'middleware' => ['auth', 's
     Route::get('/billing/invoices/{invoice}/status', [BillingController::class, 'status'])->name('billing.status');
     Route::post('/billing/auto-renew/stop', [BillingController::class, 'stopAutoRenew'])->name('billing.autorenew.stop');
 
+    // Telegram bots (channel = telegram instances)
+    Route::prefix('telegram')->name('telegram.')->group(function () {
+        $tg = \App\Http\Controllers\TelegramController::class;
+        Route::get('/', [$tg, 'index'])->name('index');
+        Route::post('/', [$tg, 'store'])->name('store')->middleware('throttle:10,1');
+        Route::post('/{instance}/reconnect', [$tg, 'reconnect'])->name('reconnect');
+        Route::delete('/{instance}', [$tg, 'destroy'])->name('destroy');
+    });
+
     // AI agents: provider/model/prompt and which WhatsApp number each one answers for
     Route::prefix('ai')->name('ai.')->group(function () {
         $ai = \App\Http\Controllers\AiSettingsController::class;

@@ -10,7 +10,7 @@
 > ⭐ **Cloned or using this project? Please give it a star and/or follow [@marcelnagm](https://github.com/marcelnagm).**
 > It's free, takes two seconds and is what keeps the project maintained. Thank you! 🙏
 
-**SAMA Envios** is a mission-critical communication infrastructure that merges the power of **Laravel** with the LLM of your choice (**Groq, OpenAI, Claude, Gemini, DeepSeek, Mistral, OpenRouter, Ollama or any OpenAI-compatible endpoint**). Designed for teams that demand stable bulk messaging and **Intelligent AI Customer Service** on WhatsApp, answering through the very number the customer wrote to.
+**SAMA Envios** is a mission-critical communication infrastructure that merges the power of **Laravel** with the LLM of your choice (**Groq, OpenAI, Claude, Gemini, DeepSeek, Mistral, OpenRouter, Ollama or any OpenAI-compatible endpoint**). Designed for teams that demand stable bulk messaging and **Intelligent AI Customer Service** on WhatsApp and Telegram, answering through the very number (or bot) the customer wrote to.
 
 **Documentation map**
 
@@ -20,6 +20,7 @@
 | [Tool Call Chain API](#-tool-call-chain-api-ai-agents) | REST + AI agent tools |
 | [System Architecture](#-system-architecture-queues--warmup) | Queues, Warmup, production requirements |
 | [WhatsApp Chat (CRM)](#-whatsapp-chat-crm) | WhatsApp Web-style inbox on top of Evolution API |
+| [Telegram](#-telegram) | Connect Telegram bots; same chat, AI agents and plan limits; always answers through the bot the message came in |
 | [Fair Send Queue](#️-fair-send-queue) | Balanced batches of 50 across users and sessions |
 | [Plans & Billing](#-plans--billing) | Freemium + 3 plans, due dates, blocking, Asaas · Efí · AbacatePay · Stone (Pagar.me) · Stripe · PagBank · Mercado Pago (Pix / card, customer chooses) |
 | [Tests](#-tests) | PHPUnit suite |
@@ -549,6 +550,43 @@ retried after 30 minutes. Run `php artisan migrate` to add the cache columns. Wi
 
 * * *
 
+## ✈️ Telegram
+
+A Telegram bot is a **channel of the same instance structure** as a WhatsApp number: its conversations show up in the
+**Chat** inbox, the **AI agents** answer them (per-instance agent, working hours and the "pause AI when a human replies"
+rule all apply), contacts land in the CRM and every bot counts toward the plan's *instances* limit.
+**Every reply leaves through the bot that received the message**: the AI, the chat UI and retries never switch bot or channel.
+
+```
+Customer ──► Telegram ──► POST /api/webhooks/telegram/{instance} ──► ProcessTelegramUpdateJob ──► chats / chat_messages ──► AI agent
+Customer ◄── Telegram ◄── Bot API sendMessage / sendPhoto / ... ◄── SendAiReplyJob · SendChatMessageJob (same bot)
+```
+
+**Setup**
+
+1. In Telegram open **@BotFather**, send `/newbot` and copy the token (`123456789:AAH...`).
+2. Make sure `APP_URL` is your **public https** address (Telegram only delivers webhooks to https; local development needs a tunnel such as ngrok or Cloudflare Tunnel).
+3. Run `php artisan migrate` (adds `channel`, `telegram_token`, `telegram_username`, `telegram_secret` to `instances`).
+4. Open **Telegram** in the menu, paste the token and click **Connect**. The app calls `getMe`, then `setWebhook` with a random secret per bot.
+   If the webhook cannot be registered the bot is not saved. Use **Register webhook again** after changing `APP_URL`.
+5. Keep a worker on the `default` queue (incoming updates, chat sends) and on `disparos` (AI replies) running.
+6. In **AI**, enable automatic replies and, if you want, assign an agent to the bot (it appears in the instance list like any number).
+
+**Optional `.env` settings** (defaults in `config/telegram.php`): `TELEGRAM_API_URL` (default `https://api.telegram.org`, useful for a self-hosted Bot API server),
+`TELEGRAM_TIMEOUT` (seconds, default 30) and `TELEGRAM_MAX_DOWNLOAD_BYTES` (incoming media limit, default 20 MB, the Bot API maximum).
+
+**What works:** text, photos, video, voice notes, audio and documents in both directions (media sent from the chat UI uses `sendPhoto` / `sendVideo` / `sendVoice` / `sendDocument`),
+replies to a specific message, edited messages, typing indicator, opt-out with `/stop` or `#sair`, `/start` treated as a greeting for the AI.
+
+**Limits (Telegram, not the app):**
+
+* A bot **cannot start a conversation**: the customer must message it first. Number-based bulk campaigns, new chat by phone and warm-up remain **WhatsApp-only** (Telegram contacts have status `telegram` and are never picked by campaigns).
+* Only one-to-one chats; groups, channels and other bots are ignored.
+* No history import, reactions or "delete for everyone", and no read receipts.
+* The token is stored encrypted and never shown again; a bot can be connected to only one account.
+
+* * *
+
 ## ⚖️ Fair Send Queue
 
 `php artisan whatsapp:queue` (scheduled hourly) used to take the oldest pending rows of **all** users, so one big campaign
@@ -715,7 +753,7 @@ In the chat header (badge icon) each user can set a name. Anything sent from the
 
 ## 🧪 Tests
 
-`vendor/bin/phpunit` (in-memory SQLite, no external services): fair queue planner and command, chat backend, avatar caching, billing lifecycle and plan enforcement, the Mercado Pago gateway (admin settings, Pix, card, recurrence, webhook) and the Asaas / Efí / AbacatePay / Stone (Pagar.me) / Stripe / PagBank gateways (HTTP faked).
+`vendor/bin/phpunit` (in-memory SQLite, no external services): fair queue planner and command, chat backend, Telegram channel (webhook secret, inbound, AI reply through the same bot, settings), avatar caching, billing lifecycle and plan enforcement, the Mercado Pago gateway (admin settings, Pix, card, recurrence, webhook) and the Asaas / Efí / AbacatePay / Stone (Pagar.me) / Stripe / PagBank gateways (HTTP faked).
 
 * * *
 

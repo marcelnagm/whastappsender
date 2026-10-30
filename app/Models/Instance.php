@@ -19,8 +19,14 @@ class Instance extends Model
         'warmup',
         'name',
         'instance_name',
-        'status'
+        'status',
+        'channel',
+        'telegram_token',
+        'telegram_username',
+        'telegram_secret',
     ];
+
+    protected $hidden = ['telegram_token', 'telegram_secret'];
 
     /**
      * Attribute casting.
@@ -29,6 +35,7 @@ class Instance extends Model
     protected $casts = [
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
+        'telegram_token' => 'encrypted',
         'disconnected_at' => 'datetime',
         'down_alerted_at' => 'datetime',
     ];
@@ -65,6 +72,11 @@ class Instance extends Model
     /**
      * Whether this row represents a connected session.
      */
+    public function isTelegram(): bool
+    {
+        return $this->channel === 'telegram';
+    }
+
     public function isConnected(): bool
     {
         return $this->status === 'connected';

@@ -23,11 +23,13 @@ class GenerateWarmupConversations extends Command
         $admins = Instance::join('users', 'instances.user_id', '=', 'users.id')
             ->where('users.role', 'admin')
             ->where('instances.status', 'connected')
+            ->where('instances.channel', 'whatsapp')
             ->select('instances.*') // Ensure hydrated models are Instance
             ->get();
         // 2. Instances in warmup (targets)
 
         $targets = Instance::where('warmup', 1)
+            ->where('channel', 'whatsapp')
             ->where('status', 'connected')
             ->whereHas('user', function ($query) {
                 $query->where('role', '!=', 'admin');
