@@ -45,6 +45,9 @@ trait CreatesTestSchema
             $t->text('telegram_token')->nullable();
             $t->string('telegram_username', 64)->nullable();
             $t->string('telegram_secret', 64)->nullable();
+            $t->text('instagram_token')->nullable();
+            $t->string('instagram_id', 40)->nullable();
+            $t->string('instagram_username', 64)->nullable();
             $t->timestamps();
         });
 

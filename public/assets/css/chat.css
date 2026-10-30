@@ -302,3 +302,9 @@
 .wa-icon-btn.wa-on { color: #00a884; }
 .wa-sign-menu { min-width: 260px; padding: 10px; }
 .wa-sign-preview { font-size: 12px; color: #667781; margin-top: 6px; word-break: break-word; }
+
+/* channel badge (omnichannel inbox) */
+.wa-ch { font-size: .72rem; margin-left: 6px; vertical-align: middle; }
+.wa-ch-whatsapp { color: #25d366; }
+.wa-ch-telegram { color: #229ed9; }
+.wa-ch-instagram { color: #d6249f; }

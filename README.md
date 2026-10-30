@@ -10,7 +10,7 @@
 > ⭐ **Cloned or using this project? Please give it a star and/or follow [@marcelnagm](https://github.com/marcelnagm).**
 > It's free, takes two seconds and is what keeps the project maintained. Thank you! 🙏
 
-**SAMA Envios** is a mission-critical communication infrastructure that merges the power of **Laravel** with the LLM of your choice (**Groq, OpenAI, Claude, Gemini, DeepSeek, Mistral, OpenRouter, Ollama or any OpenAI-compatible endpoint**). Designed for teams that demand stable bulk messaging and **Intelligent AI Customer Service** on WhatsApp and Telegram, answering through the very number (or bot) the customer wrote to.
+**SAMA Envios** is a mission-critical communication infrastructure that merges the power of **Laravel** with the LLM of your choice (**Groq, OpenAI, Claude, Gemini, DeepSeek, Mistral, OpenRouter, Ollama or any OpenAI-compatible endpoint**). Designed for teams that demand stable bulk messaging and **Intelligent AI Customer Service** on WhatsApp, Telegram and Instagram in one omnichannel inbox, answering through the very number, bot or account the customer wrote to.
 
 **Documentation map**
 
@@ -21,6 +21,7 @@
 | [System Architecture](#-system-architecture-queues--warmup) | Queues, Warmup, production requirements |
 | [WhatsApp Chat (CRM)](#-whatsapp-chat-crm) | WhatsApp Web-style inbox on top of Evolution API |
 | [Telegram](#-telegram) | Connect Telegram bots; same chat, AI agents and plan limits; always answers through the bot the message came in |
+| [Instagram](#-instagram-direct) | Instagram DMs in the same omnichannel chat; AI answers through the account that received the message |
 | [Fair Send Queue](#️-fair-send-queue) | Balanced batches of 50 across users and sessions |
 | [Plans & Billing](#-plans--billing) | Freemium + 3 plans, due dates, blocking, Asaas · Efí · AbacatePay · Stone (Pagar.me) · Stripe · PagBank · Mercado Pago (Pix / card, customer chooses) |
 | [Tests](#-tests) | PHPUnit suite |
@@ -587,6 +588,52 @@ replies to a specific message, edited messages, typing indicator, opt-out with `
 
 * * *
 
+## 📸 Instagram (Direct)
+
+An Instagram professional account is a **channel of the same instance structure** as WhatsApp numbers and Telegram bots.
+All conversations land in the same **Chat**, which is **omnichannel**: each conversation shows a channel badge
+(WhatsApp / Telegram / Instagram) in the list and in the conversation header, and the instance selector is labelled by channel.
+The **AI agents** answer Instagram DMs like any other channel (per-instance agent, working hours, pause on human reply) and
+**every reply leaves through the account that received the message**. Messages you send from the Instagram app itself (echo events) also appear in the chat.
+
+```
+Customer ──► Instagram ──► POST /api/webhooks/instagram (X-Hub-Signature-256) ──► ProcessInstagramEventJob ──► chats / chat_messages ──► AI agent
+Customer ◄── Instagram ◄── graph.instagram.com/{version}/me/messages ◄── SendAiReplyJob · SendChatMessageJob (same account)
+```
+
+**Setup**
+
+1. In [Meta for Developers](https://developers.facebook.com/apps) create an app with the **Instagram** product (*Instagram API with Instagram login*, permission `instagram_business_manage_messages`). The Instagram account must be **Business or Creator**.
+2. Put the app credentials in `.env` (see below) and make sure `APP_URL` is your **public https** address.
+3. In the app dashboard (*Instagram > API setup > Webhooks*) set the **callback URL** to `https://YOUR-DOMAIN/api/webhooks/instagram` and the **verify token** to the value of `INSTAGRAM_VERIFY_TOKEN`, then subscribe to the `messages` field. The Instagram menu in the app shows the exact callback URL.
+4. Run `php artisan migrate` (adds `instagram_token`, `instagram_id`, `instagram_username` to `instances`).
+5. Generate the account's access token in the dashboard, open **Instagram** in the menu and paste it. The app validates it, subscribes the account to messages and stores the token encrypted. The token lasts 60 days: use **Renew connection** before it expires.
+6. Keep workers on `default` (incoming events, chat sends) and `disparos` (AI replies) running. Assign an AI agent to the account in **AI** if you want one just for Instagram.
+
+**`.env` example** (defaults in `config/instagram.php`):
+
+```
+INSTAGRAM_APP_SECRET=your-meta-app-secret
+INSTAGRAM_VERIFY_TOKEN=any-long-random-string-you-also-type-in-the-dashboard
+#INSTAGRAM_API_VERSION=v21.0
+#INSTAGRAM_WINDOW_HOURS=24
+#INSTAGRAM_TIMEOUT=30
+#INSTAGRAM_MAX_DOWNLOAD_BYTES=26214400
+#INSTAGRAM_MEDIA_LINK_MINUTES=30
+```
+
+**What works:** text, images, video, audio and files in both directions, replies/quotes received, shared posts and reels as links, typing indicator,
+opt-out with `/stop` or `#sair`, long answers split automatically (Instagram limits a text to 1000 characters). Files sent from the chat are fetched by Instagram through a temporary signed link (`/instagram-media/...`).
+
+**Limits (Meta, not the app):**
+
+* **Reply window:** Instagram only accepts a reply within `INSTAGRAM_WINDOW_HOURS` (24 h) of the customer's **last** message. Outside the window the chat refuses to send and the AI records the error.
+* The account **cannot start a conversation** or message a list of contacts: the customer writes first. Number-based bulk campaigns, new chat by phone, history import and warm-up remain **WhatsApp-only** (Instagram contacts have status `instagram` and are never picked by campaigns).
+* No reactions or "delete for everyone" from the chat. Only direct messages (no comments or story replies sending).
+* Apps in development mode only receive messages from accounts with a role in the app; going live needs Meta app review for the messaging permission.
+
+* * *
+
 ## ⚖️ Fair Send Queue
 
 `php artisan whatsapp:queue` (scheduled hourly) used to take the oldest pending rows of **all** users, so one big campaign
@@ -753,7 +800,7 @@ In the chat header (badge icon) each user can set a name. Anything sent from the
 
 ## 🧪 Tests
 
-`vendor/bin/phpunit` (in-memory SQLite, no external services): fair queue planner and command, chat backend, Telegram channel (webhook secret, inbound, AI reply through the same bot, settings), avatar caching, billing lifecycle and plan enforcement, the Mercado Pago gateway (admin settings, Pix, card, recurrence, webhook) and the Asaas / Efí / AbacatePay / Stone (Pagar.me) / Stripe / PagBank gateways (HTTP faked).
+`vendor/bin/phpunit` (in-memory SQLite, no external services): fair queue planner and command, chat backend, Telegram and Instagram channels (webhook secret/signature, inbound, AI reply through the same bot/account, reply window, settings), avatar caching, billing lifecycle and plan enforcement, the Mercado Pago gateway (admin settings, Pix, card, recurrence, webhook) and the Asaas / Efí / AbacatePay / Stone (Pagar.me) / Stripe / PagBank gateways (HTTP faked).
 
 * * *
 

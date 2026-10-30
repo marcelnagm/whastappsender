@@ -255,6 +255,15 @@
   // ------------------------------------------------------------------
   // chat list
   // ------------------------------------------------------------------
+  var CHANNELS = { whatsapp: ['WhatsApp', 'bi-whatsapp'], telegram: ['Telegram', 'bi-telegram'], instagram: ['Instagram', 'bi-instagram'] };
+  function channelTag(chat) {
+    var c = CHANNELS[chat.channel || 'whatsapp'] || CHANNELS.whatsapp;
+    var tag = h('span', 'wa-ch wa-ch-' + (chat.channel || 'whatsapp'));
+    tag.title = c[0];
+    tag.appendChild(h('i', 'bi ' + c[1]));
+    return tag;
+  }
+
   function chatItem(chat) {
     var active = S.active && S.active.id === chat.id;
     var unread = active ? 0 : chat.unread;
@@ -266,6 +275,7 @@
     var body = h('div', 'wa-chat-body');
     var row1 = h('div', 'wa-chat-row');
     var nm = h('div', 'wa-chat-name', chat.name);
+    nm.appendChild(channelTag(chat));
     if (chat.in_crm) nm.appendChild(h('span', 'wa-crm-tag', 'CRM'));
     row1.appendChild(nm);
     row1.appendChild(h('div', 'wa-chat-time', fmtListTime(chat.last && chat.last.at)));
@@ -346,7 +356,8 @@
 
   function setHeader(chat) {
     el.name.textContent = chat.name;
-    el.sub.textContent = chat.phone ? '+' + chat.phone : '';
+    var ch = CHANNELS[chat.channel || 'whatsapp'] || CHANNELS.whatsapp;
+    el.sub.textContent = ch[0] + (chat.phone ? ' · +' + chat.phone : '');
     var av = avatarEl(chat.name, chat.avatar);
     el.avatar.replaceChildren();
     el.avatar.style.backgroundColor = av.style.backgroundColor;

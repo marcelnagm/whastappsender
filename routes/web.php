@@ -95,6 +95,15 @@ Route::group(['namespace' => 'App\Http\Controllers', 'middleware' => ['auth', 's
         Route::delete('/{instance}', [$tg, 'destroy'])->name('destroy');
     });
 
+    // Instagram accounts (channel = instagram instances)
+    Route::prefix('instagram')->name('instagram.')->group(function () {
+        $ig = \App\Http\Controllers\InstagramController::class;
+        Route::get('/', [$ig, 'index'])->name('index');
+        Route::post('/', [$ig, 'store'])->name('store')->middleware('throttle:10,1');
+        Route::post('/{instance}/refresh', [$ig, 'refresh'])->name('refresh');
+        Route::delete('/{instance}', [$ig, 'destroy'])->name('destroy');
+    });
+
     // AI agents: provider/model/prompt and which WhatsApp number each one answers for
     Route::prefix('ai')->name('ai.')->group(function () {
         $ai = \App\Http\Controllers\AiSettingsController::class;
@@ -231,3 +240,5 @@ Route::group(['namespace' => 'App\Http\Controllers', 'middleware' => ['auth', 's
         }
     });
 });
+
+Route::get('/instagram-media/{message}', [\App\Http\Controllers\InstagramMediaController::class, 'show'])->middleware('signed')->name('instagram.media');

@@ -6,8 +6,7 @@ use App\Models\Chat;
 use App\Models\ChatMessage;
 use App\Models\Contact;
 use App\Models\Instance;
-use App\Services\AI\AiAutoReplyService;
-use App\Services\AI\AiInboundMessageRecorder;
+use App\Services\Channels\InboundAiBridge;
 use App\Services\Chat\ChatMessageRecorder;
 use Carbon\Carbon;
 use Illuminate\Database\QueryException;
@@ -99,31 +98,11 @@ class TelegramInbound
     private function afterRecorded(Instance $instance, Contact $contact, string $jid, string $messageId, ?string $text, string $type): void
     {
         $text = trim((string) $text);
-
-        // opt-out, same idea as #sair on WhatsApp
-        if (in_array(Str::lower($text), ['/stop', '#sair'], true)) {
-            $contact->update(['ignore_me' => 1]);
-
-            return;
-        }
-        if ($type !== 'text' && $text === '') {
-            return; // media without caption: nothing for the AI to answer
-        }
         if ($text === '/start') {
             $text = 'Olá'; // the button every Telegram user presses first
         }
-        if ($text === '' || (int) $contact->ignore_me === 1) {
-            return;
-        }
 
-        $data = ['key' => ['remoteJid' => $jid, 'id' => $messageId, 'fromMe' => false], 'message' => ['conversation' => $text]];
-
-        try {
-            app(AiInboundMessageRecorder::class)->record($instance->instance_name, $data, $text);
-            app(AiAutoReplyService::class)->handleInbound($instance->instance_name, $data, $text);
-        } catch (\Throwable $e) {
-            Log::warning('Telegram AI flow failed: ' . $e->getMessage(), ['instance_id' => $instance->id]);
-        }
+        InboundAiBridge::run($instance, $contact, $jid, $messageId, $text, $type);
     }
 
     private function contact(Instance $instance, string $jid, ?string $name): Contact

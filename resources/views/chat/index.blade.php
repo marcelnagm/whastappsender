@@ -1,7 +1,7 @@
 @extends('layouts.app-master')
 
 @section('content')
-<link rel="stylesheet" href="{{ url('assets/css/chat.css') }}?v=1">
+<link rel="stylesheet" href="{{ url('assets/css/chat.css') }}?v=2">
 
 @if ($instances->isEmpty())
     <div class="alert alert-warning">
@@ -34,17 +34,17 @@
     <aside class="wa-side" id="wa-side">
         <header class="wa-side-header">
             <div class="wa-instance">
-                <i class="bi bi-whatsapp"></i>
+                <i class="bi bi-{{ $current->channelKey() }}"></i>
                 @if ($instances->count() > 1)
                     <select id="wa-instance-select" class="form-select form-select-sm" aria-label="{{ __('Instance') }}">
                         @foreach ($instances as $ins)
                             <option value="{{ $ins->id }}" @if($ins->id === $current->id) selected @endif>
-                                {{ $ins->name }} · {{ $ins->instance_name }}
+                                {{ ucfirst($ins->channelKey()) }} · {{ $ins->name }}@if($ins->isWhatsapp()) · {{ $ins->instance_name }}@endif
                             </option>
                         @endforeach
                     </select>
                 @else
-                    <span class="wa-instance-name">{{ $current->name }} · {{ $current->instance_name }}</span>
+                    <span class="wa-instance-name">{{ $current->name }}@if($current->isWhatsapp()) · {{ $current->instance_name }}@endif</span>
                 @endif
             </div>
             <div class="wa-side-actions">
@@ -61,7 +61,7 @@
                     <button type="button" class="wa-icon-btn" id="wa-sync" title="{{ __('Import history') }}" aria-haspopup="true"><i class="bi bi-arrow-repeat"></i></button>
                     <div id="wa-sync-menu" class="wa-sync-menu d-none" role="menu">
                         <div class="wa-sync-menu-title">{{ __('Import history from') }}</div>
-                        @foreach ($instances as $ins)
+                        @foreach ($instances->filter->isWhatsapp() as $ins)
                             <button type="button" class="wa-sync-item" role="menuitem" data-instance="{{ $ins->id }}">
                                 <i class="bi bi-whatsapp"></i>
                                 <span>{{ $ins->name }} · {{ $ins->instance_name }}</span>

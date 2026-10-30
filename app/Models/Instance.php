@@ -23,10 +23,10 @@ class Instance extends Model
         'channel',
         'telegram_token',
         'telegram_username',
-        'telegram_secret',
+        'telegram_secret', 'instagram_token', 'instagram_id', 'instagram_username',
     ];
 
-    protected $hidden = ['telegram_token', 'telegram_secret'];
+    protected $hidden = ['telegram_token', 'telegram_secret', 'instagram_token'];
 
     /**
      * Attribute casting.
@@ -36,6 +36,7 @@ class Instance extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
         'telegram_token' => 'encrypted',
+        'instagram_token' => 'encrypted',
         'disconnected_at' => 'datetime',
         'down_alerted_at' => 'datetime',
     ];
@@ -75,6 +76,23 @@ class Instance extends Model
     public function isTelegram(): bool
     {
         return $this->channel === 'telegram';
+    }
+
+    public function isInstagram(): bool
+    {
+        return $this->channel === 'instagram';
+    }
+
+    /** True for numbers served by the Evolution API (the default channel). */
+    public function isWhatsapp(): bool
+    {
+        return !in_array($this->channel, ['telegram', 'instagram'], true);
+    }
+
+    /** whatsapp | telegram | instagram */
+    public function channelKey(): string
+    {
+        return $this->isWhatsapp() ? 'whatsapp' : (string) $this->channel;
     }
 
     public function isConnected(): bool

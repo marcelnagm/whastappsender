@@ -48,7 +48,7 @@ class ChatController extends Controller
         $current = $instances->firstWhere('id', (int) $request->query('instance')) ?? $instances->first();
 
         // First time this number is opened in the chat: bring in the conversations Evolution already stores
-        if ($current && !$current->isTelegram() && !ChatMessage::where('instance_id', $current->id)->exists() && Cache::add("chat-history-sync:{$current->id}", 1, 3600)) {
+        if ($current && $current->isWhatsapp() && !ChatMessage::where('instance_id', $current->id)->exists() && Cache::add("chat-history-sync:{$current->id}", 1, 3600)) {
             HistorySyncStatus::queued($current->id);
             SyncChatHistoryJob::dispatch($current->id)->onQueue('default');
         }
@@ -130,8 +130,8 @@ class ChatController extends Controller
         ]);
 
         $instance = $this->ownedInstance((int) $data['instance_id']);
-        if ($instance->isTelegram()) {
-            return response()->json(['message' => __('Telegram bots cannot start conversations. The customer must message the bot first.')], 422);
+        if (!$instance->isWhatsapp()) {
+            return response()->json(['message' => __('Only WhatsApp can start a conversation. On this channel the customer must write first.')], 422);
         }
         $phone = preg_replace('/\D/', '', $data['phone']);
 
@@ -188,7 +188,7 @@ class ChatController extends Controller
     public function syncHistory(Request $request, Instance $instance): JsonResponse
     {
         abort_unless((int) $instance->user_id === (int) Auth::id(), 403);
-        abort_if($instance->isTelegram(), 422, __('Telegram has no history to sync.'));
+        abort_if(!$instance->isWhatsapp(), 422, __('History import is only available for WhatsApp.'));
 
         if (!HistorySyncStatus::isBusy($instance->id)) {
             HistorySyncStatus::queued($instance->id);
@@ -266,6 +266,10 @@ class ChatController extends Controller
 
         $text = trim((string) ($data['text'] ?? ''));
         $file = $request->file('file');
+
+        if ($chat->instance->isInstagram() && !\App\Services\Instagram\InstagramWindow::isOpen($chat)) {
+            return response()->json(['message' => \App\Services\Instagram\InstagramWindow::closedMessage()], 422);
+        }
 
         if ($text === '' && !$file) {
             return response()->json(['message' => __('Type a message')], 422);
@@ -352,7 +356,7 @@ class ChatController extends Controller
         $this->authorizeMessage($message);
         $data = $request->validate(['emoji' => 'nullable|string|max:16']);
 
-        if (!$message->message_id || $message->deleted || $message->instance->isTelegram()) {
+        if (!$message->message_id || $message->deleted || !$message->instance->isWhatsapp()) {
             return response()->json(['message' => __('Message not available for reactions.')], 422);
         }
 
@@ -388,7 +392,7 @@ class ChatController extends Controller
     {
         $this->authorizeMessage($message);
 
-        if (!$message->from_me || !$message->message_id || $message->deleted || $message->instance->isTelegram()) {
+        if (!$message->from_me || !$message->message_id || $message->deleted || !$message->instance->isWhatsapp()) {
             return response()->json(['message' => __('This message cannot be deleted.')], 422);
         }
 
@@ -431,7 +435,7 @@ class ChatController extends Controller
         if ($unread->isNotEmpty()) {
             ChatMessage::whereIn('id', $unread->pluck('id'))->update(['status' => 'read']);
 
-            if (config('chat.send_read_receipts', true) && !$chat->instance->isTelegram()) {
+            if (config('chat.send_read_receipts', true) && $chat->instance->isWhatsapp()) {
                 $keys = $unread->map(fn ($m) => [
                     'remoteJid' => $chat->remote_jid,
                     'fromMe' => false,
@@ -456,10 +460,12 @@ class ChatController extends Controller
     {
         $this->authorizeChat($chat);
 
-        if ($chat->instance->isTelegram()) {
-            $client = \App\Services\Telegram\TelegramClient::for($chat->instance);
-            $tgChat = substr((string) $chat->remote_jid, 3);
-            app()->terminating(fn () => $client->typing($tgChat));
+        if (!$chat->instance->isWhatsapp()) {
+            $other = substr((string) $chat->remote_jid, 3); // "tg:<id>" / "ig:<id>"
+            $client = $chat->instance->isInstagram()
+                ? \App\Services\Instagram\InstagramClient::for($chat->instance)
+                : \App\Services\Telegram\TelegramClient::for($chat->instance);
+            app()->terminating(fn () => $client->typing($other));
 
             return response()->json(null, 204);
         }
@@ -504,7 +510,7 @@ class ChatController extends Controller
         abort_unless($message->hasMedia(), 404);
 
         if (!$message->media_path || !Storage::exists($message->media_path)) {
-            abort_unless($message->message_id && !$message->instance->isTelegram(), 404);
+            abort_unless($message->message_id && $message->instance->isWhatsapp(), 404);
 
             try {
                 $data = $this->evolution->mediaBase64($message->instance->instance_name, $message->message_id);
@@ -640,7 +646,7 @@ class ChatController extends Controller
     public function linkPhone(Request $request, Chat $chat): JsonResponse
     {
         $this->authorizeChat($chat);
-        abort_unless(!str_starts_with((string) $chat->remote_jid, 'tg:') && LidResolver::isLid($chat->remote_jid), 422, __('This conversation is already identified.'));
+        abort_unless(!preg_match('/^(tg|ig):/', (string) $chat->remote_jid) && LidResolver::isLid($chat->remote_jid), 422, __('This conversation is already identified.'));
 
         $data = $request->validate(['phone' => 'required|string|max:30']);
         $phone = LidResolver::phoneFrom(preg_replace('/\D/', '', $data['phone']));
@@ -679,6 +685,7 @@ class ChatController extends Controller
             'unread' => (int) $chat->unread_count,
             'in_crm' => (bool) $chat->contact_id,
             'unidentified' => LidResolver::isLid($chat->remote_jid),
+            'channel' => $chat->instance ? $chat->instance->channelKey() : 'whatsapp',
             'last' => [
                 'type' => $chat->last_message_type,
                 'text' => $chat->last_message_preview,

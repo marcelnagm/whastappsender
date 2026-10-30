@@ -26,6 +26,8 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::post('/webhook/whatsapp', [WebhookController::class, 'receive']);
+Route::get('/webhooks/instagram', [\App\Http\Controllers\InstagramWebhookController::class, 'verify'])->name('webhooks.instagram.verify');
+Route::post('/webhooks/instagram', [\App\Http\Controllers\InstagramWebhookController::class, 'receive'])->name('webhooks.instagram');
 Route::post('/webhooks/telegram/{instance}', [\App\Http\Controllers\TelegramWebhookController::class, 'receive'])->whereNumber('instance')->name('webhooks.telegram');
 Route::post('/webhooks/mercadopago', [\App\Http\Controllers\MercadoPagoWebhookController::class, 'receive'])->name('webhooks.mercadopago');
 // Asaas / Efí (appends /pix to the registered URL) / AbacatePay
