@@ -65,9 +65,18 @@
                     
                     <div class="d-flex justify-content-center gap-2">
                         <span class="badge bg-primary-soft text-primary px-3 py-2 rounded-pill shadow-sm">
-                            <i class="bi bi-star-fill me-1"></i> {{ __('SCORE:') }} {{ $contact->score }}
+                            <i class="bi bi-star-fill me-1"></i> {{ __('SCORE:') }} {{ (int) $contact->score }} · {{ __(ucfirst($contact->scoreTier())) }}
                         </span>
                     </div>
+                    @if ($contact->score_locked)
+                        <p class="small text-muted mt-2 mb-0"><i class="bi bi-lock-fill me-1"></i>{{ __('Set manually: the automatic score does not change it.') }}</p>
+                    @elseif (!empty($contact->score_breakdown))
+                        <dl class="row small text-start mt-3 mb-0">
+                            @foreach (['recency' => 'Recent activity', 'frequency' => 'Messages received', 'responsiveness' => 'Answers to our messages', 'receipts' => 'Delivered / read', 'conversation' => 'Two-way conversation', 'channels' => 'Linked channels', 'profile' => 'Profile data', 'penalties' => 'Penalties'] as $k => $label)
+                                <dt class="col-8 fw-normal text-muted">{{ __($label) }}</dt><dd class="col-4 text-end mb-1 {{ ($contact->score_breakdown[$k] ?? 0) < 0 ? 'text-danger' : '' }}">{{ $contact->score_breakdown[$k] ?? 0 }}</dd>
+                            @endforeach
+                        </dl>
+                    @endif
 
                     <div class="list-group list-group-flush border-top mt-4 pt-3 text-start">
                         <div class="list-group-item border-0 px-0 py-2">

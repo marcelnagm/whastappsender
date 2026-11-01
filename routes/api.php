@@ -4,6 +4,8 @@ use App\Http\Controllers\Api\Admin\PanicController as AdminPanicController;
 use App\Http\Controllers\Api\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CampaignController;
+use App\Http\Controllers\Api\ChannelController;
+use App\Http\Controllers\Api\ConversationController;
 use App\Http\Controllers\Api\CampaignItemController;
 use App\Http\Controllers\Api\ContactController;
 use App\Http\Controllers\Api\DashboardController;
@@ -54,13 +56,19 @@ Route::prefix('v1')->group(function () {
         // Contacts
         Route::get('/contacts', [ContactController::class, 'index']);
         Route::post('/contacts', [ContactController::class, 'store']);
+        Route::get('/contacts/ranking', [ContactController::class, 'ranking']);
         Route::post('/contacts/import', [ContactController::class, 'import']);
         Route::delete('/contacts', [ContactController::class, 'clean']);
         Route::post('/contacts/bulk-delete', [ContactController::class, 'bulkDelete']);
         Route::post('/contacts/bulk-status', [ContactController::class, 'bulkStatus']);
+        Route::post('/contacts/check-unresponsive', [ContactController::class, 'checkUnresponsive']);
         Route::get('/contacts/{contact}', [ContactController::class, 'show']);
         Route::put('/contacts/{contact}', [ContactController::class, 'update']);
         Route::delete('/contacts/{contact}', [ContactController::class, 'destroy']);
+        Route::get('/contacts/{contact}/channels', [ContactController::class, 'channels']);
+        Route::post('/contacts/{contact}/link', [ContactController::class, 'link']);
+        Route::post('/contacts/{contact}/unlink', [ContactController::class, 'unlink']);
+        Route::post('/contacts/{contact}/rescore', [ContactController::class, 'rescore']);
         Route::post('/contacts/{contact}/sync-photo', [ContactController::class, 'syncPhoto']);
 
         // Campaigns
@@ -95,6 +103,24 @@ Route::prefix('v1')->group(function () {
         Route::get('/instances/{instance}/connection', [InstanceController::class, 'connection']);
         Route::post('/instances/{instance}/warmup', [InstanceController::class, 'toggleWarmup']);
         Route::post('/instances/{instance}/sync', [InstanceController::class, 'sync']);
+
+        // Channels (Telegram / Instagram / TikTok) and their statistics
+        Route::get('/channels', [ChannelController::class, 'index']);
+        Route::get('/channels/stats', [ChannelController::class, 'stats']);
+        Route::post('/channels/telegram', [ChannelController::class, 'connectTelegram']);
+        Route::post('/channels/instagram', [ChannelController::class, 'connectInstagram']);
+        Route::get('/channels/tiktok/url', [ChannelController::class, 'tiktokUrl']);
+        Route::post('/channels/{instance}/renew', [ChannelController::class, 'renew']);
+        Route::delete('/channels/{instance}', [ChannelController::class, 'destroy']);
+
+        // Omnichannel inbox
+        Route::middleware('plan.feature:chat')->group(function () {
+            Route::get('/conversations', [ConversationController::class, 'index']);
+            Route::get('/conversations/{chat}/messages', [ConversationController::class, 'messages']);
+            Route::post('/conversations/{chat}/messages', [ConversationController::class, 'send']);
+            Route::post('/conversations/{chat}/read', [ConversationController::class, 'markRead']);
+            Route::post('/conversations/{chat}/ai-pause', [ConversationController::class, 'aiPause']);
+        });
 
         // Notifications
         Route::get('/notifications', [NotificationController::class, 'index']);

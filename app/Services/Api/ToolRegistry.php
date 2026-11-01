@@ -33,6 +33,9 @@ class ToolRegistry
                 'search' => ['type' => 'string', 'description' => 'Search by name, phone or email'],
                 'page' => ['type' => 'integer', 'description' => 'Page number'],
                 'per_page' => ['type' => 'integer', 'description' => 'Items per page (max 100)'],
+                'tier' => ['type' => 'string', 'enum' => ['hot', 'warm', 'cold', 'frozen'], 'description' => 'Only contacts of this engagement tier'],
+                'status' => ['type' => 'string', 'description' => 'Filter by status (ativo, inativo, no-whatsapp, telegram, instagram, tiktok)'],
+                'sort' => ['type' => 'string', 'enum' => ['score'], 'description' => 'score = best engagement first'],
             ]),
             self::tool('get_contact', 'Get a contact by ID.', [
                 'contact_id' => ['type' => 'integer', 'description' => 'Contact ID'],
@@ -49,6 +52,8 @@ class ToolRegistry
                 'contact' => ['type' => 'string'],
                 'email' => ['type' => 'string'],
                 'status' => ['type' => 'string', 'enum' => ['ativo', 'inativo', 'no-whatsapp']],
+                'score' => ['type' => 'integer', 'description' => 'Set the score by hand (0-100); it stops being recalculated'],
+                'score_locked' => ['type' => 'boolean', 'description' => 'false hands the score back to the automatic calculation'],
             ], ['contact_id']),
             self::tool('delete_contact', 'Delete a contact.', [
                 'contact_id' => ['type' => 'integer', 'description' => 'Contact ID'],
@@ -64,6 +69,74 @@ class ToolRegistry
             self::tool('sync_contact_photo', 'Sync contact profile photo from WhatsApp.', [
                 'contact_id' => ['type' => 'integer'],
             ], ['contact_id']),
+
+            self::tool('get_contact_ranking', 'Contacts ranked by engagement score (0-100) with tier (hot/warm/cold/frozen) and what the score is made of.', [
+                'tier' => ['type' => 'string', 'enum' => ['hot', 'warm', 'cold', 'frozen']],
+                'limit' => ['type' => 'integer', 'description' => 'Max 100, default 20'],
+            ]),
+            self::tool('rescore_contact', 'Recalculate the automatic score of a contact now (manual scores are kept).', [
+                'contact_id' => ['type' => 'integer'],
+            ], ['contact_id']),
+            self::tool('get_contact_channels', 'Show the Telegram/Instagram/TikTok identities linked to a contact and all their conversations.', [
+                'contact_id' => ['type' => 'integer'],
+            ], ['contact_id']),
+            self::tool('link_contacts', 'Link a Telegram/Instagram/TikTok contact to a WhatsApp contact (same person).', [
+                'contact_id' => ['type' => 'integer'],
+                'linked_contact_id' => ['type' => 'integer'],
+            ], ['contact_id', 'linked_contact_id']),
+            self::tool('unlink_contact', 'Remove the link of a Telegram/Instagram/TikTok contact.', [
+                'contact_id' => ['type' => 'integer'],
+            ], ['contact_id']),
+            self::tool('check_unresponsive_contacts', 'Deactivate contacts whose WhatsApp messages were never delivered for X hours (default from config). Use dry_run to only list.', [
+                'dry_run' => ['type' => 'boolean'],
+                'hours' => ['type' => 'integer', 'description' => 'Override the configured period'],
+            ]),
+
+            // Channels
+            self::tool('list_channels', 'List connected channel accounts (telegram, instagram, tiktok, whatsapp).', [
+                'channel' => ['type' => 'string', 'enum' => ['whatsapp', 'telegram', 'instagram', 'tiktok']],
+            ]),
+            self::tool('connect_telegram_bot', 'Connect a Telegram bot with its BotFather token.', [
+                'token' => ['type' => 'string'],
+            ], ['token']),
+            self::tool('connect_instagram_account', 'Connect an Instagram professional account with its access token.', [
+                'token' => ['type' => 'string'],
+            ], ['token']),
+            self::tool('get_tiktok_connect_url', 'URL the person must open in a browser to authorise a TikTok account.'),
+            self::tool('renew_channel_connection', 'Renew tokens / webhook of a Telegram, Instagram or TikTok account.', [
+                'instance_id' => ['type' => 'integer'],
+            ], ['instance_id']),
+            self::tool('remove_channel_account', 'Disconnect and remove a Telegram, Instagram or TikTok account.', [
+                'instance_id' => ['type' => 'integer'],
+            ], ['instance_id']),
+            self::tool('get_channel_stats', 'Per-channel numbers (chats, messages, AI replies, first response time) for the last 7, 30 or 90 days.', [
+                'days' => ['type' => 'integer', 'enum' => [7, 30, 90]],
+            ]),
+
+            // Omnichannel inbox
+            self::tool('list_conversations', 'List conversations of every channel, newest first. window_open tells whether we can still reply (Instagram 24h, TikTok 48h).', [
+                'channel' => ['type' => 'string', 'enum' => ['whatsapp', 'telegram', 'instagram', 'tiktok']],
+                'instance_id' => ['type' => 'integer'],
+                'unread' => ['type' => 'boolean', 'description' => 'Only conversations with unread messages'],
+                'search' => ['type' => 'string'],
+                'page' => ['type' => 'integer'],
+                'per_page' => ['type' => 'integer'],
+            ]),
+            self::tool('get_conversation_messages', 'Messages of a conversation (latest page; pass before_id for older ones).', [
+                'chat_id' => ['type' => 'integer'],
+                'before_id' => ['type' => 'integer'],
+            ], ['chat_id']),
+            self::tool('send_conversation_message', 'Send a text message in a conversation, through the channel it belongs to.', [
+                'chat_id' => ['type' => 'integer'],
+                'text' => ['type' => 'string'],
+            ], ['chat_id', 'text']),
+            self::tool('mark_conversation_read', 'Mark a conversation as read.', [
+                'chat_id' => ['type' => 'integer'],
+            ], ['chat_id']),
+            self::tool('pause_conversation_ai', 'Pause (true) or resume (false) the AI agent in a conversation.', [
+                'chat_id' => ['type' => 'integer'],
+                'paused' => ['type' => 'boolean'],
+            ], ['chat_id', 'paused']),
 
             // Campaigns
             self::tool('list_campaigns', 'List campaigns.', [
@@ -201,6 +274,27 @@ class ToolRegistry
             'bulk_update_contact_status' => [\App\Http\Controllers\Api\ContactController::class, 'bulkStatus'],
             'clear_contacts' => [\App\Http\Controllers\Api\ContactController::class, 'clean'],
             'sync_contact_photo' => [\App\Http\Controllers\Api\ContactController::class, 'syncPhoto', 'contact_id' => 'contact'],
+
+            'get_contact_ranking' => [\App\Http\Controllers\Api\ContactController::class, 'ranking'],
+            'rescore_contact' => [\App\Http\Controllers\Api\ContactController::class, 'rescore', 'contact_id' => 'contact'],
+            'get_contact_channels' => [\App\Http\Controllers\Api\ContactController::class, 'channels', 'contact_id' => 'contact'],
+            'link_contacts' => [\App\Http\Controllers\Api\ContactController::class, 'link', 'contact_id' => 'contact'],
+            'unlink_contact' => [\App\Http\Controllers\Api\ContactController::class, 'unlink', 'contact_id' => 'contact'],
+            'check_unresponsive_contacts' => [\App\Http\Controllers\Api\ContactController::class, 'checkUnresponsive'],
+
+            'list_channels' => [\App\Http\Controllers\Api\ChannelController::class, 'index'],
+            'connect_telegram_bot' => [\App\Http\Controllers\Api\ChannelController::class, 'connectTelegram'],
+            'connect_instagram_account' => [\App\Http\Controllers\Api\ChannelController::class, 'connectInstagram'],
+            'get_tiktok_connect_url' => [\App\Http\Controllers\Api\ChannelController::class, 'tiktokUrl'],
+            'renew_channel_connection' => [\App\Http\Controllers\Api\ChannelController::class, 'renew', 'instance_id' => 'instance'],
+            'remove_channel_account' => [\App\Http\Controllers\Api\ChannelController::class, 'destroy', 'instance_id' => 'instance'],
+            'get_channel_stats' => [\App\Http\Controllers\Api\ChannelController::class, 'stats'],
+
+            'list_conversations' => [\App\Http\Controllers\Api\ConversationController::class, 'index'],
+            'get_conversation_messages' => [\App\Http\Controllers\Api\ConversationController::class, 'messages', 'chat_id' => 'chat'],
+            'send_conversation_message' => [\App\Http\Controllers\Api\ConversationController::class, 'send', 'chat_id' => 'chat'],
+            'mark_conversation_read' => [\App\Http\Controllers\Api\ConversationController::class, 'markRead', 'chat_id' => 'chat'],
+            'pause_conversation_ai' => [\App\Http\Controllers\Api\ConversationController::class, 'aiPause', 'chat_id' => 'chat'],
 
             'list_campaigns' => [\App\Http\Controllers\Api\CampaignController::class, 'index'],
             'get_campaign' => [\App\Http\Controllers\Api\CampaignController::class, 'show', 'campaign_id' => 'campaign'],

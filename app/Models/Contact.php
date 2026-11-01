@@ -35,7 +35,7 @@ class Contact extends Model
      *
      * @var array
      */
-    protected $fillable = ['name', 'contact', 'email', 'user_id', 'ignore_me', 'lid', 'status', 'score', 'profile_url', 'linked_contact_id'];
+    protected $fillable = ['name', 'contact', 'email', 'user_id', 'ignore_me', 'lid', 'status', 'score', 'profile_url', 'linked_contact_id', 'deactivated_reason', 'deactivated_at', 'score_breakdown', 'score_updated_at', 'score_locked'];
 
 
     /**
@@ -107,6 +107,48 @@ class Contact extends Model
 
         return false;
     }
+    protected $casts = [
+        'deactivated_at' => 'datetime',
+        'score_breakdown' => 'array',
+        'score_updated_at' => 'datetime',
+        'score_locked' => 'boolean',
+    ];
+
+    protected static function booted(): void
+    {
+        // a score typed by a person (form, API, import) is a decision: the automatic score never overwrites it.
+        // The scorer writes with query-builder updates, which do not fire this event.
+        static::saving(function (Contact $c) {
+            if ($c->isDirty('score') && !$c->isDirty('score_locked') && ($c->exists || (int) $c->score !== 0)) {
+                $c->score_locked = true;
+            }
+
+            // a person put the contact back to "ativo": the automatic deactivation no longer applies
+            if ($c->exists && $c->isDirty('status') && $c->status === 'ativo' && !$c->isDirty('deactivated_reason') && $c->deactivated_reason) {
+                $c->deactivated_reason = null;
+                $c->deactivated_at = null;
+            }
+        });
+    }
+
+    public function scopeTier($query, string $tier)
+    {
+        $t = config('contacts.score.tiers');
+
+        return match ($tier) {
+            'hot' => $query->where('score', '>=', $t['hot']),
+            'warm' => $query->where('score', '>=', $t['warm'])->where('score', '<', $t['hot']),
+            'cold' => $query->where('score', '>=', $t['cold'])->where('score', '<', $t['warm']),
+            'frozen' => $query->where(fn ($w) => $w->whereNull('score')->orWhere('score', '<', $t['cold'])),
+            default => $query,
+        };
+    }
+
+    public function scoreTier(): string
+    {
+        return \App\Services\Contacts\ContactScorer::tier((int) $this->score);
+    }
+
     public function addScore($score){
         $this->score += $score;
     }

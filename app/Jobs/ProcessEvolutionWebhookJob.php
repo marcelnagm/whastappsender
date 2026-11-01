@@ -142,6 +142,14 @@ Log::info(json_encode($data));
             'updated_at' => now()
         ]);
 
+        // A receipt finally arrived: a contact deactivated for being unreachable is reachable again
+        if ($affected > 0 && in_array(strtolower($finalStatus), \App\Services\Contacts\UnresponsiveContacts::DELIVERED, true)) {
+            $contactId = WhatsappJob::where('message_id', $msgId)->value('contact_id');
+            if ($contactId) {
+                \App\Services\Contacts\UnresponsiveContacts::reactivate((int) $contactId);
+            }
+        }
+
         if ($affected === 0) {
             #Log::warning("ACK received ($statusKey) but message_id not found: $msgId");
         } elseif (config('app.debug')) {

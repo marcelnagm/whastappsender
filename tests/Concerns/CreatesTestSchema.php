@@ -69,6 +69,11 @@ trait CreatesTestSchema
             $t->integer('score')->nullable();
             $t->string('profile_url')->nullable();
             $t->unsignedBigInteger('linked_contact_id')->nullable();
+            $t->string('deactivated_reason', 40)->nullable();
+            $t->timestamp('deactivated_at')->nullable();
+            $t->json('score_breakdown')->nullable();
+            $t->timestamp('score_updated_at')->nullable();
+            $t->boolean('score_locked')->default(false);
             $t->timestamps();
         });
 

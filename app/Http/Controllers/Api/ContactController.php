@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Services\Channels\ContactLinks;
+use App\Services\Contacts\UnresponsiveContacts;
 use App\Imports\ContactsImport;
 use App\Models\Contact;
 use Illuminate\Http\Request;
@@ -23,9 +25,42 @@ class ContactController extends ApiController
                         ->orWhere('email', 'LIKE', "%{$search}%");
                 });
             })
+            ->when(in_array($request->input('tier'), ['hot', 'warm', 'cold', 'frozen'], true), fn ($q) => $q->tier($request->input('tier')))
+            ->when($request->input('status'), fn ($q, $status) => $q->where('status', $status))
+            ->when($request->input('sort') === 'score', fn ($q) => $q->orderByDesc('score'))
             ->orderBy('name', 'asc');
 
         return $this->paginated($query->paginate($perPage));
+    }
+
+    /** Contacts ordered by engagement score, with tier and what the score is made of. */
+    public function ranking(Request $request)
+    {
+        $limit = min(max((int) $request->input('limit', 20), 1), 100);
+        $tier = $request->input('tier');
+
+        $rows = $this->scopedToUser(Contact::query())
+            ->where('status', '!=', 'no-whatsapp')
+            ->when(in_array($tier, ['hot', 'warm', 'cold', 'frozen'], true), fn ($q) => $q->tier($tier))
+            ->orderByDesc('score')->orderBy('name')->limit($limit)->get()
+            ->map(fn (Contact $c) => [
+                'id' => $c->id, 'name' => $c->name, 'contact' => $c->contact, 'status' => $c->status,
+                'score' => (int) $c->score, 'tier' => $c->scoreTier(), 'score_locked' => (bool) $c->score_locked,
+                'breakdown' => $c->score_breakdown, 'score_updated_at' => optional($c->score_updated_at)->toIso8601String(),
+            ]);
+
+        return $this->success($rows);
+    }
+
+    /** Recalculates the automatic score of one contact now. */
+    public function rescore(Contact $contact)
+    {
+        $this->authorizeOwner($contact);
+        $r = app(\App\Services\Contacts\ContactScorer::class)->recalculate($contact);
+
+        return $r
+            ? $this->success(['id' => $contact->id] + $r, 'Score recalculated.')
+            : $this->success(['id' => $contact->id, 'score' => (int) $contact->score, 'score_locked' => true], 'Score is set manually; not recalculated.');
     }
 
     public function store(Request $request)
@@ -57,11 +92,69 @@ class ContactController extends ApiController
         $data = $request->validate(array_merge(Contact::$rules, [
             'email' => 'nullable|email',
             'status' => 'nullable|in:ativo,inativo,no-whatsapp',
+            'score' => 'nullable|integer|between:0,100',
+            'score_locked' => 'nullable|boolean', // false hands the score back to the automatic calculation
         ]));
 
         $contact->update($data);
 
         return $this->success($contact->fresh(), 'Contact updated.');
+    }
+
+    /** The contact with its linked channel identities (Telegram / Instagram / TikTok) and their conversations. */
+    public function channels(Contact $contact)
+    {
+        $this->authorizeOwner($contact);
+
+        $group = ContactLinks::group($contact);
+        $chats = ContactLinks::chats($contact);
+
+        return $this->success([
+            'root_id' => ContactLinks::root($contact)->id,
+            'contacts' => $group->map(fn (Contact $c) => [
+                'id' => $c->id, 'name' => $c->name, 'contact' => $c->contact,
+                'channel' => ContactLinks::channelOf($c), 'linked_contact_id' => $c->linked_contact_id,
+            ])->values(),
+            'chats' => $chats->map(fn ($c) => [
+                'id' => $c->id, 'channel' => $c->instance ? $c->instance->channelKey() : 'whatsapp',
+                'instance_id' => $c->instance_id, 'unread' => (int) $c->unread_count,
+                'last_message_at' => optional($c->last_message_at)->toIso8601String(),
+            ])->values(),
+        ]);
+    }
+
+    /** Ties a Telegram/Instagram/TikTok contact to a WhatsApp contact (either order). */
+    public function link(Request $request, Contact $contact)
+    {
+        $this->authorizeOwner($contact);
+        $data = $request->validate(['linked_contact_id' => 'required|integer']);
+        $other = $this->scopedToUser(Contact::query())->findOrFail($data['linked_contact_id']);
+
+        try {
+            ContactLinks::link($contact, $other);
+        } catch (\InvalidArgumentException $e) {
+            return $this->error($e->getMessage(), 422);
+        }
+
+        return $this->success(['group' => ContactLinks::group($contact->fresh())->pluck('id')->values()], 'Contacts linked.');
+    }
+
+    public function unlink(Contact $contact)
+    {
+        $this->authorizeOwner($contact);
+        ContactLinks::unlink($contact);
+
+        return $this->success(['id' => $contact->id, 'linked_contact_id' => $contact->fresh()->linked_contact_id], 'Contact unlinked.');
+    }
+
+    /** Runs the "messages never delivered" check for the caller's contacts (dry_run lists without deactivating). */
+    public function checkUnresponsive(Request $request)
+    {
+        $data = $request->validate(['hours' => 'nullable|integer|min:1|max:8760', 'dry_run' => 'nullable|boolean']);
+
+        $r = app(UnresponsiveContacts::class)->run($data['hours'] ?? null, $request->boolean('dry_run'), Auth::id());
+
+        return $this->success($r + ['dry_run' => $request->boolean('dry_run')]);
     }
 
     public function destroy(Contact $contact)

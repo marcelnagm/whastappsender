@@ -57,6 +57,16 @@
             <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
                 <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-bottom">
                     <h6 class="m-0 font-weight-bold text-primary">{{ __('Leads (') }}{{ $contacts->total() }})</h6>
+                    <div class="d-flex flex-wrap gap-1 align-items-center small">
+                        <span class="text-muted me-1">{{ __('Ranking') }}:</span>
+                        <a href="{{ route('contacts.index', array_merge(request()->except('tier', 'page'), ['sort' => 'score'])) }}" class="btn btn-sm {{ request('sort') === 'score' && !request('tier') ? 'btn-primary' : 'btn-outline-primary' }}">{{ __('By score') }}</a>
+                        @foreach (['hot' => ['Hot', 'danger'], 'warm' => ['Warm', 'warning'], 'cold' => ['Cold', 'info'], 'frozen' => ['Frozen', 'secondary']] as $t => $m)
+                            <a href="{{ route('contacts.index', array_merge(request()->except('page'), ['tier' => $t, 'sort' => 'score'])) }}" class="btn btn-sm {{ request('tier') === $t ? 'btn-' . $m[1] : 'btn-outline-' . $m[1] }}">{{ __($m[0]) }}</a>
+                        @endforeach
+                        @if (request('tier') || request('sort'))
+                            <a href="{{ route('contacts.index', request()->except('tier', 'sort', 'page')) }}" class="btn btn-sm btn-link">{{ __('Clear') }}</a>
+                        @endif
+                    </div>
                 </div>
 
                 @if ($message = Session::get('success'))
@@ -120,9 +130,8 @@
                                         </div>
                                     </td>
                                     <td class="text-center">
-                                        <span class="fw-bold {{ $contact->score > 50 ? 'text-success' : 'text-muted' }}">
-                                            {{ $contact->score }}
-                                        </span>
+                                        @php $tierColor = ['hot' => 'danger', 'warm' => 'warning', 'cold' => 'info', 'frozen' => 'secondary'][$contact->scoreTier()]; @endphp
+                                        <span class="badge bg-{{ $tierColor }} rounded-pill" title="{{ $contact->score_locked ? __('Set manually') : __('Automatic score') }}">{{ (int) $contact->score }}@if($contact->score_locked) <i class="bi bi-lock-fill"></i>@endif</span>
                                     </td>
                                     <td class="text-center" id="status-cell-{{ $contact->id }}">
                                         @if($contact->status === 'ativo')
@@ -130,7 +139,7 @@
                                         @elseif($contact->status === 'no-whatsapp')
                                         <span class="badge bg-danger-soft text-danger rounded-pill px-3">{{ __('No-WA') }}</span>
                                         @else
-                                        <span class="badge bg-secondary-soft text-secondary rounded-pill px-3">{{ $contact->status }}</span>
+                                        <span class="badge bg-secondary-soft text-secondary rounded-pill px-3" @if($contact->deactivated_reason) title="{{ __('Deactivated automatically: messages were never delivered') }}" @endif>{{ $contact->status }}</span>
                                         @endif
                                     </td>
                                     <td class="text-center">

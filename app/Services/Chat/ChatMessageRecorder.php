@@ -243,6 +243,11 @@ class ChatMessageRecorder
 
         if ($isNew && !$message->from_me && !$history) {
             $chat->unread_count = (int) $chat->unread_count + 1;
+
+            // the person wrote to us: no longer an unreachable contact
+            if ($chat->contact_id) {
+                \App\Services\Contacts\UnresponsiveContacts::reactivate((int) $chat->contact_id);
+            }
         }
 
         if ($chat->isDirty()) {

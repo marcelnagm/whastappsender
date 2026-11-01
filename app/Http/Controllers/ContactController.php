@@ -91,8 +91,10 @@ class ContactController extends Controller
                         ->orWhere('email', 'LIKE', "%{$search}%");
                 });
             })
+            ->when(in_array($request->input('tier'), ['hot', 'warm', 'cold', 'frozen'], true), fn ($q) => $q->tier($request->input('tier')))
+            ->when($request->input('sort') === 'score', fn ($q) => $q->orderByDesc('score'))
             ->orderBy('name', 'asc')
-            ->paginate(20); // 20 per page for usability
+            ->paginate(20)->withQueryString(); // 20 per page for usability
 
         return view('contact.index', compact('contacts'))
             ->with('i', (request()->input('page', 1) - 1) * $contacts->perPage());

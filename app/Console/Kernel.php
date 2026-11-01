@@ -40,6 +40,12 @@ class Kernel extends ConsoleKernel
         // Renewal invoices, grace period, blocking for non-payment (cheap: only touches live subscriptions)
         $schedule->command('billing:run')->hourly()->withoutOverlapping()->onOneServer();
 
+        // Stop wasting sends on numbers whose messages never arrive
+        $schedule->command('contacts:deactivate-unresponsive')->hourly()->withoutOverlapping()->onOneServer();
+
+        // Engagement score + ranking of contacts
+        $schedule->command('contacts:score')->hourly()->withoutOverlapping()->onOneServer();
+
         $schedule->command('warmup:generate')
             ->dailyAt('08:00')
             ->timezone('America/Boa_Vista') // Use local timezone for the schedule

@@ -3,6 +3,7 @@
 namespace App\Services\Api;
 
 use App\Models\Campaign;
+use App\Models\Chat;
 use App\Models\CampaignItem;
 use App\Models\Contact;
 use App\Models\Instance;
@@ -102,6 +103,7 @@ class ToolDispatcher
             'campaign' => Campaign::class,
             'campaignItem' => CampaignItem::class,
             'instance' => Instance::class,
+            'chat' => Chat::class,
             'user' => User::class,
         ];
 
@@ -114,7 +116,7 @@ class ToolDispatcher
 
         $query = $modelMap[$paramName]::query();
 
-        if (!Auth::user()->isAdmin() && in_array($paramName, ['contact', 'campaign', 'campaignItem', 'instance'])) {
+        if (!Auth::user()->isAdmin() && in_array($paramName, ['contact', 'campaign', 'campaignItem', 'instance', 'chat'])) {
             $query->where('user_id', Auth::id());
         }
 

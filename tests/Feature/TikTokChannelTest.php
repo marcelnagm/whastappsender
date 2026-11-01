@@ -214,7 +214,7 @@ class TikTokChannelTest extends TestCase
     public function test_oauth_connect_callback_reauthorize_and_ownership(): void
     {
         Http::fake(['tt.test/open/tt_user/oauth2/token/*' => Http::response(['code' => 0, 'data' => [
-            'access_token' => 'A1', 'refresh_token' => 'R1', 'expires_in' => 86400, 'refresh_token_expires_in' => 2592000, 'open_id' => 'bizX', 'display_name' => 'Minha Loja TT',
+            'access_token' => 'acc-token-secret', 'refresh_token' => 'ref-token-secret', 'expires_in' => 86400, 'refresh_token_expires_in' => 2592000, 'open_id' => 'bizX', 'display_name' => 'Minha Loja TT',
         ]])]);
 
         $r = $this->actingAs($this->user)->get(route('tiktok.connect'));
@@ -231,8 +231,8 @@ class TikTokChannelTest extends TestCase
         $this->actingAs($this->user)->get(route('tiktok.callback', ['auth_code' => 'CODE', 'state' => $q['state']]))->assertRedirect(route('tiktok.index'))->assertSessionHas('success');
         $acc = Instance::where('channel', 'tiktok')->first();
         $this->assertSame('bizX', $acc->tiktok_open_id);
-        $this->assertSame('A1', $acc->tiktok_token);
-        $this->assertNotSame('A1', $acc->getRawOriginal('tiktok_token'), 'encrypted at rest');
+        $this->assertSame('acc-token-secret', $acc->tiktok_token);
+        $this->assertNotSame('acc-token-secret', $acc->getRawOriginal('tiktok_token'), 'encrypted at rest');
         Http::assertSent(fn (Request $r) => str_contains($r->url(), 'oauth2/token') && $r['auth_code'] === 'CODE' && $r['client_secret'] === 'appsecret');
 
         // authorising the same account again renews instead of duplicating
@@ -251,7 +251,7 @@ class TikTokChannelTest extends TestCase
         $this->actingAs($this->user)->get(route('tiktok.callback', ['auth_code' => 'C', 'state' => $old]))->assertSessionHas('error');
 
         $page = $this->actingAs($this->user)->get(route('tiktok.index'))->assertOk()->assertSee('Minha Loja TT')->assertSee('https://crm.test/api/webhooks/tiktok');
-        $page->assertDontSee('A1')->assertDontSee('R1');
+        $page->assertDontSee('acc-token-secret')->assertDontSee('ref-token-secret');
         $this->assertArrayNotHasKey('tiktok_token', $acc->toArray());
         $this->assertArrayNotHasKey('tiktok_refresh_token', $acc->toArray());
 

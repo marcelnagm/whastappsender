@@ -934,5 +934,13 @@
     "Send a message through": "Enviar un mensaje por",
     "Message queued.": "Mensaje en cola de envío.",
     "reply window closed": "ventana de respuesta cerrada",
-    "No contact found.": "Ningún contacto encontrado."
+    "No contact found.": "Ningún contacto encontrado.",
+    "Deactivated automatically: messages were never delivered": "Desactivado automáticamente: los mensajes nunca fueron entregados",
+    "Only Telegram, Instagram and TikTok accounts can be renewed here.": "Aquí solo se pueden renovar cuentas de Telegram, Instagram y TikTok.",
+    "Ranking": "Ranking",
+    "By score": "Por puntuación",
+    "Clear": "Limpiar",
+    "Set manually": "Definido manualmente",
+    "Automatic score": "Puntuación automática",
+    "Set manually: the automatic score does not change it.": "Definido manualmente: la puntuación automática no lo cambia."
 }

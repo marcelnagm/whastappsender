@@ -45,6 +45,7 @@ class InstanceController extends ApiController
     public function show(Instance $instance)
     {
         $this->authorizeOwner($instance);
+        $this->whatsappOnly($instance);
 
         return $this->success([
             'instance' => $instance,
@@ -55,6 +56,7 @@ class InstanceController extends ApiController
     public function destroy(Instance $instance)
     {
         $this->authorizeOwner($instance);
+        $this->whatsappOnly($instance);
 
         WhatsappService::delete($instance->instance_name);
         $instance->delete();
@@ -65,6 +67,7 @@ class InstanceController extends ApiController
     public function qr(Instance $instance)
     {
         $this->authorizeOwner($instance);
+        $this->whatsappOnly($instance);
 
         $qr = WhatsappService::qr($instance->instance_name);
 
@@ -78,6 +81,7 @@ class InstanceController extends ApiController
     public function connection(Instance $instance)
     {
         $this->authorizeOwner($instance);
+        $this->whatsappOnly($instance);
 
         $connected = WhatsappService::isConnected($instance->instance_name);
 
@@ -96,6 +100,7 @@ class InstanceController extends ApiController
     public function toggleWarmup(Instance $instance)
     {
         $this->authorizeOwner($instance);
+        $this->whatsappOnly($instance);
 
         if ($instance->warmup != 1) {
             app(\App\Services\Billing\Entitlements::class)->authorizeFeature(Auth::user(), 'warmup');
@@ -112,11 +117,18 @@ class InstanceController extends ApiController
     public function sync(Instance $instance)
     {
         $this->authorizeOwner($instance);
+        $this->whatsappOnly($instance);
 
         \App\Jobs\SyncContactsJob::dispatch(Auth::id(), $instance->instance_name);
 
         return $this->success([
             'instance_id' => $instance->id,
         ], 'Contact sync started.');
+    }
+
+    /** Telegram / Instagram / TikTok accounts have their own endpoints (/channels). */
+    private function whatsappOnly(Instance $instance): void
+    {
+        abort_unless($instance->isWhatsapp(), 422, 'This is not a WhatsApp number. Use the /channels endpoints.');
     }
 }

@@ -24,6 +24,7 @@
 | [Instagram](#-instagram-direct) | Instagram DMs in the same omnichannel chat; AI answers through the account that received the message |
 | [TikTok](#-tiktok-business-messaging) | TikTok Business DMs in the same chat, step-by-step setup (developer app, approval, OAuth, webhook) |
 | [Channel statistics & linked contacts](#-channel-statistics--linked-contacts) | Per-channel numbers, and one person's WhatsApp / Telegram / Instagram / TikTok conversations tied together |
+| [Contact ranking & unresponsive contacts](#-contact-ranking--unresponsive-contacts) | Engagement score with tiers, and automatic deactivation of contacts whose WhatsApp messages are never delivered |
 | [Fair Send Queue](#️-fair-send-queue) | Balanced batches of 50 across users and sessions |
 | [Plans & Billing](#-plans--billing) | Freemium + 3 plans, due dates, blocking, Asaas · Efí · AbacatePay · Stone (Pagar.me) · Stripe · PagBank · Mercado Pago (Pix / card, customer chooses) |
 | [Tests](#-tests) | PHPUnit suite |
@@ -180,15 +181,41 @@ curl -X POST https://your-domain.com/api/v1/tools/chain \
 
 | Tool | Description |
 |------|-------------|
-| `list_contacts` | List contacts (search, pagination) |
+| `list_contacts` | List contacts (search, pagination, `tier`, `status`, `sort=score`) |
 | `get_contact` | Get contact by ID |
 | `create_contact` | Create a contact |
-| `update_contact` | Update a contact |
+| `update_contact` | Update a contact (`score` sets it by hand and locks it; `score_locked=false` hands it back to the automation) |
 | `delete_contact` | Delete a contact |
 | `bulk_delete_contacts` | Delete multiple contacts |
 | `bulk_update_contact_status` | Update status (`ativo`, `inativo`, `no-whatsapp`) |
 | `clear_contacts` | Delete all contacts for the current user |
 | `sync_contact_photo` | Sync profile photo from WhatsApp |
+| `get_contact_ranking` | Contacts ordered by score with tier and breakdown (`tier`, `limit`) |
+| `rescore_contact` | Recalculate one contact's automatic score now |
+| `get_contact_channels` | A contact's linked Telegram / Instagram / TikTok identities and conversations |
+| `link_contacts` / `unlink_contact` | Tie / untie a channel contact to a WhatsApp contact |
+| `check_unresponsive_contacts` | Run the "messages never delivered" deactivation for your contacts (`dry_run`, `hours`) |
+
+#### Channels (Telegram · Instagram · TikTok)
+
+| Tool | Description |
+|------|-------------|
+| `list_channels` | Connected accounts (`channel` filter) |
+| `connect_telegram_bot` | Connect a bot with its BotFather `token` |
+| `connect_instagram_account` | Connect an Instagram professional account with its access `token` |
+| `get_tiktok_connect_url` | URL the person opens in a browser to authorise TikTok (OAuth needs a browser) |
+| `renew_channel_connection` / `remove_channel_account` | Renew tokens/webhook, or disconnect (`instance_id`) |
+| `get_channel_stats` | Per-channel numbers for 7, 30 or 90 days |
+
+#### Omnichannel inbox
+
+| Tool | Description |
+|------|-------------|
+| `list_conversations` | Conversations of every channel (`channel`, `instance_id`, `unread`, `search`); `window_open` says whether a reply is still allowed |
+| `get_conversation_messages` | Messages of a conversation (`chat_id`, `before_id` for older pages) |
+| `send_conversation_message` | Send text through the channel the conversation belongs to (`chat_id`, `text`); needs the `chat` plan feature |
+| `mark_conversation_read` | Mark as read |
+| `pause_conversation_ai` | Pause / resume the AI agent in that conversation (`paused`) |
 
 #### Campaigns
 
@@ -269,7 +296,11 @@ All operations are also available as standard REST endpoints under `/api/v1/`:
 | Contacts | `GET/POST /contacts`, `GET/PUT/DELETE /contacts/{id}`, `POST /contacts/import`, `POST /contacts/bulk-delete`, etc. |
 | Campaigns | `GET/POST /campaigns`, `GET/PUT/DELETE /campaigns/{id}`, `GET /campaigns/{id}/report` |
 | Campaign Items | `GET/POST /campaign-items`, `POST /campaign-items/{id}/generate-all`, `GET /campaign-items/{id}/jobs` |
-| Instances | `GET/POST /instances`, `GET /instances/{id}/qr`, `POST /instances/{id}/sync` |
+| Instances (WhatsApp) | `GET/POST /instances`, `GET /instances/{id}/qr`, `POST /instances/{id}/sync` (Telegram/Instagram/TikTok accounts answer `422` here: use `/channels`) |
+| Contact ranking | `GET /contacts/ranking?tier=&limit=`, `POST /contacts/{id}/rescore`, `GET /contacts?tier=&status=&sort=score`, `POST /contacts/check-unresponsive` (`dry_run`, `hours`) |
+| Contact links | `GET /contacts/{id}/channels`, `POST /contacts/{id}/link` (`linked_contact_id`), `POST /contacts/{id}/unlink` |
+| Channels | `GET /channels`, `GET /channels/stats?days=`, `POST /channels/telegram`, `POST /channels/instagram`, `GET /channels/tiktok/url`, `POST /channels/{id}/renew`, `DELETE /channels/{id}` |
+| Conversations | `GET /conversations`, `GET/POST /conversations/{chat}/messages`, `POST /conversations/{chat}/read`, `POST /conversations/{chat}/ai-pause` |
 | Jobs | `POST /whatsapp-jobs/{id}/retry`, `POST /whatsapp-jobs/bulk-retry` |
 | Admin | `GET /admin/users`, `POST /admin/panic/toggle`, etc. |
 
@@ -704,6 +735,42 @@ Sending still needs the person to have written first on that channel: linking do
 
 * * *
 
+## 🎯 Contact ranking & unresponsive contacts
+
+### Unresponsive contacts (automatic deactivation)
+
+Sending to numbers that never receive the message wastes queue time and puts the account at risk. Every hour (`contacts:deactivate-unresponsive`, also runnable by hand with `--dry-run` and `--hours=`) the system looks for WhatsApp contacts whose messages stayed **sent without a delivery receipt for more than X hours** and sets them to `inativo` (reason `undelivered`, shown as a tooltip on the status badge).
+
+| Variable | Default | Meaning |
+|----------|---------|---------|
+| `CONTACT_UNDELIVERED_ENABLED` | `true` | Turns the check on/off |
+| `CONTACT_UNDELIVERED_AFTER_HOURS` | `72` | Hours without delivery before a message counts |
+| `CONTACT_UNDELIVERED_MIN_MESSAGES` | `1` | How many undelivered messages deactivate the contact |
+| `CONTACT_UNDELIVERED_LOOKBACK_DAYS` | `30` | Older messages are ignored |
+| `CONTACT_UNDELIVERED_EVIDENCE_DAYS` | `30` | The account must have received delivery/read receipts in this period |
+| `CONTACT_UNDELIVERED_REACTIVATE` | `true` | Reactivates when the contact writes or a delivery receipt finally arrives |
+
+Safeguards: accounts that never receive receipts (webhook off, receipts disabled) are skipped, so nobody is deactivated by a broken setup; contacts that wrote to you or got a delivered/read message after the first stale one are kept; only `ativo` WhatsApp contacts are touched (Telegram / Instagram / TikTok are never deactivated). Putting a contact back to `ativo` by hand clears the automatic reason. Needs `php artisan migrate`.
+
+### Score ranking
+
+Each contact has a **0-100 engagement score** (`contacts:score`, hourly, only recalculating contacts whose score is older than `CONTACT_SCORE_REFRESH_HOURS`), looking at the whole person (linked Telegram / Instagram / TikTok identities included):
+
+| Signal | Max | How |
+|--------|-----|-----|
+| Recency | 30 | last inbound message, decaying over `CONTACT_SCORE_WINDOW_DAYS` |
+| Frequency | 20 | messages received (logarithmic, so 200 messages do not drown everyone else) |
+| Responsiveness | 20 | share of our messages answered within 48h |
+| Delivery / read | 15 | delivered and read receipts |
+| Conversation | 5 | two-way conversation exists |
+| Channels | 5 | linked channels |
+| Profile | 5 | name and email filled in |
+| Penalties | up to -100 | opted out / no WhatsApp (-100), deactivated for no delivery (-40), stale undelivered messages (-8 each, max -25) |
+
+Tiers: **hot** ≥ 70, **warm** ≥ 40, **cold** ≥ 15, **frozen** below (`CONTACT_SCORE_HOT/WARM/COLD`). The contact list has ranking filters and sorting by score, and the contact page shows what the score is made of. A score typed by a person is **locked** (the automation never overwrites it); unlock with `score_locked=false`. API: `GET /contacts/ranking`, `POST /contacts/{id}/rescore`; MCP: `get_contact_ranking`, `rescore_contact`.
+
+* * *
+
 ## ⚖️ Fair Send Queue
 
 `php artisan whatsapp:queue` (scheduled hourly) used to take the oldest pending rows of **all** users, so one big campaign
@@ -870,7 +937,7 @@ In the chat header (badge icon) each user can set a name. Anything sent from the
 
 ## 🧪 Tests
 
-`vendor/bin/phpunit` (in-memory SQLite, no external services): fair queue planner and command, chat backend, Telegram, Instagram and TikTok channels (webhook secret/signature, OAuth, token refresh, inbound, AI reply through the same bot/account, reply window, settings), channel statistics and cross-channel contact links, avatar caching, billing lifecycle and plan enforcement, the Mercado Pago gateway (admin settings, Pix, card, recurrence, webhook) and the Asaas / Efí / AbacatePay / Stone (Pagar.me) / Stripe / PagBank gateways (HTTP faked).
+`vendor/bin/phpunit` (in-memory SQLite, no external services): fair queue planner and command, chat backend, Telegram, Instagram and TikTok channels (webhook secret/signature, OAuth, token refresh, inbound, AI reply through the same bot/account, reply window, settings), channel statistics and cross-channel contact links, unresponsive-contact deactivation, contact score ranking, the new channel / inbox / ranking API endpoints and MCP tools, avatar caching, billing lifecycle and plan enforcement, the Mercado Pago gateway (admin settings, Pix, card, recurrence, webhook) and the Asaas / Efí / AbacatePay / Stone (Pagar.me) / Stripe / PagBank gateways (HTTP faked).
 
 * * *
 
