@@ -114,6 +114,11 @@
               </a>
             </li>
             <li>
+              <a class="dropdown-item {{ request()->is('admin/signup-welcome*') ? 'active' : '' }}" href="{{ route('admin.welcome.edit') }}">
+                <i class="bi bi-envelope-heart me-2"></i>{{ __('Signup welcome') }}
+              </a>
+            </li>
+            <li>
               <a class="dropdown-item {{ request()->is('admin/payment-gateway*') ? 'active' : '' }}" href="{{ route('admin.gateway.edit') }}">
                 <i class="bi bi-credit-card-2-front me-2"></i>{{ __('Payment gateway') }}
               </a>

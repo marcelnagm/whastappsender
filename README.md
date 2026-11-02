@@ -26,6 +26,7 @@
 | [TikTok](#-tiktok-business-messaging) | TikTok Business DMs in the same chat, step-by-step setup (developer app, approval, OAuth, webhook) |
 | [Channel statistics & linked contacts](#-channel-statistics--linked-contacts) | Per-channel numbers, and one person's WhatsApp / Telegram / Instagram / TikTok conversations tied together |
 | [Contact ranking & unresponsive contacts](#-contact-ranking--unresponsive-contacts) | Engagement score with tiers, and automatic deactivation of contacts whose WhatsApp messages are never delivered |
+| [Signup welcome](#signup-welcome-message) | Admin chooses the campaign message sent to people who register on the site |
 | [Team & roles](#-team--roles-sub-users) | Sub-users working for the contract account (admin, approver, creator, sender, attendant, analyst) |
 | [Audience & approval](#-audience--approval-of-campaigns) | Choose the audience by score and channels; approval flow before sending |
 | [Fair Send Queue](#️-fair-send-queue) | Balanced batches across users and sessions, with plan priority |
@@ -820,6 +821,15 @@ Each contact has a **0-100 engagement score** (`contacts:score`, hourly, only re
 | Penalties | up to -100 | opted out / no WhatsApp (-100), deactivated for no delivery (-40), stale undelivered messages (-8 each, max -25) |
 
 Tiers: **hot** ≥ 70, **warm** ≥ 40, **cold** ≥ 15, **frozen** below (`CONTACT_SCORE_HOT/WARM/COLD`). The contact list has ranking filters and sorting by score, and the contact page shows what the score is made of. A score typed by a person is **locked** (the automation never overwrites it); unlock with `score_locked=false`. API: `GET /contacts/ranking`, `POST /contacts/{id}/rescore`; MCP: `get_contact_ranking`, `rescore_contact`.
+
+* * *
+
+## Signup welcome message
+
+The message sent on WhatsApp to people who register on the site is chosen by the **administrator** in **Admin > Signup welcome**: pick any campaign message from the list
+(with a preview) or **None** to turn it off. It is stored in the database (`app_settings`, run `php artisan migrate`), so it works with `config:cache` and needs no edit of `.env`.
+`WHATSAPP_MESSAGE_UP` in `.env` is only the **fallback** for installs that never saved the setting; once the admin saves a choice (even "None") the panel wins.
+The contact is created and the message queued on the `default` queue; a missing or deleted message is logged and never breaks the signup.
 
 * * *
 

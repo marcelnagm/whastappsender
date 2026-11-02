@@ -1018,5 +1018,12 @@
     "Hot": "Caliente",
     "Warm": "Templado",
     "Cold": "Frío",
-    "Frozen": "Congelado"
+    "Frozen": "Congelado",
+    "Signup welcome message saved.": "Mensaje de bienvenida del registro guardado.",
+    "Signup welcome message turned off.": "Mensaje de bienvenida del registro desactivado.",
+    "Signup welcome": "Bienvenida del registro",
+    "The message below is sent on WhatsApp to everyone who registers on the site.": "El mensaje de abajo se envía por WhatsApp a todas las personas que se registran en el sitio.",
+    "Using the value of WHATSAPP_MESSAGE_UP from .env. Save a choice here to manage it from the panel.": "Usando el valor de WHATSAPP_MESSAGE_UP del .env. Guarda una elección aquí para gestionarlo desde el panel.",
+    "None (do not send a welcome message)": "Ninguno (no enviar mensaje de bienvenida)",
+    "Preview": "Vista previa"
 }

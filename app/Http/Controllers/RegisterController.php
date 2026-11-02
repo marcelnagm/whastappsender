@@ -55,10 +55,11 @@ class RegisterController extends Controller
                 ]
             );
 
-            // 2. Environment variable check
-            $campaignItemId = env('WHATSAPP_MESSAGE_UP');
+            // 2. Message chosen by the administrator (Admin > Signup welcome); WHATSAPP_MESSAGE_UP is the fallback
+            $welcome = app(\App\Services\Settings\SignupWelcome::class);
+            $campaignItemId = $welcome->itemId();
             if (!$campaignItemId) {
-                Log::error("Follow-up aborted: WHATSAPP_MESSAGE_UP not set in .env");
+                Log::info('Signup welcome skipped: no message selected in Admin > Signup welcome.');
                 return;
             }
 

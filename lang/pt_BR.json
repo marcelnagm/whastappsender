@@ -1018,5 +1018,12 @@
     "Hot": "Quente",
     "Warm": "Morno",
     "Cold": "Frio",
-    "Frozen": "Congelado"
+    "Frozen": "Congelado",
+    "Signup welcome message saved.": "Mensagem de boas-vindas do cadastro salva.",
+    "Signup welcome message turned off.": "Mensagem de boas-vindas do cadastro desativada.",
+    "Signup welcome": "Boas-vindas do cadastro",
+    "The message below is sent on WhatsApp to everyone who registers on the site.": "A mensagem abaixo é enviada pelo WhatsApp para todos que se cadastram no site.",
+    "Using the value of WHATSAPP_MESSAGE_UP from .env. Save a choice here to manage it from the panel.": "Usando o valor de WHATSAPP_MESSAGE_UP do .env. Salve uma escolha aqui para gerenciar pelo painel.",
+    "None (do not send a welcome message)": "Nenhuma (não enviar mensagem de boas-vindas)",
+    "Preview": "Pré-visualização"
 }

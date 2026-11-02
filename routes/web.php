@@ -226,6 +226,9 @@ Route::group(['namespace' => 'App\Http\Controllers', 'middleware' => ['auth', 's
         Route::post('/billing/invoices/{invoice}/paid', [AdminBillingController::class, 'markPaid'])->name('admin.billing.paid');
         Route::post('/billing/grant', [AdminBillingController::class, 'grant'])->name('admin.billing.grant');
 
+        Route::get('/signup-welcome', [\App\Http\Controllers\AdminSignupWelcomeController::class, 'edit'])->name('admin.welcome.edit');
+        Route::post('/signup-welcome', [\App\Http\Controllers\AdminSignupWelcomeController::class, 'update'])->name('admin.welcome.update');
+
         Route::get('/payment-gateway', [\App\Http\Controllers\AdminGatewayController::class, 'edit'])->name('admin.gateway.edit');
         Route::post('/payment-gateway', [\App\Http\Controllers\AdminGatewayController::class, 'update'])->name('admin.gateway.update');
         Route::post('/payment-gateway/webhook', [\App\Http\Controllers\AdminGatewayController::class, 'registerWebhook'])->name('admin.gateway.webhook');

@@ -119,6 +119,13 @@ trait CreatesTestSchema
             $t->timestamps();
         });
 
+        Schema::create('app_settings', function (Blueprint $t) {
+            $t->id();
+            $t->string('key', 100)->unique();
+            $t->text('value')->nullable();
+            $t->timestamps();
+        });
+
         Schema::create('campaign', function (Blueprint $t) {
             $t->id();
             $t->string('name')->nullable();

@@ -35,6 +35,8 @@ return [
         'url'      => env('WHATSAPP_URL', 'localhost'),
         'port'     => env('WHATSAPP_PORT', '8080'),
         'apikey'   => env('WHATSAPP_APIKEY'),
+        // Fallback for the signup welcome message (the administrator chooses it in Admin > Signup welcome)
+        'message_up' => env('WHATSAPP_MESSAGE_UP'),
     ],
     'groq' => [
         'key' => env('GROQ_API_KEY', null),
