@@ -10,7 +10,7 @@
 > ⭐ **Cloned or using this project? Please give it a star and/or follow [@marcelnagm](https://github.com/marcelnagm).**
 > It's free, takes two seconds and is what keeps the project maintained. Thank you! 🙏
 
-**SAMA Envios** is a mission-critical communication infrastructure that merges the power of **Laravel** with the LLM of your choice (**Groq, OpenAI, Claude, Gemini, DeepSeek, Mistral, OpenRouter, Ollama or any OpenAI-compatible endpoint**). Designed for teams that demand stable bulk messaging and **Intelligent AI Customer Service** on WhatsApp, Telegram, Instagram and TikTok in one omnichannel inbox with per-channel statistics, answering through the very number, bot or account the customer wrote to.
+**SAMA Envios** is a mission-critical communication infrastructure that merges the power of **Laravel** with the LLM of your choice (**Groq, OpenAI, Claude, Gemini, DeepSeek, Mistral, OpenRouter, Ollama or any OpenAI-compatible endpoint**). Designed for teams that demand stable bulk messaging and **Intelligent AI Customer Service** on WhatsApp, Telegram, Instagram, Facebook Messenger and TikTok in one omnichannel inbox with per-channel statistics, answering through the very number, bot or account the customer wrote to.
 
 **Documentation map**
 
@@ -24,13 +24,14 @@
 | [Instagram](#-instagram-direct) | Instagram DMs in the same omnichannel chat; AI answers through the account that received the message |
 | [Facebook](#-facebook-messenger) | Facebook Page (Messenger) conversations in the same chat; replies go through the Page that received the message |
 | [TikTok](#-tiktok-business-messaging) | TikTok Business DMs in the same chat, step-by-step setup (developer app, approval, OAuth, webhook) |
-| [Channel statistics & linked contacts](#-channel-statistics--linked-contacts) | Per-channel numbers, and one person's WhatsApp / Telegram / Instagram / TikTok conversations tied together |
+| [Channel statistics & linked contacts](#-channel-statistics--linked-contacts) | Per-channel numbers, and one person's WhatsApp / Telegram / Instagram / Facebook / TikTok conversations tied together |
 | [Contact ranking & unresponsive contacts](#-contact-ranking--unresponsive-contacts) | Engagement score with tiers, and automatic deactivation of contacts whose WhatsApp messages are never delivered |
 | [Signup welcome](#signup-welcome-message) | Admin chooses the campaign message sent to people who register on the site |
 | [Team & roles](#-team--roles-sub-users) | Sub-users working for the contract account (admin, approver, creator, sender, attendant, analyst) |
 | [Audience & approval](#-audience--approval-of-campaigns) | Choose the audience by score and channels; approval flow before sending |
 | [Fair Send Queue](#️-fair-send-queue) | Balanced batches across users and sessions, with plan priority |
 | [Plans & Billing](#-plans--billing) | Freemium + 3 plans, due dates, blocking, Asaas · Efí · AbacatePay · Stone (Pagar.me) · Stripe · PagBank · Mercado Pago (Pix / card, customer chooses) |
+| [Environment variables](#-environment-variables) | Every `.env` variable, grouped by area, with what it controls and its default |
 | [Tests](#-tests) | PHPUnit suite |
 | [Installation](#️-installation--activation) | `install.sh` (local / VPS / update), `start-local.sh` (Docker infra for local dev), manual steps, production Docker (`.docker/`) |
 
@@ -389,7 +390,11 @@ The `.docker/supervisor/conf.d/laravel-worker.conf` file ships with `worker-disp
 
 | Command | Schedule | Purpose |
 |---------|----------|---------|
-| `whatsapp:queue` | Hourly (if `WHATSAPP_AUTOSEND=true`) | Dispatches pending `WhatsappJob` rows to `disparos` |
+| `whatsapp:queue` | `WHATSAPP_QUEUE_CRON` (default hourly), only if `WHATSAPP_AUTOSEND=true` | Dispatches pending `WhatsappJob` rows to `disparos` (fair queue + plan priority) |
+| `instances:health` | `INSTANCE_HEALTH_CRON` (default every 5 min) | Detects down sessions / lost webhooks / Evolution outages and alerts the owner |
+| `queue:monitor` | Every 5 min (only when `QUEUE_CONNECTION=redis`) | Alerts when a queue exceeds `QUEUE_BACKLOG_MAX` pending jobs |
+| `contacts:deactivate-unresponsive` | Hourly | Deactivates WhatsApp contacts whose messages are never delivered |
+| `contacts:score` | Hourly | Recalculates the engagement score / tier of contacts |
 | `warmup:generate` | Daily at 08:00 (`America/Boa_Vista`) | Starts cross-chip warmup conversations |
 | `billing:run` | Hourly | Moves subscriptions through trial / past due / suspended / expired and issues renewal invoices |
 
@@ -1065,6 +1070,136 @@ In the chat header (badge icon) each user can set a name. Anything sent from the
 - The chat imports the conversations Evolution already stores the first time a number is opened (and with the "Import history" button): newest chats first, up to `CHAT_HISTORY_MAX_CHATS` chats and `CHAT_HISTORY_PER_CHAT` messages each, page by page. Evolution can only return what it stored: keep `DATABASE_SAVE_DATA_HISTORIC=true` and the `MESSAGES_SET` / `MESSAGING_HISTORY_SET` webhooks on (already set in `docker-compose.local.yml` and `.docker/`). Messages from before the number was paired only exist if WhatsApp delivered them during pairing (`syncFullHistory`).
 - WhatsApp sometimes identifies a person by an opaque `…@lid` id. The app looks up the real phone (message key, CRM contact, Evolution), turns the chat into `<phone>@s.whatsapp.net`, merges it into the chat of that phone if there is one, and stores the lid on the contact. Diagnose/run an import without the queue with `php artisan chat:sync-history <id|instance_name>` (prints what Evolution returns; when it has no chat list the conversations are rebuilt from the stored messages). WhatsApp resolves phone → LID but generally **not** LID → phone, so the app learns each pair from the message key (`remoteJidAlt`), from the echo of messages it sent (chat or campaign), from CRM contacts and from Evolution, and keeps it in the `lid_mappings` table (run `php artisan migrate`). When none of these reveals the number, open the chat's info panel and use "Link to this number": the chats are merged and every later message follows. The import button lets you choose which of your numbers to import, and messages always leave through the number of the open chat. Repair existing chats with `php artisan chat:fix-lids` (`--no-http` uses local data only).
 
+## 🔧 Environment variables
+
+All variables live in `.env` (copy `.env.example`, which carries the same comments). Unless marked **required**, they are optional and the default shown applies. After changing `.env` in production run `php artisan config:clear` (or restart the workers, which cache config).
+
+### Application and server
+
+| Variable | Default | Controls |
+|---|---|---|
+| `APP_NAME` | SAMA Envios | Name in the UI, e-mails and mail sender |
+| `APP_ENV` | production | `local` zeroes the anti-ban delays and lets AI reach private hosts |
+| `APP_KEY` | — **required** | Encryption of sessions and of the API keys users save (`php artisan key:generate`) |
+| `APP_DEBUG` | false | Shows stack traces to visitors. Never `true` in production |
+| `APP_URL` | — **required** | Public https address; used to build webhook / OAuth callback URLs of every channel and payment gateway |
+| `FORCE_HTTPS` | false | Forces https links behind a TLS-terminating proxy |
+| `APP_LOCALE` | en | Default UI language (`en`, `pt_BR`, `es`) when the user has not chosen one |
+| `LOG_CHANNEL`, `LOG_LEVEL` | stack, debug | Where logs go and the minimum level recorded |
+
+### Database, cache, queue, storage, mail
+
+| Variable | Default | Controls |
+|---|---|---|
+| `DB_CONNECTION`, `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD` | mysql … | MySQL connection (with Docker the host is the service name) |
+| `QUEUE_CONNECTION` | database | Queue backend: `database` (zero setup) or `redis` (recommended in production; enables delayed jobs and `queue:monitor`) |
+| `CACHE_DRIVER` | file | Cache and locks. Use `redis` when several workers/servers share the per-number send gate |
+| `SESSION_DRIVER`, `SESSION_LIFETIME` | file, 120 | Login sessions and their duration (minutes) |
+| `BROADCAST_DRIVER` | log | Real-time broadcasting (log = off) |
+| `REDIS_CLIENT`, `REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD` | predis, redis, 6379 | Redis connection |
+| `REDIS_QUEUE_DB`, `REDIS_QUEUE`, `REDIS_QUEUE_RETRY_AFTER` | 2, default, 300 | Redis database and name of the queue; seconds before a running job is considered lost (must exceed the longest job) |
+| `FILESYSTEM_DISK` | local | Where uploads go (`local` or `s3`) |
+| `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_DEFAULT_REGION`, `AWS_BUCKET`, `AWS_ENDPOINT`, `AWS_URL`, `AWS_USE_PATH_STYLE_ENDPOINT` | MinIO | Campaign images and chat media storage; `AWS_ENDPOINT` is the internal address, `AWS_URL` the public one the browser uses |
+| `MAIL_*` | smtp / mailhog | Outgoing e-mail (instance alerts, invoices, password reset) |
+
+### WhatsApp (Evolution API)
+
+| Variable | Default | Controls |
+|---|---|---|
+| `WHATSAPP_PROTOCOL`, `WHATSAPP_URL`, `WHATSAPP_PORT` | http, evolution-api, 8081 | Where Laravel reaches Evolution (internal address) |
+| `WHATSAPP_APIKEY` | — **required** | Global Evolution key |
+| `WHATSAPP_CONTACT_TEST` | — | Number that receives the "test connection" message |
+| `WHATSAPP_MESSAGE_UP` | — | Fallback campaign id for the signup welcome; the real choice is made in **Admin → Signup welcome** |
+| `MIX_WHATSAPP_PUBLIC_URL`, `_PORT`, `_PROTOCOL` | — | Public Evolution address as the browser sees it (QR code screen) |
+
+### Send queue, pacing and priority
+
+| Variable | Default | Controls |
+|---|---|---|
+| `WHATSAPP_AUTOSEND` | off | Schedules `whatsapp:queue`; without it run the command by hand or via cron |
+| `WHATSAPP_QUEUE_CRON` | `0 * * * *` | Cron of that run |
+| `WHATSAPP_BATCH_SIZE` | 50 | Messages per batch |
+| `WHATSAPP_FAIRNESS` | session | How a batch is split: `session`, `user` or `fifo` |
+| `WHATSAPP_PRIORITY`, `WHATSAPP_PRIORITY_MODE` | true, weighted | Plan priority: `weighted` (proportional share) or `strict` (higher plans first) |
+| `WHATSAPP_INFLIGHT_WINDOW_HOURS` | 24 | How long a queued message counts as "in flight" before being counted again |
+| `WHATSAPP_PACING` | true | Enforces a pause between two messages of the same number (anti-ban) |
+| `WHATSAPP_COOLDOWN_MIN`, `_MAX` | 25 / 50 (0 in local) | Random seconds between messages of the same number |
+| `WHATSAPP_HUMANIZE_MIN`, `_MAX` | 4 / 9 (0 in local) | Random "typing" delay before each send |
+| `CAMPAIGN_CHANNEL_DELAY` | 3 | Seconds between campaign messages through Telegram / Instagram / Facebook / TikTok |
+
+### Chat (omnichannel inbox)
+
+| Variable | Default | Controls |
+|---|---|---|
+| `CHAT_POLL_CHATS_MS`, `CHAT_POLL_MESSAGES_MS` | 6000, 2500 | How often the browser refreshes the chat list / open conversation |
+| `CHAT_MAX_UPLOAD_KB` | 16384 | Largest file an attendant can upload |
+| `CHAT_PAUSE_AI_ON_REPLY` | false | AI stops answering a chat once a human replies |
+| `CHAT_SEND_READ_RECEIPTS` | true | Marks customer messages as read when the attendant replies |
+| `CHAT_SIGNATURE_SUFFIX` | `(CRM)` | Text appended to messages typed in the CRM chat |
+| `CHAT_HISTORY_MAX_CHATS`, `CHAT_HISTORY_PER_CHAT` | 200, 200 | Limits of the history import |
+
+### AI agents
+
+See the table in [AI Agents](#-ai-agents-multi-provider): `GROQ_API_KEY`, `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GEMINI_API_KEY`, `DEEPSEEK_API_KEY`, `MISTRAL_API_KEY`, `OPENROUTER_API_KEY` (platform keys), `AI_ALLOW_PRIVATE_HOSTS` (SSRF protection), `AI_TIMEOUT`, `AI_BUSINESS_TZ`, `AI_BUSINESS_START`, `AI_BUSINESS_END`.
+
+### Channels
+
+| Variable | Default | Controls |
+|---|---|---|
+| `TELEGRAM_API_URL`, `TELEGRAM_TIMEOUT`, `TELEGRAM_MAX_DOWNLOAD_BYTES` | api.telegram.org, 30, 20 MB | Bot API address (self-hosted server), timeout, largest file downloaded |
+| `INSTAGRAM_APP_SECRET`, `INSTAGRAM_VERIFY_TOKEN` | — | Webhook signature check and the verify token typed in the Meta dashboard |
+| `INSTAGRAM_API_VERSION`, `INSTAGRAM_GRAPH_URL`, `INSTAGRAM_TIMEOUT`, `INSTAGRAM_MAX_DOWNLOAD_BYTES` | v21.0 … | Graph API version/address, timeout, download limit |
+| `INSTAGRAM_WINDOW_HOURS`, `INSTAGRAM_MEDIA_LINK_MINUTES` | 24, 30 | Reply window after the customer's last message; validity of the public media link |
+| `FACEBOOK_APP_SECRET`, `FACEBOOK_VERIFY_TOKEN` | Instagram's | Same as Instagram; default to the Instagram values (one Meta app can serve both) |
+| `FACEBOOK_API_VERSION`, `FACEBOOK_GRAPH_URL`, `FACEBOOK_WINDOW_HOURS`, `FACEBOOK_TIMEOUT`, `FACEBOOK_MAX_DOWNLOAD_BYTES` | v21.0, 24 h … | Same meaning as Instagram |
+| `TIKTOK_APP_ID`, `TIKTOK_APP_SECRET` | — | Developer-portal app credentials (OAuth and webhook signature) |
+| `TIKTOK_WINDOW_HOURS`, `TIKTOK_SIGNATURE_TOLERANCE`, `TIKTOK_TIMEOUT`, `TIKTOK_MAX_DOWNLOAD_BYTES` | 48, 300 s, 30, 25 MB | Reply window, accepted clock skew on signatures, timeout, download limit |
+| `TIKTOK_API_URL`, `TIKTOK_AUTH_URL`, `TIKTOK_PATH_SEND`, `_TOKEN`, `_REFRESH`, `_MESSAGES`, `_UPLOAD`, `_DOWNLOAD`, `_WEBHOOK` | TikTok defaults | Endpoint overrides, only if the portal shows different ones for your API version |
+
+### Contacts: score and unresponsive deactivation
+
+| Variable | Default | Controls |
+|---|---|---|
+| `CONTACT_UNDELIVERED_ENABLED` | true | Turns automatic deactivation on/off |
+| `CONTACT_UNDELIVERED_AFTER_HOURS` | 72 | Hours a message may stay "sent" without a receipt before counting as undelivered |
+| `CONTACT_UNDELIVERED_MIN_MESSAGES` | 1 | Undelivered messages needed to deactivate |
+| `CONTACT_UNDELIVERED_LOOKBACK_DAYS`, `_EVIDENCE_DAYS` | 30, 30 | Period inspected, and period searched for signs of life (replies, receipts) |
+| `CONTACT_UNDELIVERED_REACTIVATE` | true | Reactivates when the contact writes or a receipt arrives |
+| `CONTACT_SCORE_ENABLED` | true | Turns the score on/off |
+| `CONTACT_SCORE_WINDOW_DAYS`, `CONTACT_SCORE_REFRESH_HOURS` | 90, 24 | Activity window and recalculation interval |
+| `CONTACT_SCORE_HOT`, `_WARM`, `_COLD` | 70, 40, 15 | Tier thresholds (below cold = frozen) |
+
+### Plans and billing
+
+| Variable | Default | Controls |
+|---|---|---|
+| `BILLING_ENABLED` | false | `false` = no limits or blocking; `true` = plans apply |
+| `BILLING_CURRENCY` | BRL | Currency of plans and invoices |
+| `BILLING_TRIAL_DAYS` | 7 | Free trial of paid plans |
+| `BILLING_INVOICE_DAYS_BEFORE` | 5 | Days before the due date that the renewal invoice is issued |
+| `BILLING_GRACE_DAYS` | 3 | Days after the due date before the account turns read-only |
+| `BILLING_SUSPENSION_DAYS` | 30 | Days read-only before suspension |
+| `BILLING_PENDING_DAYS` | 3 | A paid plan without trial must be paid within N days or the request expires |
+
+Gateway credentials (Asaas, Efí, AbacatePay, Stone, Stripe, PagBank, Mercado Pago) are **not** in `.env`: they are entered in **Admin → Payment gateway** and stored encrypted.
+
+### Alerts and monitoring
+
+| Variable | Default | Controls |
+|---|---|---|
+| `INSTANCE_ALERT_AFTER_MINUTES` | 3 | Minutes a session may stay down before the owner is alerted |
+| `INSTANCE_FAILURE_THRESHOLD` | 3 | Consecutive failed sends that mark a session as down |
+| `INSTANCE_HEALTH_CRON` | `*/5 * * * *` | Cron of `instances:health` |
+| `INSTANCE_REALERT_AFTER_HOURS` | 12 | Repeats the alert if the problem persists |
+| `INSTANCE_RECENT_SEND_HOURS` | 24 | Only sessions that sent something in this period are monitored |
+| `QUEUE_BACKLOG_MAX` | 500 | Pending jobs in a queue that trigger an alert (Redis only) |
+
+### Debug flags
+
+`DEBUG_WEBHOOK_STATUS`, `AI_DEBUG_FLOW`, `AI_DEBUG_WEBHOOK`, `DEBUG_WHATSAPP_QR` (all `false`): write detailed traces of Evolution status webhooks, AI decisions, AI webhooks and QR code responses to the log. Use briefly while diagnosing; they are verbose.
+
+> Variables not listed here (Telescope, Memcached, Mailgun, Postmark, Pusher, SQS, DynamoDB, session cookie options…) are standard Laravel and documented in the [Laravel docs](https://laravel.com/docs/9.x/configuration).
+
 ## 🧪 Tests
 
 `vendor/bin/phpunit` (in-memory SQLite, no external services): fair queue planner and command, chat backend, Telegram, Instagram and TikTok channels (webhook secret/signature, OAuth, token refresh, inbound, AI reply through the same bot/account, reply window, settings), channel statistics and cross-channel contact links, unresponsive-contact deactivation, contact score ranking, Facebook Messenger, team roles and approval, audience by score and channel, plan queue priority, the new channel / inbox / ranking API endpoints and MCP tools, avatar caching, billing lifecycle and plan enforcement, the Mercado Pago gateway (admin settings, Pix, card, recurrence, webhook) and the Asaas / Efí / AbacatePay / Stone (Pagar.me) / Stripe / PagBank gateways (HTTP faked).
@@ -1084,6 +1219,12 @@ In the chat header (badge icon) each user can set a name. Anything sent from the
 * ✅ **Fair Send Queue:** every batch of 50 messages is balanced across users and sessions, so no campaign starves the others.
 * ✅ **Plans & Billing:** freemium + 3 plans, trial, due dates, grace period and read-only blocking for non-payment.
 * ✅ **Payments (Asaas, Efí, AbacatePay, Stone, Stripe, PagBank, Mercado Pago):** Pix and credit card, one-time or automatic renewal, several providers at once, configured from the admin area.
+* ✅ **Omnichannel inbox:** WhatsApp, Telegram, Instagram, Facebook Messenger and TikTok in one chat, with per-channel statistics and linked contacts.
+* ✅ **Team & roles:** sub-users (admin, approver, creator, sender, attendant, analyst) working for the contract account.
+* ✅ **Audience & approval:** pick the audience by score tier and channels, and require approval before a campaign is sent.
+* ✅ **Plan priority queue:** higher plans get a larger share of every batch (weighted or strict), with no extra storage.
+* ✅ **Contact score & unresponsive contacts:** 0-100 engagement ranking and automatic deactivation of numbers that never receive messages.
+* ✅ **Signup welcome:** the admin chooses the campaign message sent to people who register.
 * ✅ **Audit Logs:** Full history of every AI interaction and every broadcast attempt.
 
 ---
@@ -1091,7 +1232,9 @@ In the chat header (badge icon) each user can set a name. Anything sent from the
 ## 💻 Technical Stack
 
 * **Backend:** Laravel 9 (Clean Code Architecture)
-* **AI Engine:** GROQ Cloud API (LPU Inference for ultra-low latency)
+* **AI Engine:** multi-provider (Groq, OpenAI, Claude, Gemini, DeepSeek, Mistral, OpenRouter, Ollama, custom OpenAI-compatible)
+* **Channels:** Evolution API (WhatsApp), Telegram Bot API, Instagram / Facebook Graph API, TikTok Business Messaging
+* **Queues / cache:** database or Redis (Predis)
 * **Agent API:** Laravel Sanctum + OpenAI Functions-compatible Tool Registry
 * **Frontend:** Bootstrap & Blade Templates
 * **API Bridge:** Optimized for Evolution API
@@ -1308,7 +1451,7 @@ exit
 |---------|-------|---------|
 | `worker-default` | `default` | Webhooks, campaign job generation, welcome flows |
 | `worker-disparos` | `disparos` | Bulk sends + AI replies |
-| `laravel-schedule` | — | `schedule:work` (autosend + `warmup:generate`) |
+| `laravel-schedule` | — | `schedule:work` (autosend, `warmup:generate`, `billing:run`, `instances:health`, `queue:monitor`, contact score / deactivation) |
 
 Add `worker-warmup` for the `warmup` queue when running chip maturation (see [Warmup Model](#2-warmup-model)).
 
@@ -1362,6 +1505,7 @@ All data is stored under `.docker/data/`. Back up these folders before redeployi
 * 📂 **Source_Code:** Fully modularized and documented Laravel source code.
 * 📂 **`.docker/`:** Production Docker stack with Supervisor configs for workers and scheduler.
 * 📂 **Architecture:** Queue isolation (`default` / `disparos` / `warmup`) + bilateral Warmup model.
+* 📂 **`.env.example`:** every variable commented with the aspect it controls (also in [Environment variables](#-environment-variables)).
 * 📂 **Tool Call API:** `app/Services/Api/ToolRegistry.php` — tool definitions for AI agents.
 
 ---
