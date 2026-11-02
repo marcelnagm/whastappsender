@@ -85,7 +85,23 @@ class CampaignItem extends Model
 
     protected $casts = [
         'welcome_enabled' => 'boolean',
+        'audience' => 'array',
+        'approved_at' => 'datetime',
+        'launched_at' => 'datetime',
     ];
+
+    protected static function booted(): void
+    {
+        // what was reviewed must be what is sent: changing the message or the media takes away the approval
+        static::saving(function (CampaignItem $item) {
+            if ($item->exists && $item->isDirty(['text', 'image']) && !$item->isDirty('approval_status')
+                && in_array($item->approval_status, ['pending', 'approved'], true)) {
+                $item->approval_status = null;
+                $item->approved_by = null;
+                $item->approved_at = null;
+            }
+        });
+    }
 
 
     /**

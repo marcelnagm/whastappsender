@@ -130,9 +130,10 @@ class envioQueue extends Command
         $names = \App\Models\User::whereIn('id', array_column($rows, 'user_id'))->pluck('name', 'id');
 
         $this->table(
-            ['User', 'Sessions', 'Pending', 'Already queued', 'Selected', 'Per session'],
+            ['User', 'Priority', 'Sessions', 'Pending', 'Already queued', 'Selected', 'Per session'],
             array_map(fn ($r) => [
                 ($names[$r['user_id']] ?? '?') . " (#{$r['user_id']})",
+                $r['priority'] ?? 1,
                 $r['sessions'],
                 $r['pending'],
                 $r['inflight'],

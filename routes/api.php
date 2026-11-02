@@ -3,7 +3,9 @@
 use App\Http\Controllers\Api\Admin\PanicController as AdminPanicController;
 use App\Http\Controllers\Api\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\ApprovalController as ApiApprovalController;
 use App\Http\Controllers\Api\CampaignController;
+use App\Http\Controllers\Api\TeamController as ApiTeamController;
 use App\Http\Controllers\Api\ChannelController;
 use App\Http\Controllers\Api\ConversationController;
 use App\Http\Controllers\Api\CampaignItemController;
@@ -89,6 +91,11 @@ Route::prefix('v1')->group(function () {
         Route::delete('/campaign-items/{campaignItem}', [CampaignItemController::class, 'destroy']);
         Route::post('/campaign-items/{campaignItem}/generate-test', [CampaignItemController::class, 'generateTest']);
         Route::post('/campaign-items/{campaignItem}/generate-all', [CampaignItemController::class, 'generateAll']);
+        Route::get('/approvals', [ApiApprovalController::class, 'pending']);
+        Route::post('/campaign-items/{campaignItem}/audience', [ApiApprovalController::class, 'audience']);
+        Route::post('/campaign-items/{campaignItem}/submit', [ApiApprovalController::class, 'submit']);
+        Route::post('/campaign-items/{campaignItem}/approve', [ApiApprovalController::class, 'approve']);
+        Route::post('/campaign-items/{campaignItem}/reject', [ApiApprovalController::class, 'reject']);
         Route::get('/campaign-items/{campaignItemId}/jobs', [WhatsappJobController::class, 'index']);
 
         // WhatsApp Jobs
@@ -124,6 +131,12 @@ Route::prefix('v1')->group(function () {
             Route::post('/conversations/{chat}/read', [ConversationController::class, 'markRead']);
             Route::post('/conversations/{chat}/ai-pause', [ConversationController::class, 'aiPause']);
         });
+
+        // Team (sub-users with roles)
+        Route::get('/team', [ApiTeamController::class, 'index']);
+        Route::post('/team', [ApiTeamController::class, 'store']);
+        Route::put('/team/{member}', [ApiTeamController::class, 'update'])->whereNumber('member');
+        Route::delete('/team/{member}', [ApiTeamController::class, 'destroy'])->whereNumber('member');
 
         // Notifications
         Route::get('/notifications', [NotificationController::class, 'index']);

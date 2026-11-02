@@ -38,6 +38,15 @@ class ToolDispatcher
             ], 403);
         }
 
+        // team members: only the tools their role allows (anything not listed is closed)
+        $team = app(\App\Services\Team\TeamContext::class);
+        if ($team->isMember()) {
+            $needed = \App\Services\Team\TeamRoles::requiredForTool($toolName);
+            if ($needed === null || ($needed !== 'any' && !$team->can($needed))) {
+                return response()->json(['success' => false, 'message' => 'Your role does not allow this tool.'], 403);
+            }
+        }
+
         $handler = $handlers[$toolName];
         $controllerClass = $handler[0];
         $method = $handler[1];

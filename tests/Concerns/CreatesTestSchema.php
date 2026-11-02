@@ -21,6 +21,8 @@ trait CreatesTestSchema
             $t->string('username')->nullable();
             $t->string('password')->nullable();
             $t->string('role')->nullable();
+            $t->unsignedBigInteger('parent_user_id')->nullable();
+            $t->string('team_role', 20)->nullable();
             $t->boolean('active')->default(true);
             $t->boolean('ai_enabled')->default(false);
             $t->string('ai_mode')->default('off');
@@ -66,7 +68,7 @@ trait CreatesTestSchema
             $t->string('contact')->nullable();
             $t->string('email')->nullable();
             $t->unsignedBigInteger('user_id')->nullable();
-            $t->boolean('ignore_me')->default(false);
+            $t->unsignedInteger('ignore_me')->nullable(); // as in production: null = may be messaged, 1 = opted out
             $t->string('lid')->nullable();
             $t->string('status')->nullable();
             $t->integer('score')->nullable();
@@ -106,6 +108,32 @@ trait CreatesTestSchema
             $t->unsignedBigInteger('user_id')->nullable();
             $t->unsignedBigInteger('campaign_id')->nullable();
             $t->boolean('welcome_enabled')->default(false);
+            $t->string('approval_status', 20)->nullable();
+            $t->unsignedBigInteger('submitted_by')->nullable();
+            $t->unsignedBigInteger('approved_by')->nullable();
+            $t->timestamp('approved_at')->nullable();
+            $t->text('approval_note')->nullable();
+            $t->json('audience')->nullable();
+            $t->unsignedInteger('audience_count')->nullable();
+            $t->timestamp('launched_at')->nullable();
+            $t->timestamps();
+        });
+
+        Schema::create('campaign', function (Blueprint $t) {
+            $t->id();
+            $t->string('name')->nullable();
+            $t->unsignedBigInteger('user_id')->nullable();
+            $t->timestamps();
+        });
+
+        Schema::create('personal_access_tokens', function (Blueprint $t) {
+            $t->id();
+            $t->morphs('tokenable');
+            $t->string('name');
+            $t->string('token', 64)->unique();
+            $t->text('abilities')->nullable();
+            $t->timestamp('last_used_at')->nullable();
+            $t->timestamp('expires_at')->nullable();
             $t->timestamps();
         });
 

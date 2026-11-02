@@ -120,16 +120,24 @@ class CampaignItemController extends Controller
 
     public function generateAll($id)
     {
-        $campaignItem = CampaignItem::select('id', 'user_id', 'name')->findOrFail($id);
+        $campaignItem = CampaignItem::select('id', 'user_id', 'name', 'approval_status', 'audience', 'audience_count')->findOrFail($id);
+        abort_unless((int) $campaignItem->user_id === (int) Auth::id() || Auth::user()->isAdmin(), 403);
 
-        // 1. Count eligible contacts (single query, faster than pluck()->count())
-        $totalContatos = Contact::where('user_id', $campaignItem->user_id)
-            ->whereNull('ignore_me') // Only mined / validated leads
-            ->count();
+        $approval = app(\App\Services\Campaigns\CampaignApproval::class);
+        if ($blocked = $approval->launchBlocker($campaignItem)) {
+            return redirect()->back()->with('error', $blocked);
+        }
+
+        // 1. Count eligible contacts: the audience chosen for this message, or everyone when none was chosen (single query)
+        $totalContatos = $campaignItem->audience
+            ? app(\App\Services\Campaigns\CampaignAudience::class)->count((int) $campaignItem->user_id, $campaignItem->audience)['total']
+            : Contact::where('user_id', $campaignItem->user_id)->whereNull('ignore_me')->count();
 
         if ($totalContatos === 0) {
             return redirect()->back()->with('error', __('No validated contacts found for this user.'));
         }
+
+        $approval->markLaunched($campaignItem);
 
         // 2. Async job on default queue to materialize send rows
         GenerateCampaignItemJobsJob::dispatch((int) $id)->onQueue('default');

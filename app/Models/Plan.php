@@ -36,10 +36,22 @@ class Plan extends Model
         $limits = $this->limits ?? [];
 
         if (!array_key_exists($key, $limits)) {
+            // plans saved before a limit existed fall back to the config definition of the same plan
+            $configured = config("billing.plans.{$this->slug}.limits", []);
+            if (array_key_exists($key, $configured)) {
+                return $configured[$key] === null ? null : (int) $configured[$key];
+            }
+
             return 0; // unknown limits are closed, not open
         }
 
         return $limits[$key] === null ? null : (int) $limits[$key];
+    }
+
+    /** Weight of the plan in the shared send queue (higher = bigger share of each batch). Never below 1. */
+    public function queueWeight(): int
+    {
+        return max(1, (int) $this->limit('queue_priority'));
     }
 
     public function priceFor(string $cycle): int
@@ -78,6 +90,8 @@ class Plan extends Model
             'contacts' => __('Contacts'),
             'messages_per_month' => __('Messages per month'),
             'ai_replies_per_month' => __('AI replies per month'),
+            'team_members' => __('Team members'),
+            'queue_priority' => __('Send queue priority'),
         ];
     }
 

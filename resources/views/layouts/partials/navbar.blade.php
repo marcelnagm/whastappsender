@@ -19,47 +19,83 @@
             <i class="bi bi-speedometer2 me-1"></i> {{ __('Dashboard') }}
           </a>
         </li>
+        @teamcan('channels')
         <li class="nav-item">
           <a href="/instances" class="nav-link text-white"><i class="bi bi-whatsapp me-1"></i> {{ __('Whatsapp') }}</a>
         </li>
+        @endteamcan
+        @teamcan('channels')
         <li class="nav-item">
           <a href="{{ route('telegram.index') }}" class="nav-link {{ request()->is('telegram*') ? 'active text-secondary' : 'text-white' }}"><i class="bi bi-telegram me-1"></i> {{ __('Telegram') }}</a>
         </li>
+        @endteamcan
+        @teamcan('channels')
         <li class="nav-item">
           <a href="{{ route('tiktok.index') }}" class="nav-link {{ request()->is('tiktok*') ? 'active text-secondary' : 'text-white' }}"><i class="bi bi-tiktok me-1"></i> {{ __('TikTok') }}</a>
         </li>
+        @endteamcan
+        @teamcan('channels')
         <li class="nav-item">
           <a href="{{ route('instagram.index') }}" class="nav-link {{ request()->is('instagram*') ? 'active text-secondary' : 'text-white' }}"><i class="bi bi-instagram me-1"></i> {{ __('Instagram') }}</a>
         </li>
+        @endteamcan
+        @teamcan('channels')
         <li class="nav-item">
           <a href="{{ route('facebook.index') }}" class="nav-link {{ request()->is('facebook*') ? 'active text-secondary' : 'text-white' }}"><i class="bi bi-facebook me-1"></i> {{ __('Facebook') }}</a>
         </li>
+        @endteamcan
+        @teamcan('chat')
         <li class="nav-item">
           <a href="{{ route('chat.index') }}" class="nav-link {{ request()->is('chat*') ? 'active text-secondary' : 'text-white' }}"><i class="bi bi-chat-dots me-1"></i> {{ __('Chat') }}</a>
         </li>
+        @endteamcan
+        @teamcan('reports')
         <li class="nav-item">
           <a href="{{ route('stats.index') }}" class="nav-link {{ request()->is('stats*') ? 'active text-secondary' : 'text-white' }}"><i class="bi bi-bar-chart-line me-1"></i> {{ __('Statistics') }}</a>
         </li>
+        @endteamcan
+        @teamcan('ai')
         <li class="nav-item">
           <a href="{{ route('ai.index') }}" class="nav-link {{ request()->is('ai*') ? 'active text-secondary' : 'text-white' }}"><i class="bi bi-robot me-1"></i> {{ __('AI') }}</a>
         </li>
+        @endteamcan
+        @teamcan('campaigns.view')
         <li class="nav-item">
           <a href="/campaigns" class="nav-link text-white"><i class="bi bi-megaphone me-1"></i> {{ __('Campaign') }}</a>
         </li>
+        @endteamcan
+        @teamcan('contacts.view')
         <li class="nav-item">
           <a href="/contacts" class="nav-link text-white"><i class="bi bi-people me-1"></i> {{ __('Contacts') }}</a>
         </li>
+        @endteamcan
+        @teamcan('campaigns.view')
         <li class="nav-item">
           <a href="{{route('campaign-items.index')}}" class="nav-link text-white"><i class="bi bi-list-check me-1"></i> {{ __('Items') }}</a>
         </li>
+        @endteamcan
+        @teamcan('campaigns.approve')
+        <li class="nav-item">
+          <a href="{{ route('approvals.index') }}" class="nav-link {{ request()->is('approvals*') ? 'active text-secondary' : 'text-white' }}"><i class="bi bi-check2-square me-1"></i> {{ __('Approvals') }}</a>
+        </li>
+        @endteamcan
+        @teamcan('team')
+        <li class="nav-item">
+          <a href="{{ route('team.index') }}" class="nav-link {{ request()->is('team*') ? 'active text-secondary' : 'text-white' }}"><i class="bi bi-people-fill me-1"></i> {{ __('Team') }}</a>
+        </li>
+        @endteamcan
+        @teamcan('owner')
         <li class="nav-item">
           <a href="{{ route('billing.index') }}" class="nav-link {{ request()->is('billing*') ? 'active text-secondary' : 'text-white' }}"><i class="bi bi-credit-card me-1"></i> {{ __('Plan') }}</a>
         </li>
+        @endteamcan
+        @teamcan('owner')
         <li class="nav-item">
           <a href="{{ route('profile.edit') }}" class="nav-link {{ request()->is('me/profile') ? 'active text-secondary' : 'text-white' }}">
             <i class="bi bi-person-lines-fill me-1"></i> {{ __('My Profile') }}
           </a>
         </li>
+        @endteamcan
 
         @if(Auth::user()->role === 'admin')
         <li class="nav-item dropdown">

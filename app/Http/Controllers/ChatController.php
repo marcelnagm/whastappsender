@@ -53,7 +53,7 @@ class ChatController extends Controller
             SyncChatHistoryJob::dispatch($current->id)->onQueue('default');
         }
 
-        $signature = ChatSignature::normalize($request->user()->chat_signature);
+        $signature = ChatSignature::normalize(\App\Services\Team\TeamContext::actor($request)->chat_signature);
 
         return view('chat.index', compact('instances', 'current', 'signature'));
     }
@@ -177,7 +177,7 @@ class ChatController extends Controller
         $data = $request->validate(['name' => 'nullable|string|max:200']);
         $name = ChatSignature::normalize($data['name'] ?? null);
 
-        $request->user()->forceFill(['chat_signature' => $name])->save();
+        \App\Services\Team\TeamContext::actor($request)->forceFill(['chat_signature' => $name])->save();
 
         return response()->json([
             'name' => $name,
@@ -279,7 +279,7 @@ class ChatController extends Controller
             return response()->json(['message' => __('Type a message')], 422);
         }
 
-        $signature = $request->user()->chat_signature;
+        $signature = \App\Services\Team\TeamContext::actor($request)->chat_signature;
 
         $attributes = [
             'chat_id' => $chat->id,

@@ -141,6 +141,46 @@ class ToolRegistry
                 'paused' => ['type' => 'boolean'],
             ], ['chat_id', 'paused']),
 
+            // Approval, audience and team
+            self::tool('preview_campaign_audience', 'How many contacts a campaign message would reach, by score (tiers / min_score / max_score) and channels. save=true stores it on the message.', [
+                'campaign_item_id' => ['type' => 'integer'],
+                'tiers' => ['type' => 'array', 'items' => ['type' => 'string', 'enum' => ['hot', 'warm', 'cold', 'frozen']]],
+                'min_score' => ['type' => 'integer'],
+                'max_score' => ['type' => 'integer'],
+                'channels' => ['type' => 'array', 'items' => ['type' => 'string', 'enum' => ['whatsapp', 'telegram', 'instagram', 'facebook', 'tiktok']]],
+                'save' => ['type' => 'boolean'],
+            ], ['campaign_item_id']),
+            self::tool('submit_campaign_item_for_approval', 'Send a campaign message to the approvers (optionally suggesting the audience).', [
+                'campaign_item_id' => ['type' => 'integer'],
+                'tiers' => ['type' => 'array', 'items' => ['type' => 'string']],
+                'channels' => ['type' => 'array', 'items' => ['type' => 'string']],
+            ], ['campaign_item_id']),
+            self::tool('list_pending_approvals', 'Campaign messages waiting for approval.'),
+            self::tool('approve_campaign_item', 'Approve a campaign message with its audience (score + channels). Without audience fields the saved audience is used.', [
+                'campaign_item_id' => ['type' => 'integer'],
+                'tiers' => ['type' => 'array', 'items' => ['type' => 'string']],
+                'min_score' => ['type' => 'integer'],
+                'max_score' => ['type' => 'integer'],
+                'channels' => ['type' => 'array', 'items' => ['type' => 'string']],
+                'note' => ['type' => 'string'],
+            ], ['campaign_item_id']),
+            self::tool('reject_campaign_item', 'Reject a campaign message.', [
+                'campaign_item_id' => ['type' => 'integer'],
+                'note' => ['type' => 'string'],
+            ], ['campaign_item_id']),
+            self::tool('list_team_members', 'Sub-users of the account and the available roles (admin, approver, creator, sender, agent, analyst).'),
+            self::tool('add_team_member', 'Add a sub-user with a role.', [
+                'name' => ['type' => 'string'], 'email' => ['type' => 'string'], 'password' => ['type' => 'string'],
+                'role' => ['type' => 'string', 'enum' => ['admin', 'approver', 'creator', 'sender', 'agent', 'analyst']],
+            ], ['name', 'email', 'password', 'role']),
+            self::tool('update_team_member', 'Change a sub-user (role, active, name, password).', [
+                'member_id' => ['type' => 'integer'], 'name' => ['type' => 'string'], 'password' => ['type' => 'string'],
+                'role' => ['type' => 'string', 'enum' => ['admin', 'approver', 'creator', 'sender', 'agent', 'analyst']], 'active' => ['type' => 'boolean'],
+            ], ['member_id']),
+            self::tool('remove_team_member', 'Remove a sub-user.', [
+                'member_id' => ['type' => 'integer'],
+            ], ['member_id']),
+
             // Campaigns
             self::tool('list_campaigns', 'List campaigns.', [
                 'page' => ['type' => 'integer'],
@@ -299,6 +339,16 @@ class ToolRegistry
             'send_conversation_message' => [\App\Http\Controllers\Api\ConversationController::class, 'send', 'chat_id' => 'chat'],
             'mark_conversation_read' => [\App\Http\Controllers\Api\ConversationController::class, 'markRead', 'chat_id' => 'chat'],
             'pause_conversation_ai' => [\App\Http\Controllers\Api\ConversationController::class, 'aiPause', 'chat_id' => 'chat'],
+
+            'preview_campaign_audience' => [\App\Http\Controllers\Api\ApprovalController::class, 'audience', 'campaign_item_id' => 'campaignItem'],
+            'submit_campaign_item_for_approval' => [\App\Http\Controllers\Api\ApprovalController::class, 'submit', 'campaign_item_id' => 'campaignItem'],
+            'list_pending_approvals' => [\App\Http\Controllers\Api\ApprovalController::class, 'pending'],
+            'approve_campaign_item' => [\App\Http\Controllers\Api\ApprovalController::class, 'approve', 'campaign_item_id' => 'campaignItem'],
+            'reject_campaign_item' => [\App\Http\Controllers\Api\ApprovalController::class, 'reject', 'campaign_item_id' => 'campaignItem'],
+            'list_team_members' => [\App\Http\Controllers\Api\TeamController::class, 'index'],
+            'add_team_member' => [\App\Http\Controllers\Api\TeamController::class, 'store'],
+            'update_team_member' => [\App\Http\Controllers\Api\TeamController::class, 'update', 'member_id' => 'member'],
+            'remove_team_member' => [\App\Http\Controllers\Api\TeamController::class, 'destroy', 'member_id' => 'member'],
 
             'list_campaigns' => [\App\Http\Controllers\Api\CampaignController::class, 'index'],
             'get_campaign' => [\App\Http\Controllers\Api\CampaignController::class, 'show', 'campaign_id' => 'campaign'],

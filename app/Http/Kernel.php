@@ -34,11 +34,14 @@ class Kernel extends HttpKernel
             \Illuminate\View\Middleware\ShareErrorsFromSession::class,
             \App\Http\Middleware\VerifyCsrfToken::class,
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
+            // team members continue as the account owner, limited by their role
+            \App\Http\Middleware\ResolveTeamContext::class . ':web',
         ],
 
         'api' => [
             'throttle:api',
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
+            \App\Http\Middleware\ResolveTeamContext::class . ':sanctum',
         ],
     ];
 

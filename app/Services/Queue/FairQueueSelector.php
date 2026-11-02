@@ -89,6 +89,7 @@ class FairQueueSelector
                 'sessions' => count($u['sessions']),
                 'pending' => $u['pending'],
                 'inflight' => $u['inflight'],
+                'priority' => $u['priority'] ?? 1,
                 'selected' => count($picks),
                 'per_session' => array_count_values($picks),
             ];
@@ -168,10 +169,28 @@ class FairQueueSelector
                 'oldest_id' => (int) $row->oldest_id,
                 'inflight' => $inflight,
                 'sessions' => $userSessions,
+                'priority' => $this->priorityOf($owner),
             ];
         }
 
-        return ['users' => $users, 'picks' => $this->planner->allocate($users, $batchSize, $mode)];
+        return ['users' => $users, 'picks' => $this->planner->allocate($users, $batchSize, $mode, (string) config('whatsapp_queue.priority.mode', FairBatchPlanner::PRIORITY_WEIGHTED))];
+    }
+
+    /**
+     * Weight of the user's plan in the shared queue. Computed here from the plan at selection time, so it needs no
+     * column on the (millions of) job rows and a plan change applies to the messages already waiting.
+     */
+    private function priorityOf(?User $owner): int
+    {
+        if (!$owner || !config('whatsapp_queue.priority.enabled', true) || !$this->entitlements->enabled()) {
+            return 1;
+        }
+
+        if ($this->entitlements->isUnlimited($owner)) { // administrators: the highest weight of any plan
+            return max(1, ...array_map(fn ($p) => (int) ($p['limits']['queue_priority'] ?? 1), array_values((array) config('billing.plans', []))));
+        }
+
+        return $this->entitlements->plan($owner)->queueWeight();
     }
 
     /** Same eligibility rule the command always used. */

@@ -144,12 +144,25 @@
                                         </button>
                                         <ul class="dropdown-menu dropdown-menu-end shadow border-0 p-2" style="border-radius: 12px; z-index: 9999;">
                                             <li><h6 class="dropdown-header text-uppercase x-small fw-bold">{{ __('Processing') }}</h6></li>
+                                            @if($campaignItem->approval_status)
+                                            <li><span class="dropdown-item-text small"><span class="badge bg-{{ ['pending' => 'warning text-dark', 'approved' => 'success', 'launched' => 'primary', 'rejected' => 'danger'][$campaignItem->approval_status] ?? 'secondary' }}">{{ __(ucfirst($campaignItem->approval_status)) }}</span></span></li>
+                                            @endif
+                                            @teamcan('campaigns.manage')
+                                            <li><form action="{{ route('campaign-items.submit',$campaignItem->id) }}" method="POST">@csrf<button class="dropdown-item rounded-2 py-2"><i class="bi bi-send-exclamation me-2 text-muted"></i> {{ __('Submit for approval') }}</button></form></li>
+                                            @endteamcan
+                                            @teamcan(['campaigns.approve'])
+                                            <li><a class="dropdown-item rounded-2 py-2" href="{{ route('approvals.show',$campaignItem->id) }}"><i class="bi bi-bullseye me-2 text-muted"></i> {{ __('Audience & approval') }}</a></li>
+                                            @endteamcan
+                                            @teamcan('campaigns.send')
                                             <li><a class="dropdown-item rounded-2 py-2" href="{{ route('campaign-items.generateAll',$campaignItem->id) }}"><i class="bi bi-people-fill me-2 text-muted"></i> {{ __('Generate for all') }}</a></li>
+                                            @endteamcan
                                             @if(Auth::user()->role === 'admin')
                                             <li><a class="dropdown-item rounded-2 py-2" href="{{ route('campaign-items.generate',$campaignItem->id) }}"><i class="bi bi-bug me-2 text-muted"></i> {{ __('Generate test') }}</a></li>
                                             @endif
                                             <li><hr class="dropdown-divider"></li>
+                                            @teamcan('campaigns.send')
                                             <li><a class="dropdown-item rounded-2 py-2 text-success fw-bold" href="{{ route('campaign-items.send',$campaignItem->id) }}"><i class="bi bi-send-check-fill me-2"></i> {{ __('Start sending') }}</a></li>
+                                            @endteamcan
                                         </ul>
                                     </div>
 

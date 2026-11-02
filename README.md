@@ -26,7 +26,9 @@
 | [TikTok](#-tiktok-business-messaging) | TikTok Business DMs in the same chat, step-by-step setup (developer app, approval, OAuth, webhook) |
 | [Channel statistics & linked contacts](#-channel-statistics--linked-contacts) | Per-channel numbers, and one person's WhatsApp / Telegram / Instagram / TikTok conversations tied together |
 | [Contact ranking & unresponsive contacts](#-contact-ranking--unresponsive-contacts) | Engagement score with tiers, and automatic deactivation of contacts whose WhatsApp messages are never delivered |
-| [Fair Send Queue](#️-fair-send-queue) | Balanced batches of 50 across users and sessions |
+| [Team & roles](#-team--roles-sub-users) | Sub-users working for the contract account (admin, approver, creator, sender, attendant, analyst) |
+| [Audience & approval](#-audience--approval-of-campaigns) | Choose the audience by score and channels; approval flow before sending |
+| [Fair Send Queue](#️-fair-send-queue) | Balanced batches across users and sessions, with plan priority |
 | [Plans & Billing](#-plans--billing) | Freemium + 3 plans, due dates, blocking, Asaas · Efí · AbacatePay · Stone (Pagar.me) · Stripe · PagBank · Mercado Pago (Pix / card, customer chooses) |
 | [Tests](#-tests) | PHPUnit suite |
 | [Installation](#️-installation--activation) | `install.sh` (local / VPS / update), `start-local.sh` (Docker infra for local dev), manual steps, production Docker (`.docker/`) |
@@ -204,6 +206,7 @@ curl -X POST https://your-domain.com/api/v1/tools/chain \
 | `list_channels` | Connected accounts (`channel` filter) |
 | `connect_telegram_bot` | Connect a bot with its BotFather `token` |
 | `connect_instagram_account` | Connect an Instagram professional account with its access `token` |
+| `connect_facebook_page` | Connect a Facebook Page (Messenger) with its Page access `token` |
 | `get_tiktok_connect_url` | URL the person opens in a browser to authorise TikTok (OAuth needs a browser) |
 | `renew_channel_connection` / `remove_channel_account` | Renew tokens/webhook, or disconnect (`instance_id`) |
 | `get_channel_stats` | Per-channel numbers for 7, 30 or 90 days |
@@ -229,6 +232,15 @@ curl -X POST https://your-domain.com/api/v1/tools/chain \
 | `delete_campaign` | Delete a campaign and its items |
 | `get_campaign_report` | Delivery report with stats |
 
+#### Team (sub-users)
+
+| Tool | Description |
+|------|-------------|
+| `list_team_members` | Sub-users and the available roles |
+| `add_team_member` | Create a sub-user (`name`, `email`, `password`, `role`) |
+| `update_team_member` | Change role / active / name / password (`member_id`) |
+| `remove_team_member` | Remove a sub-user |
+
 #### Campaign Items & Sending
 
 | Tool | Description |
@@ -239,7 +251,11 @@ curl -X POST https://your-domain.com/api/v1/tools/chain \
 | `update_campaign_item` | Update a message template |
 | `delete_campaign_item` | Delete a message template |
 | `generate_test_send` | Create a test send job |
-| `launch_campaign` | Generate send jobs for all validated contacts |
+| `launch_campaign` | Generate send jobs for the message's audience (everyone when none was chosen). Team members can launch only approved messages |
+| `preview_campaign_audience` | How many contacts a filter reaches: `tiers`, `min_score`, `max_score`, `channels`; `save=true` stores it on the message |
+| `submit_campaign_item_for_approval` | Send the message to the approvers (may suggest the audience) |
+| `list_pending_approvals` | Messages waiting for review |
+| `approve_campaign_item` / `reject_campaign_item` | Approve with the audience (or reject with a `note`) |
 
 #### Send Jobs
 
@@ -301,6 +317,8 @@ All operations are also available as standard REST endpoints under `/api/v1/`:
 | Contact ranking | `GET /contacts/ranking?tier=&limit=`, `POST /contacts/{id}/rescore`, `GET /contacts?tier=&status=&sort=score`, `POST /contacts/check-unresponsive` (`dry_run`, `hours`) |
 | Contact links | `GET /contacts/{id}/channels`, `POST /contacts/{id}/link` (`linked_contact_id`), `POST /contacts/{id}/unlink` |
 | Channels | `GET /channels`, `GET /channels/stats?days=`, `POST /channels/telegram`, `POST /channels/instagram`, `GET /channels/tiktok/url`, `POST /channels/{id}/renew`, `DELETE /channels/{id}` |
+| Team | `GET/POST /team`, `PUT/DELETE /team/{id}` |
+| Approval & audience | `GET /approvals`, `POST /campaign-items/{id}/audience` (preview, `save=true`), `/submit`, `/approve`, `/reject` |
 | Conversations | `GET /conversations`, `GET/POST /conversations/{chat}/messages`, `POST /conversations/{chat}/read`, `POST /conversations/{chat}/ai-pause` |
 | Jobs | `POST /whatsapp-jobs/{id}/retry`, `POST /whatsapp-jobs/bulk-retry` |
 | Admin | `GET /admin/users`, `POST /admin/panic/toggle`, etc. |
@@ -805,6 +823,55 @@ Tiers: **hot** ≥ 70, **warm** ≥ 40, **cold** ≥ 15, **frozen** below (`CONT
 
 * * *
 
+## 👥 Team & roles (sub-users)
+
+A **contract user** (the account owner) can add **sub-users** who work for that account. A member signs in with **their own login**, but everything runs on the
+owner's account: contacts, campaigns, channels, plan limits and quotas. Members never see or change billing, the plan or the owner's profile.
+Open **Team** in the menu, or use the API / MCP tools (`/api/v1/team`, `add_team_member`...). The number of members is a plan limit (Starter 2, Pro 5, Business 20).
+
+The roles follow the model of **Meta / Instagram account roles** (Admin, Content creator, Moderator, Advertiser, Analyst), plus the *agent* of helpdesks such as
+Chatwoot, whose permissions are also split by what the person may do (conversations, contacts, reports):
+
+| Role | Instagram / Meta equivalent | Can do |
+|------|----------------------------|--------|
+| **Administrator** (`admin`) | Admin | Everything except billing/plan and the owner's profile; manages the team |
+| **Approver** (`approver`) | Moderator | Reviews campaign messages, **chooses the audience (score + channels)**, approves or rejects; sees contacts and reports |
+| **Campaign creator** (`creator`) | Content creator | Writes campaigns and messages, manages contacts, **submits for approval**; cannot send |
+| **Sender** (`sender`) | Advertiser | **Launches approved** campaigns and retries sends; cannot edit the content |
+| **Attendant** (`agent`) | Helpdesk agent | Answers conversations (chat, API `/conversations`) and reads contacts; nothing else |
+| **Analyst** (`analyst`) | Analyst | Read-only: statistics, ranking, campaign reports, contacts |
+
+How it is enforced:
+
+- **Closed by default**: a screen, API route or MCP tool that is not listed for the role answers `403`. The same table drives the web menu (items the role cannot open are hidden), the REST API and `/api/v1/tools` (`TeamRoles`).
+- Members cannot have members, cannot change their own role or access, and a disabled member or owner loses access immediately (API tokens of a member are revoked when the role changes or the member is disabled).
+- The **chat signature** is per person: each attendant signs with their own name; the owner's signature is not changed by a member.
+- Passwords are set by the owner or an administrator member (there is no member self-service profile yet). Messages sent from the chat are recorded on the account, with the member's signature.
+
+* * *
+
+## 🎯 Audience & approval of campaigns
+
+Before a message is sent, the **audience** is chosen by **score** and **channels** (screen **Approvals** in the menu, or `POST /campaign-items/{id}/audience`):
+
+- **Score:** tiers (hot / warm / cold / frozen) and/or a minimum and maximum score (see [Contact ranking](#-contact-ranking--unresponsive-contacts)). Nothing checked = ignore the ranking.
+- **Channels:** WhatsApp, Telegram, Instagram, Facebook, TikTok. A live counter shows how many contacts each channel reaches.
+  WhatsApp reaches active numbers; the other channels reach only contacts **who wrote to you and are still inside the reply window** (Instagram/Facebook 24 h, TikTok 48 h), through the same account and with the same limits as a normal reply. They count against the monthly message quota and are spaced `CAMPAIGN_CHANNEL_DELAY` seconds apart.
+- A person linked on several channels is reached **once**: when WhatsApp is selected, their linked Telegram/Instagram/Facebook/TikTok contacts are left out.
+- Messages without an audience keep the old behaviour (every active WhatsApp number). Welcome campaigns (AI first contact) do not use the audience yet.
+
+**Approval flow** (statuses `pending` → `approved` → `launched`, or `rejected`):
+
+1. The **creator** writes the message and clicks **Submit for approval** (may suggest an audience).
+2. The **approver** opens **Approvals**, adjusts the audience, checks the count and **approves** (a note is kept) or **rejects**. Approving with an empty audience is refused.
+3. The **sender** launches the approved message. The approval is **used up** by the launch: sending again needs a new approval.
+4. The **owner** (and the system administrator) is the final approver: can launch directly, and the **Approve and send** button does both.
+
+Changing the **text or media** of a pending or approved message **takes the approval away** (what was reviewed is what is sent). Approval fields are never mass-assignable from forms or the API.
+Needs `php artisan migrate`. `.env`: `CAMPAIGN_CHANNEL_DELAY` (3).
+
+* * *
+
 ## ⚖️ Fair Send Queue
 
 `php artisan whatsapp:queue` (scheduled hourly) used to take the oldest pending rows of **all** users, so one big campaign
@@ -818,6 +885,23 @@ could take every slot. Each run now takes a **batch of 50** messages (`WHATSAPP_
 - **Between a user's sessions**: slots go to the session with the shortest queue, so numbers alternate.
 - **Order**: the batch is interleaved (A, B, A, B...), so nobody waits behind a long run of one user.
 
+### Priority by plan
+
+Every plan has a **queue priority weight** (`limits.queue_priority` in `config/billing.php`: Free 1, Starter 2, Pro 4, Business 8). It multiplies the
+user's capacity in the fair share, so in a batch of 50 a Business account gets about **8x the slots of a Free one** and a Pro one about 4x.
+
+- `WHATSAPP_PRIORITY_MODE=weighted` (default): proportional share. Lower plans slow down but **never starve**.
+- `WHATSAPP_PRIORITY_MODE=strict`: higher priorities are served first; lower plans only get what is left over.
+- `WHATSAPP_PRIORITY=false` turns it off. It also has no effect while `BILLING_ENABLED=false`. Administrators get the highest weight.
+- `php artisan whatsapp:queue --dry-run` shows the weight (**Priority** column) next to each user's share.
+- A plan change applies at once, even to messages already waiting, and plans saved before the limit existed fall back to the config value.
+
+**Why not a priority column or one Redis queue per plan?** The bottleneck is not the Redis queue: messages only enter it in small batches (50 per run),
+and *which* messages enter is decided in the planner. Putting the weight in the planner costs nothing extra: no new column or index on the (large)
+`whatsapp_job` table, no extra queues or workers to run and monitor, and the existing fair-share code is reused. A `priority` column would have to be
+kept in sync with every plan change; separate queues (`disparos-high` / `disparos-low`) would add workers, queue monitoring and Redis keys without
+changing who gets the slots.
+
 Each message is bound to the session chosen by the planner (`whatsapp_job.instance_id`); if that session disconnects before
 sending, the job falls back to another connected session of the same user. Users with no connected session are skipped and
 their messages stay `pendente`.
@@ -827,7 +911,7 @@ php artisan whatsapp:queue --dry-run          # show the split per user/session 
 php artisan whatsapp:queue --batch=100 --mode=user
 ```
 
-`.env`: `WHATSAPP_BATCH_SIZE` (50), `WHATSAPP_FAIRNESS` (session|user|fifo), `WHATSAPP_QUEUE_CRON` (`0 * * * *`).
+`.env`: `WHATSAPP_BATCH_SIZE` (50), `WHATSAPP_FAIRNESS` (session|user|fifo), `WHATSAPP_QUEUE_CRON` (`0 * * * *`), `WHATSAPP_PRIORITY` (true), `WHATSAPP_PRIORITY_MODE` (weighted|strict).
 Manual retries from the logs screen still dispatch directly and bypass the planner.
 
 * * *
@@ -846,6 +930,8 @@ Before that, give existing customers time with `php artisan billing:grant all pr
 | Connected numbers | 1 | 2 | 5 | 15 |
 | Contacts | 100 | 2,000 | 20,000 | unlimited |
 | Messages / month | 100 | 2,000 | 10,000 | 50,000 |
+| Team members (sub-users) | - | 2 | 5 | 20 |
+| Send queue priority (weight) | 1 | 2 | 4 | 8 |
 | AI auto-replies / month | - | - | 1,000 | 10,000 |
 | WhatsApp Chat (CRM) | - | yes | yes | yes |
 | Welcome campaign (AI first contact) | - | - | yes | yes |
@@ -971,7 +1057,7 @@ In the chat header (badge icon) each user can set a name. Anything sent from the
 
 ## 🧪 Tests
 
-`vendor/bin/phpunit` (in-memory SQLite, no external services): fair queue planner and command, chat backend, Telegram, Instagram and TikTok channels (webhook secret/signature, OAuth, token refresh, inbound, AI reply through the same bot/account, reply window, settings), channel statistics and cross-channel contact links, unresponsive-contact deactivation, contact score ranking, the new channel / inbox / ranking API endpoints and MCP tools, avatar caching, billing lifecycle and plan enforcement, the Mercado Pago gateway (admin settings, Pix, card, recurrence, webhook) and the Asaas / Efí / AbacatePay / Stone (Pagar.me) / Stripe / PagBank gateways (HTTP faked).
+`vendor/bin/phpunit` (in-memory SQLite, no external services): fair queue planner and command, chat backend, Telegram, Instagram and TikTok channels (webhook secret/signature, OAuth, token refresh, inbound, AI reply through the same bot/account, reply window, settings), channel statistics and cross-channel contact links, unresponsive-contact deactivation, contact score ranking, Facebook Messenger, team roles and approval, audience by score and channel, plan queue priority, the new channel / inbox / ranking API endpoints and MCP tools, avatar caching, billing lifecycle and plan enforcement, the Mercado Pago gateway (admin settings, Pix, card, recurrence, webhook) and the Asaas / Efí / AbacatePay / Stone (Pagar.me) / Stripe / PagBank gateways (HTTP faked).
 
 * * *
 

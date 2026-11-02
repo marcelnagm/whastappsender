@@ -51,6 +51,8 @@ return [
                 'contacts' => 100,
                 'messages_per_month' => 100,
                 'ai_replies_per_month' => 0,
+                'team_members' => 0,
+                'queue_priority' => 1,
             ],
         ],
         'starter' => [
@@ -71,6 +73,8 @@ return [
                 'contacts' => 2000,
                 'messages_per_month' => 2000,
                 'ai_replies_per_month' => 0,
+                'team_members' => 2,
+                'queue_priority' => 2,
             ],
         ],
         'pro' => [
@@ -91,6 +95,8 @@ return [
                 'contacts' => 20000,
                 'messages_per_month' => 10000,
                 'ai_replies_per_month' => 1000,
+                'team_members' => 5,
+                'queue_priority' => 4,
             ],
         ],
         'business' => [
@@ -111,6 +117,8 @@ return [
                 'contacts' => null,
                 'messages_per_month' => 50000,
                 'ai_replies_per_month' => 10000,
+                'team_members' => 20,
+                'queue_priority' => 8,
             ],
         ],
     ],

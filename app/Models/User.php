@@ -104,6 +104,22 @@ class User extends Authenticatable implements \Illuminate\Contracts\Translation\
         return $this->active;
     }
 
+    /** Works for another account (sub-user). */
+    public function isMember(): bool
+    {
+        return $this->parent_user_id !== null;
+    }
+
+    public function members()
+    {
+        return $this->hasMany(User::class, 'parent_user_id');
+    }
+
+    public function owner()
+    {
+        return $this->belongsTo(User::class, 'parent_user_id');
+    }
+
     public function isAdmin()
     {
         return $this->role === 'admin';

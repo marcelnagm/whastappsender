@@ -5,7 +5,7 @@
     $money = fn ($cents, $cur = 'BRL') => ($cur === 'BRL' ? 'R$ ' : $cur . ' ') . number_format($cents / 100, 2, ',', '.');
     $featureLabels = \App\Models\Plan::featureLabels();
     $limitLabels = \App\Models\Plan::limitLabels();
-    $usageLabels = ['instances' => __('Connected numbers'), 'contacts' => __('Contacts'), 'messages_per_month' => __('Messages this month'), 'ai_replies_per_month' => __('AI replies this month')];
+    $usageLabels = ['instances' => __('Connected numbers'), 'contacts' => __('Contacts'), 'messages_per_month' => __('Messages this month'), 'ai_replies_per_month' => __('AI replies this month'), 'team_members' => __('Team members')];
     $statusBadge = ['free' => 'secondary', 'pending' => 'warning', 'trialing' => 'info', 'active' => 'success', 'past_due' => 'warning', 'suspended' => 'danger'];
     $statusText = ['free' => __('Free'), 'pending' => __('Waiting for payment'), 'trialing' => __('Free trial'), 'active' => __('Active'), 'past_due' => __('Payment overdue'), 'suspended' => __('Blocked')];
 @endphp

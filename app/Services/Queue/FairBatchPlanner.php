@@ -22,18 +22,23 @@ final class FairBatchPlanner
     public const MODE_SESSION = 'session';
     public const MODE_USER = 'user';
 
+    /** weighted: a plan's priority is its share of every batch (nobody starves). strict: higher priorities are served first. */
+    public const PRIORITY_WEIGHTED = 'weighted';
+    public const PRIORITY_STRICT = 'strict';
+
     /**
      * @param array<int,array{
      *     user_id:int,
      *     pending:int,
      *     oldest_id:int,
      *     inflight:int,
-     *     sessions:array<int,int>
-     * }> $users  sessions = instance_id => messages of this user already waiting on that session
+     *     sessions:array<int,int>,
+     *     priority?:int
+     * }> $users  priority = weight of the user's plan (default 1); sessions = instance_id => messages of this user already waiting on that session
      *
      * @return array<int,array<int,int>> user_id => ordered list of instance ids, one entry per granted slot
      */
-    public function allocate(array $users, int $batchSize, string $mode = self::MODE_SESSION): array
+    public function allocate(array $users, int $batchSize, string $mode = self::MODE_SESSION, string $priorityMode = self::PRIORITY_WEIGHTED): array
     {
         $state = [];
         foreach ($users as $u) {
@@ -41,8 +46,10 @@ final class FairBatchPlanner
                 continue; // nothing to send, or no connected session to send from
             }
 
+            $priority = max(1, (int) ($u['priority'] ?? 1));
             $state[$u['user_id']] = [
-                'weight' => $mode === self::MODE_USER ? 1 : count($u['sessions']),
+                'priority' => $priority,
+                'weight' => ($mode === self::MODE_USER ? 1 : count($u['sessions'])) * $priority,
                 'inflight' => max(0, (int) $u['inflight']),
                 'pending' => (int) $u['pending'],
                 'oldest' => (int) $u['oldest_id'],
@@ -58,7 +65,7 @@ final class FairBatchPlanner
                 if (count($s['picks']) >= $s['pending']) {
                     continue; // backlog exhausted
                 }
-                if ($best === null || $this->hasLessThan($s, $userId, $state[$best], $best)) {
+                if ($best === null || $this->hasLessThan($s, $userId, $state[$best], $best, $priorityMode)) {
                     $best = $userId;
                 }
             }
@@ -120,8 +127,12 @@ final class FairBatchPlanner
     }
 
     /** True when $a deserves the next slot before $b (lower occupancy per unit of capacity). */
-    private function hasLessThan(array $a, int $aId, array $b, int $bId): bool
+    private function hasLessThan(array $a, int $aId, array $b, int $bId, string $priorityMode = self::PRIORITY_WEIGHTED): bool
     {
+        if ($priorityMode === self::PRIORITY_STRICT && $a['priority'] !== $b['priority']) {
+            return $a['priority'] > $b['priority'];
+        }
+
         // (occupancy_a / weight_a) < (occupancy_b / weight_b), kept in integers
         $left = ($a['inflight'] + count($a['picks'])) * $b['weight'];
         $right = ($b['inflight'] + count($b['picks'])) * $a['weight'];

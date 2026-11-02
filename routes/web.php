@@ -130,6 +130,24 @@ Route::group(['namespace' => 'App\Http\Controllers', 'middleware' => ['auth', 's
     });
 
     // AI agents: provider/model/prompt and which WhatsApp number each one answers for
+    Route::prefix('approvals')->name('approvals.')->group(function () {
+        $ap = \App\Http\Controllers\ApprovalController::class;
+        Route::get('/', [$ap, 'index'])->name('index');
+        Route::get('/{item}', [$ap, 'show'])->whereNumber('item')->name('show');
+        Route::post('/{item}/preview', [$ap, 'preview'])->whereNumber('item')->name('preview');
+        Route::post('/{item}/approve', [$ap, 'approve'])->whereNumber('item')->name('approve');
+        Route::post('/{item}/reject', [$ap, 'reject'])->whereNumber('item')->name('reject');
+    });
+    Route::post('/campaign-items/{item}/submit', [\App\Http\Controllers\ApprovalController::class, 'submit'])->whereNumber('item')->name('campaign-items.submit');
+
+    Route::prefix('team')->name('team.')->group(function () {
+        $team = \App\Http\Controllers\TeamController::class;
+        Route::get('/', [$team, 'index'])->name('index');
+        Route::post('/', [$team, 'store'])->name('store');
+        Route::put('/{member}', [$team, 'update'])->whereNumber('member')->name('update');
+        Route::delete('/{member}', [$team, 'destroy'])->whereNumber('member')->name('destroy');
+    });
+
     Route::prefix('ai')->name('ai.')->group(function () {
         $ai = \App\Http\Controllers\AiSettingsController::class;
         Route::get('/', [$ai, 'index'])->name('index');

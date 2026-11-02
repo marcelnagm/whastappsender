@@ -37,9 +37,27 @@ class GerarJobsWhatsApp extends Command
 
         // 1. Chunk to avoid RAM spikes
         // Only valid (mined/validated) contacts
-        Contact::where('user_id', $campaignItem->user_id)
-            ->whereNull('ignore_me') // Only mined / validated contacts
-            ->where('status','ativo') // Only active WhatsApp numbers
+        // The audience chosen at approval (score + channels) decides who receives it; without one, every active number
+        $audience = $campaignItem->audience;
+        $recipients = $audience
+            ? app(\App\Services\Campaigns\CampaignAudience::class)->query((int) $campaignItem->user_id, $audience, 'whatsapp')
+            : Contact::where('user_id', $campaignItem->user_id)
+                ->whereNull('ignore_me') // Only mined / validated contacts
+                ->where('status','ativo'); // Only active WhatsApp numbers
+
+        $viaWhatsapp = !$audience || in_array('whatsapp', \App\Services\Campaigns\CampaignAudience::normalize($audience)['channels'], true);
+
+        // Telegram / Instagram / Facebook / TikTok recipients are sent by their own job (replies inside the allowed window)
+        if ($audience && \App\Services\Campaigns\CampaignAudience::usesOtherChannels($audience)) {
+            \App\Jobs\DispatchCampaignChannelsJob::dispatch((int) $campaignItem->id)->onQueue('default');
+        }
+
+        if (!$viaWhatsapp) {
+            $this->info('Audience has no WhatsApp channel: only the other channels were dispatched.');
+            return self::SUCCESS;
+        }
+
+        $recipients
             ->chunkById(1000, function ($contacts) use ($campaignItem) {
 
                 $jobs = [];

@@ -26,6 +26,17 @@ return [
     // in "fila" for longer than this are ignored (e.g. a worker was down).
     'inflight_window_hours' => (int) env('WHATSAPP_INFLIGHT_WINDOW_HOURS', 24),
 
+    // Priority by plan. Every plan has a "queue_priority" weight (config/billing.php limits; Free 1, Starter 2, Pro 4,
+    // Business 8). It multiplies the user's capacity in the fair share, so a Business account gets about 8x the slots of
+    // a Free one in every batch.
+    //   weighted : proportional share (default): lower plans slow down but never starve
+    //   strict   : higher priorities are served first; lower plans only get what is left over
+    // Nothing is stored per message: the weight is read from the owner's plan when the batch is built.
+    'priority' => [
+        'enabled' => (bool) env('WHATSAPP_PRIORITY', true),
+        'mode' => env('WHATSAPP_PRIORITY_MODE', 'weighted'),
+    ],
+
     // Cron expression of the scheduled run (only when WHATSAPP_AUTOSEND is enabled)
     'cron' => env('WHATSAPP_QUEUE_CRON', '0 * * * *'),
 
