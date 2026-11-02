@@ -41,6 +41,13 @@ Route::post('/webhooks/mercadopago', [\App\Http\Controllers\MercadoPagoWebhookCo
 Route::post('/webhooks/{provider}/{path?}', [\App\Http\Controllers\GatewayWebhookController::class, 'receive'])
     ->where('provider', 'asaas|efi|abacatepay|pagarme|stripe|pagbank')->where('path', '.*')->name('webhooks.gateway');
 
+// Public contact form endpoints (used by the embeddable script on the owner's website; no login)
+Route::prefix('public/forms')->group(function () {
+    $pf = \App\Http\Controllers\PublicFormController::class;
+    Route::get('/{key}', [$pf, 'definition'])->where('key', '[a-z0-9]+');
+    Route::post('/{key}', [$pf, 'submit'])->where('key', '[a-z0-9]+')->middleware('throttle:forms');
+});
+
 Route::prefix('v1')->group(function () {
     Route::post('/auth/login', [AuthController::class, 'login']);
 

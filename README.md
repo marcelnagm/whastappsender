@@ -27,6 +27,7 @@
 | [Channel statistics & linked contacts](#-channel-statistics--linked-contacts) | Per-channel numbers, and one person's WhatsApp / Telegram / Instagram / Facebook / TikTok conversations tied together |
 | [Contact ranking & unresponsive contacts](#-contact-ranking--unresponsive-contacts) | Engagement score with tiers, and automatic deactivation of contacts whose WhatsApp messages are never delivered |
 | [Signup welcome](#signup-welcome-message) | Admin chooses the campaign message sent to people who register on the site |
+| [Contact forms](#-contact-forms-embeddable) | Build a form, paste one script line on any site; leads land in the CRM and the AI answers on WhatsApp / available channels |
 | [Team & roles](#-team--roles-sub-users) | Sub-users working for the contract account (admin, approver, creator, sender, attendant, analyst) |
 | [Audience & approval](#-audience--approval-of-campaigns) | Choose the audience by score and channels; approval flow before sending |
 | [Fair Send Queue](#️-fair-send-queue) | Balanced batches across users and sessions, with plan priority |
@@ -838,6 +839,23 @@ The contact is created and the message queued on the `default` queue; a missing 
 
 * * *
 
+## 📝 Contact forms (embeddable)
+
+Open **Forms** in the menu, build a form and paste **one line** on any website. Every submission becomes a contact and a conversation in the CRM chat, and the AI agent can answer the person right away.
+
+```html
+<script src="https://YOUR-DOMAIN/f/FORM-KEY.js" async></script>
+<!-- optional: choose where it appears (otherwise it is drawn right after the script) -->
+<div data-sama-form="FORM-KEY"></div>
+```
+
+* **You choose the fields** (text, e-mail, phone, long text, choice), labels, placeholders and which are required. Each field can be given a *meaning*: contact name, WhatsApp number, e-mail or "message for the AI"; the rest is stored as extra information. A form needs a WhatsApp or e-mail field.
+* **What a submission does:** creates (or updates) the contact, opens/updates the conversation in the chat with the answers as the first message, and, if *AI reply* is on, the agent of that WhatsApp number answers (same working hours, plan quota, opt-out and *no WhatsApp* rules as any other conversation).
+* **Which channel answers:** WhatsApp first (the number the visitor typed, through the connected number you choose or any connected one). If WhatsApp is not possible, a channel (Telegram, Instagram, Facebook, TikTok) the same person is already linked to is used, but only while its reply window is open. You can restrict the allowed channels per form. With nothing available the lead is simply stored (see the *Submissions* screen).
+* **Public endpoint:** `GET/POST /api/public/forms/{key}` (CORS open). Protection: hidden honeypot field, per-IP rate limit (`FORMS_THROTTLE_PER_MINUTE`), optional *allowed websites* list (Origin check, subdomains included) and an *active* switch. The form is drawn in a Shadow DOM, so your site's CSS does not break it.
+* Phone numbers typed without a country code receive `FORMS_DEFAULT_COUNTRY_CODE` (default `55`).
+* Submissions are processed by the `default` queue worker. Run `php artisan migrate`. Team roles: *Administrator* and *Campaign creator* manage forms.
+
 ## 👥 Team & roles (sub-users)
 
 A **contract user** (the account owner) can add **sub-users** who work for that account. A member signs in with **their own login**, but everything runs on the
@@ -1169,6 +1187,13 @@ See the table in [AI Agents](#-ai-agents-multi-provider): `GROQ_API_KEY`, `OPENA
 | `CONTACT_SCORE_WINDOW_DAYS`, `CONTACT_SCORE_REFRESH_HOURS` | 90, 24 | Activity window and recalculation interval |
 | `CONTACT_SCORE_HOT`, `_WARM`, `_COLD` | 70, 40, 15 | Tier thresholds (below cold = frozen) |
 
+### Contact forms
+
+| Variable | Default | Controls |
+|---|---|---|
+| `FORMS_DEFAULT_COUNTRY_CODE` | 55 | Prefix added to phone numbers typed without a country code (empty = leave as typed) |
+| `FORMS_THROTTLE_PER_MINUTE` | 10 | Submissions accepted per minute from one IP address (spam protection of the public endpoint) |
+
 ### Plans and billing
 
 | Variable | Default | Controls |
@@ -1202,7 +1227,7 @@ Gateway credentials (Asaas, Efí, AbacatePay, Stone, Stripe, PagBank, Mercado Pa
 
 ## 🧪 Tests
 
-`vendor/bin/phpunit` (in-memory SQLite, no external services): fair queue planner and command, chat backend, Telegram, Instagram and TikTok channels (webhook secret/signature, OAuth, token refresh, inbound, AI reply through the same bot/account, reply window, settings), channel statistics and cross-channel contact links, unresponsive-contact deactivation, contact score ranking, Facebook Messenger, team roles and approval, audience by score and channel, plan queue priority, the new channel / inbox / ranking API endpoints and MCP tools, avatar caching, billing lifecycle and plan enforcement, the Mercado Pago gateway (admin settings, Pix, card, recurrence, webhook) and the Asaas / Efí / AbacatePay / Stone (Pagar.me) / Stripe / PagBank gateways (HTTP faked).
+`vendor/bin/phpunit` (in-memory SQLite, no external services): fair queue planner and command, chat backend, Telegram, Instagram and TikTok channels (webhook secret/signature, OAuth, token refresh, inbound, AI reply through the same bot/account, reply window, settings), channel statistics and cross-channel contact links, unresponsive-contact deactivation, contact score ranking, Facebook Messenger, team roles and approval, audience by score and channel, plan queue priority, embeddable contact forms (public script/endpoint, spam protection, contact + chat creation, AI reply channel choice), the new channel / inbox / ranking API endpoints and MCP tools, avatar caching, billing lifecycle and plan enforcement, the Mercado Pago gateway (admin settings, Pix, card, recurrence, webhook) and the Asaas / Efí / AbacatePay / Stone (Pagar.me) / Stripe / PagBank gateways (HTTP faked).
 
 * * *
 
@@ -1220,6 +1245,7 @@ Gateway credentials (Asaas, Efí, AbacatePay, Stone, Stripe, PagBank, Mercado Pa
 * ✅ **Plans & Billing:** freemium + 3 plans, trial, due dates, grace period and read-only blocking for non-payment.
 * ✅ **Payments (Asaas, Efí, AbacatePay, Stone, Stripe, PagBank, Mercado Pago):** Pix and credit card, one-time or automatic renewal, several providers at once, configured from the admin area.
 * ✅ **Omnichannel inbox:** WhatsApp, Telegram, Instagram, Facebook Messenger and TikTok in one chat, with per-channel statistics and linked contacts.
+* ✅ **Embeddable contact forms:** one `<script>` line on any site; leads become contacts and conversations in the CRM and the AI replies.
 * ✅ **Team & roles:** sub-users (admin, approver, creator, sender, attendant, analyst) working for the contract account.
 * ✅ **Audience & approval:** pick the audience by score tier and channels, and require approval before a campaign is sent.
 * ✅ **Plan priority queue:** higher plans get a larger share of every batch (weighted or strict), with no extra storage.

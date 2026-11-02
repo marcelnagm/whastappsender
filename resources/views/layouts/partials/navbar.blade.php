@@ -79,6 +79,11 @@
           <a href="{{ route('approvals.index') }}" class="nav-link {{ request()->is('approvals*') ? 'active text-secondary' : 'text-white' }}"><i class="bi bi-check2-square me-1"></i> {{ __('Approvals') }}</a>
         </li>
         @endteamcan
+        @teamcan('forms')
+        <li class="nav-item">
+          <a href="{{ route('forms.index') }}" class="nav-link {{ request()->is('forms*') ? 'active text-secondary' : 'text-white' }}"><i class="bi bi-ui-checks me-1"></i> {{ __('Forms') }}</a>
+        </li>
+        @endteamcan
         @teamcan('team')
         <li class="nav-item">
           <a href="{{ route('team.index') }}" class="nav-link {{ request()->is('team*') ? 'active text-secondary' : 'text-white' }}"><i class="bi bi-people-fill me-1"></i> {{ __('Team') }}</a>

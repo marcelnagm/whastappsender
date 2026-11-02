@@ -42,6 +42,9 @@ Route::get('/', 'App\Http\Controllers\HomeController@index')->name('home.index')
 // Language selector (public: guests can choose too)
 Route::get('/language/{locale}', [\App\Http\Controllers\LanguageController::class, 'switch'])->name('language.switch');
 
+// Public JS import of an embeddable contact form (CORS open; the form itself checks allowed sites)
+Route::get('/f/{key}.js', [\App\Http\Controllers\PublicFormController::class, 'script'])->where('key', '[a-z0-9]+')->name('forms.script');
+
 // WhatsApp Web-style chat (CRM). The browser only talks to Laravel; Laravel talks to the Evolution API.
 Route::middleware(['auth', 'subscription.writable', 'plan.feature:chat'])->prefix('chat')->name('chat.')->group(function () {
     $chat = \App\Http\Controllers\ChatController::class;
@@ -139,6 +142,18 @@ Route::group(['namespace' => 'App\Http\Controllers', 'middleware' => ['auth', 's
         Route::post('/{item}/reject', [$ap, 'reject'])->whereNumber('item')->name('reject');
     });
     Route::post('/campaign-items/{item}/submit', [\App\Http\Controllers\ApprovalController::class, 'submit'])->whereNumber('item')->name('campaign-items.submit');
+
+    // Embeddable contact forms: the owner builds them here, visitors submit through the public script (routes/api.php)
+    Route::prefix('forms')->name('forms.')->group(function () {
+        $fm = \App\Http\Controllers\ContactFormController::class;
+        Route::get('/', [$fm, 'index'])->name('index');
+        Route::get('/create', [$fm, 'create'])->name('create');
+        Route::post('/', [$fm, 'store'])->name('store');
+        Route::get('/{form}/edit', [$fm, 'edit'])->whereNumber('form')->name('edit');
+        Route::put('/{form}', [$fm, 'update'])->whereNumber('form')->name('update');
+        Route::delete('/{form}', [$fm, 'destroy'])->whereNumber('form')->name('destroy');
+        Route::get('/{form}/submissions', [$fm, 'submissions'])->whereNumber('form')->name('submissions');
+    });
 
     Route::prefix('team')->name('team.')->group(function () {
         $team = \App\Http\Controllers\TeamController::class;
