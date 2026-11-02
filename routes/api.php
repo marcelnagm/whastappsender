@@ -28,6 +28,8 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::post('/webhook/whatsapp', [WebhookController::class, 'receive']);
+Route::get('/webhooks/facebook', [\App\Http\Controllers\FacebookWebhookController::class, 'verify'])->name('webhooks.facebook.verify');
+Route::post('/webhooks/facebook', [\App\Http\Controllers\FacebookWebhookController::class, 'receive'])->name('webhooks.facebook');
 Route::post('/webhooks/tiktok', [\App\Http\Controllers\TikTokWebhookController::class, 'receive'])->name('webhooks.tiktok');
 Route::get('/webhooks/instagram', [\App\Http\Controllers\InstagramWebhookController::class, 'verify'])->name('webhooks.instagram.verify');
 Route::post('/webhooks/instagram', [\App\Http\Controllers\InstagramWebhookController::class, 'receive'])->name('webhooks.instagram');
@@ -109,6 +111,7 @@ Route::prefix('v1')->group(function () {
         Route::get('/channels/stats', [ChannelController::class, 'stats']);
         Route::post('/channels/telegram', [ChannelController::class, 'connectTelegram']);
         Route::post('/channels/instagram', [ChannelController::class, 'connectInstagram']);
+        Route::post('/channels/facebook', [ChannelController::class, 'connectFacebook']);
         Route::get('/channels/tiktok/url', [ChannelController::class, 'tiktokUrl']);
         Route::post('/channels/{instance}/renew', [ChannelController::class, 'renew']);
         Route::delete('/channels/{instance}', [ChannelController::class, 'destroy']);

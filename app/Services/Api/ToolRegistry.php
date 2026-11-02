@@ -34,7 +34,7 @@ class ToolRegistry
                 'page' => ['type' => 'integer', 'description' => 'Page number'],
                 'per_page' => ['type' => 'integer', 'description' => 'Items per page (max 100)'],
                 'tier' => ['type' => 'string', 'enum' => ['hot', 'warm', 'cold', 'frozen'], 'description' => 'Only contacts of this engagement tier'],
-                'status' => ['type' => 'string', 'description' => 'Filter by status (ativo, inativo, no-whatsapp, telegram, instagram, tiktok)'],
+                'status' => ['type' => 'string', 'description' => 'Filter by status (ativo, inativo, no-whatsapp, telegram, instagram, facebook, tiktok)'],
                 'sort' => ['type' => 'string', 'enum' => ['score'], 'description' => 'score = best engagement first'],
             ]),
             self::tool('get_contact', 'Get a contact by ID.', [
@@ -77,14 +77,14 @@ class ToolRegistry
             self::tool('rescore_contact', 'Recalculate the automatic score of a contact now (manual scores are kept).', [
                 'contact_id' => ['type' => 'integer'],
             ], ['contact_id']),
-            self::tool('get_contact_channels', 'Show the Telegram/Instagram/TikTok identities linked to a contact and all their conversations.', [
+            self::tool('get_contact_channels', 'Show the Telegram/Instagram/Facebook/TikTok identities linked to a contact and all their conversations.', [
                 'contact_id' => ['type' => 'integer'],
             ], ['contact_id']),
-            self::tool('link_contacts', 'Link a Telegram/Instagram/TikTok contact to a WhatsApp contact (same person).', [
+            self::tool('link_contacts', 'Link a Telegram/Instagram/Facebook/TikTok contact to a WhatsApp contact (same person).', [
                 'contact_id' => ['type' => 'integer'],
                 'linked_contact_id' => ['type' => 'integer'],
             ], ['contact_id', 'linked_contact_id']),
-            self::tool('unlink_contact', 'Remove the link of a Telegram/Instagram/TikTok contact.', [
+            self::tool('unlink_contact', 'Remove the link of a Telegram/Instagram/Facebook/TikTok contact.', [
                 'contact_id' => ['type' => 'integer'],
             ], ['contact_id']),
             self::tool('check_unresponsive_contacts', 'Deactivate contacts whose WhatsApp messages were never delivered for X hours (default from config). Use dry_run to only list.', [
@@ -94,7 +94,7 @@ class ToolRegistry
 
             // Channels
             self::tool('list_channels', 'List connected channel accounts (telegram, instagram, tiktok, whatsapp).', [
-                'channel' => ['type' => 'string', 'enum' => ['whatsapp', 'telegram', 'instagram', 'tiktok']],
+                'channel' => ['type' => 'string', 'enum' => ['whatsapp', 'telegram', 'instagram', 'facebook', 'tiktok']],
             ]),
             self::tool('connect_telegram_bot', 'Connect a Telegram bot with its BotFather token.', [
                 'token' => ['type' => 'string'],
@@ -102,11 +102,14 @@ class ToolRegistry
             self::tool('connect_instagram_account', 'Connect an Instagram professional account with its access token.', [
                 'token' => ['type' => 'string'],
             ], ['token']),
+            self::tool('connect_facebook_page', 'Connect a Facebook Page (Messenger) with its Page access token.', [
+                'token' => ['type' => 'string'],
+            ], ['token']),
             self::tool('get_tiktok_connect_url', 'URL the person must open in a browser to authorise a TikTok account.'),
-            self::tool('renew_channel_connection', 'Renew tokens / webhook of a Telegram, Instagram or TikTok account.', [
+            self::tool('renew_channel_connection', 'Renew tokens / webhook of a Telegram, Instagram, Facebook or TikTok account.', [
                 'instance_id' => ['type' => 'integer'],
             ], ['instance_id']),
-            self::tool('remove_channel_account', 'Disconnect and remove a Telegram, Instagram or TikTok account.', [
+            self::tool('remove_channel_account', 'Disconnect and remove a Telegram, Instagram, Facebook or TikTok account.', [
                 'instance_id' => ['type' => 'integer'],
             ], ['instance_id']),
             self::tool('get_channel_stats', 'Per-channel numbers (chats, messages, AI replies, first response time) for the last 7, 30 or 90 days.', [
@@ -114,8 +117,8 @@ class ToolRegistry
             ]),
 
             // Omnichannel inbox
-            self::tool('list_conversations', 'List conversations of every channel, newest first. window_open tells whether we can still reply (Instagram 24h, TikTok 48h).', [
-                'channel' => ['type' => 'string', 'enum' => ['whatsapp', 'telegram', 'instagram', 'tiktok']],
+            self::tool('list_conversations', 'List conversations of every channel, newest first. window_open tells whether we can still reply (Instagram/Facebook 24h, TikTok 48h).', [
+                'channel' => ['type' => 'string', 'enum' => ['whatsapp', 'telegram', 'instagram', 'facebook', 'tiktok']],
                 'instance_id' => ['type' => 'integer'],
                 'unread' => ['type' => 'boolean', 'description' => 'Only conversations with unread messages'],
                 'search' => ['type' => 'string'],
@@ -285,6 +288,7 @@ class ToolRegistry
             'list_channels' => [\App\Http\Controllers\Api\ChannelController::class, 'index'],
             'connect_telegram_bot' => [\App\Http\Controllers\Api\ChannelController::class, 'connectTelegram'],
             'connect_instagram_account' => [\App\Http\Controllers\Api\ChannelController::class, 'connectInstagram'],
+            'connect_facebook_page' => [\App\Http\Controllers\Api\ChannelController::class, 'connectFacebook'],
             'get_tiktok_connect_url' => [\App\Http\Controllers\Api\ChannelController::class, 'tiktokUrl'],
             'renew_channel_connection' => [\App\Http\Controllers\Api\ChannelController::class, 'renew', 'instance_id' => 'instance'],
             'remove_channel_account' => [\App\Http\Controllers\Api\ChannelController::class, 'destroy', 'instance_id' => 'instance'],

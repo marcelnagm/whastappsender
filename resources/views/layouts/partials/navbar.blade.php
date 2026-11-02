@@ -32,6 +32,9 @@
           <a href="{{ route('instagram.index') }}" class="nav-link {{ request()->is('instagram*') ? 'active text-secondary' : 'text-white' }}"><i class="bi bi-instagram me-1"></i> {{ __('Instagram') }}</a>
         </li>
         <li class="nav-item">
+          <a href="{{ route('facebook.index') }}" class="nav-link {{ request()->is('facebook*') ? 'active text-secondary' : 'text-white' }}"><i class="bi bi-facebook me-1"></i> {{ __('Facebook') }}</a>
+        </li>
+        <li class="nav-item">
           <a href="{{ route('chat.index') }}" class="nav-link {{ request()->is('chat*') ? 'active text-secondary' : 'text-white' }}"><i class="bi bi-chat-dots me-1"></i> {{ __('Chat') }}</a>
         </li>
         <li class="nav-item">

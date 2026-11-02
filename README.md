@@ -22,6 +22,7 @@
 | [WhatsApp Chat (CRM)](#-whatsapp-chat-crm) | WhatsApp Web-style inbox on top of Evolution API |
 | [Telegram](#-telegram) | Connect Telegram bots; same chat, AI agents and plan limits; always answers through the bot the message came in |
 | [Instagram](#-instagram-direct) | Instagram DMs in the same omnichannel chat; AI answers through the account that received the message |
+| [Facebook](#-facebook-messenger) | Facebook Page (Messenger) conversations in the same chat; replies go through the Page that received the message |
 | [TikTok](#-tiktok-business-messaging) | TikTok Business DMs in the same chat, step-by-step setup (developer app, approval, OAuth, webhook) |
 | [Channel statistics & linked contacts](#-channel-statistics--linked-contacts) | Per-channel numbers, and one person's WhatsApp / Telegram / Instagram / TikTok conversations tied together |
 | [Contact ranking & unresponsive contacts](#-contact-ranking--unresponsive-contacts) | Engagement score with tiers, and automatic deactivation of contacts whose WhatsApp messages are never delivered |
@@ -664,6 +665,39 @@ opt-out with `/stop` or `#sair`, long answers split automatically (Instagram lim
 * The account **cannot start a conversation** or message a list of contacts: the customer writes first. Number-based bulk campaigns, new chat by phone, history import and warm-up remain **WhatsApp-only** (Instagram contacts have status `instagram` and are never picked by campaigns).
 * No reactions or "delete for everyone" from the chat. Only direct messages (no comments or story replies sending).
 * Apps in development mode only receive messages from accounts with a role in the app; going live needs Meta app review for the messaging permission.
+
+* * *
+
+## 📘 Facebook (Messenger)
+
+A Facebook **Page** is another channel of the same instance structure: its Messenger conversations appear in the omnichannel **Chat** (badge "Facebook"),
+the **AI agents** answer them and **every reply leaves through the Page that received the message**. Messages typed in the Page inbox (echo) also appear in the chat.
+
+```
+Customer ──► Messenger ──► POST /api/webhooks/facebook (X-Hub-Signature-256) ──► ProcessFacebookEventJob ──► chats / chat_messages ──► AI agent
+Customer ◄── Messenger ◄── graph.facebook.com/{version}/me/messages ◄── SendAiReplyJob · SendChatMessageJob (same Page)
+```
+
+**Setup**
+
+1. In [Meta for Developers](https://developers.facebook.com/apps) use the same app as Instagram (or create one) and add the **Messenger** product. Permissions: `pages_messaging`, `pages_manage_metadata`, `pages_show_list`.
+2. Put the credentials in `.env`. `FACEBOOK_APP_SECRET` and `FACEBOOK_VERIFY_TOKEN` fall back to the Instagram values, so one Meta app is enough. `APP_URL` must be a **public https** address.
+3. In *Messenger > Webhooks* set the **callback URL** to `https://YOUR-DOMAIN/api/webhooks/facebook`, the **verify token** to `FACEBOOK_VERIFY_TOKEN` and subscribe the Page to `messages`, `message_echoes` and `messaging_postbacks`.
+4. Run `php artisan migrate`.
+5. Generate the **Page access token** (Messenger > Access tokens, or a long-lived Page token) and paste it in **Facebook** in the menu. The app validates it, subscribes the Page and stores the token encrypted and never shows it again.
+6. Keep workers on `default` and `disparos`. Assign an AI agent to the Page in **AI** if you want one only for Facebook.
+
+```
+FACEBOOK_APP_SECRET=your-meta-app-secret
+FACEBOOK_VERIFY_TOKEN=any-long-random-string
+#FACEBOOK_API_VERSION=v21.0
+#FACEBOOK_WINDOW_HOURS=24
+#FACEBOOK_TIMEOUT=30
+```
+
+**What works:** text, images, video, audio and files in both directions, typing indicator, opt-out with `/stop` or `#sair`, long answers split (Messenger limits a text to 2000 characters), statistics, contact links to a WhatsApp contact, REST (`POST /channels/facebook`) and MCP (`connect_facebook_page`).
+
+**Limits (Meta, not the app):** replies only within `FACEBOOK_WINDOW_HOURS` (24 h) of the customer's last message; a Page **cannot start a conversation**; campaigns, new chat by phone and warm-up stay **WhatsApp-only** (Facebook contacts have status `facebook`); apps in development only receive messages from people with a role in the app, and going live needs Meta app review.
 
 * * *
 

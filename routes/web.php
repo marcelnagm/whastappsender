@@ -111,6 +111,15 @@ Route::group(['namespace' => 'App\Http\Controllers', 'middleware' => ['auth', 's
         Route::delete('/{instance}', [$tt, 'destroy'])->name('destroy');
     });
 
+    // Facebook Pages (channel = facebook instances)
+    Route::prefix('facebook')->name('facebook.')->group(function () {
+        $fb = \App\Http\Controllers\FacebookController::class;
+        Route::get('/', [$fb, 'index'])->name('index');
+        Route::post('/', [$fb, 'store'])->name('store')->middleware('throttle:10,1');
+        Route::post('/{instance}/refresh', [$fb, 'refresh'])->name('refresh');
+        Route::delete('/{instance}', [$fb, 'destroy'])->name('destroy');
+    });
+
     // Instagram accounts (channel = instagram instances)
     Route::prefix('instagram')->name('instagram.')->group(function () {
         $ig = \App\Http\Controllers\InstagramController::class;

@@ -50,23 +50,23 @@ class InstagramInbound
     public function handle(Instance $instance, array $event): void
     {
         $msg = $event['message'] ?? null;
-        if (!$instance->isInstagram() || !is_array($msg) || empty($msg['mid']) || !empty($msg['is_deleted'])) {
+        if (!$this->owns($instance) || !is_array($msg) || empty($msg['mid']) || !empty($msg['is_deleted'])) {
             return;
         }
 
         $echo = !empty($msg['is_echo']);
         $customer = (string) ($echo ? ($event['recipient']['id'] ?? '') : ($event['sender']['id'] ?? ''));
-        if ($customer === '' || $customer === (string) $instance->instagram_id) {
+        if ($customer === '' || $customer === $this->accountId($instance)) {
             return;
         }
 
         $mid = (string) $msg['mid'];
         $base = self::msgId($mid);
-        if (Cache::has('ig-sent:' . $base) || ChatMessage::where('instance_id', $instance->id)->where('message_id', $base)->exists()) {
+        if (Cache::has($this->sentKey($base)) || ChatMessage::where('instance_id', $instance->id)->where('message_id', $base)->exists()) {
             return; // already known (our own send, or delivered twice)
         }
 
-        $jid = self::jid($customer);
+        $jid = $this->jidFor($customer);
         $contact = $this->contact($instance, $jid);
         $chat = $this->chat($instance, $jid, $customer, $contact);
         $ts = isset($event['timestamp']) ? Carbon::createFromTimestampMs((int) $event['timestamp']) : now();
@@ -103,6 +103,46 @@ class InstagramInbound
         }
     }
 
+    // ---- hooks: Facebook Messenger uses the same event format, so FacebookInbound only overrides these ----------------
+
+    protected function channelKey(): string
+    {
+        return 'instagram';
+    }
+
+    protected function owns(Instance $instance): bool
+    {
+        return $instance->isInstagram();
+    }
+
+    protected function accountId(Instance $instance): string
+    {
+        return (string) $instance->instagram_id;
+    }
+
+    protected function sentKey(string $messageId): string
+    {
+        return 'ig-sent:' . $messageId;
+    }
+
+    protected function jidFor(string $customerId): string
+    {
+        return self::jid($customerId);
+    }
+
+    protected function client(Instance $instance)
+    {
+        return InstagramClient::for($instance);
+    }
+
+    /** @param array<string,mixed> $profile */
+    protected function displayName(array $profile): ?string
+    {
+        $name = $profile['name'] ?? null;
+
+        return $name ?: (!empty($profile['username']) ? '@' . $profile['username'] : null);
+    }
+
     private function contact(Instance $instance, string $jid): Contact
     {
         $contact = Contact::where('user_id', $instance->user_id)->where('contact', $jid)->first();
@@ -110,12 +150,10 @@ class InstagramInbound
             return $contact;
         }
 
-        $profile = InstagramClient::for($instance)->profile(substr($jid, 3));
-        $name = $profile['name'] ?? null;
-        $name = $name ?: (!empty($profile['username']) ? '@' . $profile['username'] : null);
+        $name = $this->displayName($this->client($instance)->profile(substr($jid, 3)));
 
-        // status "instagram" keeps it out of WhatsApp campaigns (they only pick "ativo")
-        return Contact::create(['user_id' => $instance->user_id, 'contact' => $jid, 'name' => $name ? mb_substr($name, 0, 120) : null, 'status' => 'instagram']);
+        // the channel name as status keeps it out of WhatsApp campaigns (they only pick "ativo")
+        return Contact::create(['user_id' => $instance->user_id, 'contact' => $jid, 'name' => $name ? mb_substr($name, 0, 120) : null, 'status' => $this->channelKey()]);
     }
 
     private function chat(Instance $instance, string $jid, string $igsid, Contact $contact): Chat
@@ -132,7 +170,7 @@ class InstagramInbound
         try {
             return Chat::create([
                 'user_id' => $instance->user_id, 'instance_id' => $instance->id, 'remote_jid' => $jid,
-                'phone' => null, 'name' => $contact->name ?: 'Instagram ' . substr($igsid, -4), 'contact_id' => $contact->id,
+                'phone' => null, 'name' => $contact->name ?: ucfirst($this->channelKey()) . ' ' . substr($igsid, -4), 'contact_id' => $contact->id,
             ]);
         } catch (QueryException $e) {
             return Chat::where('instance_id', $instance->id)->where('remote_jid', $jid)->first() ?? throw $e;
@@ -192,7 +230,7 @@ class InstagramInbound
     private function downloadMedia(Instance $instance, ChatMessage $message, string $url): void
     {
         try {
-            $binary = InstagramClient::for($instance)->download($url);
+            $binary = $this->client($instance)->download($url);
         } catch (\Throwable $e) {
             Log::info('Instagram media not downloaded: ' . $e->getMessage(), ['instance_id' => $instance->id]);
 

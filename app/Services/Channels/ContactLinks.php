@@ -7,12 +7,12 @@ use App\Models\Contact;
 use Illuminate\Support\Collection;
 
 /**
- * Ties the Telegram / Instagram / TikTok contact of a person to their WhatsApp contact, so the chat can show the person's
- * conversations in every channel and send a message through any of them. Channel contacts store "tg:/ig:/tt:<id>" in `contact`.
+ * Ties the Telegram / Instagram / Facebook / TikTok contact of a person to their WhatsApp contact, so the chat can show the person's
+ * conversations in every channel and send a message through any of them. Channel contacts store "tg:/ig:/fb:/tt:<id>" in `contact`.
  */
 class ContactLinks
 {
-    public const PREFIXES = ['tg' => 'telegram', 'ig' => 'instagram', 'tt' => 'tiktok'];
+    public const PREFIXES = ['tg' => 'telegram', 'ig' => 'instagram', 'tt' => 'tiktok', 'fb' => 'facebook'];
 
     public static function channelOf(Contact $c): string
     {
@@ -64,7 +64,7 @@ class ContactLinks
         }
         [$channel, $whatsapp] = self::isChannelContact($a) ? [$a, $b] : [$b, $a];
         if (!self::isChannelContact($channel) || self::isChannelContact($whatsapp)) {
-            throw new \InvalidArgumentException('Link one WhatsApp contact to one Telegram, Instagram or TikTok contact.');
+            throw new \InvalidArgumentException('Link one WhatsApp contact to one Telegram, Instagram, Facebook or TikTok contact.');
         }
 
         $channel->update(['linked_contact_id' => $whatsapp->id]);

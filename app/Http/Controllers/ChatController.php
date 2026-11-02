@@ -468,6 +468,7 @@ class ChatController extends Controller
             $other = substr((string) $chat->remote_jid, 3); // "tg:<id>" / "ig:<id>"
             $client = match (true) {
                 $chat->instance->isInstagram() => \App\Services\Instagram\InstagramClient::for($chat->instance),
+                $chat->instance->isFacebook() => \App\Services\Facebook\FacebookClient::for($chat->instance),
                 $chat->instance->isTiktok() => \App\Services\TikTok\TikTokClient::for($chat->instance),
                 default => \App\Services\Telegram\TelegramClient::for($chat->instance),
             };
@@ -595,7 +596,7 @@ class ChatController extends Controller
     }
 
     // ---------------------------------------------------------------------
-    // Linked channels: the same person on WhatsApp / Telegram / Instagram / TikTok
+    // Linked channels: the same person on WhatsApp / Telegram / Instagram / Facebook / TikTok
     // ---------------------------------------------------------------------
 
     /** Conversations of the same person in every channel, with the reply window of each. */
@@ -635,10 +636,10 @@ class ChatController extends Controller
         $query = Contact::where('user_id', Auth::id())->where('id', '!=', $contact->id);
         if (\App\Services\Channels\ContactLinks::isChannelContact($contact)) {
             // looking for the WhatsApp contact of this person
-            $query->where(fn ($w) => $w->where('contact', 'not like', 'tg:%')->where('contact', 'not like', 'ig:%')->where('contact', 'not like', 'tt:%'));
+            $query->where(fn ($w) => $w->where('contact', 'not like', 'tg:%')->where('contact', 'not like', 'ig:%')->where('contact', 'not like', 'fb:%')->where('contact', 'not like', 'tt:%'));
         } else {
             // looking for the Telegram / Instagram / TikTok contact still unlinked
-            $query->whereNull('linked_contact_id')->where(fn ($w) => $w->where('contact', 'like', 'tg:%')->orWhere('contact', 'like', 'ig:%')->orWhere('contact', 'like', 'tt:%'));
+            $query->whereNull('linked_contact_id')->where(fn ($w) => $w->where('contact', 'like', 'tg:%')->orWhere('contact', 'like', 'ig:%')->orWhere('contact', 'like', 'fb:%')->orWhere('contact', 'like', 'tt:%'));
         }
         if ($q !== '') {
             $digits = preg_replace('/\D/', '', $q);
@@ -669,7 +670,7 @@ class ChatController extends Controller
         try {
             \App\Services\Channels\ContactLinks::link($contact, $other);
         } catch (\InvalidArgumentException $e) {
-            return response()->json(['message' => __('Link one WhatsApp contact to one Telegram, Instagram or TikTok contact.')], 422);
+            return response()->json(['message' => __('Link one WhatsApp contact to one Telegram, Instagram, Facebook or TikTok contact.')], 422);
         }
 
         return $this->links($chat);

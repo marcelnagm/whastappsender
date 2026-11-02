@@ -10,10 +10,10 @@ use App\Services\Stats\ChannelStats;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
-/** Telegram / Instagram / TikTok accounts (WhatsApp numbers stay in InstanceController). */
+/** Telegram / Instagram / Facebook / TikTok accounts (WhatsApp numbers stay in InstanceController). */
 class ChannelController extends ApiController
 {
-    private const CHANNELS = ['telegram', 'instagram', 'tiktok'];
+    private const CHANNELS = ['telegram', 'instagram', 'facebook', 'tiktok'];
 
     public function index(Request $request)
     {
@@ -41,6 +41,13 @@ class ChannelController extends ApiController
         $data = $request->validate(['token' => 'required|string|min:20|max:1000']);
 
         return $this->run(fn () => $this->success($this->present($accounts->connectInstagram(Auth::user(), trim($data['token']))), 'Instagram account connected.', 201));
+    }
+
+    public function connectFacebook(Request $request, ChannelAccounts $accounts)
+    {
+        $data = $request->validate(['token' => 'required|string|min:20|max:1000']);
+
+        return $this->run(fn () => $this->success($this->present($accounts->connectFacebook(Auth::user(), trim($data['token']))), 'Facebook Page connected.', 201));
     }
 
     /** TikTok needs a browser: the person opens this URL, authorises, and the callback stores the account. */

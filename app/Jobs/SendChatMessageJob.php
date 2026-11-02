@@ -51,6 +51,11 @@ class SendChatMessageJob implements ShouldQueue
 
             return;
         }
+        if ($message->instance->isFacebook()) {
+            $this->sendViaFacebook($message, $chat);
+
+            return;
+        }
         if ($message->instance->isTiktok()) {
             $this->sendViaTikTok($message, $chat);
 
@@ -105,6 +110,44 @@ class SendChatMessageJob implements ShouldQueue
             $this->markSent($message, $chat, $chatId . ':' . $id);
         } catch (\Throwable $e) {
             Log::error('SendChatMessageJob (telegram) failed: ' . $e->getMessage(), ['chat_message_id' => $message->id]);
+
+            $message->update(['status' => 'error', 'error' => mb_substr($e->getMessage(), 0, 600)]);
+            Chat::where('id', $chat->id)->where('last_message_id', $message->id)->update(['last_message_status' => 'error']);
+        }
+    }
+
+    /** Same Page that received the conversation answers it, inside Messenger's reply window. */
+    private function sendViaFacebook(ChatMessage $message, Chat $chat): void
+    {
+        try {
+            if (!\App\Services\Channels\ReplyWindow::isOpen($chat)) {
+                throw new \RuntimeException(\App\Services\Channels\ReplyWindow::closedMessage('facebook'));
+            }
+
+            $client = \App\Services\Facebook\FacebookClient::for($message->instance);
+            $psid = substr((string) $chat->remote_jid, 3);
+            $ids = [];
+
+            if (in_array($message->type, ['image', 'video', 'audio', 'document'], true)) {
+                if (!$message->media_path || !Storage::exists($message->media_path)) {
+                    throw new \RuntimeException('Attachment file not found.');
+                }
+                // the signed media route is shared with Instagram: it only serves files the agent sent
+                $url = \Illuminate\Support\Facades\URL::temporarySignedRoute(
+                    'instagram.media', now()->addMinutes((int) config('instagram.media_link_minutes', 30)), ['message' => $message->id]
+                );
+                $ids[] = $client->sendAttachment($psid, $message->type, $url);
+                if ($message->body && $message->type !== 'audio') {
+                    $ids = array_merge($ids, $client->sendText($psid, (string) $message->body));
+                }
+            } else {
+                $ids = $client->sendText($psid, (string) $message->body);
+            }
+
+            \App\Services\Facebook\FacebookInbound::rememberSent($ids);
+            $this->markSent($message, $chat, \App\Services\Instagram\InstagramInbound::msgId($ids[0] ?? ''));
+        } catch (\Throwable $e) {
+            Log::error('SendChatMessageJob (facebook) failed: ' . $e->getMessage(), ['chat_message_id' => $message->id]);
 
             $message->update(['status' => 'error', 'error' => mb_substr($e->getMessage(), 0, 600)]);
             Chat::where('id', $chat->id)->where('last_message_id', $message->id)->update(['last_message_status' => 'error']);

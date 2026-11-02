@@ -5,7 +5,7 @@ namespace App\Services\Channels;
 use App\Models\Chat;
 use App\Models\ChatMessage;
 
-/** Instagram and TikTok accept a reply only for a limited time after the customer's last message; WhatsApp and Telegram have no such window here. */
+/** Instagram, Facebook and TikTok accept a reply only for a limited time after the customer's last message; WhatsApp and Telegram have no such window here. */
 class ReplyWindow
 {
     public static function hours(string $channel): ?int
@@ -13,6 +13,7 @@ class ReplyWindow
         return match ($channel) {
             'instagram' => max(1, (int) config('instagram.window_hours', 24)),
             'tiktok' => max(1, (int) config('tiktok.window_hours', 48)),
+            'facebook' => max(1, (int) config('facebook.window_hours', 24)),
             default => null,
         };
     }
@@ -32,7 +33,7 @@ class ReplyWindow
 
     public static function closedMessage(string $channel): string
     {
-        $key = $channel === 'tiktok' ? 'TikTok' : 'Instagram';
+        $key = ['tiktok' => 'TikTok', 'facebook' => 'Facebook'][$channel] ?? 'Instagram';
 
         return __(':channel only accepts replies up to :hours hours after the customer\'s last message.', ['channel' => $key, 'hours' => self::hours($channel)]);
     }

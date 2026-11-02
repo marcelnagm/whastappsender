@@ -8,6 +8,7 @@
     'whatsapp'  => ['WhatsApp',  'bi-whatsapp',  '#25d366'],
     'telegram'  => ['Telegram',  'bi-telegram',  '#229ed9'],
     'instagram' => ['Instagram', 'bi-instagram', '#d6249f'],
+    'facebook'  => ['Facebook',  'bi-facebook',  '#1877f2'],
     'tiktok'    => ['TikTok',    'bi-tiktok',    '#fe2c55'],
   ];
   $fmt = function ($min) {

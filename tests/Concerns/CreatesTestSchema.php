@@ -48,6 +48,9 @@ trait CreatesTestSchema
             $t->text('instagram_token')->nullable();
             $t->string('instagram_id', 40)->nullable();
             $t->string('instagram_username', 64)->nullable();
+            $t->text('facebook_token')->nullable();
+            $t->string('facebook_page_id', 40)->nullable();
+            $t->string('facebook_page_name', 120)->nullable();
             $t->text('tiktok_token')->nullable();
             $t->text('tiktok_refresh_token')->nullable();
             $t->string('tiktok_open_id', 80)->nullable();

@@ -5,10 +5,10 @@ namespace App\Services\Stats;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 
-/** Numbers per channel (WhatsApp, Telegram, Instagram, TikTok) for one account over the last N days. */
+/** Numbers per channel (WhatsApp, Telegram, Instagram, Facebook, TikTok) for one account over the last N days. */
 class ChannelStats
 {
-    public const CHANNELS = ['whatsapp', 'telegram', 'instagram', 'tiktok'];
+    public const CHANNELS = ['whatsapp', 'telegram', 'instagram', 'facebook', 'tiktok'];
 
     /** @return array{since:\Carbon\Carbon,days:int,channels:array,instances:array,daily:array} */
     public function summary(User $user, int $days): array
@@ -66,7 +66,7 @@ class ChannelStats
         }
 
         foreach (DB::table('contacts')->where('user_id', $user->id)->selectRaw("
-            CASE WHEN contact LIKE 'tg:%' THEN 'telegram' WHEN contact LIKE 'ig:%' THEN 'instagram' WHEN contact LIKE 'tt:%' THEN 'tiktok' ELSE 'whatsapp' END as ch,
+            CASE WHEN contact LIKE 'tg:%' THEN 'telegram' WHEN contact LIKE 'ig:%' THEN 'instagram' WHEN contact LIKE 'fb:%' THEN 'facebook' WHEN contact LIKE 'tt:%' THEN 'tiktok' ELSE 'whatsapp' END as ch,
             COUNT(*) as n, SUM(CASE WHEN linked_contact_id IS NOT NULL THEN 1 ELSE 0 END) as linked")->groupBy('ch')->get() as $r) {
             $channels[$r->ch]['contacts'] = (int) $r->n;
             $channels[$r->ch]['linked'] = (int) $r->linked;

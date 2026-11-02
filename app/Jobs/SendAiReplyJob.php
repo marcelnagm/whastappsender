@@ -71,6 +71,11 @@ class SendAiReplyJob implements ShouldQueue
 
             return;
         }
+        if ($instance->isFacebook()) {
+            $this->sendViaFacebook($aiMessage, $instance, $contact);
+
+            return;
+        }
         if ($instance->isTiktok()) {
             $this->sendViaTikTok($aiMessage, $instance, $contact);
 
@@ -158,6 +163,44 @@ class SendAiReplyJob implements ShouldQueue
             }
         } catch (\Throwable $e) {
             Log::error('SendAiReplyJob (telegram) failed: ' . $e->getMessage());
+            $aiMessage->update(['status' => 'error', 'error' => mb_substr($e->getMessage(), 0, 600)]);
+        }
+    }
+
+    /** Answers through the Facebook Page that received the message (inside the reply window). */
+    private function sendViaFacebook(AiMessage $aiMessage, Instance $instance, Contact $contact): void
+    {
+        try {
+            if (!str_starts_with((string) $contact->contact, 'fb:')) {
+                throw new \RuntimeException('Contact is not a Facebook chat.');
+            }
+            $psid = substr((string) $contact->contact, 3);
+            $chat = \App\Models\Chat::with('instance')->where('instance_id', $instance->id)->where('remote_jid', $contact->contact)->first();
+            if ($chat && !\App\Services\Channels\ReplyWindow::isOpen($chat)) {
+                throw new \RuntimeException(\App\Services\Channels\ReplyWindow::closedMessage('facebook'));
+            }
+
+            $client = \App\Services\Facebook\FacebookClient::for($instance);
+            $client->typing($psid);
+            $ids = $client->sendText($psid, (string) $aiMessage->content);
+            \App\Services\Facebook\FacebookInbound::rememberSent($ids);
+            $messageId = \App\Services\Instagram\InstagramInbound::msgId($ids[0] ?? '');
+
+            $aiMessage->update(['status' => 'sent', 'channel_message_id' => $messageId]);
+            if ($aiMessage->session) {
+                $aiMessage->session->update(['last_outbound_at' => now()]);
+            }
+
+            if ($chat) {
+                $message = \App\Models\ChatMessage::create([
+                    'chat_id' => $chat->id, 'instance_id' => $instance->id, 'user_id' => $instance->user_id,
+                    'message_id' => $messageId, 'from_me' => true, 'type' => 'text', 'body' => $aiMessage->content,
+                    'status' => 'sent', 'message_timestamp' => now(),
+                ]);
+                app(\App\Services\Chat\ChatMessageRecorder::class)->touchChat($chat, $message, true);
+            }
+        } catch (\Throwable $e) {
+            Log::error('SendAiReplyJob (facebook) failed: ' . $e->getMessage());
             $aiMessage->update(['status' => 'error', 'error' => mb_substr($e->getMessage(), 0, 600)]);
         }
     }

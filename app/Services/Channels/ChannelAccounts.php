@@ -5,6 +5,8 @@ namespace App\Services\Channels;
 use App\Models\Instance;
 use App\Models\User;
 use App\Services\Billing\Entitlements;
+use App\Services\Facebook\FacebookClient;
+use App\Services\Facebook\FacebookException;
 use App\Services\Instagram\InstagramClient;
 use App\Services\Instagram\InstagramException;
 use App\Services\Telegram\TelegramClient;
@@ -15,7 +17,7 @@ use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Str;
 
 /**
- * Connect, renew and remove Telegram bots, Instagram accounts and TikTok accounts.
+ * Connect, renew and remove Telegram bots, Instagram accounts, Facebook Pages and TikTok accounts.
  * Used by the settings pages and by the REST API / agent tools, so both behave the same.
  */
 class ChannelAccounts
@@ -119,6 +121,51 @@ class ChannelAccounts
         return $instance;
     }
 
+    // ---- Facebook (Messenger for Pages) ------------------------------------------------------------------------------
+
+    /** @throws ChannelException */
+    public function connectFacebook(User $user, string $token): Instance
+    {
+        if (!config('facebook.app_secret') || !config('facebook.verify_token')) {
+            throw new ChannelException(__('Facebook is not configured on this server (FACEBOOK_APP_SECRET and FACEBOOK_VERIFY_TOKEN).'));
+        }
+
+        $client = new FacebookClient($token);
+        try {
+            $page = $client->me();
+        } catch (FacebookException $e) {
+            throw new ChannelException(__('Facebook rejected this token: :error', ['error' => $e->getMessage()]));
+        }
+
+        $pageId = (string) ($page['id'] ?? '');
+        if ($pageId === '' || Instance::where('channel', 'facebook')->where('facebook_page_id', $pageId)->exists()) {
+            throw new ChannelException(__('This Facebook Page is already connected.'));
+        }
+
+        app(Entitlements::class)->authorizeUsage($user, 'instances');
+
+        $name = (string) ($page['name'] ?? $pageId);
+        $instance = $user->instances()->create([
+            'name' => $name,
+            'instance_name' => 'fb-' . $user->id . '-' . Str::lower(Str::random(8)),
+            'status' => 'connected',
+            'channel' => 'facebook',
+            'facebook_token' => $token,
+            'facebook_page_id' => $pageId,
+            'facebook_page_name' => mb_substr($name, 0, 120),
+        ]);
+
+        try {
+            $client->subscribe();
+        } catch (FacebookException $e) {
+            $instance->delete();
+
+            throw new ChannelException(__('Could not subscribe the account to messages: :error', ['error' => $e->getMessage()]));
+        }
+
+        return $instance;
+    }
+
     // ---- TikTok (OAuth) --------------------------------------------------------------------------------------------
 
     /** @throws ChannelException */
@@ -191,7 +238,7 @@ class ChannelAccounts
 
     // ---- common ------------------------------------------------------------------------------------------------------
 
-    /** Renews tokens / webhook of a Telegram, Instagram or TikTok account. @throws ChannelException */
+    /** Renews tokens / webhook of a Telegram, Instagram, Facebook or TikTok account. @throws ChannelException */
     public function renew(Instance $instance): void
     {
         try {
@@ -204,17 +251,21 @@ class ChannelAccounts
                     $client = new InstagramClient($new);
                 }
                 $client->subscribe();
+            } elseif ($instance->isFacebook()) {
+                // Page tokens do not expire: check it still works and subscribe the Page again
+                FacebookClient::for($instance)->me();
+                FacebookClient::for($instance)->subscribe();
             } elseif ($instance->isTiktok()) {
                 TikTokClient::for($instance)->refreshIfNeeded(true);
             } else {
-                throw new ChannelException(__('Only Telegram, Instagram and TikTok accounts can be renewed here.'));
+                throw new ChannelException(__('Only Telegram, Instagram, Facebook and TikTok accounts can be renewed here.'));
             }
-        } catch (InstagramException | TikTokException $e) {
+        } catch (InstagramException | FacebookException | TikTokException $e) {
             throw new ChannelException(__('Could not renew the connection: :error', ['error' => $e->getMessage()]));
         }
     }
 
-    /** Removes a Telegram, Instagram or TikTok account (best-effort cleanup at the provider). */
+    /** Removes a Telegram, Instagram, Facebook or TikTok account (best-effort cleanup at the provider). */
     public function remove(Instance $instance): void
     {
         try {
@@ -222,6 +273,8 @@ class ChannelAccounts
                 TelegramClient::for($instance)->deleteWebhook();
             } elseif ($instance->isInstagram()) {
                 InstagramClient::for($instance)->unsubscribe();
+            } elseif ($instance->isFacebook()) {
+                FacebookClient::for($instance)->unsubscribe();
             }
         } catch (\Throwable $e) {
             // the token may already be revoked: remove it anyway

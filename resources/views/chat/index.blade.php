@@ -197,7 +197,7 @@
         signPreview: @json(__('Customers will see:')),
         syncFrom: @json(__('Import history from')),
         linkedTitle: @json(__('Same person on other channels')),
-        linkedHelp: @json(__('Link this contact to its Telegram, Instagram or TikTok conversation to see them together and reply through any channel.')),
+        linkedHelp: @json(__('Link this contact to its Telegram, Instagram, Facebook or TikTok conversation to see them together and reply through any channel.')),
         linkedOpen: @json(__('Open')),
         linkedUnlink: @json(__('Unlink')),
         linkedSearch: @json(__('Search contact by name or number')),
