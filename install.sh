@@ -128,7 +128,7 @@ php_check() {
   have php || die "PHP is not installed. Install PHP 8.1+ (8.3 recommended) with the extensions: mbstring, xml, curl, zip, gd, bcmath, mysql."
   php -r 'exit(version_compare(PHP_VERSION, "8.0.2", ">=") ? 0 : 1);' || die "PHP 8.0.2 or newer is required (found $(php -r 'echo PHP_VERSION;'))."
   local missing=()
-  for ext in mbstring xml curl zip gd pdo_mysql fileinfo; do
+  for ext in mbstring xml curl zip gd pdo_mysql fileinfo iconv openssl; do
     php -m | grep -qi "^${ext}$" || missing+=("$ext")
   done
   [[ ${#missing[@]} -eq 0 ]] || die "Missing PHP extensions: ${missing[*]}"

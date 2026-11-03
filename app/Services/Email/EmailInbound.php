@@ -32,22 +32,21 @@ class EmailInbound
     }
 
     /**
-     * @param array|null $parsed result of MimeParser::parse (already parsed by the caller)
+     * @param array $m message as built by Mailbox::map (or by the contact form processor)
      * @param bool $answer false = only record it (no AI reply)
      */
-    public function handle(Instance $instance, string $raw, ?array $parsed = null, bool $answer = true): ?ChatMessage
+    public function handle(Instance $instance, array $m, bool $answer = true): ?ChatMessage
     {
         if (!$instance->isEmail()) {
             return null;
         }
 
-        $m = $parsed ?? MimeParser::parse($raw);
         $from = $m['from_email'];
         if (!$from || $m['bounce'] || strtolower($from) === strtolower((string) $instance->email_address)) {
             return null; // bounces and our own copies are not conversations
         }
 
-        $messageId = $m['message_id'] ?: 'gen-' . sha1($raw);
+        $messageId = $m['message_id'] ?: 'gen-' . sha1(json_encode([$from, $m['subject'], $m['date'], $m['text']]));
         if (ChatMessage::where('instance_id', $instance->id)->where('message_id', $messageId)->exists()) {
             return null; // fetched twice
         }
@@ -56,7 +55,7 @@ class EmailInbound
         $contact = $this->contact($instance, $jid, $from, $m['from_name']);
         $chat = $this->chat($instance, $jid, $m['from_name'], $contact);
 
-        $reply = MimeParser::trimQuoted($m['text']);
+        $reply = QuotedReply::trim($m['text']);
         $subject = $m['subject'];
         $firstOfThread = !ChatMessage::where('chat_id', $chat->id)->exists();
         $body = ($subject !== '' ? '✉️ ' . $subject . ($reply !== '' ? "\n\n" : '') : '') . $reply;

@@ -7,8 +7,7 @@ return [
     // Most new messages imported from one mailbox per check (the rest is taken on the next one)
     'max_per_poll' => (int) env('EMAIL_MAX_PER_POLL', 20),
 
-    // Messages bigger than this are skipped (bytes, default 10 MB) and so are attachments (kept in the chat only up to the limit)
-    'max_message_bytes' => (int) env('EMAIL_MAX_MESSAGE_BYTES', 10485760),
+    // Attachments bigger than this are not kept in the chat (bytes, default 10 MB)
     'max_attachment_bytes' => (int) env('EMAIL_MAX_ATTACHMENT_BYTES', 10485760),
 
     // Seconds to wait for an SMTP / IMAP server

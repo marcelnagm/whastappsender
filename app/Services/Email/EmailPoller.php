@@ -12,9 +12,6 @@ class EmailPoller
     {
     }
 
-    /** @var callable|null tests: fn (Instance $i): ImapClient */
-    public static $clientFactory = null;
-
     /** @return int messages imported */
     public function poll(Instance $instance): int
     {
@@ -24,14 +21,14 @@ class EmailPoller
 
         $client = null;
         try {
-            $client = self::$clientFactory ? (self::$clientFactory)($instance) : ImapClient::connect($instance);
-            $box = $client->select('INBOX');
+            $client = Mailbox::open($instance);
+            $box = $client->status();
 
             // first check, or the server renumbered the mailbox: start from "now", never import old history
             if ($instance->email_uidvalidity === null || (int) $instance->email_uidvalidity !== (int) $box['uidvalidity'] || ($instance->email_last_uid > 0 && ($box['uidnext'] ?? 0) <= $instance->email_last_uid)) {
                 $instance->forceFill(['email_uidvalidity' => $box['uidvalidity'], 'email_last_uid' => max(0, ((int) ($box['uidnext'] ?? 1)) - 1)]);
                 $this->ok($instance);
-                $client->logout();
+                $client->close();
 
                 return 0;
             }
@@ -39,31 +36,25 @@ class EmailPoller
             $imported = 0;
             $last = (int) $instance->email_last_uid;
             $max = max(1, (int) config('email.max_per_poll', 20));
-            foreach (array_slice($client->uidsAfter($last), 0, $max) as $uid) {
-                $size = $client->size($uid);
-                if ($size === 0 || $size <= (int) config('email.max_message_bytes', 10485760)) {
-                    $raw = $client->fetch($uid);
-                    if ($raw !== null && $raw !== '') {
-                        try {
-                            if ($this->inbound->handle($instance, $raw)) {
-                                $imported++;
-                            }
-                        } catch (\Throwable $e) {
-                            Log::warning('E-mail not imported: ' . $e->getMessage(), ['instance_id' => $instance->id, 'uid' => $uid]);
-                        }
+            foreach ($client->newerThan($last, $max) as $uid => $parsed) {
+                try {
+                    if ($this->inbound->handle($instance, $parsed)) {
+                        $imported++;
                     }
+                } catch (\Throwable $e) {
+                    Log::warning('E-mail not imported: ' . $e->getMessage(), ['instance_id' => $instance->id, 'uid' => $uid]);
                 }
-                $last = $uid; // too big or broken messages are skipped, never retried forever
+                $last = max($last, $uid); // broken messages are skipped, never retried forever
             }
 
             $instance->email_last_uid = $last;
             $this->ok($instance);
-            $client->logout();
+            $client->close();
 
             return $imported;
         } catch (\Throwable $e) {
             $instance->forceFill(['status' => 'disconnected', 'email_error' => mb_substr($e->getMessage(), 0, 250), 'email_checked_at' => now()])->save();
-            $client?->logout();
+            $client?->close();
 
             return 0;
         }

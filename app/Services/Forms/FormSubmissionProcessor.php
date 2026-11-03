@@ -190,7 +190,7 @@ class FormSubmissionProcessor
             'message_id' => 'form-' . $s->id . '@forms.local', 'in_reply_to' => null, 'references' => [], 'date' => now()->toRfc2822String(),
             'text' => $text, 'attachments' => [], 'auto' => false, 'bounce' => false,
         ];
-        $message = app(EmailInbound::class)->handle($instance, '', $parsed, (bool) $form->ai_reply);
+        $message = app(EmailInbound::class)->handle($instance, $parsed, (bool) $form->ai_reply);
         if (!$message) {
             return null;
         }

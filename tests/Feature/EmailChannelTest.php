@@ -16,9 +16,8 @@ use App\Services\Channels\ChannelException;
 use App\Services\Channels\ContactLinks;
 use App\Services\Email\EmailClient;
 use App\Services\Email\EmailPoller;
-use App\Services\Email\ImapClient;
-use App\Services\Email\ImapTransport;
-use App\Services\Email\MimeParser;
+use App\Services\Email\Mailbox;
+use App\Services\Email\QuotedReply;
 use App\Services\Forms\ContactFormFields;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -32,11 +31,13 @@ use Symfony\Component\Mime\RawMessage;
 use Tests\Concerns\CreatesTestSchema;
 use Tests\TestCase;
 
-/** A scripted IMAP server: enough of RFC 3501 for the commands ImapClient uses. */
-class FakeImap implements ImapTransport
+/**
+ * Stands in for the IMAP server (the library itself talks to a real one): holds raw messages by uid and hands them over
+ * parsed by the real webklex/php-imap library through Mailbox::map.
+ */
+class FakeImap
 {
-    public string $out = "* OK ready\r\n";
-    public array $commands = [];
+    public int $opened = 0;
     public bool $loginOk = true;
 
     /** @param array<int,string> $mailbox uid => raw message */
@@ -44,59 +45,40 @@ class FakeImap implements ImapTransport
     {
     }
 
-    public function readLine(): ?string
+    public function connect(): object
     {
-        if ($this->out === '') {
-            return null;
+        $this->opened++;
+        if (!$this->loginOk) {
+            throw new \App\Services\Email\EmailException('IMAP: login refused');
         }
-        $p = strpos($this->out, "\r\n");
-        $line = substr($this->out, 0, $p);
-        $this->out = substr($this->out, $p + 2);
+        $server = $this;
 
-        return $line;
-    }
-
-    public function read(int $bytes): string
-    {
-        $d = substr($this->out, 0, $bytes);
-        $this->out = substr($this->out, $bytes);
-
-        return $d;
-    }
-
-    public function write(string $data): void
-    {
-        [$tag, $cmd] = explode(' ', trim($data), 2);
-        $this->commands[] = $cmd;
-        $next = (empty($this->mailbox) ? 0 : max(array_keys($this->mailbox))) + 1;
-
-        if (str_starts_with($cmd, 'LOGIN')) {
-            $this->out .= $this->loginOk ? "$tag OK logged in\r\n" : "$tag NO [AUTHENTICATIONFAILED] Invalid credentials\r\n";
-        } elseif (str_starts_with($cmd, 'SELECT')) {
-            $this->out .= '* ' . count($this->mailbox) . " EXISTS\r\n* OK [UIDVALIDITY {$this->validity}] ok\r\n* OK [UIDNEXT $next] next\r\n$tag OK selected\r\n";
-        } elseif (preg_match('/^UID SEARCH UID (\d+):\*/', $cmd, $m)) {
-            $uids = array_filter(array_keys($this->mailbox), fn ($u) => $u >= (int) $m[1]);
-            if (!$uids && $this->mailbox) {
-                $uids = [max(array_keys($this->mailbox))]; // real servers return the last message for "n:*"
+        return new class($server) {
+            public function __construct(private FakeImap $s)
+            {
             }
-            $this->out .= '* SEARCH ' . implode(' ', $uids) . "\r\n$tag OK done\r\n";
-        } elseif (preg_match('/^UID FETCH (\d+) \(RFC822\.SIZE\)/', $cmd, $m)) {
-            $this->out .= '* 1 FETCH (UID ' . $m[1] . ' RFC822.SIZE ' . strlen($this->mailbox[(int) $m[1]] ?? '') . ")\r\n$tag OK done\r\n";
-        } elseif (preg_match('/^UID FETCH (\d+) \(BODY\.PEEK\[\]\)/', $cmd, $m)) {
-            $raw = $this->mailbox[(int) $m[1]] ?? '';
-            $this->out .= '* 1 FETCH (UID ' . $m[1] . ' BODY[] {' . strlen($raw) . "}\r\n" . $raw . ")\r\n$tag OK done\r\n";
-        } else {
-            $this->out .= "$tag OK\r\n";
-        }
-    }
 
-    public function enableTls(): bool
-    {
-        return true;
-    }
+            public function status(): array
+            {
+                return ['uidvalidity' => $this->s->validity, 'uidnext' => (empty($this->s->mailbox) ? 0 : max(array_keys($this->s->mailbox))) + 1];
+            }
 
-    public function close(): void
-    {
+            public function newerThan(int $last, int $max): array
+            {
+                $out = [];
+                foreach ($this->s->mailbox as $uid => $raw) {
+                    if ($uid > $last && count($out) < $max) {
+                        $out[$uid] = Mailbox::map(\Webklex\PHPIMAP\Message::fromString($raw));
+                    }
+                }
+
+                return $out;
+            }
+
+            public function close(): void
+            {
+            }
+        };
     }
 }
 
@@ -142,24 +124,13 @@ class EmailChannelTest extends TestCase
         $this->smtp = new FakeSmtp();
         $this->imap = new FakeImap();
         EmailClient::$transportFactory = fn () => $this->smtp;
-        EmailPoller::$clientFactory = fn () => $this->imapClient();
-    }
-
-    /** a new connection to the scripted server (it greets every client) */
-    private function imapClient(): ImapClient
-    {
-        $this->imap->out = "* OK ready\r\n";
-        $c = new ImapClient($this->imap);
-        $c->open();
-        $c->login('u', 'p');
-
-        return $c;
+        Mailbox::$factory = fn () => $this->imap->connect();
     }
 
     protected function tearDown(): void
     {
         EmailClient::$transportFactory = null;
-        EmailPoller::$clientFactory = null;
+        Mailbox::$factory = null;
         parent::tearDown();
     }
 
@@ -205,7 +176,7 @@ class EmailChannelTest extends TestCase
         $this->assertStringNotContainsString('S3gredo!', (string) DB::table('instances')->where('id', $i->id)->value('smtp_password'));
         $this->assertSame(1, (int) $i->email_last_uid); // the old mail is not imported
         $this->assertArrayNotHasKey('smtp_password', $i->toArray());
-        $this->assertContains('SELECT "INBOX"', $this->imap->commands);
+        $this->assertSame(1, $this->imap->opened);
     }
 
     public function test_wrong_credentials_are_refused_and_nothing_is_saved(): void
@@ -224,7 +195,7 @@ class EmailChannelTest extends TestCase
 
         EmailClient::$transportFactory = fn () => $this->smtp;
         $this->imap->loginOk = false;
-        EmailPoller::$clientFactory = fn () => $this->imapClient();
+        Mailbox::$factory = fn () => $this->imap->connect();
         $this->expectException(ChannelException::class);
         $this->expectExceptionMessage('login refused');
         $this->box();
@@ -308,7 +279,7 @@ class EmailChannelTest extends TestCase
     {
         $i = $this->box();
         $this->imap->loginOk = false;
-        EmailPoller::$clientFactory = fn () => $this->imapClient();
+        Mailbox::$factory = fn () => $this->imap->connect();
         app(EmailPoller::class)->poll($i->fresh());
         $this->assertSame('disconnected', $i->fresh()->status);
         $this->assertStringContainsString('login refused', (string) $i->fresh()->email_error);
@@ -515,7 +486,7 @@ class EmailChannelTest extends TestCase
 
     // ---- MIME ------------------------------------------------------------------------------------------------------------
 
-    public function test_mime_parser_handles_multipart_encodings_and_attachments(): void
+    public function test_library_message_is_mapped_with_encodings_and_attachments(): void
     {
         $raw = "From: =?UTF-8?B?Sm9zw6k=?= <jose@x.com>\r\nSubject: =?ISO-8859-1?Q?Or=E7amento_urgente?=\r\nMessage-ID: <abc@x.com>\r\nReferences: <a@x.com> <b@x.com>\r\n"
             . "Content-Type: multipart/mixed; boundary=\"BB\"\r\n\r\n--BB\r\nContent-Type: multipart/alternative; boundary=\"AA\"\r\n\r\n"
@@ -523,7 +494,7 @@ class EmailChannelTest extends TestCase
             . "--AA\r\nContent-Type: text/html; charset=UTF-8\r\n\r\n<p>html</p>\r\n--AA--\r\n"
             . "--BB\r\nContent-Type: application/pdf; name=\"proposta.pdf\"\r\nContent-Disposition: attachment; filename=\"proposta.pdf\"\r\nContent-Transfer-Encoding: base64\r\n\r\n" . chunk_split(base64_encode('%PDF-1.4 fake')) . "\r\n--BB--\r\n";
 
-        $m = MimeParser::parse($raw);
+        $m = Mailbox::map(\Webklex\PHPIMAP\Message::fromString($raw));
         $this->assertSame('José', $m['from_name']);
         $this->assertSame('jose@x.com', $m['from_email']);
         $this->assertSame('Orçamento urgente', $m['subject']);
@@ -536,13 +507,13 @@ class EmailChannelTest extends TestCase
         $this->assertFalse($m['auto']);
     }
 
-    public function test_mime_parser_falls_back_to_html_and_trims_quotes(): void
+    public function test_html_only_message_falls_back_to_html_and_trims_quotes(): void
     {
-        $m = MimeParser::parse("From: a@x.com\r\nSubject: x\r\nContent-Type: text/html; charset=UTF-8\r\n\r\n<style>p{}</style><p>Olá<br>mundo</p>");
+        $m = Mailbox::map(\Webklex\PHPIMAP\Message::fromString("From: a@x.com\r\nSubject: x\r\nContent-Type: text/html; charset=UTF-8\r\n\r\n<style>p{}</style><p>Olá<br>mundo</p>"));
         $this->assertSame("Olá\nmundo", $m['text']);
 
-        $this->assertSame('Obrigado!', MimeParser::trimQuoted("Obrigado!\n\nEm seg., 2 de nov. de 2026 10:00, Loja <l@x.com> escreveu:\n> oi"));
-        $this->assertSame('> só citação', MimeParser::trimQuoted("> só citação")); // never returns empty
+        $this->assertSame('Obrigado!', QuotedReply::trim("Obrigado!\n\nEm seg., 2 de nov. de 2026 10:00, Loja <l@x.com> escreveu:\n> oi"));
+        $this->assertSame('> só citação', QuotedReply::trim("> só citação")); // never returns empty
     }
 
     public function test_mail_to_the_mailbox_itself_is_ignored_and_attachments_are_stored(): void
@@ -550,7 +521,7 @@ class EmailChannelTest extends TestCase
         \Illuminate\Support\Facades\Storage::fake();
         $i = $this->box();
         $this->imap->mailbox[2] = $this->mail('self', 'Cópia', 'loja@exemplo.com');
-        $att = "From: Ana <ana@x.com>\r\nSubject: Foto\r\nMessage-ID: <p1@x.com>\r\nContent-Type: multipart/mixed; boundary=\"B\"\r\n\r\n--B\r\nContent-Type: text/plain\r\n\r\nveja\r\n--B\r\nContent-Type: image/png; name=\"a.png\"\r\nContent-Disposition: attachment; filename=\"a.png\"\r\nContent-Transfer-Encoding: base64\r\n\r\n" . base64_encode('PNGDATA') . "\r\n--B--\r\n";
+        $att = "From: Ana <ana@x.com>\r\nSubject: Foto\r\nMessage-ID: <p1@x.com>\r\nContent-Type: multipart/mixed; boundary=\"B\"\r\n\r\n--B\r\nContent-Type: text/plain\r\n\r\nveja\r\n--B\r\nContent-Type: image/png; name=\"a.png\"\r\nContent-Disposition: attachment; filename=\"a.png\"\r\nContent-Transfer-Encoding: base64\r\n\r\n" . 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==' . "\r\n--B--\r\n";
         $this->imap->mailbox[3] = $att;
         $this->assertSame(1, app(EmailPoller::class)->poll($i->fresh()));
 

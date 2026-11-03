@@ -8,7 +8,7 @@ use App\Services\Billing\Entitlements;
 use App\Services\Email\EmailClient;
 use App\Services\Email\EmailException;
 use App\Services\Email\EmailPoller;
-use App\Services\Email\ImapClient;
+use App\Services\Email\Mailbox;
 use App\Services\Facebook\FacebookClient;
 use App\Services\Facebook\FacebookException;
 use App\Services\Instagram\InstagramClient;
@@ -290,9 +290,9 @@ class ChannelAccounts
             if (!$i->imap_host) {
                 return null;
             }
-            $client = EmailPoller::$clientFactory ? (EmailPoller::$clientFactory)($i) : ImapClient::connect($i);
-            $box = $client->select('INBOX');
-            $client->logout();
+            $client = Mailbox::open($i);
+            $box = $client->status();
+            $client->close();
 
             return $box;
         } catch (EmailException $e) {
