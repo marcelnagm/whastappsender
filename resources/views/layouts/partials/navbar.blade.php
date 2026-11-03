@@ -44,6 +44,11 @@
           <a href="{{ route('facebook.index') }}" class="nav-link {{ request()->is('facebook*') ? 'active text-secondary' : 'text-white' }}"><i class="bi bi-facebook me-1"></i> {{ __('Facebook') }}</a>
         </li>
         @endteamcan
+        @teamcan('channels')
+        <li class="nav-item">
+          <a href="{{ route('email.index') }}" class="nav-link {{ request()->is('email*') ? 'active text-secondary' : 'text-white' }}"><i class="bi bi-envelope me-1"></i> {{ __('Email') }}</a>
+        </li>
+        @endteamcan
         @teamcan('chat')
         <li class="nav-item">
           <a href="{{ route('chat.index') }}" class="nav-link {{ request()->is('chat*') ? 'active text-secondary' : 'text-white' }}"><i class="bi bi-chat-dots me-1"></i> {{ __('Chat') }}</a>

@@ -13,6 +13,7 @@ use App\Services\Billing\Entitlements;
 use App\Services\Channels\ContactLinks;
 use App\Services\Channels\InboundAiBridge;
 use App\Services\Channels\ReplyWindow;
+use App\Services\Email\EmailInbound;
 use App\Services\Chat\ChatMessageRecorder;
 use Illuminate\Support\Facades\Log;
 
@@ -51,7 +52,13 @@ class FormSubmissionProcessor
         $delivery = 'none';
         $chat = null;
         if ($contact) {
-            [$delivery, $chat] = $this->deliver($form, $s, $user, $contact, $phone, $name, $text, $notes);
+            [$delivery, $chat] = $this->deliver($form, $s, $user, $contact, $phone, $name, $email, $text, $notes);
+        } elseif ($email) {
+            // no phone: the lead's own address and the owner's mailbox are enough for a conversation
+            if ($mail = $this->viaEmail($form, $s, $user, $name, $email, $text)) {
+                [$delivery, $chat, $contact] = $mail;
+                $notes = [];
+            }
         }
 
         $s->update([
@@ -114,7 +121,7 @@ class FormSubmissionProcessor
     }
 
     /** @return array{0:string,1:?Chat} channel used + chat where the conversation landed */
-    private function deliver($form, ContactFormSubmission $s, User $user, Contact $contact, string $phone, ?string $name, string $text, array &$notes): array
+    private function deliver($form, ContactFormSubmission $s, User $user, Contact $contact, string $phone, ?string $name, ?string $email, string $text, array &$notes): array
     {
         $allowed = array_values((array) $form->reply_channels);
         $may = fn (string $ch) => !$allowed || in_array($ch, $allowed, true);
@@ -156,9 +163,41 @@ class FormSubmissionProcessor
             return [$channel, $chat];
         }
 
+        // 3) The lead left an e-mail address and the owner has a mailbox connected
+        if ($email && ($mail = $this->viaEmail($form, $s, $user, $name, $email, $text))) {
+            return [$mail[0], $mail[1]];
+        }
+
         $notes[] = __('No channel available to answer: stored only.');
 
         return ['none', null];
+    }
+
+    /** @return array{0:string,1:Chat,2:Contact}|null conversation opened in the owner's mailbox (the AI answers by e-mail) */
+    private function viaEmail($form, ContactFormSubmission $s, User $user, ?string $name, string $email, string $text): ?array
+    {
+        $allowed = array_values((array) $form->reply_channels);
+        if ($allowed && !in_array('email', $allowed, true)) {
+            return null;
+        }
+        $instance = Instance::where('user_id', $user->id)->where('channel', 'email')->where('status', 'connected')->orderBy('id')->first();
+        if (!$instance) {
+            return null;
+        }
+
+        $parsed = [
+            'subject' => (string) ($form->title ?: $form->name), 'from_email' => strtolower($email), 'from_name' => $name, 'to' => null,
+            'message_id' => 'form-' . $s->id . '@forms.local', 'in_reply_to' => null, 'references' => [], 'date' => now()->toRfc2822String(),
+            'text' => $text, 'attachments' => [], 'auto' => false, 'bounce' => false,
+        ];
+        $message = app(EmailInbound::class)->handle($instance, '', $parsed, (bool) $form->ai_reply);
+        if (!$message) {
+            return null;
+        }
+        $chat = Chat::find($message->chat_id);
+        $contact = $chat ? Contact::find($chat->contact_id) : null;
+
+        return $contact ? ['email', $chat, $contact] : null;
     }
 
     private function whatsappInstance($form, User $user): ?Instance

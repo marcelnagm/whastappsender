@@ -26,9 +26,12 @@ class Instance extends Model
         'telegram_secret', 'instagram_token', 'instagram_id', 'instagram_username',
         'tiktok_token', 'tiktok_refresh_token', 'tiktok_open_id', 'tiktok_username', 'tiktok_token_expires_at', 'tiktok_refresh_expires_at',
         'facebook_token', 'facebook_page_id', 'facebook_page_name',
+        'email_address', 'email_from_name', 'smtp_host', 'smtp_port', 'smtp_encryption', 'smtp_username', 'smtp_password',
+        'imap_host', 'imap_port', 'imap_encryption', 'imap_username', 'imap_password',
+        'email_last_uid', 'email_uidvalidity', 'email_checked_at', 'email_error',
     ];
 
-    protected $hidden = ['telegram_token', 'telegram_secret', 'instagram_token', 'facebook_token', 'tiktok_token', 'tiktok_refresh_token'];
+    protected $hidden = ['telegram_token', 'telegram_secret', 'instagram_token', 'facebook_token', 'tiktok_token', 'tiktok_refresh_token', 'smtp_password', 'imap_password'];
 
     /**
      * Attribute casting.
@@ -42,6 +45,9 @@ class Instance extends Model
         'facebook_token' => 'encrypted',
         'tiktok_token' => 'encrypted',
         'tiktok_refresh_token' => 'encrypted',
+        'smtp_password' => 'encrypted',
+        'imap_password' => 'encrypted',
+        'email_checked_at' => 'datetime',
         'tiktok_token_expires_at' => 'datetime',
         'tiktok_refresh_expires_at' => 'datetime',
         'disconnected_at' => 'datetime',
@@ -100,15 +106,20 @@ class Instance extends Model
         return $this->channel === 'tiktok';
     }
 
+    public function isEmail(): bool
+    {
+        return $this->channel === 'email';
+    }
+
     public function channelLabel(): string
     {
-        return ['telegram' => 'Telegram', 'instagram' => 'Instagram', 'tiktok' => 'TikTok', 'facebook' => 'Facebook'][$this->channel] ?? 'WhatsApp';
+        return ['telegram' => 'Telegram', 'instagram' => 'Instagram', 'tiktok' => 'TikTok', 'facebook' => 'Facebook', 'email' => 'Email'][$this->channel] ?? 'WhatsApp';
     }
 
     /** True for numbers served by the Evolution API (the default channel). */
     public function isWhatsapp(): bool
     {
-        return !in_array($this->channel, ['telegram', 'instagram', 'tiktok', 'facebook'], true);
+        return !in_array($this->channel, ['telegram', 'instagram', 'tiktok', 'facebook', 'email'], true);
     }
 
     /** whatsapp | telegram | instagram */

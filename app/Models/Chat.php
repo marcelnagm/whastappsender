@@ -25,6 +25,8 @@ class Chat extends Model
         'last_message_from_me',
         'last_message_status',
         'last_message_at',
+        'email_subject',
+        'email_refs',
     ];
 
     protected $casts = [

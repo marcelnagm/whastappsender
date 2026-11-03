@@ -98,7 +98,7 @@ final class TeamRoles
         ['campaigns.approve', ['approvals.*']],
         ['reports', ['stats.*']],
         ['forms', ['forms.*']],
-        ['channels', ['telegram.*', 'tiktok.*', 'facebook.*', 'instagram.*', 'instances.*', 'whatsapp.*']],
+        ['channels', ['telegram.*', 'tiktok.*', 'facebook.*', 'email.*', 'instagram.*', 'instances.*', 'whatsapp.*']],
         ['ai', ['ai.*']],
         ['team', ['team.*']],
     ];
@@ -136,7 +136,7 @@ final class TeamRoles
         'any-audience' => ['preview_campaign_audience'],
         'reports' => ['get_dashboard', 'get_channel_stats'],
         'channels' => ['list_instances', 'get_instance', 'create_instance', 'delete_instance', 'get_instance_qr', 'check_instance_connection', 'toggle_instance_warmup', 'sync_instance_contacts',
-            'list_channels', 'connect_telegram_bot', 'connect_instagram_account', 'connect_facebook_page', 'get_tiktok_connect_url', 'renew_channel_connection', 'remove_channel_account'],
+            'list_channels', 'connect_telegram_bot', 'connect_instagram_account', 'connect_facebook_page', 'connect_email_account', 'get_tiktok_connect_url', 'renew_channel_connection', 'remove_channel_account'],
     ];
 
     /** @return string|string[]|null  'any' | permission | any-of list | null (denied) */

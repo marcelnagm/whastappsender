@@ -10,6 +10,7 @@
     'instagram' => ['Instagram', 'bi-instagram', '#d6249f'],
     'facebook'  => ['Facebook',  'bi-facebook',  '#1877f2'],
     'tiktok'    => ['TikTok',    'bi-tiktok',    '#fe2c55'],
+    'email'     => ['Email',     'bi-envelope',  '#6c757d'],
   ];
   $fmt = function ($min) {
       if ($min === null) return '—';

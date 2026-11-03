@@ -10,10 +10,10 @@ use App\Services\Stats\ChannelStats;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
-/** Telegram / Instagram / Facebook / TikTok accounts (WhatsApp numbers stay in InstanceController). */
+/** Telegram / Instagram / Facebook / TikTok / e-mail accounts (WhatsApp numbers stay in InstanceController). */
 class ChannelController extends ApiController
 {
-    private const CHANNELS = ['telegram', 'instagram', 'facebook', 'tiktok'];
+    private const CHANNELS = ['telegram', 'instagram', 'facebook', 'tiktok', 'email'];
 
     public function index(Request $request)
     {
@@ -48,6 +48,19 @@ class ChannelController extends ApiController
         $data = $request->validate(['token' => 'required|string|min:20|max:1000']);
 
         return $this->run(fn () => $this->success($this->present($accounts->connectFacebook(Auth::user(), trim($data['token']))), 'Facebook Page connected.', 201));
+    }
+
+    public function connectEmail(Request $request, ChannelAccounts $accounts)
+    {
+        $data = $request->validate([
+            'email' => 'required|email|max:190', 'from_name' => 'nullable|string|max:120',
+            'smtp_host' => 'required|string|max:190', 'smtp_port' => 'required|integer|between:1,65535',
+            'smtp_encryption' => 'required|in:ssl,tls,none', 'smtp_username' => 'required|string|max:190', 'smtp_password' => 'required|string|max:500',
+            'imap_host' => 'nullable|string|max:190', 'imap_port' => 'nullable|integer|between:1,65535', 'imap_encryption' => 'nullable|in:ssl,tls,none',
+            'imap_username' => 'nullable|string|max:190', 'imap_password' => 'nullable|string|max:500',
+        ]);
+
+        return $this->run(fn () => $this->success($this->present($accounts->connectEmail(Auth::user(), $data)), 'E-mail account connected.', 201));
     }
 
     /** TikTok needs a browser: the person opens this URL, authorises, and the callback stores the account. */
@@ -99,7 +112,7 @@ class ChannelController extends ApiController
     {
         return [
             'id' => $i->id, 'name' => $i->name, 'channel' => $i->channelKey(),
-            'status' => $i->status, 'account' => $i->instance_name,
+            'status' => $i->status, 'account' => $i->isEmail() ? $i->email_address : $i->instance_name,
         ];
     }
 }

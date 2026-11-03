@@ -10,7 +10,7 @@
 > ⭐ **Cloned or using this project? Please give it a star and/or follow [@marcelnagm](https://github.com/marcelnagm).**
 > It's free, takes two seconds and is what keeps the project maintained. Thank you! 🙏
 
-**SAMA Envios** is a mission-critical communication infrastructure that merges the power of **Laravel** with the LLM of your choice (**Groq, OpenAI, Claude, Gemini, DeepSeek, Mistral, OpenRouter, Ollama or any OpenAI-compatible endpoint**). Designed for teams that demand stable bulk messaging and **Intelligent AI Customer Service** on WhatsApp, Telegram, Instagram, Facebook Messenger and TikTok in one omnichannel inbox with per-channel statistics, answering through the very number, bot or account the customer wrote to.
+**SAMA Envios** is a mission-critical communication infrastructure that merges the power of **Laravel** with the LLM of your choice (**Groq, OpenAI, Claude, Gemini, DeepSeek, Mistral, OpenRouter, Ollama or any OpenAI-compatible endpoint**). Designed for teams that demand stable bulk messaging and **Intelligent AI Customer Service** on WhatsApp, Telegram, Instagram, Facebook Messenger, TikTok and e-mail in one omnichannel inbox with per-channel statistics, answering through the very number, bot or account the customer wrote to.
 
 **Documentation map**
 
@@ -24,7 +24,8 @@
 | [Instagram](#-instagram-direct) | Instagram DMs in the same omnichannel chat; AI answers through the account that received the message |
 | [Facebook](#-facebook-messenger) | Facebook Page (Messenger) conversations in the same chat; replies go through the Page that received the message |
 | [TikTok](#-tiktok-business-messaging) | TikTok Business DMs in the same chat, step-by-step setup (developer app, approval, OAuth, webhook) |
-| [Channel statistics & linked contacts](#-channel-statistics--linked-contacts) | Per-channel numbers, and one person's WhatsApp / Telegram / Instagram / Facebook / TikTok conversations tied together |
+| [Email](#️-email-smtp--imap) | Connect a mailbox with SMTP/IMAP credentials: e-mail joins the chat, the AI answers by e-mail and the sender is unified with the same contact |
+| [Channel statistics & linked contacts](#-channel-statistics--linked-contacts) | Per-channel numbers, and one person's WhatsApp / Telegram / Instagram / Facebook / TikTok / e-mail conversations tied together |
 | [Contact ranking & unresponsive contacts](#-contact-ranking--unresponsive-contacts) | Engagement score with tiers, and automatic deactivation of contacts whose WhatsApp messages are never delivered |
 | [Signup welcome](#signup-welcome-message) | Admin chooses the campaign message sent to people who register on the site |
 | [Contact forms](#-contact-forms-embeddable) | Build a form, paste one script line on any site; leads land in the CRM and the AI answers on WhatsApp / available channels |
@@ -395,6 +396,7 @@ The `.docker/supervisor/conf.d/laravel-worker.conf` file ships with `worker-disp
 | `instances:health` | `INSTANCE_HEALTH_CRON` (default every 5 min) | Detects down sessions / lost webhooks / Evolution outages and alerts the owner |
 | `queue:monitor` | Every 5 min (only when `QUEUE_CONNECTION=redis`) | Alerts when a queue exceeds `QUEUE_BACKLOG_MAX` pending jobs |
 | `contacts:deactivate-unresponsive` | Hourly | Deactivates WhatsApp contacts whose messages are never delivered |
+| `email:fetch` | `EMAIL_FETCH_CRON` (default every minute) | Imports new mail from the connected mailboxes (IMAP) and lets the AI answer |
 | `contacts:score` | Hourly | Recalculates the engagement score / tier of contacts |
 | `warmup:generate` | Daily at 08:00 (`America/Boa_Vista`) | Starts cross-chip warmup conversations |
 | `billing:run` | Hourly | Moves subscriptions through trial / past due / suspended / expired and issues renewal invoices |
@@ -794,6 +796,21 @@ Sending still needs the person to have written first on that channel: linking do
 
 * * *
 
+## ✉️ Email (SMTP / IMAP)
+
+Open **Email** in the menu and type the credentials of a mailbox (for example `vendas@yourcompany.com`). It becomes one more channel of the omnichannel chat: customers who write by e-mail show up next to WhatsApp, Telegram, Instagram, Facebook and TikTok, the **AI agent answers by e-mail** and the person is **unified with the same contact** across channels.
+
+* **Sending (SMTP, required):** server, port (`587` STARTTLS, `465` SSL/TLS), username and password. They are tested when you connect (login without sending anything) and stored **encrypted**. Replies go out through that mailbox, inside the same e-mail thread (`Re: subject`, `In-Reply-To` / `References`), whether written by an attendant in the chat (attachments included) or by the AI.
+* **Receiving (IMAP, optional):** server, port (`993` SSL/TLS, `143` STARTTLS) and, if different, user/password (they default to the SMTP ones). Without IMAP the channel is send-only. The scheduler runs `email:fetch` every minute (`EMAIL_FETCH_CRON`); run `php artisan email:fetch --now` to check by hand. Only mail that arrives **after** you connect is imported, nothing in your mailbox is marked as read or deleted, and the IMAP client is built in (no PHP `imap` extension needed).
+* **Quick setup buttons** fill the servers of Gmail, Outlook / Microsoft 365, Zoho and Yahoo. Gmail, Outlook and Yahoo require an **app password** (not the normal one).
+* **One person, one contact:** an e-mail conversation is the contact `em:<address>`. If a WhatsApp contact (CRM, import, form) has the same address in its *email* field, the two are linked automatically, in either order, so the chat shows the person's conversations in every channel. When two WhatsApp contacts share one address nothing is guessed, and a link made by a person is never overridden. The *Statistics* page and the contact ranking count e-mail like any other channel.
+* **The AI and e-mail:** the AI of that mailbox answers each message (working hours, plan quota, `#sair` opt-out and *human handoff* apply). Safety rules for mail: automatic messages (newsletters, `no-reply@`, out-of-office, `List-Unsubscribe`, `Auto-Submitted`) are shown in the chat but never answered; bounces are ignored; AI replies are marked `Auto-Submitted: auto-generated` so other robots do not answer back; and one sender gets at most `EMAIL_AI_MAX_REPLIES_PER_DAY` AI answers per day (anti mail-loop).
+* **Contact forms:** a form lead that only leaves an **e-mail** is answered through your mailbox (in the form's *channels the AI may use*, tick Email). If the lead also typed a WhatsApp number, WhatsApp is still used first.
+* **Safety of the server address:** the host and port come from the user, so SMTP/IMAP servers on localhost or private networks (and `169.254.*`) are refused unless `EMAIL_ALLOW_PRIVATE_HOSTS=true` (default only in `APP_ENV=local`), and only the usual ports are accepted (`EMAIL_SMTP_PORTS`, `EMAIL_IMAP_PORTS`). Server messages never echo the password.
+* **Limits:** messages above `EMAIL_MAX_MESSAGE_BYTES` (10 MB) are skipped, `EMAIL_MAX_PER_POLL` messages are imported per check, plain text is used for the answer (HTML mail is converted to text, quoted history is trimmed). Mailboxes count as channel accounts in the plan limit. E-mail contacts have status `email`, so WhatsApp campaigns never pick them, and campaigns do not send by e-mail (no bulk mailing from here).
+* **REST / agent tools:** `POST /api/v1/channels/email` (`connect_email_account`), `GET /api/v1/channels?channel=email`, renew/remove like the other channels. The chat API (`/conversations`, `send_conversation_message`) works with e-mail chats too.
+* Run `php artisan migrate` (new columns on `instances` and `chats`).
+
 ## 🎯 Contact ranking & unresponsive contacts
 
 ### Unresponsive contacts (automatic deactivation)
@@ -1187,6 +1204,20 @@ See the table in [AI Agents](#-ai-agents-multi-provider): `GROQ_API_KEY`, `OPENA
 | `CONTACT_SCORE_WINDOW_DAYS`, `CONTACT_SCORE_REFRESH_HOURS` | 90, 24 | Activity window and recalculation interval |
 | `CONTACT_SCORE_HOT`, `_WARM`, `_COLD` | 70, 40, 15 | Tier thresholds (below cold = frozen) |
 
+### E-mail channel
+
+| Variable | Default | Controls |
+|---|---|---|
+| `EMAIL_FETCH_CRON` | `* * * * *` | How often the mailboxes (IMAP) are checked for new mail |
+| `EMAIL_MAX_PER_POLL` | 20 | Most new messages imported from one mailbox per check |
+| `EMAIL_MAX_MESSAGE_BYTES`, `EMAIL_MAX_ATTACHMENT_BYTES` | 10 MB, 10 MB | Bigger messages are skipped; bigger attachments are not kept |
+| `EMAIL_TIMEOUT` | 20 | Seconds to wait for an SMTP / IMAP server |
+| `EMAIL_ALLOW_PRIVATE_HOSTS` | only `APP_ENV=local` | Allow servers on localhost / private networks (SSRF protection: keep `false` on a shared host) |
+| `EMAIL_SMTP_PORTS`, `EMAIL_IMAP_PORTS` | `25,465,587,2525` / `143,993` | Ports users may use (empty = any) |
+| `EMAIL_AI_MAX_REPLIES_PER_DAY` | 5 | Loop protection: AI answers per sender per day |
+
+Mailbox credentials are **not** in `.env`: each user types them in the **Email** screen and they are stored encrypted.
+
 ### Contact forms
 
 | Variable | Default | Controls |
@@ -1227,7 +1258,7 @@ Gateway credentials (Asaas, Efí, AbacatePay, Stone, Stripe, PagBank, Mercado Pa
 
 ## 🧪 Tests
 
-`vendor/bin/phpunit` (in-memory SQLite, no external services): fair queue planner and command, chat backend, Telegram, Instagram and TikTok channels (webhook secret/signature, OAuth, token refresh, inbound, AI reply through the same bot/account, reply window, settings), channel statistics and cross-channel contact links, unresponsive-contact deactivation, contact score ranking, Facebook Messenger, team roles and approval, audience by score and channel, plan queue priority, embeddable contact forms (public script/endpoint, spam protection, contact + chat creation, AI reply channel choice), the new channel / inbox / ranking API endpoints and MCP tools, avatar caching, billing lifecycle and plan enforcement, the Mercado Pago gateway (admin settings, Pix, card, recurrence, webhook) and the Asaas / Efí / AbacatePay / Stone (Pagar.me) / Stripe / PagBank gateways (HTTP faked).
+`vendor/bin/phpunit` (in-memory SQLite, no external services): fair queue planner and command, chat backend, Telegram, Instagram and TikTok channels (webhook secret/signature, OAuth, token refresh, inbound, AI reply through the same bot/account, reply window, settings), channel statistics and cross-channel contact links, unresponsive-contact deactivation, contact score ranking, Facebook Messenger, team roles and approval, audience by score and channel, plan queue priority, e-mail channel (SMTP send, built-in IMAP client with a scripted server, MIME parser, threading, AI reply, loop protection, contact unification), embeddable contact forms (public script/endpoint, spam protection, contact + chat creation, AI reply channel choice), the new channel / inbox / ranking API endpoints and MCP tools, avatar caching, billing lifecycle and plan enforcement, the Mercado Pago gateway (admin settings, Pix, card, recurrence, webhook) and the Asaas / Efí / AbacatePay / Stone (Pagar.me) / Stripe / PagBank gateways (HTTP faked).
 
 * * *
 
@@ -1244,7 +1275,7 @@ Gateway credentials (Asaas, Efí, AbacatePay, Stone, Stripe, PagBank, Mercado Pa
 * ✅ **Fair Send Queue:** every batch of 50 messages is balanced across users and sessions, so no campaign starves the others.
 * ✅ **Plans & Billing:** freemium + 3 plans, trial, due dates, grace period and read-only blocking for non-payment.
 * ✅ **Payments (Asaas, Efí, AbacatePay, Stone, Stripe, PagBank, Mercado Pago):** Pix and credit card, one-time or automatic renewal, several providers at once, configured from the admin area.
-* ✅ **Omnichannel inbox:** WhatsApp, Telegram, Instagram, Facebook Messenger and TikTok in one chat, with per-channel statistics and linked contacts.
+* ✅ **Omnichannel inbox:** WhatsApp, Telegram, Instagram, Facebook Messenger, TikTok and e-mail (your own SMTP/IMAP mailbox) in one chat, with per-channel statistics and linked contacts.
 * ✅ **Embeddable contact forms:** one `<script>` line on any site; leads become contacts and conversations in the CRM and the AI replies.
 * ✅ **Team & roles:** sub-users (admin, approver, creator, sender, attendant, analyst) working for the contract account.
 * ✅ **Audience & approval:** pick the audience by score tier and channels, and require approval before a campaign is sent.

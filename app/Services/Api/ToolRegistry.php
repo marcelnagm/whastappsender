@@ -94,7 +94,7 @@ class ToolRegistry
 
             // Channels
             self::tool('list_channels', 'List connected channel accounts (telegram, instagram, tiktok, whatsapp).', [
-                'channel' => ['type' => 'string', 'enum' => ['whatsapp', 'telegram', 'instagram', 'facebook', 'tiktok']],
+                'channel' => ['type' => 'string', 'enum' => ['whatsapp', 'telegram', 'instagram', 'facebook', 'tiktok', 'email']],
             ]),
             self::tool('connect_telegram_bot', 'Connect a Telegram bot with its BotFather token.', [
                 'token' => ['type' => 'string'],
@@ -105,11 +105,18 @@ class ToolRegistry
             self::tool('connect_facebook_page', 'Connect a Facebook Page (Messenger) with its Page access token.', [
                 'token' => ['type' => 'string'],
             ], ['token']),
+            self::tool('connect_email_account', 'Connect a mailbox: SMTP credentials send (and answer with the AI), IMAP (optional) receives into the chat.', [
+                'email' => ['type' => 'string'], 'from_name' => ['type' => 'string'],
+                'smtp_host' => ['type' => 'string'], 'smtp_port' => ['type' => 'integer'], 'smtp_encryption' => ['type' => 'string', 'enum' => ['ssl', 'tls', 'none']],
+                'smtp_username' => ['type' => 'string'], 'smtp_password' => ['type' => 'string'],
+                'imap_host' => ['type' => 'string'], 'imap_port' => ['type' => 'integer'], 'imap_encryption' => ['type' => 'string', 'enum' => ['ssl', 'tls', 'none']],
+                'imap_username' => ['type' => 'string'], 'imap_password' => ['type' => 'string'],
+            ], ['email', 'smtp_host', 'smtp_port', 'smtp_encryption', 'smtp_username', 'smtp_password']),
             self::tool('get_tiktok_connect_url', 'URL the person must open in a browser to authorise a TikTok account.'),
-            self::tool('renew_channel_connection', 'Renew tokens / webhook of a Telegram, Instagram, Facebook or TikTok account.', [
+            self::tool('renew_channel_connection', 'Renew tokens / webhook of a Telegram, Instagram, Facebook, TikTok or e-mail account.', [
                 'instance_id' => ['type' => 'integer'],
             ], ['instance_id']),
-            self::tool('remove_channel_account', 'Disconnect and remove a Telegram, Instagram, Facebook or TikTok account.', [
+            self::tool('remove_channel_account', 'Disconnect and remove a Telegram, Instagram, Facebook, TikTok or e-mail account.', [
                 'instance_id' => ['type' => 'integer'],
             ], ['instance_id']),
             self::tool('get_channel_stats', 'Per-channel numbers (chats, messages, AI replies, first response time) for the last 7, 30 or 90 days.', [
@@ -118,7 +125,7 @@ class ToolRegistry
 
             // Omnichannel inbox
             self::tool('list_conversations', 'List conversations of every channel, newest first. window_open tells whether we can still reply (Instagram/Facebook 24h, TikTok 48h).', [
-                'channel' => ['type' => 'string', 'enum' => ['whatsapp', 'telegram', 'instagram', 'facebook', 'tiktok']],
+                'channel' => ['type' => 'string', 'enum' => ['whatsapp', 'telegram', 'instagram', 'facebook', 'tiktok', 'email']],
                 'instance_id' => ['type' => 'integer'],
                 'unread' => ['type' => 'boolean', 'description' => 'Only conversations with unread messages'],
                 'search' => ['type' => 'string'],
@@ -329,6 +336,7 @@ class ToolRegistry
             'connect_telegram_bot' => [\App\Http\Controllers\Api\ChannelController::class, 'connectTelegram'],
             'connect_instagram_account' => [\App\Http\Controllers\Api\ChannelController::class, 'connectInstagram'],
             'connect_facebook_page' => [\App\Http\Controllers\Api\ChannelController::class, 'connectFacebook'],
+            'connect_email_account' => [\App\Http\Controllers\Api\ChannelController::class, 'connectEmail'],
             'get_tiktok_connect_url' => [\App\Http\Controllers\Api\ChannelController::class, 'tiktokUrl'],
             'renew_channel_connection' => [\App\Http\Controllers\Api\ChannelController::class, 'renew', 'instance_id' => 'instance'],
             'remove_channel_account' => [\App\Http\Controllers\Api\ChannelController::class, 'destroy', 'instance_id' => 'instance'],

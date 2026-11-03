@@ -129,6 +129,13 @@ class Contact extends Model
                 $c->deactivated_at = null;
             }
         });
+
+        // one e-mail address on a WhatsApp contact and on an e-mail conversation = the same person
+        static::saved(function (Contact $c) {
+            if ($c->wasChanged('email') && $c->email && !str_contains((string) $c->contact, ':')) {
+                \App\Services\Channels\ContactLinks::linkByEmail($c);
+            }
+        });
     }
 
     public function scopeTier($query, string $tier)

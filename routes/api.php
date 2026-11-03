@@ -126,6 +126,7 @@ Route::prefix('v1')->group(function () {
         Route::post('/channels/telegram', [ChannelController::class, 'connectTelegram']);
         Route::post('/channels/instagram', [ChannelController::class, 'connectInstagram']);
         Route::post('/channels/facebook', [ChannelController::class, 'connectFacebook']);
+        Route::post('/channels/email', [ChannelController::class, 'connectEmail']);
         Route::get('/channels/tiktok/url', [ChannelController::class, 'tiktokUrl']);
         Route::post('/channels/{instance}/renew', [ChannelController::class, 'renew']);
         Route::delete('/channels/{instance}', [ChannelController::class, 'destroy']);

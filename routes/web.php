@@ -114,6 +114,15 @@ Route::group(['namespace' => 'App\Http\Controllers', 'middleware' => ['auth', 's
         Route::delete('/{instance}', [$tt, 'destroy'])->name('destroy');
     });
 
+    // E-mail mailboxes (channel = email instances): SMTP credentials to send, IMAP to receive
+    Route::prefix('email')->name('email.')->group(function () {
+        $em = \App\Http\Controllers\EmailController::class;
+        Route::get('/', [$em, 'index'])->name('index');
+        Route::post('/', [$em, 'store'])->name('store')->middleware('throttle:10,1');
+        Route::post('/{instance}/refresh', [$em, 'refresh'])->name('refresh')->middleware('throttle:10,1');
+        Route::delete('/{instance}', [$em, 'destroy'])->name('destroy');
+    });
+
     // Facebook Pages (channel = facebook instances)
     Route::prefix('facebook')->name('facebook.')->group(function () {
         $fb = \App\Http\Controllers\FacebookController::class;

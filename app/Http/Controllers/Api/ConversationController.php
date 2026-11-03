@@ -22,7 +22,7 @@ class ConversationController extends ApiController
         $query = Chat::with(['contact', 'instance'])
             ->where('user_id', Auth::id())->where('archived', false)->whereNotNull('last_message_at')
             ->when($request->filled('instance_id'), fn ($w) => $w->where('instance_id', (int) $request->input('instance_id')))
-            ->when(in_array($channel, ['whatsapp', 'telegram', 'instagram', 'facebook', 'tiktok'], true), function ($w) use ($channel) {
+            ->when(in_array($channel, ['whatsapp', 'telegram', 'instagram', 'facebook', 'tiktok', 'email'], true), function ($w) use ($channel) {
                 $ids = Instance::where('user_id', Auth::id())
                     ->when($channel === 'whatsapp', fn ($i) => $i->where(fn ($x) => $x->whereNull('channel')->orWhere('channel', 'whatsapp')), fn ($i) => $i->where('channel', $channel))
                     ->pluck('id');

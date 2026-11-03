@@ -5,6 +5,10 @@ namespace App\Services\Channels;
 use App\Models\Instance;
 use App\Models\User;
 use App\Services\Billing\Entitlements;
+use App\Services\Email\EmailClient;
+use App\Services\Email\EmailException;
+use App\Services\Email\EmailPoller;
+use App\Services\Email\ImapClient;
 use App\Services\Facebook\FacebookClient;
 use App\Services\Facebook\FacebookException;
 use App\Services\Instagram\InstagramClient;
@@ -236,6 +240,66 @@ class ChannelAccounts
         return [$instance, 'created'];
     }
 
+    // ---- E-mail (the user's own mailbox) -------------------------------------------------------------------------------
+
+    /**
+     * @param array{email:string,from_name?:?string,smtp_host:string,smtp_port:int,smtp_encryption:string,smtp_username:string,smtp_password:string,
+     *              imap_host?:?string,imap_port?:?int,imap_encryption?:?string,imap_username?:?string,imap_password?:?string} $d
+     * @throws ChannelException
+     */
+    public function connectEmail(User $user, array $d): Instance
+    {
+        $address = strtolower(trim($d['email']));
+        if (Instance::where('channel', 'email')->where('email_address', $address)->exists()) {
+            throw new ChannelException(__('This e-mail address is already connected.'));
+        }
+
+        $attrs = [
+            'email_address' => $address,
+            'email_from_name' => isset($d['from_name']) ? mb_substr(trim((string) $d['from_name']), 0, 120) : null,
+            'smtp_host' => strtolower(trim($d['smtp_host'])), 'smtp_port' => (int) $d['smtp_port'], 'smtp_encryption' => $d['smtp_encryption'],
+            'smtp_username' => $d['smtp_username'], 'smtp_password' => $d['smtp_password'],
+            'imap_host' => !empty($d['imap_host']) ? strtolower(trim($d['imap_host'])) : null,
+            'imap_port' => !empty($d['imap_host']) ? (int) ($d['imap_port'] ?: 993) : null,
+            'imap_encryption' => !empty($d['imap_host']) ? ($d['imap_encryption'] ?: 'ssl') : null,
+            'imap_username' => !empty($d['imap_username']) ? $d['imap_username'] : null,
+            'imap_password' => !empty($d['imap_password']) ? $d['imap_password'] : null,
+        ];
+        $probe = new Instance($attrs);
+        $box = $this->checkEmail($probe);
+
+        app(Entitlements::class)->authorizeUsage($user, 'instances');
+
+        return $user->instances()->create($attrs + [
+            'name' => $address,
+            'instance_name' => 'em-' . $user->id . '-' . Str::lower(Str::random(8)),
+            'status' => 'connected',
+            'channel' => 'email',
+            // only mail that arrives from now on is imported
+            'email_uidvalidity' => $box['uidvalidity'] ?? null,
+            'email_last_uid' => $box ? max(0, (int) ($box['uidnext'] ?? 1) - 1) : 0,
+            'email_checked_at' => $box ? now() : null,
+        ]);
+    }
+
+    /** Opens SMTP (and IMAP when set) with the given credentials. @return array|null IMAP mailbox info @throws ChannelException */
+    public function checkEmail(Instance $i): ?array
+    {
+        try {
+            EmailClient::for($i)->check();
+            if (!$i->imap_host) {
+                return null;
+            }
+            $client = EmailPoller::$clientFactory ? (EmailPoller::$clientFactory)($i) : ImapClient::connect($i);
+            $box = $client->select('INBOX');
+            $client->logout();
+
+            return $box;
+        } catch (EmailException $e) {
+            throw new ChannelException($e->getMessage());
+        }
+    }
+
     // ---- common ------------------------------------------------------------------------------------------------------
 
     /** Renews tokens / webhook of a Telegram, Instagram, Facebook or TikTok account. @throws ChannelException */
@@ -257,8 +321,17 @@ class ChannelAccounts
                 FacebookClient::for($instance)->subscribe();
             } elseif ($instance->isTiktok()) {
                 TikTokClient::for($instance)->refreshIfNeeded(true);
+            } elseif ($instance->isEmail()) {
+                try {
+                    $this->checkEmail($instance);
+                } catch (ChannelException $e) {
+                    $instance->update(['status' => 'disconnected', 'email_error' => mb_substr($e->getMessage(), 0, 250)]);
+
+                    throw $e;
+                }
+                $instance->update(['status' => 'connected', 'email_error' => null]);
             } else {
-                throw new ChannelException(__('Only Telegram, Instagram, Facebook and TikTok accounts can be renewed here.'));
+                throw new ChannelException(__('Only Telegram, Instagram, Facebook, TikTok and e-mail accounts can be renewed here.'));
             }
         } catch (InstagramException | FacebookException | TikTokException $e) {
             throw new ChannelException(__('Could not renew the connection: :error', ['error' => $e->getMessage()]));

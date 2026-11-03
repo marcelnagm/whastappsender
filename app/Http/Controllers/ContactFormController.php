@@ -11,7 +11,7 @@ use Illuminate\Http\Request;
 /** Where the account owner builds the embeddable contact forms and sees what came in. */
 class ContactFormController extends Controller
 {
-    public const CHANNELS = ['whatsapp', 'telegram', 'instagram', 'facebook', 'tiktok'];
+    public const CHANNELS = ['whatsapp', 'telegram', 'instagram', 'facebook', 'tiktok', 'email'];
 
     public function index(Request $request)
     {

@@ -61,6 +61,11 @@ class SendChatMessageJob implements ShouldQueue
 
             return;
         }
+        if ($message->instance->isEmail()) {
+            $this->sendViaEmail($message, $chat);
+
+            return;
+        }
 
         $instance = $message->instance->instance_name;
         $number = $chat->sendNumber();
@@ -85,6 +90,34 @@ class SendChatMessageJob implements ShouldQueue
             $this->markSent($message, $chat, EvolutionChatClient::extractMessageId($response));
         } catch (\Throwable $e) {
             Log::error('SendChatMessageJob failed: ' . $e->getMessage(), ['chat_message_id' => $message->id]);
+
+            $message->update(['status' => 'error', 'error' => mb_substr($e->getMessage(), 0, 600)]);
+            Chat::where('id', $chat->id)->where('last_message_id', $message->id)->update(['last_message_status' => 'error']);
+        }
+    }
+
+    /** Same mailbox that received the conversation answers it, inside the same e-mail thread. */
+    private function sendViaEmail(ChatMessage $message, Chat $chat): void
+    {
+        try {
+            $instance = $message->instance;
+            $to = substr((string) $chat->remote_jid, 3); // "em:<address>"
+            $options = \App\Services\Email\EmailThread::options($chat);
+            if ($message->media_path) {
+                $options['attachments'] = [['data' => $this->readBinary($message), 'name' => $message->file_name ?: 'file', 'mime' => $message->mimetype]];
+            }
+
+            $id = \App\Services\Email\EmailClient::for($instance)->send(
+                $to,
+                \App\Services\Email\EmailThread::subject($chat, (string) ($instance->email_from_name ?: '')),
+                (string) $message->body,
+                $options
+            );
+            \App\Services\Email\EmailThread::remember($chat, $id);
+
+            $this->markSent($message, $chat, $id);
+        } catch (\Throwable $e) {
+            Log::error('SendChatMessageJob (email) failed: ' . $e->getMessage(), ['chat_message_id' => $message->id]);
 
             $message->update(['status' => 'error', 'error' => mb_substr($e->getMessage(), 0, 600)]);
             Chat::where('id', $chat->id)->where('last_message_id', $message->id)->update(['last_message_status' => 'error']);

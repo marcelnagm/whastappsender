@@ -81,6 +81,11 @@ class SendAiReplyJob implements ShouldQueue
 
             return;
         }
+        if ($instance->isEmail()) {
+            $this->sendViaEmail($aiMessage, $instance, $contact);
+
+            return;
+        }
 
         $config = config('services.whatsapp');
         $baseUrl = "{$config['protocol']}://{$config['url']}:{$config['port']}";
@@ -163,6 +168,40 @@ class SendAiReplyJob implements ShouldQueue
             }
         } catch (\Throwable $e) {
             Log::error('SendAiReplyJob (telegram) failed: ' . $e->getMessage());
+            $aiMessage->update(['status' => 'error', 'error' => mb_substr($e->getMessage(), 0, 600)]);
+        }
+    }
+
+    /** Answers by e-mail through the mailbox that received the message, in the same thread. Marked "auto-generated" so other robots do not answer back. */
+    private function sendViaEmail(AiMessage $aiMessage, Instance $instance, Contact $contact): void
+    {
+        try {
+            if (!str_starts_with((string) $contact->contact, 'em:')) {
+                throw new \RuntimeException('Contact is not an e-mail conversation.');
+            }
+            $to = substr((string) $contact->contact, 3);
+            $chat = \App\Models\Chat::where('instance_id', $instance->id)->where('remote_jid', $contact->contact)->first();
+
+            $options = $chat ? \App\Services\Email\EmailThread::options($chat, true) : ['auto' => true];
+            $subject = $chat ? \App\Services\Email\EmailThread::subject($chat, (string) ($instance->email_from_name ?: '')) : __('Message from :name', ['name' => (string) config('app.name')]);
+            $id = \App\Services\Email\EmailClient::for($instance)->send($to, $subject, (string) $aiMessage->content, $options);
+
+            $aiMessage->update(['status' => 'sent', 'channel_message_id' => $id]);
+            if ($aiMessage->session) {
+                $aiMessage->session->update(['last_outbound_at' => now()]);
+            }
+
+            if ($chat) {
+                \App\Services\Email\EmailThread::remember($chat, $id);
+                $message = \App\Models\ChatMessage::create([
+                    'chat_id' => $chat->id, 'instance_id' => $instance->id, 'user_id' => $instance->user_id,
+                    'message_id' => $id, 'from_me' => true, 'type' => 'text', 'body' => $aiMessage->content,
+                    'status' => 'sent', 'message_timestamp' => now(),
+                ]);
+                app(\App\Services\Chat\ChatMessageRecorder::class)->touchChat($chat, $message, true);
+            }
+        } catch (\Throwable $e) {
+            Log::error('SendAiReplyJob (email) failed: ' . $e->getMessage());
             $aiMessage->update(['status' => 'error', 'error' => mb_substr($e->getMessage(), 0, 600)]);
         }
     }

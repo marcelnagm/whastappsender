@@ -464,6 +464,10 @@ class ChatController extends Controller
     {
         $this->authorizeChat($chat);
 
+        if ($chat->instance->isEmail()) {
+            return response()->json(null, 204); // no "typing" in e-mail
+        }
+
         if (!$chat->instance->isWhatsapp()) {
             $other = substr((string) $chat->remote_jid, 3); // "tg:<id>" / "ig:<id>"
             $client = match (true) {
@@ -636,10 +640,10 @@ class ChatController extends Controller
         $query = Contact::where('user_id', Auth::id())->where('id', '!=', $contact->id);
         if (\App\Services\Channels\ContactLinks::isChannelContact($contact)) {
             // looking for the WhatsApp contact of this person
-            $query->where(fn ($w) => $w->where('contact', 'not like', 'tg:%')->where('contact', 'not like', 'ig:%')->where('contact', 'not like', 'fb:%')->where('contact', 'not like', 'tt:%'));
+            $query->where(fn ($w) => $w->where('contact', 'not like', 'tg:%')->where('contact', 'not like', 'ig:%')->where('contact', 'not like', 'fb:%')->where('contact', 'not like', 'tt:%')->where('contact', 'not like', 'em:%'));
         } else {
             // looking for the Telegram / Instagram / TikTok contact still unlinked
-            $query->whereNull('linked_contact_id')->where(fn ($w) => $w->where('contact', 'like', 'tg:%')->orWhere('contact', 'like', 'ig:%')->orWhere('contact', 'like', 'fb:%')->orWhere('contact', 'like', 'tt:%'));
+            $query->whereNull('linked_contact_id')->where(fn ($w) => $w->where('contact', 'like', 'tg:%')->orWhere('contact', 'like', 'ig:%')->orWhere('contact', 'like', 'fb:%')->orWhere('contact', 'like', 'tt:%')->orWhere('contact', 'like', 'em:%'));
         }
         if ($q !== '') {
             $digits = preg_replace('/\D/', '', $q);
@@ -670,7 +674,7 @@ class ChatController extends Controller
         try {
             \App\Services\Channels\ContactLinks::link($contact, $other);
         } catch (\InvalidArgumentException $e) {
-            return response()->json(['message' => __('Link one WhatsApp contact to one Telegram, Instagram, Facebook or TikTok contact.')], 422);
+            return response()->json(['message' => __('Link one WhatsApp contact to one Telegram, Instagram, Facebook, TikTok or email contact.')], 422);
         }
 
         return $this->links($chat);

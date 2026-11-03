@@ -87,6 +87,10 @@ class AiInboundMessageRecorder
     private function resolveContact(int $userId, array $data): ?Contact
     {
         $remoteJid = (string) ($data['key']['remoteJid'] ?? '');
+        // e-mail conversations: the whole address is the contact (it has an "@" like a JID, but is not one)
+        if (str_starts_with($remoteJid, 'em:')) {
+            return Contact::where('user_id', $userId)->where('contact', $remoteJid)->first();
+        }
         $senderPn = $data['key']['senderPn'] ?? null;
         $isLid = str_contains($remoteJid, '@lid');
 
@@ -127,6 +131,6 @@ class AiInboundMessageRecorder
 
     private function isGroupMessage(string $remoteJid): bool
     {
-        return str_contains($remoteJid, '@g.us');
+        return !str_starts_with($remoteJid, 'em:') && str_contains($remoteJid, '@g.us');
     }
 }

@@ -12,7 +12,7 @@ use Illuminate\Support\Collection;
  */
 class ContactLinks
 {
-    public const PREFIXES = ['tg' => 'telegram', 'ig' => 'instagram', 'tt' => 'tiktok', 'fb' => 'facebook'];
+    public const PREFIXES = ['tg' => 'telegram', 'ig' => 'instagram', 'tt' => 'tiktok', 'fb' => 'facebook', 'em' => 'email'];
 
     public static function channelOf(Contact $c): string
     {
@@ -68,6 +68,36 @@ class ContactLinks
         }
 
         $channel->update(['linked_contact_id' => $whatsapp->id]);
+    }
+
+    /**
+     * Same e-mail address = same person: ties the e-mail contact ("em:<address>") to the WhatsApp contact that has that address
+     * (whichever of the two appeared first). Never overrides a link a person made, never guesses when two WhatsApp contacts share the address.
+     */
+    public static function linkByEmail(Contact $c): void
+    {
+        if (self::channelOf($c) === 'email') {
+            $address = strtolower(substr((string) $c->contact, 3));
+            if ($address === '' || $c->linked_contact_id) {
+                return;
+            }
+            $matches = Contact::where('user_id', $c->user_id)->whereRaw('LOWER(email) = ?', [$address])
+                ->where(fn ($q) => $q->whereNull('linked_contact_id'))->where('contact', 'not like', '%:%')->limit(2)->get();
+            if ($matches->count() === 1) {
+                $c->update(['linked_contact_id' => $matches->first()->id]);
+            }
+
+            return;
+        }
+
+        $address = strtolower(trim((string) $c->email));
+        if ($address === '' || self::isChannelContact($c)) {
+            return;
+        }
+        $mail = Contact::where('user_id', $c->user_id)->where('contact', 'em:' . $address)->whereNull('linked_contact_id')->first();
+        if ($mail && Contact::where('user_id', $c->user_id)->whereRaw('LOWER(email) = ?', [$address])->where('contact', 'not like', '%:%')->count() === 1) {
+            $mail->update(['linked_contact_id' => $c->id]);
+        }
     }
 
     public static function unlink(Contact $channel): void
