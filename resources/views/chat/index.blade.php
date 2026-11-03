@@ -83,7 +83,7 @@
             <div class="wa-newchat-title">{{ __('New chat') }}</div>
             <input type="search" id="wa-newchat-q" class="form-control form-control-sm" placeholder="{{ __('Name or phone (with country code)') }}" autocomplete="off">
             <div id="wa-newchat-results" class="wa-newchat-results"></div>
-            <div class="wa-newchat-hint">{{ __('Example: 5595981110695') }}</div>
+            <div class="wa-newchat-hint">{{ __('Example: 5511999990000') }}</div>
         </div>
 
         <div id="wa-sync-bar" class="wa-sync-bar d-none" role="status" aria-live="polite"></div>
@@ -211,7 +211,7 @@
         linkedNone: @json(__('No contact found.')),
         linkTitle: @json(__('Unidentified contact')),
         linkHelp: @json(__('WhatsApp did not reveal the phone number of this conversation. Enter it to merge the conversation with that contact; later messages follow automatically.')),
-        linkPlaceholder: @json(__('Phone with country code, e.g. 5595981110695')),
+        linkPlaceholder: @json(__('Phone with country code, e.g. 5511999990000')),
         linkButton: @json(__('Link to this number')),
         linkDone: @json(__('Conversation linked.')),
         syncWaiting: @json(__('Import queued, waiting for a queue worker…')),

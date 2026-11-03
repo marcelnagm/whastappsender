@@ -1344,7 +1344,7 @@ php artisan schedule:work
 `down` (stop, keep data), `reset` (stop **and delete** the local data), `--tools` adds phpMyAdmin (http://localhost:8082).
 
 The credentials live in the Laravel `.env` (docker compose reads the same file). Before starting anything the script refuses values that
-would hurt: a `DB_HOST` that is not your machine (the sample `.env.example` points to the author's server, so migrations would run
+would hurt: a `DB_HOST` that is not your machine (a `DB_HOST` copied from an old `.env` could point to another server, so migrations would run
 there), sample passwords/API keys, the shared sample `APP_KEY`, and endpoints that don't match the local stack; `--fix-env` repairs them
 (keeping a backup, `.env.backup-*`, which is git-ignored). After starting it **tests the credentials for real**: the MySQL login (inside
 the container and from your PHP), the Evolution API key (and that a wrong key is rejected), the MinIO login/bucket and Mailpit.
@@ -1439,21 +1439,23 @@ Use Docker service names as hosts:
 ```env
 DB_HOST=mysql
 DB_DATABASE=whatsapp_sender
-DB_USERNAME=marcel
-DB_PASSWORD=password_mysql_123
+DB_USERNAME=sama
+DB_PASSWORD=<strong password>
+DB_ROOT_PASSWORD=<another strong password>   # used by the MySQL container
+POSTGRES_PASSWORD=<strong password>          # Evolution API database
 
 REDIS_HOST=redis
-REDIS_PASSWORD=password_redis_123
+REDIS_PASSWORD=<strong password>
 
 AWS_ENDPOINT=http://minio:9000
 AWS_ACCESS_KEY_ID=admin
-AWS_SECRET_ACCESS_KEY=sua_senha_forte_123
+AWS_SECRET_ACCESS_KEY=<strong password>     # also the MinIO admin password
 AWS_BUCKET=ads
 
 WHATSAPP_URL=evolution-api
 WHATSAPP_PORT=8080
 WHATSAPP_PROTOCOL=http
-WHATSAPP_APIKEY=BQYHJGJHJ
+WHATSAPP_APIKEY=<long random key>         # the Evolution API container receives this same key
 ```
 
 **3. Configure Evolution API (`.docker/.env.docker`)**
@@ -1463,10 +1465,9 @@ Edit `.env.docker` with your domain and webhook URL:
 ```env
 SERVER_URL=https://your-domain.com:8080
 WEBHOOK_GLOBAL_URL=https://your-domain.com/api/webhook/whatsapp
-AUTHENTICATION_API_KEY=your_api_key_here
 ```
 
-The `AUTHENTICATION_API_KEY` must match `WHATSAPP_APIKEY` in the Laravel `.env`.
+The Evolution API key is **not** in `.env.docker`: `docker-compose.yml` passes `WHATSAPP_APIKEY` from the Laravel `.env` as `AUTHENTICATION_API_KEY` (and builds the Evolution database / Redis URIs from `POSTGRES_PASSWORD` / `REDIS_PASSWORD`), so no secret is stored in a tracked file.
 
 **4. Configure Nginx SSL (`nginx/nginx.conf`)**
 
@@ -1534,16 +1535,20 @@ docker compose -f .docker/docker-compose.yml down
 docker compose -f .docker/docker-compose.yml up -d --build app
 ```
 
-#### Default credentials (change in production!)
+#### Credentials (none ship with the repository)
 
-| Service | User | Password |
-|---------|------|----------|
-| MySQL | `marcel` | `password_mysql_123` |
-| MySQL root | `root` | `root_password_456` |
-| PostgreSQL (Evolution) | `admin` | `password123` |
-| Redis | — | `password_redis_123` |
-| MinIO | `admin` | `sua_senha_forte_123` |
-| Evolution API key | — | `BQYHJGJHJ` (set in `.env.docker`) |
+The Compose files refuse to start until these variables exist in `.env` (next to `docker-compose.yml`), so no password is stored in git:
+
+| Variable in `.env` | Used by |
+|---------|----------|
+| `DB_PASSWORD` (user `DB_USERNAME`, default `sama`) | MySQL (Laravel) |
+| `DB_ROOT_PASSWORD` | MySQL root |
+| `POSTGRES_PASSWORD` (user `admin`) | PostgreSQL (Evolution) |
+| `REDIS_PASSWORD` | Redis (`.docker/` stack) |
+| `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` | MinIO user / password |
+| `WHATSAPP_APIKEY` | Evolution API key |
+
+Generate each one with `openssl rand -base64 24 | tr -d '/+='`.
 
 #### Persistent data
 

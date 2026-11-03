@@ -6,7 +6,9 @@ services:
     image: redis:7-alpine
     container_name: whatsapp_redis
     restart: always
-    command: redis-server --appendonly yes --requirepass password_redis_123
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?Set REDIS_PASSWORD in .env}
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
     ports:
       - "6379:6379"
     volumes:
@@ -14,7 +16,7 @@ services:
     networks:
       - evolution_network
     healthcheck:
-      test: ["CMD", "redis-cli", "-a", "password_redis_123", "ping"]
+      test: ["CMD-SHELL", "redis-cli -a \"$$REDIS_PASSWORD\" ping | grep -q PONG"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -77,9 +79,9 @@ services:
     restart: always
     environment:
       MYSQL_DATABASE: whatsapp_sender
-      MYSQL_USER: marcel
-      MYSQL_PASSWORD: password_mysql_123
-      MYSQL_ROOT_PASSWORD: root_password_456
+      MYSQL_USER: ${DB_USERNAME:-sama}
+      MYSQL_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:?Set DB_ROOT_PASSWORD in .env}
     ports:
       - "3306:3306"
     volumes:
@@ -95,7 +97,7 @@ services:
     environment:
       POSTGRES_DB: evolution
       POSTGRES_USER: admin
-      POSTGRES_PASSWORD: password123
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
     volumes:
       - ./data/postgres:/var/lib/postgresql/data
     networks:
@@ -115,6 +117,12 @@ services:
         condition: service_healthy
     env_file:
       - .env.docker
+    environment:
+      # secrets come from .env (never from a tracked file)
+      AUTHENTICATION_API_KEY: ${WHATSAPP_APIKEY:?Set WHATSAPP_APIKEY in .env}
+      DATABASE_CONNECTION_URI: postgresql://admin:${POSTGRES_PASSWORD}@postgres:5432/evolution?schema=public
+      CACHE_REDIS_URI: redis://:${REDIS_PASSWORD}@redis:6379/2
+      REDIS_URI: redis://:${REDIS_PASSWORD}@redis:6379/1
     volumes:
       - ./data/evolution_instances:/evolution/instances
     networks:
@@ -130,8 +138,8 @@ services:
     volumes:
       - ./data/minio:/data
     environment:
-      MINIO_ROOT_USER: "admin"
-      MINIO_ROOT_PASSWORD: "sua_senha_forte_123"
+      MINIO_ROOT_USER: ${AWS_ACCESS_KEY_ID:-admin}
+      MINIO_ROOT_PASSWORD: ${AWS_SECRET_ACCESS_KEY:?Set AWS_SECRET_ACCESS_KEY in .env}
     command: server /data --console-address ":9001"
     restart: always
     networks:
