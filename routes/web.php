@@ -191,6 +191,16 @@ Route::group(['namespace' => 'App\Http\Controllers', 'middleware' => ['auth', 's
         Route::delete('/deals/{deal}', [$pl, 'destroyDeal'])->whereNumber('deal')->name('deals.destroy');
     });
 
+    // Follow-up tasks
+    Route::prefix('tasks')->name('tasks.')->group(function () {
+        $tk = \App\Http\Controllers\TasksController::class;
+        Route::get('/', [$tk, 'index'])->name('index');
+        Route::post('/', [$tk, 'store'])->name('store');
+        Route::put('/{task}', [$tk, 'update'])->whereNumber('task')->name('update');
+        Route::post('/{task}/done', [$tk, 'done'])->whereNumber('task')->name('done');
+        Route::delete('/{task}', [$tk, 'destroy'])->whereNumber('task')->name('destroy');
+    });
+
     Route::prefix('team')->name('team.')->group(function () {
         $team = \App\Http\Controllers\TeamController::class;
         Route::get('/', [$team, 'index'])->name('index');

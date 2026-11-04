@@ -29,6 +29,7 @@
     signatureSuffix: D.signatureSuffix || '(CRM)',
     chatBase: D.urlChatBase,
     apiBase: D.urlApiBase,
+    tasksBase: D.urlTasks,
     messageBase: D.urlMessageBase,
     urlIndex: D.urlIndex
   };
@@ -1236,6 +1237,29 @@
         dealBox.appendChild(mk);
       }
       host.appendChild(dealBox);
+    }
+
+    // follow-ups
+    if (d.can_tasks) {
+      var tk = h('div', 'mb-2');
+      tk.appendChild(h('label', 'form-label small mb-1 d-block', T.followTitle));
+      d.tasks.forEach(function (t) {
+        var row = h('div', 'wa-task' + (t.overdue ? ' wa-task-late' : ''));
+        var ok = h('button', 'wa-tagx', '✓'); ok.type = 'button'; ok.title = T.markDone;
+        ok.addEventListener('click', async function () { try { await api(cfg.tasksBase + '/' + t.id + '/done', { method: 'POST' }); again(); } catch (e) { toast(e.message); } });
+        row.appendChild(ok);
+        row.appendChild(h('span', 'small', ' ' + t.title + (t.due ? ' · ' + t.due : '') + (t.who ? ' · ' + t.who : '')));
+        tk.appendChild(row);
+      });
+      var tt = h('input', 'form-control form-control-sm mt-1'); tt.placeholder = T.followPlaceholder; tt.maxLength = 160;
+      var td = h('input', 'form-control form-control-sm mt-1'); td.type = 'datetime-local';
+      var ta2 = h('button', 'btn btn-sm btn-outline-secondary mt-1', T.followAdd); ta2.type = 'button';
+      ta2.addEventListener('click', async function () {
+        if (!tt.value.trim()) return;
+        try { await api(cfg.tasksBase, { method: 'POST', body: { title: tt.value.trim(), due_at: td.value || null, chat_id: chat.id } }); toast(T.followSaved); again(); } catch (e) { toast(e.message); }
+      });
+      tk.appendChild(tt); tk.appendChild(td); tk.appendChild(ta2);
+      host.appendChild(tk);
     }
 
     // internal notes

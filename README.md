@@ -31,6 +31,7 @@
 | [Contact forms](#-contact-forms-embeddable) | Build a form, paste one script line on any site; leads land in the CRM and the AI answers on WhatsApp / available channels |
 | [Sales pipeline](#-sales-pipeline-kanban) | Kanban funnel of deals: drag cards between stages, values, expected close date, won / lost with reason, win rate |
 | [Team inbox](#-team-inbox--deals-from-conversations) | Assign conversations (by hand or balanced), labels, internal notes, filters, and deals opened automatically from new conversations and contact forms |
+| [Follow-ups](#-follow-up-tasks--reminders) | Tasks with a due time for a contact or conversation, assigned to a person, with an in-app reminder when they fall due |
 | [Team & roles](#-team--roles-sub-users) | Sub-users working for the contract account (admin, approver, creator, sender, attendant, analyst) |
 | [Audience & approval](#-audience--approval-of-campaigns) | Choose the audience by score and channels; approval flow before sending |
 | [Fair Send Queue](#️-fair-send-queue) | Balanced batches across users and sessions, with plan priority |
@@ -398,6 +399,7 @@ The `.docker/supervisor/conf.d/laravel-worker.conf` file ships with `worker-disp
 | `instances:health` | `INSTANCE_HEALTH_CRON` (default every 5 min) | Detects down sessions / lost webhooks / Evolution outages and alerts the owner |
 | `queue:monitor` | Every 5 min (only when `QUEUE_CONNECTION=redis`) | Alerts when a queue exceeds `QUEUE_BACKLOG_MAX` pending jobs |
 | `contacts:deactivate-unresponsive` | Hourly | Deactivates WhatsApp contacts whose messages are never delivered |
+| `tasks:remind` | every minute | Notifies the person responsible for each follow-up task that fell due (once) |
 | `email:fetch` | `EMAIL_FETCH_CRON` (default every minute) | Imports new mail from the connected mailboxes (IMAP) and lets the AI answer |
 | `contacts:score` | Hourly | Recalculates the engagement score / tier of contacts |
 | `warmup:generate` | Daily at 08:00 (`America/Boa_Vista`) | Starts cross-chip warmup conversations |
@@ -903,6 +905,17 @@ Endpoints (session auth, `chat.*` permission): `GET /chat/api/chats/{id}/crm`, `
 
 * * *
 
+## ⏰ Follow-up tasks & reminders
+
+Open **Follow-ups** in the menu (or use the **Follow-ups** block of the chat side panel, which links the task to that conversation and contact). A task has *what to do*, *when*, *who* (the owner or a team member) and, optionally, a contact. Tabs: *Open*, *Today*, *Overdue*, *Done*; *Mine* / *Everyone* (team members start in *Mine*). Mark as done (and reopen), edit the time or remove.
+
+* **Reminder:** the scheduler runs `php artisan tasks:remind` every minute; when an open task falls due, the person responsible gets an **in-app notification** (the bell) once. Changing the due time asks for a new reminder. A task without an assignee reminds the owner. A task without a time never reminds.
+* **Time zone:** the "when" you type is in the application's time zone (`APP_TIMEZONE` / `config/app.php`).
+* **Permission:** `tasks` for the administrator and the attendant; the owner always. Tasks, assignees and contacts are always checked against the account, so nobody can attach another account's contact or person.
+* Data: table `tasks` (run `php artisan migrate`).
+
+* * *
+
 ## 👥 Team & roles (sub-users)
 
 A **contract user** (the account owner) can add **sub-users** who work for that account. A member signs in with **their own login**, but everything runs on the
@@ -918,7 +931,7 @@ Chatwoot, whose permissions are also split by what the person may do (conversati
 | **Approver** (`approver`) | Moderator | Reviews campaign messages, **chooses the audience (score + channels)**, approves or rejects; sees contacts and reports |
 | **Campaign creator** (`creator`) | Content creator | Writes campaigns and messages, manages contacts, **submits for approval**; cannot send |
 | **Sender** (`sender`) | Advertiser | **Launches approved** campaigns and retries sends; cannot edit the content |
-| **Attendant** (`agent`) | Helpdesk agent | Answers conversations (chat, API `/conversations`), reads contacts and works the sales pipeline; nothing else |
+| **Attendant** (`agent`) | Helpdesk agent | Answers conversations (chat, API `/conversations`), reads contacts, works the sales pipeline and the follow-ups; nothing else |
 | **Analyst** (`analyst`) | Analyst | Read-only: statistics, ranking, campaign reports, contacts |
 
 How it is enforced:
@@ -1294,7 +1307,7 @@ Gateway credentials (Asaas, Efí, AbacatePay, Stone, Stripe, PagBank, Mercado Pa
 
 ## 🧪 Tests
 
-`vendor/bin/phpunit` (in-memory SQLite, no external services): fair queue planner and command, chat backend, Telegram, Instagram and TikTok channels (webhook secret/signature, OAuth, token refresh, inbound, AI reply through the same bot/account, reply window, settings), channel statistics and cross-channel contact links, unresponsive-contact deactivation, contact score ranking, Facebook Messenger, team roles and approval, audience by score and channel, plan queue priority, team inbox (balanced assignment, visibility, labels, internal notes) and deals opened from conversations and forms, sales pipeline, e-mail channel (SMTP send, IMAP mailbox through webklex/php-imap with a scripted server, message mapping, threading, AI reply, loop protection, contact unification), embeddable contact forms (public script/endpoint, spam protection, contact + chat creation, AI reply channel choice), the new channel / inbox / ranking API endpoints and MCP tools, avatar caching, billing lifecycle and plan enforcement, the Mercado Pago gateway (admin settings, Pix, card, recurrence, webhook) and the Asaas / Efí / AbacatePay / Stone (Pagar.me) / Stripe / PagBank gateways (HTTP faked).
+`vendor/bin/phpunit` (in-memory SQLite, no external services): fair queue planner and command, chat backend, Telegram, Instagram and TikTok channels (webhook secret/signature, OAuth, token refresh, inbound, AI reply through the same bot/account, reply window, settings), channel statistics and cross-channel contact links, unresponsive-contact deactivation, contact score ranking, Facebook Messenger, team roles and approval, audience by score and channel, plan queue priority, follow-up tasks and reminders, team inbox (balanced assignment, visibility, labels, internal notes) and deals opened from conversations and forms, sales pipeline, e-mail channel (SMTP send, IMAP mailbox through webklex/php-imap with a scripted server, message mapping, threading, AI reply, loop protection, contact unification), embeddable contact forms (public script/endpoint, spam protection, contact + chat creation, AI reply channel choice), the new channel / inbox / ranking API endpoints and MCP tools, avatar caching, billing lifecycle and plan enforcement, the Mercado Pago gateway (admin settings, Pix, card, recurrence, webhook) and the Asaas / Efí / AbacatePay / Stone (Pagar.me) / Stripe / PagBank gateways (HTTP faked).
 
 * * *
 

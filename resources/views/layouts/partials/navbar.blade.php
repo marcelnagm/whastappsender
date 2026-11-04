@@ -89,6 +89,11 @@
           <a href="{{ route('pipeline.index') }}" class="nav-link {{ request()->is('pipeline*') ? 'active text-secondary' : 'text-white' }}"><i class="bi bi-kanban me-1"></i> {{ __('Pipeline') }}</a>
         </li>
         @endteamcan
+        @teamcan('tasks')
+        <li class="nav-item">
+          <a href="{{ route('tasks.index') }}" class="nav-link {{ request()->is('tasks*') ? 'active text-secondary' : 'text-white' }}"><i class="bi bi-alarm me-1"></i> {{ __('Follow-ups') }}</a>
+        </li>
+        @endteamcan
         @teamcan('forms')
         <li class="nav-item">
           <a href="{{ route('forms.index') }}" class="nav-link {{ request()->is('forms*') ? 'active text-secondary' : 'text-white' }}"><i class="bi bi-ui-checks me-1"></i> {{ __('Forms') }}</a>

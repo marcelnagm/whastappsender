@@ -28,6 +28,7 @@
      data-signature-suffix="{{ config('chat.signature_suffix') }}"
      data-url-chat-base="{{ url('chat/api/chats') }}"
      data-url-api-base="{{ url('chat/api') }}"
+     data-url-tasks="{{ url('tasks') }}"
      data-url-message-base="{{ url('chat/api/messages') }}"
      data-url-index="{{ route('chat.index') }}">
 
@@ -260,6 +261,11 @@
         whatsappName: @json(__('WhatsApp name')),
         typing: @json(__('Type a message')),
         teamTitle: @json(__('Team')),
+        followTitle: @json(__('Follow-ups')),
+        followPlaceholder: @json(__('What to do (e.g. call back)')),
+        followAdd: @json(__('Add follow-up')),
+        followSaved: @json(__('Task created.')),
+        markDone: @json(__('Mark as done')),
         unassigned: @json(__('Unassigned')),
         assignedTo: @json(__('Handled by')),
         assignToMe: @json(__('Assign to me')),

@@ -43,6 +43,12 @@ class ChatCrmController extends Controller
             'can_deals' => $canDeals,
             'deal' => $deal && $canDeals ? ['id' => $deal->id, 'title' => $deal->title, 'stage' => optional($deal->stage)->name, 'url' => route('pipeline.index', ['pipeline' => $deal->pipeline_id])] : null,
             'pipelines' => $canDeals ? Pipeline::where('user_id', $owner->id)->orderBy('id')->get(['id', 'name']) : [],
+            'can_tasks' => $this->team->can('tasks'),
+            'tasks' => $this->team->can('tasks') ? \App\Models\Task::with('assignee:id,name')->where('user_id', $owner->id)->whereNull('done_at')
+                ->where(fn ($q) => $q->where('chat_id', $chat->id)->when($chat->contact_id, fn ($w) => $w->orWhere('contact_id', $chat->contact_id)))
+                ->orderByRaw('due_at is null')->orderBy('due_at')->limit(20)->get()->map(fn ($t) => [
+                    'id' => $t->id, 'title' => $t->title, 'due' => optional($t->due_at)->format('d/m H:i'), 'overdue' => $t->isOverdue(), 'who' => optional($t->assignee)->name,
+                ])->values() : [],
             'settings' => $this->team->can('team') ? [
                 'assign_mode' => $owner->chat_assign_mode, 'agents_see' => $owner->chat_agents_see,
                 'deal_auto_chat' => (bool) $owner->deal_auto_chat, 'deal_auto_form' => (bool) $owner->deal_auto_form,
