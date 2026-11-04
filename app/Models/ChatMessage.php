@@ -36,6 +36,16 @@ class ChatMessage extends Model
         'message_timestamp' => 'datetime',
     ];
 
+    protected static function booted(): void
+    {
+        // a new message from the customer may distribute the conversation and open a deal (never breaks the recording)
+        static::created(function (ChatMessage $m) {
+            if (!$m->from_me) {
+                \App\Services\Chat\InboundHooks::onInbound($m);
+            }
+        });
+    }
+
     public function chat()
     {
         return $this->belongsTo(Chat::class);

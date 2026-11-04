@@ -74,6 +74,18 @@ Route::middleware(['auth', 'subscription.writable', 'plan.feature:chat'])->prefi
         Route::post('/chats/{chat}/contact', [$chat, 'saveContact'])->name('contact.save');
         Route::post('/chats/{chat}/ai-pause', [$chat, 'aiPause'])->name('ai-pause');
 
+        // team side: assignment, labels, internal notes, deal, inbox settings
+        $crm = \App\Http\Controllers\ChatCrmController::class;
+        Route::get('/chats/{chat}/crm', [$crm, 'show'])->name('crm');
+        Route::post('/chats/{chat}/assign', [$crm, 'assign'])->name('assign');
+        Route::put('/chats/{chat}/tags', [$crm, 'syncTags'])->name('tags.sync');
+        Route::post('/tags', [$crm, 'storeTag'])->name('tags.store');
+        Route::delete('/tags/{tag}', [$crm, 'destroyTag'])->name('tags.destroy');
+        Route::post('/chats/{chat}/notes', [$crm, 'storeNote'])->name('notes.store');
+        Route::delete('/notes/{note}', [$crm, 'destroyNote'])->name('notes.destroy');
+        Route::post('/chats/{chat}/deal', [$crm, 'createDeal'])->name('deal');
+        Route::put('/settings', [$crm, 'settings'])->name('settings');
+
         Route::post('/messages/{message}/retry', [$chat, 'retry'])->name('retry');
         Route::post('/messages/{message}/react', [$chat, 'react'])->name('react');
         Route::delete('/messages/{message}', [$chat, 'destroy'])->name('destroy');

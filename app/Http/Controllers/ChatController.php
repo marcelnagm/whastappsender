@@ -92,8 +92,17 @@ class ChatController extends Controller
 
         $this->fixLidChats($instance);
 
-        $chats = Chat::with('contact')
+        $filter = (string) $request->query('filter', 'all');
+        $tagId = (int) $request->query('tag');
+        $only = app(\App\Services\Chat\ChatAssignment::class)->restrictedTo(Auth::user());
+        $me = (int) (\App\Services\Team\TeamContext::actor($request)->id ?? 0);
+
+        $chats = Chat::with(['contact', 'tags', 'assignee:id,name'])
             ->where('user_id', Auth::id())
+            ->when($only, fn ($query) => $query->where(fn ($w) => $w->whereNull('assigned_to')->orWhere('assigned_to', $only)))
+            ->when($filter === 'mine', fn ($query) => $query->where('assigned_to', $me))
+            ->when($filter === 'unassigned', fn ($query) => $query->whereNull('assigned_to'))
+            ->when($tagId > 0, fn ($query) => $query->whereHas('tags', fn ($t) => $t->where('chat_tags.id', $tagId)))
             ->where('instance_id', $instance->id)
             ->where('archived', false)
             ->whereNotNull('last_message_at')
@@ -771,6 +780,8 @@ class ChatController extends Controller
     private function authorizeChat(Chat $chat): void
     {
         abort_unless((int) $chat->user_id === (int) Auth::id(), 403);
+        $only = app(\App\Services\Chat\ChatAssignment::class)->restrictedTo(Auth::user());
+        abort_if($only && $chat->assigned_to && (int) $chat->assigned_to !== $only, 403);
     }
 
     private function authorizeMessage(ChatMessage $message): void
@@ -787,6 +798,8 @@ class ChatController extends Controller
             'avatar' => $chat->avatar(),
             'unread' => (int) $chat->unread_count,
             'in_crm' => (bool) $chat->contact_id,
+            'assigned' => $chat->assigned_to ? ['id' => (int) $chat->assigned_to, 'name' => optional($chat->assignee)->name] : null,
+            'tags' => $chat->tags->map(fn ($t) => ['id' => $t->id, 'name' => $t->name, 'color' => $t->color])->values(),
             'unidentified' => LidResolver::isLid($chat->remote_jid),
             'channel' => $chat->instance ? $chat->instance->channelKey() : 'whatsapp',
             'last' => [

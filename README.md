@@ -30,6 +30,7 @@
 | [Signup welcome](#signup-welcome-message) | Admin chooses the campaign message sent to people who register on the site |
 | [Contact forms](#-contact-forms-embeddable) | Build a form, paste one script line on any site; leads land in the CRM and the AI answers on WhatsApp / available channels |
 | [Sales pipeline](#-sales-pipeline-kanban) | Kanban funnel of deals: drag cards between stages, values, expected close date, won / lost with reason, win rate |
+| [Team inbox](#-team-inbox--deals-from-conversations) | Assign conversations (by hand or balanced), labels, internal notes, filters, and deals opened automatically from new conversations and contact forms |
 | [Team & roles](#-team--roles-sub-users) | Sub-users working for the contract account (admin, approver, creator, sender, attendant, analyst) |
 | [Audience & approval](#-audience--approval-of-campaigns) | Choose the audience by score and channels; approval flow before sending |
 | [Fair Send Queue](#️-fair-send-queue) | Balanced batches across users and sessions, with plan priority |
@@ -886,6 +887,22 @@ Open **Pipeline** in the menu. Every account starts with a **Sales** funnel (*Ne
 
 * * *
 
+## 🗂️ Team inbox & deals from conversations
+
+Everything below lives in the **chat side panel** (the *Contact info* button), card **Team**, and works for every channel (WhatsApp, Telegram, Instagram, Facebook, TikTok, e-mail). It follows the helpdesk model of Kommo, Zoko, Trengo and Wati.
+
+* **Handled by:** each conversation has one person responsible (the owner or a team member that uses the chat). Choose it in the panel (or *Assign to me*). The list shows who has it and can be filtered: *All*, *Assigned to me*, *Unassigned*.
+* **Automatic distribution** (*Inbox settings*, owner / administrator): *New conversations → Distributed to whoever has fewer open*. When a customer's first message arrives in an unassigned conversation, it goes to the team member with the fewest open (non-archived) conversations; the owner only receives them when there is no member. Imported history never assigns anything.
+* **Attendant visibility:** *Attendants see → Only theirs and unassigned* hides other attendants' conversations (list, messages and sending answer `403`); owner and administrators always see everything.
+* **Labels:** colored labels shared by the account (up to 50), several per conversation, shown in the list and filterable through the API (`GET /chat/api/chats?tag=ID`). Only owner / administrator delete a label.
+* **Internal notes:** notes with author and time, visible to the team only; they are **not messages and are never sent to the customer**. The author, the owner and administrators can delete them.
+* **Deals:** the panel shows the person's open deal (link to the funnel) or a **Create deal** button (one open deal per person). With *Open a deal when a new customer writes* on, the first message of a new customer, or of one back after `DEAL_NEW_AFTER_DAYS` (30) days of silence, opens a deal in the first stage of the default pipeline, already assigned to the attendant. With *Open a deal when a contact form arrives* on, every form submission does the same. Both switches are off by default; an open deal is never duplicated.
+* Data: columns `chats.assigned_to / assigned_at`, tables `chat_tags`, `chat_tag_links`, `chat_notes`, and the four settings on the account owner (`users.chat_assign_mode`, `chat_agents_see`, `deal_auto_chat`, `deal_auto_form`). Run `php artisan migrate`.
+
+Endpoints (session auth, `chat.*` permission): `GET /chat/api/chats/{id}/crm`, `POST …/assign`, `PUT …/tags`, `POST …/notes`, `POST …/deal`, `POST|DELETE /chat/api/tags`, `DELETE /chat/api/notes/{id}`, `PUT /chat/api/settings`.
+
+* * *
+
 ## 👥 Team & roles (sub-users)
 
 A **contract user** (the account owner) can add **sub-users** who work for that account. A member signs in with **their own login**, but everything runs on the
@@ -1238,6 +1255,12 @@ Mailbox credentials are **not** in `.env`: each user types them in the **Email**
 | `FORMS_DEFAULT_COUNTRY_CODE` | 55 | Prefix added to phone numbers typed without a country code (empty = leave as typed) |
 | `FORMS_THROTTLE_PER_MINUTE` | 10 | Submissions accepted per minute from one IP address (spam protection of the public endpoint) |
 
+### Deals (sales pipeline)
+
+| Variable | Default | Controls |
+|---|---|---|
+| `DEAL_NEW_AFTER_DAYS` | 30 | With *open a deal automatically* on: a customer who writes again after this many days of silence counts as a new lead (a deal still open is never duplicated) |
+
 ### Plans and billing
 
 | Variable | Default | Controls |
@@ -1271,7 +1294,7 @@ Gateway credentials (Asaas, Efí, AbacatePay, Stone, Stripe, PagBank, Mercado Pa
 
 ## 🧪 Tests
 
-`vendor/bin/phpunit` (in-memory SQLite, no external services): fair queue planner and command, chat backend, Telegram, Instagram and TikTok channels (webhook secret/signature, OAuth, token refresh, inbound, AI reply through the same bot/account, reply window, settings), channel statistics and cross-channel contact links, unresponsive-contact deactivation, contact score ranking, Facebook Messenger, team roles and approval, audience by score and channel, plan queue priority, e-mail channel (SMTP send, IMAP mailbox through webklex/php-imap with a scripted server, message mapping, threading, AI reply, loop protection, contact unification), embeddable contact forms (public script/endpoint, spam protection, contact + chat creation, AI reply channel choice), the new channel / inbox / ranking API endpoints and MCP tools, avatar caching, billing lifecycle and plan enforcement, the Mercado Pago gateway (admin settings, Pix, card, recurrence, webhook) and the Asaas / Efí / AbacatePay / Stone (Pagar.me) / Stripe / PagBank gateways (HTTP faked).
+`vendor/bin/phpunit` (in-memory SQLite, no external services): fair queue planner and command, chat backend, Telegram, Instagram and TikTok channels (webhook secret/signature, OAuth, token refresh, inbound, AI reply through the same bot/account, reply window, settings), channel statistics and cross-channel contact links, unresponsive-contact deactivation, contact score ranking, Facebook Messenger, team roles and approval, audience by score and channel, plan queue priority, team inbox (balanced assignment, visibility, labels, internal notes) and deals opened from conversations and forms, sales pipeline, e-mail channel (SMTP send, IMAP mailbox through webklex/php-imap with a scripted server, message mapping, threading, AI reply, loop protection, contact unification), embeddable contact forms (public script/endpoint, spam protection, contact + chat creation, AI reply channel choice), the new channel / inbox / ranking API endpoints and MCP tools, avatar caching, billing lifecycle and plan enforcement, the Mercado Pago gateway (admin settings, Pix, card, recurrence, webhook) and the Asaas / Efí / AbacatePay / Stone (Pagar.me) / Stripe / PagBank gateways (HTTP faked).
 
 * * *
 

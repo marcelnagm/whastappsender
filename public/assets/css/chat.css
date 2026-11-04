@@ -311,3 +311,12 @@
 .wa-ch-facebook { color: #1877f2; }
 .wa-ch-tiktok { color: #fe2c55; }
 .wa-ch-email { color: #6c757d; }
+
+/* team inbox: filter, assignee, labels, notes */
+.wa-filter { padding: 4px 12px 8px; }
+.wa-chat-meta { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 3px; align-items: center; }
+.wa-assignee { font-size: .65rem; color: #54656f; }
+.wa-tagchip { display: inline-block; font-size: .65rem; color: #fff; border-radius: 10px; padding: 1px 7px; line-height: 1.4; }
+.wa-tagx { border: 0; background: transparent; color: inherit; font-size: .8rem; line-height: 1; padding: 0 0 0 4px; opacity: .8; cursor: pointer; }
+.wa-note { background: #fff8e1; border-radius: 6px; padding: 6px 8px; margin-top: 6px; }
+.wa-note-meta { font-size: .65rem; color: #7a6a3a; display: flex; justify-content: space-between; align-items: center; }

@@ -27,6 +27,7 @@
      data-signature="{{ $signature }}"
      data-signature-suffix="{{ config('chat.signature_suffix') }}"
      data-url-chat-base="{{ url('chat/api/chats') }}"
+     data-url-api-base="{{ url('chat/api') }}"
      data-url-message-base="{{ url('chat/api/messages') }}"
      data-url-index="{{ route('chat.index') }}">
 
@@ -77,6 +78,14 @@
         <div class="wa-search">
             <i class="bi bi-search"></i>
             <input type="search" id="wa-search" placeholder="{{ __('Search or start a new chat') }}" autocomplete="off">
+        </div>
+
+        <div class="wa-filter">
+            <select id="wa-filter" class="form-select form-select-sm" aria-label="{{ __('Filter conversations') }}">
+                <option value="all">{{ __('All conversations') }}</option>
+                <option value="mine">{{ __('Assigned to me') }}</option>
+                <option value="unassigned">{{ __('Unassigned') }}</option>
+            </select>
         </div>
 
         <div id="wa-newchat" class="wa-newchat d-none">
@@ -250,6 +259,31 @@
         resumeAi: @json(__('Resume AI')),
         whatsappName: @json(__('WhatsApp name')),
         typing: @json(__('Type a message')),
+        teamTitle: @json(__('Team')),
+        unassigned: @json(__('Unassigned')),
+        assignedTo: @json(__('Handled by')),
+        assignToMe: @json(__('Assign to me')),
+        saved: @json(__('Saved.')),
+        tagsTitle: @json(__('Labels')),
+        addTag: @json(__('Add a label…')),
+        newTag: @json(__('New label (Enter)')),
+        remove2: @json(__('Remove')),
+        dealTitle: @json(__('Deal')),
+        createDeal: @json(__('Create deal')),
+        dealCreated: @json(__('Deal created.')),
+        notesTitle: @json(__('Internal notes')),
+        notePlaceholder: @json(__('Only your team sees this')),
+        addNote: @json(__('Add note')),
+        confirmNote: @json(__('Delete this note?')),
+        settingsTitle: @json(__('Inbox settings')),
+        modeLabel: @json(__('New conversations')),
+        modeManual: @json(__('Assigned by hand')),
+        modeBalanced: @json(__('Distributed to whoever has fewer open')),
+        seeLabel: @json(__('Attendants see')),
+        seeAll: @json(__('All conversations')),
+        seeAssigned: @json(__('Only theirs and unassigned')),
+        autoDealChat: @json(__('Open a deal when a new customer writes')),
+        autoDealForm: @json(__('Open a deal when a contact form arrives')),
     };
 </script>
 <script src="{{ url('assets/js/chat.js') }}?v=1"></script>

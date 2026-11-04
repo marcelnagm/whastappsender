@@ -27,6 +27,8 @@ class Chat extends Model
         'last_message_at',
         'email_subject',
         'email_refs',
+        'assigned_to',
+        'assigned_at',
     ];
 
     protected $casts = [
@@ -36,6 +38,7 @@ class Chat extends Model
         'last_message_at' => 'datetime',
         'avatar_checked_at' => 'datetime',
         'avatar_next_check_at' => 'datetime',
+        'assigned_at' => 'datetime',
     ];
 
     public function user()
@@ -51,6 +54,21 @@ class Chat extends Model
     public function contact()
     {
         return $this->belongsTo(Contact::class);
+    }
+
+    public function tags()
+    {
+        return $this->belongsToMany(ChatTag::class, 'chat_tag_links', 'chat_id', 'tag_id');
+    }
+
+    public function notes()
+    {
+        return $this->hasMany(ChatNote::class);
+    }
+
+    public function assignee()
+    {
+        return $this->belongsTo(User::class, 'assigned_to');
     }
 
     public function messages()

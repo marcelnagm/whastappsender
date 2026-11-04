@@ -28,6 +28,7 @@
     urlSignature: D.urlSignature,
     signatureSuffix: D.signatureSuffix || '(CRM)',
     chatBase: D.urlChatBase,
+    apiBase: D.urlApiBase,
     messageBase: D.urlMessageBase,
     urlIndex: D.urlIndex
   };
@@ -293,6 +294,12 @@
 
     body.appendChild(row1);
     body.appendChild(row2);
+    if (chat.assigned || (chat.tags && chat.tags.length)) {
+      var row3 = h('div', 'wa-chat-meta');
+      if (chat.assigned) { var who = h('span', 'wa-assignee'); who.appendChild(icon('person-check')); who.appendChild(document.createTextNode(' ' + (chat.assigned.name || ''))); row3.appendChild(who); }
+      (chat.tags || []).slice(0, 3).forEach(function (t) { var c = h('span', 'wa-tagchip', t.name); c.style.background = t.color; row3.appendChild(c); });
+      body.appendChild(row3);
+    }
     item.appendChild(body);
     item.addEventListener('click', function () { openChat(chat); });
     return item;
@@ -309,7 +316,7 @@
     if (S.loadingChats) return;
     S.loadingChats = true;
     try {
-      var url = cfg.urlChats + '?instance=' + cfg.instance + (S.query ? '&q=' + encodeURIComponent(S.query) : '');
+      var url = cfg.urlChats + '?instance=' + cfg.instance + (S.query ? '&q=' + encodeURIComponent(S.query) : '') + (S.filter && S.filter !== 'all' ? '&filter=' + S.filter : '');
       var data = await api(url);
       S.chats = data.chats || [];
       renderChats();
@@ -1141,9 +1148,137 @@
     }
     body.appendChild(ai);
 
+    var team = h('div', 'wa-info-card');
+    body.appendChild(team);
+    renderTeam(chat, team);
+
     var linked = h('div', 'wa-info-card');
     body.appendChild(linked);
     renderLinked(chat, linked);
+  }
+
+  // ------------------------------------------------------------------
+  // team: who handles it, labels, internal notes, deal, inbox settings
+  // ------------------------------------------------------------------
+  function field(label, node) {
+    var w = h('div', 'mb-2');
+    w.appendChild(h('label', 'form-label small mb-1', label));
+    w.appendChild(node);
+    return w;
+  }
+
+  function selectOf(options, value) {
+    var sel = h('select', 'form-select form-select-sm');
+    options.forEach(function (o) { var op = h('option', null, o[1]); op.value = o[0]; if (String(o[0]) === String(value)) op.selected = true; sel.appendChild(op); });
+    return sel;
+  }
+
+  async function renderTeam(chat, host) {
+    host.replaceChildren(h('h6', null, T.teamTitle));
+    var d;
+    try { d = await api(cfg.chatBase + '/' + chat.id + '/crm'); } catch (e) { host.appendChild(h('p', 'small text-danger', e.message)); return; }
+    if (!S.active || S.active.id !== chat.id) return;
+    var again = function () { renderTeam(chat, host); loadChats(); };
+
+    // who handles it
+    var people = [['', T.unassigned]].concat(d.people.map(function (p) { return [p.id, p.name]; }));
+    var assign = selectOf(people, d.assigned ? d.assigned.id : '');
+    assign.addEventListener('change', async function () {
+      try { await api(cfg.chatBase + '/' + chat.id + '/assign', { method: 'POST', body: { user_id: assign.value === '' ? null : parseInt(assign.value, 10) } }); toast(T.saved); loadChats(); }
+      catch (e) { toast(e.message); again(); }
+    });
+    host.appendChild(field(T.assignedTo, assign));
+    var mineBtn = h('button', 'btn btn-sm btn-outline-secondary mb-2', T.assignToMe); mineBtn.type = 'button';
+    mineBtn.addEventListener('click', function () { assign.value = d.me; assign.dispatchEvent(new Event('change')); });
+    if (!d.assigned || d.assigned.id !== d.me) host.appendChild(mineBtn);
+
+    // labels
+    var tagWrap = h('div', 'mb-2');
+    tagWrap.appendChild(h('label', 'form-label small mb-1 d-block', T.tagsTitle));
+    var ids = d.tags.map(function (t) { return t.id; });
+    var saveTags = async function (next) { try { await api(cfg.chatBase + '/' + chat.id + '/tags', { method: 'PUT', body: { tag_ids: next } }); again(); } catch (e) { toast(e.message); } };
+    d.tags.forEach(function (t) {
+      var chip = h('span', 'wa-tagchip me-1', t.name); chip.style.background = t.color;
+      var x = h('button', 'wa-tagx', '×'); x.type = 'button'; x.title = T.remove2;
+      x.addEventListener('click', function () { saveTags(ids.filter(function (i) { return i !== t.id; })); });
+      chip.appendChild(x); tagWrap.appendChild(chip);
+    });
+    var free = d.all_tags.filter(function (t) { return ids.indexOf(t.id) < 0; });
+    if (free.length) {
+      var pick = selectOf([['', T.addTag]].concat(free.map(function (t) { return [t.id, t.name]; })), '');
+      pick.className += ' mt-1';
+      pick.addEventListener('change', function () { if (pick.value) saveTags(ids.concat([parseInt(pick.value, 10)])); });
+      tagWrap.appendChild(pick);
+    }
+    var nt = h('input', 'form-control form-control-sm mt-1'); nt.placeholder = T.newTag; nt.maxLength = 40;
+    nt.addEventListener('keydown', async function (ev) {
+      if (ev.key !== 'Enter' || !nt.value.trim()) return;
+      ev.preventDefault();
+      try { var tag = await api(cfg.apiBase + '/tags', { method: 'POST', body: { name: nt.value.trim() } }); saveTags(ids.indexOf(tag.id) < 0 ? ids.concat([tag.id]) : ids); } catch (e) { toast(e.message); }
+    });
+    tagWrap.appendChild(nt);
+    host.appendChild(tagWrap);
+
+    // deal
+    if (d.can_deals) {
+      var dealBox = h('div', 'mb-2');
+      dealBox.appendChild(h('label', 'form-label small mb-1 d-block', T.dealTitle));
+      if (d.deal) {
+        var a = h('a', 'small', d.deal.title + (d.deal.stage ? ' · ' + d.deal.stage : '')); a.href = d.deal.url; a.target = '_blank'; a.rel = 'noopener';
+        dealBox.appendChild(a);
+      } else {
+        var ps = d.pipelines.length > 1 ? selectOf(d.pipelines.map(function (p) { return [p.id, p.name]; }), d.pipelines[0].id) : null;
+        if (ps) dealBox.appendChild(ps);
+        var mk = h('button', 'btn btn-sm btn-outline-success', T.createDeal); mk.type = 'button';
+        mk.addEventListener('click', async function () {
+          try { await api(cfg.chatBase + '/' + chat.id + '/deal', { method: 'POST', body: ps ? { pipeline_id: parseInt(ps.value, 10) } : {} }); toast(T.dealCreated); again(); } catch (e) { toast(e.message); }
+        });
+        dealBox.appendChild(mk);
+      }
+      host.appendChild(dealBox);
+    }
+
+    // internal notes
+    var notes = h('div', 'mb-2');
+    notes.appendChild(h('label', 'form-label small mb-1 d-block', T.notesTitle));
+    var ta = h('textarea', 'form-control form-control-sm'); ta.rows = 2; ta.maxLength = 4000; ta.placeholder = T.notePlaceholder;
+    notes.appendChild(ta);
+    var addN = h('button', 'btn btn-sm btn-outline-secondary mt-1', T.addNote); addN.type = 'button';
+    addN.addEventListener('click', async function () {
+      if (!ta.value.trim()) return;
+      try { await api(cfg.chatBase + '/' + chat.id + '/notes', { method: 'POST', body: { body: ta.value } }); again(); } catch (e) { toast(e.message); }
+    });
+    notes.appendChild(addN);
+    d.notes.forEach(function (n) {
+      var box = h('div', 'wa-note');
+      box.appendChild(h('div', 'small', n.body));
+      var meta = h('div', 'wa-note-meta', n.author + ' · ' + fmtListTime(n.at));
+      if (n.mine || d.settings) {
+        var del = h('button', 'wa-tagx', '×'); del.type = 'button'; del.title = T.remove2;
+        del.addEventListener('click', async function () { if (!confirm(T.confirmNote)) return; try { await api(cfg.apiBase + '/notes/' + n.id, { method: 'DELETE' }); again(); } catch (e) { toast(e.message); } });
+        meta.appendChild(del);
+      }
+      box.appendChild(meta); notes.appendChild(box);
+    });
+    host.appendChild(notes);
+
+    // account settings (owner / administrator)
+    if (d.settings) {
+      var st = h('details', 'mt-2');
+      st.appendChild(h('summary', 'small', T.settingsTitle));
+      var mode = selectOf([['manual', T.modeManual], ['balanced', T.modeBalanced]], d.settings.assign_mode);
+      var see = selectOf([['all', T.seeAll], ['assigned', T.seeAssigned]], d.settings.agents_see);
+      st.appendChild(field(T.modeLabel, mode)); st.appendChild(field(T.seeLabel, see));
+      var cb = function (label, on) { var l = h('label', 'd-block small'); var i = h('input'); i.type = 'checkbox'; i.checked = on; i.className = 'form-check-input me-1'; l.appendChild(i); l.appendChild(document.createTextNode(label)); return [l, i]; };
+      var c1 = cb(T.autoDealChat, d.settings.deal_auto_chat), c2 = cb(T.autoDealForm, d.settings.deal_auto_form);
+      st.appendChild(c1[0]); st.appendChild(c2[0]);
+      var sv = h('button', 'btn btn-sm btn-success mt-2', T.save); sv.type = 'button';
+      sv.addEventListener('click', async function () {
+        try { await api(cfg.apiBase + '/settings', { method: 'PUT', body: { assign_mode: mode.value, agents_see: see.value, deal_auto_chat: c1[1].checked, deal_auto_form: c2[1].checked } }); toast(T.saved); } catch (e) { toast(e.message); }
+      });
+      st.appendChild(sv);
+      host.appendChild(st);
+    }
   }
 
   // ------------------------------------------------------------------
@@ -1264,6 +1399,9 @@
   // ------------------------------------------------------------------
   // events
   // ------------------------------------------------------------------
+  var filterSel = $('wa-filter');
+  if (filterSel) filterSel.addEventListener('change', function () { S.filter = filterSel.value; loadChats(); });
+
   el.search.addEventListener('input', debounce(function () {
     S.query = el.search.value.trim();
     loadChats();
