@@ -29,6 +29,7 @@
 | [Contact ranking & unresponsive contacts](#-contact-ranking--unresponsive-contacts) | Engagement score with tiers, and automatic deactivation of contacts whose WhatsApp messages are never delivered |
 | [Signup welcome](#signup-welcome-message) | Admin chooses the campaign message sent to people who register on the site |
 | [Contact forms](#-contact-forms-embeddable) | Build a form, paste one script line on any site; leads land in the CRM and the AI answers on WhatsApp / available channels |
+| [Sales pipeline](#-sales-pipeline-kanban) | Kanban funnel of deals: drag cards between stages, values, expected close date, won / lost with reason, win rate |
 | [Team & roles](#-team--roles-sub-users) | Sub-users working for the contract account (admin, approver, creator, sender, attendant, analyst) |
 | [Audience & approval](#-audience--approval-of-campaigns) | Choose the audience by score and channels; approval flow before sending |
 | [Fair Send Queue](#️-fair-send-queue) | Balanced batches across users and sessions, with plan priority |
@@ -873,6 +874,18 @@ Open **Forms** in the menu, build a form and paste **one line** on any website. 
 * Phone numbers typed without a country code receive `FORMS_DEFAULT_COUNTRY_CODE` (default `55`).
 * Submissions are processed by the `default` queue worker. Run `php artisan migrate`. Team roles: *Administrator* and *Campaign creator* manage forms.
 
+## 🧲 Sales pipeline (Kanban)
+
+Open **Pipeline** in the menu. Every account starts with a **Sales** funnel (*New lead → Contacted → Proposal → Negotiation → Won / Lost*); stages can be renamed, recolored, added or removed, and you can keep **several pipelines** (e.g. one per product). This is the funnel board that Kommo, Pipedrive, HubSpot and RD Station CRM are built around.
+
+* **Deals** carry a title, a value, an expected close date and (optionally) a contact. Drag a card to another stage or position; dropping it on a **Won** or **Lost** stage closes it (you are asked why it was lost) and dropping it on any other stage reopens it.
+* The header shows open deals and their value, won value and the **win rate** (won ÷ closed).
+* A stage that still holds deals cannot be removed, and the last pipeline cannot be deleted. Removing a pipeline removes its deals.
+* Everything runs on the contract account; team roles **administrator** and **attendant** can work the funnel (permission `deals`), the others cannot.
+* Data: tables `pipelines`, `pipeline_stages`, `deals` (run `php artisan migrate`). Deals come from the board for now; creating them from chat conversations and contact forms is the natural next step.
+
+* * *
+
 ## 👥 Team & roles (sub-users)
 
 A **contract user** (the account owner) can add **sub-users** who work for that account. A member signs in with **their own login**, but everything runs on the
@@ -884,11 +897,11 @@ Chatwoot, whose permissions are also split by what the person may do (conversati
 
 | Role | Instagram / Meta equivalent | Can do |
 |------|----------------------------|--------|
-| **Administrator** (`admin`) | Admin | Everything except billing/plan and the owner's profile; manages the team |
+| **Administrator** (`admin`) | Admin | Everything (including the sales pipeline) except billing/plan and the owner's profile; manages the team |
 | **Approver** (`approver`) | Moderator | Reviews campaign messages, **chooses the audience (score + channels)**, approves or rejects; sees contacts and reports |
 | **Campaign creator** (`creator`) | Content creator | Writes campaigns and messages, manages contacts, **submits for approval**; cannot send |
 | **Sender** (`sender`) | Advertiser | **Launches approved** campaigns and retries sends; cannot edit the content |
-| **Attendant** (`agent`) | Helpdesk agent | Answers conversations (chat, API `/conversations`) and reads contacts; nothing else |
+| **Attendant** (`agent`) | Helpdesk agent | Answers conversations (chat, API `/conversations`), reads contacts and works the sales pipeline; nothing else |
 | **Analyst** (`analyst`) | Analyst | Read-only: statistics, ranking, campaign reports, contacts |
 
 How it is enforced:

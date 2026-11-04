@@ -31,11 +31,11 @@ final class TeamRoles
     public static function matrix(): array
     {
         return [
-            self::ADMIN => ['chat', 'contacts.view', 'contacts.manage', 'campaigns.view', 'campaigns.manage', 'campaigns.approve', 'campaigns.send', 'reports', 'channels', 'ai', 'forms', 'team'],
+            self::ADMIN => ['chat', 'contacts.view', 'contacts.manage', 'campaigns.view', 'campaigns.manage', 'campaigns.approve', 'campaigns.send', 'reports', 'channels', 'ai', 'forms', 'deals', 'team'],
             self::APPROVER => ['contacts.view', 'campaigns.view', 'campaigns.approve', 'reports'],
             self::CREATOR => ['contacts.view', 'contacts.manage', 'campaigns.view', 'campaigns.manage', 'forms'],
             self::SENDER => ['contacts.view', 'campaigns.view', 'campaigns.send'],
-            self::AGENT => ['chat', 'contacts.view'],
+            self::AGENT => ['chat', 'contacts.view', 'deals'],
             self::ANALYST => ['contacts.view', 'campaigns.view', 'reports'],
         ];
     }
@@ -98,6 +98,7 @@ final class TeamRoles
         ['campaigns.approve', ['approvals.*']],
         ['reports', ['stats.*']],
         ['forms', ['forms.*']],
+        ['deals', ['pipeline.*']],
         ['channels', ['telegram.*', 'tiktok.*', 'facebook.*', 'email.*', 'instagram.*', 'instances.*', 'whatsapp.*']],
         ['ai', ['ai.*']],
         ['team', ['team.*']],

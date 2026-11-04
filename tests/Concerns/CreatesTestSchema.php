@@ -166,6 +166,7 @@ trait CreatesTestSchema
             '2026_10_30_100000_create_ai_profiles_table.php',
             '2026_11_02_130000_create_contact_forms_tables.php',
             '2026_11_02_140000_add_email_channel.php',
+            '2026_11_04_100000_create_sales_pipeline_tables.php',
         ] as $file) {
             (require database_path('migrations/' . $file))->up();
         }

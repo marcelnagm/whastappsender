@@ -164,6 +164,21 @@ Route::group(['namespace' => 'App\Http\Controllers', 'middleware' => ['auth', 's
         Route::get('/{form}/submissions', [$fm, 'submissions'])->whereNumber('form')->name('submissions');
     });
 
+    // Sales funnel (Kanban of deals)
+    Route::prefix('pipeline')->name('pipeline.')->group(function () {
+        $pl = \App\Http\Controllers\PipelineController::class;
+        Route::get('/', [$pl, 'index'])->name('index');
+        Route::post('/pipelines', [$pl, 'storePipeline'])->name('pipelines.store');
+        Route::delete('/pipelines/{pipeline}', [$pl, 'destroyPipeline'])->whereNumber('pipeline')->name('pipelines.destroy');
+        Route::post('/pipelines/{pipeline}/stages', [$pl, 'storeStage'])->whereNumber('pipeline')->name('stages.store');
+        Route::put('/stages/{stage}', [$pl, 'updateStage'])->whereNumber('stage')->name('stages.update');
+        Route::delete('/stages/{stage}', [$pl, 'destroyStage'])->whereNumber('stage')->name('stages.destroy');
+        Route::post('/pipelines/{pipeline}/deals', [$pl, 'storeDeal'])->whereNumber('pipeline')->name('deals.store');
+        Route::put('/deals/{deal}', [$pl, 'updateDeal'])->whereNumber('deal')->name('deals.update');
+        Route::post('/deals/{deal}/move', [$pl, 'moveDeal'])->whereNumber('deal')->name('deals.move');
+        Route::delete('/deals/{deal}', [$pl, 'destroyDeal'])->whereNumber('deal')->name('deals.destroy');
+    });
+
     Route::prefix('team')->name('team.')->group(function () {
         $team = \App\Http\Controllers\TeamController::class;
         Route::get('/', [$team, 'index'])->name('index');

@@ -84,6 +84,11 @@
           <a href="{{ route('approvals.index') }}" class="nav-link {{ request()->is('approvals*') ? 'active text-secondary' : 'text-white' }}"><i class="bi bi-check2-square me-1"></i> {{ __('Approvals') }}</a>
         </li>
         @endteamcan
+        @teamcan('deals')
+        <li class="nav-item">
+          <a href="{{ route('pipeline.index') }}" class="nav-link {{ request()->is('pipeline*') ? 'active text-secondary' : 'text-white' }}"><i class="bi bi-kanban me-1"></i> {{ __('Pipeline') }}</a>
+        </li>
+        @endteamcan
         @teamcan('forms')
         <li class="nav-item">
           <a href="{{ route('forms.index') }}" class="nav-link {{ request()->is('forms*') ? 'active text-secondary' : 'text-white' }}"><i class="bi bi-ui-checks me-1"></i> {{ __('Forms') }}</a>
