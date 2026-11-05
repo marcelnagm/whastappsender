@@ -35,6 +35,7 @@
 | [Consent](#️-consent--opt-out) | Proof of who agreed to be messaged and how, opt-in / opt-out words on every channel, consent box on forms, "campaigns only to contacts with consent" switch, CSV export |
 | [Segments](#-custom-fields--segments) | Your own contact fields (text, number, date, choice, yes/no), saved segments with conditions, segment as campaign audience, CSV export |
 | [Automations](#-automations) | "When X, do Y" rules: triggers on deals, labels and customer words; actions that create tasks, label, assign, move deals and notify; loop protection and run log |
+| [Team performance](#-team-performance--goals) | First-response time, conversations answered, deals won/lost and follow-ups per person, monthly goals with progress |
 | [Quick replies](#-quick-replies) | Canned answers shared by the team: type `/shortcut` in the chat, with variables like the customer's name |
 | [Team & roles](#-team--roles-sub-users) | Sub-users working for the contract account (admin, approver, creator, sender, attendant, analyst) |
 | [Audience & approval](#-audience--approval-of-campaigns) | Choose the audience by score and channels; approval flow before sending |
@@ -919,6 +920,14 @@ Open **Follow-ups** in the menu (or use the **Follow-ups** block of the chat sid
 * Data: table `tasks` (run `php artisan migrate`).
 
 * * *
+
+## 🏆 Team performance & goals
+
+Open **Team performance** in the menu (administrator / analyst / approver / owner) to see, for the last 7 / 30 / 90 days, this month or a custom range:
+
+* **First response:** how long a customer waited until the next reply (average and median), **conversations answered** and **messages sent** per person. A reply is credited to the person who sent it from the chat; typed on the phone it counts for whoever the conversation is assigned to; replies by the **AI agent** and **campaigns** close the wait but count for nobody (the AI total is shown apart). Messages sent before this feature have no author and fall under the assignee.
+* **Deals** won (with value) and lost per assignee, **follow-ups** done and currently overdue.
+* **Goals of the month** (administrator / owner set them): deals won, value won, conversations answered or average first response in minutes (lower is better), for the whole team or one person, with a progress bar.
 
 ## 🤖 Automations
 

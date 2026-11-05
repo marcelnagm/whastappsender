@@ -27,6 +27,8 @@ class ChatMessage extends Model
         'error',
         'deleted',
         'message_timestamp',
+        'sent_by',
+        'source',
     ];
 
     protected $casts = [

@@ -59,6 +59,11 @@
           <a href="{{ route('stats.index') }}" class="nav-link {{ request()->is('stats*') ? 'active text-secondary' : 'text-white' }}"><i class="bi bi-bar-chart-line me-1"></i> {{ __('Statistics') }}</a>
         </li>
         @endteamcan
+        @teamcan('reports')
+        <li class="nav-item">
+          <a href="{{ route('team-report.index') }}" class="nav-link {{ request()->is('team-report*') ? 'active text-secondary' : 'text-white' }}"><i class="bi bi-trophy me-1"></i> {{ __('Team performance') }}</a>
+        </li>
+        @endteamcan
         @teamcan('ai')
         <li class="nav-item">
           <a href="{{ route('ai.index') }}" class="nav-link {{ request()->is('ai*') ? 'active text-secondary' : 'text-white' }}"><i class="bi bi-robot me-1"></i> {{ __('AI') }}</a>

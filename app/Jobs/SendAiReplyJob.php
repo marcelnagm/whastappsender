@@ -161,7 +161,7 @@ class SendAiReplyJob implements ShouldQueue
             if ($chat) {
                 $message = \App\Models\ChatMessage::create([
                     'chat_id' => $chat->id, 'instance_id' => $instance->id, 'user_id' => $instance->user_id,
-                    'message_id' => $messageId, 'from_me' => true, 'type' => 'text', 'body' => $aiMessage->content,
+                    'message_id' => $messageId, 'from_me' => true, 'source' => 'ai', 'type' => 'text', 'body' => $aiMessage->content,
                     'status' => 'sent', 'message_timestamp' => now(),
                 ]);
                 app(\App\Services\Chat\ChatMessageRecorder::class)->touchChat($chat, $message, true);
@@ -195,7 +195,7 @@ class SendAiReplyJob implements ShouldQueue
                 \App\Services\Email\EmailThread::remember($chat, $id);
                 $message = \App\Models\ChatMessage::create([
                     'chat_id' => $chat->id, 'instance_id' => $instance->id, 'user_id' => $instance->user_id,
-                    'message_id' => $id, 'from_me' => true, 'type' => 'text', 'body' => $aiMessage->content,
+                    'message_id' => $id, 'from_me' => true, 'source' => 'ai', 'type' => 'text', 'body' => $aiMessage->content,
                     'status' => 'sent', 'message_timestamp' => now(),
                 ]);
                 app(\App\Services\Chat\ChatMessageRecorder::class)->touchChat($chat, $message, true);
@@ -233,7 +233,7 @@ class SendAiReplyJob implements ShouldQueue
             if ($chat) {
                 $message = \App\Models\ChatMessage::create([
                     'chat_id' => $chat->id, 'instance_id' => $instance->id, 'user_id' => $instance->user_id,
-                    'message_id' => $messageId, 'from_me' => true, 'type' => 'text', 'body' => $aiMessage->content,
+                    'message_id' => $messageId, 'from_me' => true, 'source' => 'ai', 'type' => 'text', 'body' => $aiMessage->content,
                     'status' => 'sent', 'message_timestamp' => now(),
                 ]);
                 app(\App\Services\Chat\ChatMessageRecorder::class)->touchChat($chat, $message, true);
@@ -271,7 +271,7 @@ class SendAiReplyJob implements ShouldQueue
             if ($chat) {
                 $message = \App\Models\ChatMessage::create([
                     'chat_id' => $chat->id, 'instance_id' => $instance->id, 'user_id' => $instance->user_id,
-                    'message_id' => $messageId, 'from_me' => true, 'type' => 'text', 'body' => $aiMessage->content,
+                    'message_id' => $messageId, 'from_me' => true, 'source' => 'ai', 'type' => 'text', 'body' => $aiMessage->content,
                     'status' => 'sent', 'message_timestamp' => now(),
                 ]);
                 app(\App\Services\Chat\ChatMessageRecorder::class)->touchChat($chat, $message, true);
@@ -309,7 +309,7 @@ class SendAiReplyJob implements ShouldQueue
             if ($chat) {
                 $message = \App\Models\ChatMessage::create([
                     'chat_id' => $chat->id, 'instance_id' => $instance->id, 'user_id' => $instance->user_id,
-                    'message_id' => $messageId, 'from_me' => true, 'type' => 'text', 'body' => $aiMessage->content,
+                    'message_id' => $messageId, 'from_me' => true, 'source' => 'ai', 'type' => 'text', 'body' => $aiMessage->content,
                     'status' => 'sent', 'message_timestamp' => now(),
                 ]);
                 app(\App\Services\Chat\ChatMessageRecorder::class)->touchChat($chat, $message, true);

@@ -96,14 +96,14 @@ final class TeamRoles
         ['campaigns.manage', ['campaigns.*', 'campaign-items.*']],
         [['campaigns.approve', 'campaigns.send', 'campaigns.manage'], ['approvals.preview']],
         ['campaigns.approve', ['approvals.*']],
-        ['reports', ['stats.*']],
+        ['reports', ['stats.*', 'team-report.index']],
         ['forms', ['forms.*']],
         ['deals', ['pipeline.*']],
         ['tasks', ['tasks.*']],
         ['automations', ['automations.*']],
         ['channels', ['telegram.*', 'tiktok.*', 'facebook.*', 'email.*', 'instagram.*', 'instances.*', 'whatsapp.*']],
         ['ai', ['ai.*']],
-        ['team', ['team.*']],
+        ['team', ['team.*', 'team-report.*']],
     ];
 
     /** API paths (after "api/v1/"), by method kind: R = read, W = write. First match wins. */

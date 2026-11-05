@@ -232,6 +232,14 @@ Route::group(['namespace' => 'App\Http\Controllers', 'middleware' => ['auth', 's
         Route::delete('/{automation}', [$am, 'destroy'])->whereNumber('automation')->name('destroy');
     });
 
+    // Team performance: first response, answered conversations, deals, goals
+    Route::prefix('team-report')->name('team-report.')->group(function () {
+        $tr = \App\Http\Controllers\TeamReportController::class;
+        Route::get('/', [$tr, 'index'])->name('index');
+        Route::post('/goals', [$tr, 'storeGoal'])->name('goals.store');
+        Route::delete('/goals/{goal}', [$tr, 'destroyGoal'])->whereNumber('goal')->name('goals.destroy');
+    });
+
     // Follow-up tasks
     Route::prefix('tasks')->name('tasks.')->group(function () {
         $tk = \App\Http\Controllers\TasksController::class;

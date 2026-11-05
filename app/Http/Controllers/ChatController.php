@@ -295,6 +295,8 @@ class ChatController extends Controller
             'instance_id' => $chat->instance_id,
             'user_id' => $chat->user_id,
             'from_me' => true,
+            'sent_by' => \App\Services\Team\TeamContext::actor($request)->id,
+            'source' => 'human',
             'type' => 'text',
             // stored exactly as the customer receives it (signature included), so the echo from WhatsApp matches
             'body' => ChatSignature::apply($signature, $text),
