@@ -70,7 +70,14 @@ class ChatCrmController extends Controller
         $this->authorizeChat($chat);
         $data = $request->validate(['tag_ids' => 'array|max:20', 'tag_ids.*' => 'integer']);
         $ids = ChatTag::where('user_id', Auth::id())->whereIn('id', $data['tag_ids'] ?? [])->pluck('id')->all();
-        $chat->tags()->sync($ids);
+        $changes = $chat->tags()->sync($ids);
+        foreach ($changes['attached'] as $tagId) {
+            $ctx = ['chat' => $chat, 'tag_id' => (int) $tagId];
+            if ($open = app(\App\Services\Pipeline\LeadDeals::class)->openDealFor($chat)) {
+                $ctx['deal'] = $open;
+            }
+            app(\App\Services\Automation\Automations::class)->fire('tag.added', Auth::id(), $ctx);
+        }
 
         return response()->json(['ok' => true]);
     }

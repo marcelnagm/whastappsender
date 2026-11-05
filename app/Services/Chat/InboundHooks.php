@@ -24,7 +24,16 @@ class InboundHooks
                 return;
             }
             app(ChatAssignment::class)->autoAssign($chat, $owner);
-            app(LeadDeals::class)->fromInbound($chat->fresh(), $owner, $m);
+            $deals = app(LeadDeals::class);
+            $deals->fromInbound($chat->fresh(), $owner, $m);
+            if ($m->body) {
+                $chat = $chat->fresh();
+                $ctx = ['chat' => $chat, 'text' => (string) $m->body];
+                if ($open = $deals->openDealFor($chat)) {
+                    $ctx['deal'] = $open;
+                }
+                app(\App\Services\Automation\Automations::class)->fire('message.keyword', $owner, $ctx);
+            }
         } catch (\Throwable $e) {
             Log::warning('Inbound hooks failed: ' . $e->getMessage(), ['chat_message_id' => $m->id]);
         }

@@ -223,6 +223,15 @@ Route::group(['namespace' => 'App\Http\Controllers', 'middleware' => ['auth', 's
         Route::get('/segments/{segment}/export', [$au, 'export'])->whereNumber('segment')->name('segments.export');
     });
 
+    // Automations: when X happens, do Y
+    Route::prefix('automations')->name('automations.')->group(function () {
+        $am = \App\Http\Controllers\AutomationsController::class;
+        Route::get('/', [$am, 'index'])->name('index');
+        Route::post('/', [$am, 'store'])->name('store');
+        Route::post('/{automation}/toggle', [$am, 'toggle'])->whereNumber('automation')->name('toggle');
+        Route::delete('/{automation}', [$am, 'destroy'])->whereNumber('automation')->name('destroy');
+    });
+
     // Follow-up tasks
     Route::prefix('tasks')->name('tasks.')->group(function () {
         $tk = \App\Http\Controllers\TasksController::class;

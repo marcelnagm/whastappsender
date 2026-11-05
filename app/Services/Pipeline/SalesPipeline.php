@@ -49,6 +49,7 @@ class SalesPipeline
         $deal->position = 1 + (int) Deal::where('stage_id', $stage->id)->max('position');
         $this->place($deal, $stage);
         $deal->save();
+        app(\App\Services\Automation\Automations::class)->fire('deal.created', $p->user_id, ['deal' => $deal, 'stage_id' => $stage->id]);
 
         return $deal;
     }
@@ -58,6 +59,8 @@ class SalesPipeline
     {
         abort_unless($stage->pipeline_id === $deal->pipeline_id && $stage->user_id === $deal->user_id, 422);
 
+        $wasStage = $deal->stage_id;
+        $wasStatus = $deal->status;
         $this->place($deal, $stage, $lostReason);
 
         $siblings = Deal::where('stage_id', $stage->id)->where('id', '!=', $deal->id)->orderBy('position')->orderBy('id')->pluck('id')->all();
@@ -69,7 +72,17 @@ class SalesPipeline
             Deal::where('id', $id)->update(['position' => $i]);
         }
 
-        return $deal->fresh();
+        $deal = $deal->fresh();
+        if ($wasStage !== $stage->id) {
+            $auto = app(\App\Services\Automation\Automations::class);
+            $ctx = ['deal' => $deal, 'stage_id' => $stage->id];
+            $auto->fire('deal.stage', $deal->user_id, $ctx);
+            if ($wasStatus !== $stage->kind && in_array($stage->kind, ['won', 'lost'], true)) {
+                $auto->fire('deal.' . $stage->kind, $deal->user_id, $ctx);
+            }
+        }
+
+        return $deal;
     }
 
     private function place(Deal $deal, PipelineStage $stage, ?string $lostReason = null): void

@@ -31,7 +31,7 @@ final class TeamRoles
     public static function matrix(): array
     {
         return [
-            self::ADMIN => ['chat', 'contacts.view', 'contacts.manage', 'campaigns.view', 'campaigns.manage', 'campaigns.approve', 'campaigns.send', 'reports', 'channels', 'ai', 'forms', 'deals', 'tasks', 'team'],
+            self::ADMIN => ['chat', 'contacts.view', 'contacts.manage', 'campaigns.view', 'campaigns.manage', 'campaigns.approve', 'campaigns.send', 'reports', 'channels', 'ai', 'forms', 'deals', 'tasks', 'automations', 'team'],
             self::APPROVER => ['contacts.view', 'campaigns.view', 'campaigns.approve', 'reports'],
             self::CREATOR => ['contacts.view', 'contacts.manage', 'campaigns.view', 'campaigns.manage', 'forms'],
             self::SENDER => ['contacts.view', 'campaigns.view', 'campaigns.send'],
@@ -100,6 +100,7 @@ final class TeamRoles
         ['forms', ['forms.*']],
         ['deals', ['pipeline.*']],
         ['tasks', ['tasks.*']],
+        ['automations', ['automations.*']],
         ['channels', ['telegram.*', 'tiktok.*', 'facebook.*', 'email.*', 'instagram.*', 'instances.*', 'whatsapp.*']],
         ['ai', ['ai.*']],
         ['team', ['team.*']],

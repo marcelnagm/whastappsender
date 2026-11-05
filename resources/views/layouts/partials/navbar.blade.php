@@ -104,6 +104,11 @@
           <a href="{{ route('consent.index') }}" class="nav-link {{ request()->is('consent*') ? 'active text-secondary' : 'text-white' }}"><i class="bi bi-shield-check me-1"></i> {{ __('Consent') }}</a>
         </li>
         @endteamcan
+        @teamcan('automations')
+        <li class="nav-item">
+          <a href="{{ route('automations.index') }}" class="nav-link {{ request()->is('automations*') ? 'active text-secondary' : 'text-white' }}"><i class="bi bi-diagram-3 me-1"></i> {{ __('Automations') }}</a>
+        </li>
+        @endteamcan
         @teamcan('tasks')
         <li class="nav-item">
           <a href="{{ route('tasks.index') }}" class="nav-link {{ request()->is('tasks*') ? 'active text-secondary' : 'text-white' }}"><i class="bi bi-alarm me-1"></i> {{ __('Follow-ups') }}</a>

@@ -34,6 +34,7 @@
 | [Follow-ups](#-follow-up-tasks--reminders) | Tasks with a due time for a contact or conversation, assigned to a person, with an in-app reminder when they fall due |
 | [Consent](#️-consent--opt-out) | Proof of who agreed to be messaged and how, opt-in / opt-out words on every channel, consent box on forms, "campaigns only to contacts with consent" switch, CSV export |
 | [Segments](#-custom-fields--segments) | Your own contact fields (text, number, date, choice, yes/no), saved segments with conditions, segment as campaign audience, CSV export |
+| [Automations](#-automations) | "When X, do Y" rules: triggers on deals, labels and customer words; actions that create tasks, label, assign, move deals and notify; loop protection and run log |
 | [Quick replies](#-quick-replies) | Canned answers shared by the team: type `/shortcut` in the chat, with variables like the customer's name |
 | [Team & roles](#-team--roles-sub-users) | Sub-users working for the contract account (admin, approver, creator, sender, attendant, analyst) |
 | [Audience & approval](#-audience--approval-of-campaigns) | Choose the audience by score and channels; approval flow before sending |
@@ -919,6 +920,15 @@ Open **Follow-ups** in the menu (or use the **Follow-ups** block of the chat sid
 
 * * *
 
+## 🤖 Automations
+
+Open **Automations** in the menu (administrator / owner). Each rule is *when* something happens → *then* one or more actions (up to 5), run on the account's behalf.
+
+* **Triggers:** a deal is created, moves to a stage (any, or a chosen one), is won or lost; a label is applied to a conversation (any, or a chosen one); a customer writes one of the words you list (case-insensitive, anywhere in the message).
+* **Actions:** create a follow-up task (title, due in N hours, for the owner, whoever has the conversation or a team member), apply a label, assign the conversation (and its deal), move the deal to a stage, notify someone in the app.
+* **Safe by design:** an automation runs once per deal / conversation inside a chain and chains stop at depth 3, so two rules that move a deal back and forth never loop; a failing action is logged (*partial* / *error* in **Latest runs**) and neither stops the other actions nor the original change; rules only ever touch the account's own deals, labels, stages and team.
+* Automations do not send messages to customers on their own: sending stays with campaigns (consent and approval rules) and with your team.
+
 ## 🧩 Custom fields & segments
 
 Open **Segments** in the menu (administrator / campaign creator / owner).
@@ -1350,7 +1360,7 @@ Gateway credentials (Asaas, Efí, AbacatePay, Stone, Stripe, PagBank, Mercado Pa
 
 ## 🧪 Tests
 
-`vendor/bin/phpunit` (in-memory SQLite, no external services): fair queue planner and command, chat backend, Telegram, Instagram and TikTok channels (webhook secret/signature, OAuth, token refresh, inbound, AI reply through the same bot/account, reply window, settings), channel statistics and cross-channel contact links, unresponsive-contact deactivation, contact score ranking, Facebook Messenger, team roles and approval, audience by score and channel, plan queue priority, quick replies, consent register (opt-in / opt-out proof, keywords, forms), custom contact fields and segments, follow-up tasks and reminders, team inbox (balanced assignment, visibility, labels, internal notes) and deals opened from conversations and forms, sales pipeline, e-mail channel (SMTP send, IMAP mailbox through webklex/php-imap with a scripted server, message mapping, threading, AI reply, loop protection, contact unification), embeddable contact forms (public script/endpoint, spam protection, contact + chat creation, AI reply channel choice), the new channel / inbox / ranking API endpoints and MCP tools, avatar caching, billing lifecycle and plan enforcement, the Mercado Pago gateway (admin settings, Pix, card, recurrence, webhook) and the Asaas / Efí / AbacatePay / Stone (Pagar.me) / Stripe / PagBank gateways (HTTP faked).
+`vendor/bin/phpunit` (in-memory SQLite, no external services): fair queue planner and command, chat backend, Telegram, Instagram and TikTok channels (webhook secret/signature, OAuth, token refresh, inbound, AI reply through the same bot/account, reply window, settings), channel statistics and cross-channel contact links, unresponsive-contact deactivation, contact score ranking, Facebook Messenger, team roles and approval, audience by score and channel, plan queue priority, quick replies, consent register (opt-in / opt-out proof, keywords, forms), custom contact fields and segments, automations (triggers, actions, loops), follow-up tasks and reminders, team inbox (balanced assignment, visibility, labels, internal notes) and deals opened from conversations and forms, sales pipeline, e-mail channel (SMTP send, IMAP mailbox through webklex/php-imap with a scripted server, message mapping, threading, AI reply, loop protection, contact unification), embeddable contact forms (public script/endpoint, spam protection, contact + chat creation, AI reply channel choice), the new channel / inbox / ranking API endpoints and MCP tools, avatar caching, billing lifecycle and plan enforcement, the Mercado Pago gateway (admin settings, Pix, card, recurrence, webhook) and the Asaas / Efí / AbacatePay / Stone (Pagar.me) / Stripe / PagBank gateways (HTTP faked).
 
 * * *
 
