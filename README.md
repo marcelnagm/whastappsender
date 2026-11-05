@@ -33,6 +33,7 @@
 | [Team inbox](#-team-inbox--deals-from-conversations) | Assign conversations (by hand or balanced), labels, internal notes, filters, and deals opened automatically from new conversations and contact forms |
 | [Follow-ups](#-follow-up-tasks--reminders) | Tasks with a due time for a contact or conversation, assigned to a person, with an in-app reminder when they fall due |
 | [Consent](#️-consent--opt-out) | Proof of who agreed to be messaged and how, opt-in / opt-out words on every channel, consent box on forms, "campaigns only to contacts with consent" switch, CSV export |
+| [Quick replies](#-quick-replies) | Canned answers shared by the team: type `/shortcut` in the chat, with variables like the customer's name |
 | [Team & roles](#-team--roles-sub-users) | Sub-users working for the contract account (admin, approver, creator, sender, attendant, analyst) |
 | [Audience & approval](#-audience--approval-of-campaigns) | Choose the audience by score and channels; approval flow before sending |
 | [Fair Send Queue](#️-fair-send-queue) | Balanced batches across users and sessions, with plan priority |
@@ -931,6 +932,16 @@ Bulk messaging needs permission: Meta's policies and Brazil's LGPD expect you to
 
 * * *
 
+## ⚡ Quick replies
+
+Open **Quick replies** in the menu to build the team's library of canned answers (shared by the whole account; anyone who uses the chat can add, edit or remove). Each one has a **shortcut**, a **title** and a **text** (up to 200 replies).
+
+* **In the chat:** type `/` at the start of the message; a list shows the matches (shortcut or title), ordered by prefix and then by how often they are used. ↑ ↓ to move, **Enter / Tab / click** to insert, **Esc** to close. The text lands in the message box already filled in, so the attendant can adjust it before sending.
+* **Variables** (filled for the open conversation): `{{name}}`, `{{first_name}}`, `{{phone}}`, `{{agent}}` (the attendant's chat signature or name), `{{company}}` (the account name), `{{today}}`. A phone number is never used as a name (the variable stays empty); an unknown `{{word}}` is left as typed.
+* Shortcuts are lower case, without `/` or spaces, and unique per account. Data: table `quick_replies` (run `php artisan migrate`).
+
+* * *
+
 ## 👥 Team & roles (sub-users)
 
 A **contract user** (the account owner) can add **sub-users** who work for that account. A member signs in with **their own login**, but everything runs on the
@@ -1329,7 +1340,7 @@ Gateway credentials (Asaas, Efí, AbacatePay, Stone, Stripe, PagBank, Mercado Pa
 
 ## 🧪 Tests
 
-`vendor/bin/phpunit` (in-memory SQLite, no external services): fair queue planner and command, chat backend, Telegram, Instagram and TikTok channels (webhook secret/signature, OAuth, token refresh, inbound, AI reply through the same bot/account, reply window, settings), channel statistics and cross-channel contact links, unresponsive-contact deactivation, contact score ranking, Facebook Messenger, team roles and approval, audience by score and channel, plan queue priority, consent register (opt-in / opt-out proof, keywords, forms), follow-up tasks and reminders, team inbox (balanced assignment, visibility, labels, internal notes) and deals opened from conversations and forms, sales pipeline, e-mail channel (SMTP send, IMAP mailbox through webklex/php-imap with a scripted server, message mapping, threading, AI reply, loop protection, contact unification), embeddable contact forms (public script/endpoint, spam protection, contact + chat creation, AI reply channel choice), the new channel / inbox / ranking API endpoints and MCP tools, avatar caching, billing lifecycle and plan enforcement, the Mercado Pago gateway (admin settings, Pix, card, recurrence, webhook) and the Asaas / Efí / AbacatePay / Stone (Pagar.me) / Stripe / PagBank gateways (HTTP faked).
+`vendor/bin/phpunit` (in-memory SQLite, no external services): fair queue planner and command, chat backend, Telegram, Instagram and TikTok channels (webhook secret/signature, OAuth, token refresh, inbound, AI reply through the same bot/account, reply window, settings), channel statistics and cross-channel contact links, unresponsive-contact deactivation, contact score ranking, Facebook Messenger, team roles and approval, audience by score and channel, plan queue priority, quick replies, consent register (opt-in / opt-out proof, keywords, forms), follow-up tasks and reminders, team inbox (balanced assignment, visibility, labels, internal notes) and deals opened from conversations and forms, sales pipeline, e-mail channel (SMTP send, IMAP mailbox through webklex/php-imap with a scripted server, message mapping, threading, AI reply, loop protection, contact unification), embeddable contact forms (public script/endpoint, spam protection, contact + chat creation, AI reply channel choice), the new channel / inbox / ranking API endpoints and MCP tools, avatar caching, billing lifecycle and plan enforcement, the Mercado Pago gateway (admin settings, Pix, card, recurrence, webhook) and the Asaas / Efí / AbacatePay / Stone (Pagar.me) / Stripe / PagBank gateways (HTTP faked).
 
 * * *
 

@@ -1,7 +1,7 @@
 @extends('layouts.app-master')
 
 @section('content')
-<link rel="stylesheet" href="{{ url('assets/css/chat.css') }}?v=3">
+<link rel="stylesheet" href="{{ url('assets/css/chat.css') }}?v=5">
 
 @if ($instances->isEmpty())
     <div class="alert alert-warning">
@@ -29,6 +29,7 @@
      data-url-chat-base="{{ url('chat/api/chats') }}"
      data-url-api-base="{{ url('chat/api') }}"
      data-url-tasks="{{ url('tasks') }}"
+     data-url-replies="{{ url('replies') }}"
      data-url-message-base="{{ url('chat/api/messages') }}"
      data-url-index="{{ route('chat.index') }}">
 
@@ -292,6 +293,6 @@
         autoDealForm: @json(__('Open a deal when a contact form arrives')),
     };
 </script>
-<script src="{{ url('assets/js/chat.js') }}?v=1"></script>
+<script src="{{ url('assets/js/chat.js') }}?v=5"></script>
 @endif
 @endsection

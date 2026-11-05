@@ -170,6 +170,7 @@ trait CreatesTestSchema
             '2026_11_04_120000_create_team_inbox_and_deal_automation.php',
             '2026_11_04_140000_create_tasks_table.php',
             '2026_11_04_160000_add_consent.php',
+            '2026_11_05_100000_create_quick_replies_table.php',
         ] as $file) {
             (require database_path('migrations/' . $file))->up();
         }

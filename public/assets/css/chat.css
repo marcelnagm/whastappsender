@@ -322,3 +322,10 @@
 .wa-note-meta { font-size: .65rem; color: #7a6a3a; display: flex; justify-content: space-between; align-items: center; }
 .wa-task { display: flex; align-items: center; gap: 4px; }
 .wa-task-late span { color: #dc3545; }
+
+/* quick replies popup */
+.wa-composer { position: relative; }
+.wa-qr { position: absolute; left: 12px; right: 12px; bottom: 100%; background: #fff; border: 1px solid #d1d7db; border-radius: 8px; box-shadow: 0 -4px 14px rgba(0,0,0,.12); max-height: 260px; overflow-y: auto; z-index: 20; }
+.wa-qr-item { padding: 8px 12px; cursor: pointer; font-size: .85rem; }
+.wa-qr-item.active, .wa-qr-item:hover { background: #f0f2f5; }
+.wa-qr-text { color: #667781; font-size: .75rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

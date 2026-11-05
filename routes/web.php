@@ -191,6 +191,17 @@ Route::group(['namespace' => 'App\Http\Controllers', 'middleware' => ['auth', 's
         Route::delete('/deals/{deal}', [$pl, 'destroyDeal'])->whereNumber('deal')->name('deals.destroy');
     });
 
+    // Quick replies (canned answers typed with "/")
+    Route::prefix('replies')->name('replies.')->group(function () {
+        $qr = \App\Http\Controllers\QuickRepliesController::class;
+        Route::get('/', [$qr, 'index'])->name('index');
+        Route::get('/search', [$qr, 'search'])->name('search');
+        Route::post('/', [$qr, 'store'])->name('store');
+        Route::put('/{reply}', [$qr, 'update'])->whereNumber('reply')->name('update');
+        Route::post('/{reply}/used', [$qr, 'used'])->whereNumber('reply')->name('used');
+        Route::delete('/{reply}', [$qr, 'destroy'])->whereNumber('reply')->name('destroy');
+    });
+
     // Consent register (opt-in / opt-out proof)
     Route::prefix('consent')->name('consent.')->group(function () {
         $cs = \App\Http\Controllers\ConsentController::class;

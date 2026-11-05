@@ -1228,5 +1228,15 @@
     "When filled, the form shows a required checkbox with this text; the acceptance is recorded as proof of consent.": "Quando preenchido, o formulário mostra uma caixa obrigatória com este texto; o aceite fica registrado como prova de consentimento.",
     "With consent": "Com consentimento",
     "With this on, contacts without a consent record (and those who opted out) are left out of every campaign and welcome message. Consent is recorded by contact forms with a consent box, by the opt-in words (:words), when you register it by hand on a contact, or on import.": "Com isto ligado, contatos sem registro de consentimento (e os que pediram para sair) ficam fora de toda campanha e mensagem de boas-vindas. O consentimento é registrado por formulários com caixa de consentimento, pelas palavras de opt-in (:words), quando você o registra à mão no contato ou na importação.",
-    "You must accept to continue.": "Você precisa aceitar para continuar."
+    "You must accept to continue.": "Você precisa aceitar para continuar.",
+    "In the chat, type \"/\" and the shortcut to insert the text. Variables: :vars.": "No chat, digite \"/\" e o atalho para inserir o texto. Variáveis: :vars.",
+    "Price table": "Tabela de preços",
+    "Quick replies": "Respostas rápidas",
+    "Quick reply limit reached.": "Limite de respostas rápidas atingido.",
+    "Quick reply removed.": "Resposta rápida removida.",
+    "Quick reply saved.": "Resposta rápida salva.",
+    "Remove this quick reply?": "Remover esta resposta rápida?",
+    "Shortcut": "Atalho",
+    "Hi {first_name}, here is our price table…": "Olá {first_name}, segue a nossa tabela de preços…",
+    ":n use|:n uses": ":n uso|:n usos"
 }

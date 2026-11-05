@@ -30,6 +30,7 @@
     chatBase: D.urlChatBase,
     apiBase: D.urlApiBase,
     tasksBase: D.urlTasks,
+    repliesBase: D.urlReplies,
     messageBase: D.urlMessageBase,
     urlIndex: D.urlIndex
   };
@@ -1599,6 +1600,48 @@
       api(cfg.chatBase + '/' + S.active.id + '/presence', { method: 'POST' }).catch(function () { /* cosmetic */ });
     }
   });
+  // quick replies: "/" at the start of the message opens the list; Tab / click inserts the text, Esc closes
+  var qr = { box: null, items: [], idx: 0, timer: null };
+  function qrClose() { if (qr.box) { qr.box.remove(); qr.box = null; } qr.items = []; }
+  function qrPick(item) {
+    qrClose();
+    el.input.value = item.text; autosize(); syncButtons(); el.input.focus();
+    api(cfg.repliesBase + '/' + item.id + '/used', { method: 'POST' }).catch(function () { /* cosmetic */ });
+  }
+  function qrPaint() {
+    if (!qr.box) { qr.box = h('div', 'wa-qr'); el.input.closest('.wa-composer').appendChild(qr.box); }
+    qr.box.replaceChildren();
+    qr.items.forEach(function (it, i) {
+      var row = h('div', 'wa-qr-item' + (i === qr.idx ? ' active' : ''));
+      row.appendChild(h('code', null, '/' + it.shortcut));
+      row.appendChild(h('strong', null, ' ' + it.title));
+      row.appendChild(h('div', 'wa-qr-text', it.text));
+      row.addEventListener('mousedown', function (ev) { ev.preventDefault(); qrPick(it); });
+      qr.box.appendChild(row);
+    });
+  }
+  function qrSearch() {
+    var m = /^\/([^\s]*)$/.exec(el.input.value);
+    if (!m || !S.active || !cfg.repliesBase) { qrClose(); return; }
+    clearTimeout(qr.timer);
+    qr.timer = setTimeout(async function () {
+      try {
+        var d = await api(cfg.repliesBase + '/search?chat=' + S.active.id + '&q=' + encodeURIComponent(m[1]));
+        if (!/^\/([^\s]*)$/.test(el.input.value)) return;
+        qr.items = d.items || []; qr.idx = 0;
+        if (qr.items.length) qrPaint(); else qrClose();
+      } catch (e) { qrClose(); }
+    }, 120);
+  }
+  el.input.addEventListener('input', qrSearch);
+  el.input.addEventListener('blur', function () { setTimeout(qrClose, 150); });
+  el.input.addEventListener('keydown', function (ev) {
+    if (qr.box && qr.items.length) {
+      if (ev.key === 'ArrowDown' || ev.key === 'ArrowUp') { ev.preventDefault(); qr.idx = (qr.idx + (ev.key === 'ArrowDown' ? 1 : qr.items.length - 1)) % qr.items.length; qrPaint(); return; }
+      if (ev.key === 'Tab' || (ev.key === 'Enter' && !ev.shiftKey)) { ev.preventDefault(); qrPick(qr.items[qr.idx]); return; }
+      if (ev.key === 'Escape') { ev.preventDefault(); qrClose(); return; }
+    }
+  }, true);
   el.input.addEventListener('keydown', function (ev) {
     if (ev.key === 'Enter' && !ev.shiftKey && !ev.isComposing) {
       ev.preventDefault();
