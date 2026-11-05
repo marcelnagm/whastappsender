@@ -10,7 +10,7 @@
 > ⭐ **Cloned or using this project? Please give it a star and/or follow [@marcelnagm](https://github.com/marcelnagm).**
 > It's free, takes two seconds and is what keeps the project maintained. Thank you! 🙏
 
-**SAMA Envios** is a mission-critical communication infrastructure that merges the power of **Laravel** with the LLM of your choice (**Groq, OpenAI, Claude, Gemini, DeepSeek, Mistral, OpenRouter, Ollama or any OpenAI-compatible endpoint**). Designed for teams that demand stable bulk messaging and **Intelligent AI Customer Service** on WhatsApp, Telegram, Instagram, Facebook Messenger, TikTok and e-mail in one omnichannel inbox with per-channel statistics, answering through the very number, bot or account the customer wrote to.
+**SAMA Envios** is a mission-critical communication infrastructure that merges the power of **Laravel** with the LLM of your choice (**Groq, OpenAI, Claude, Gemini, DeepSeek, Mistral, OpenRouter, Ollama or any OpenAI-compatible endpoint**). Designed for teams that demand stable bulk messaging and **Intelligent AI Customer Service** on WhatsApp, Telegram, Instagram, Facebook Messenger, TikTok and e-mail in one omnichannel inbox with per-channel statistics, answering through the very number, bot or account the customer wrote to. On top of the inbox sits a complete **sales CRM**: Kanban funnel, team inbox with assignment and labels, follow-up tasks, automations, custom fields and segments, consent register, team performance with goals and an AI-assisted deal forecast.
 
 **Documentation map**
 
@@ -1402,6 +1402,16 @@ Gateway credentials (Asaas, Efí, AbacatePay, Stone, Stripe, PagBank, Mercado Pa
 * ✅ **Plan priority queue:** higher plans get a larger share of every batch (weighted or strict), with no extra storage.
 * ✅ **Contact score & unresponsive contacts:** 0-100 engagement ranking and automatic deactivation of numbers that never receive messages.
 * ✅ **Signup welcome:** the admin chooses the campaign message sent to people who register.
+* ✅ **Sales pipeline (Kanban):** drag deals between stages, values, expected close date, won / lost with reason, win rate.
+* ✅ **Team inbox:** assign conversations by hand or balanced, labels, internal notes, filters; deals opened automatically from new conversations and forms.
+* ✅ **Follow-up tasks:** due time, owner and in-app reminder, linked to a contact, conversation or deal.
+* ✅ **Automations:** "when X happens, do Y" (deal created / moved / won / lost, label applied, customer writes a word) with loop protection and a run log.
+* ✅ **Custom fields & segments:** your own contact fields, saved segments and segment as campaign audience.
+* ✅ **Consent & opt-out:** proof of opt-in / opt-out on every channel, consent box on forms, "only contacts with consent" switch.
+* ✅ **Quick replies:** shared canned answers typed with `/shortcut`, with variables.
+* ✅ **Team performance & goals:** first-response time, answered conversations, deals and follow-ups per person, monthly goals.
+* ✅ **Deal forecast & priorities:** chance to close with its reasons, weighted forecast, next action and optional AI advice.
+* ✅ **E-mail channel on a ready-made library:** IMAP through `webklex/php-imap`, SMTP through Symfony Mailer (nothing reimplemented).
 * ✅ **Audit Logs:** Full history of every AI interaction and every broadcast attempt.
 
 ---
@@ -1410,7 +1420,7 @@ Gateway credentials (Asaas, Efí, AbacatePay, Stone, Stripe, PagBank, Mercado Pa
 
 * **Backend:** Laravel 9 (Clean Code Architecture)
 * **AI Engine:** multi-provider (Groq, OpenAI, Claude, Gemini, DeepSeek, Mistral, OpenRouter, Ollama, custom OpenAI-compatible)
-* **Channels:** Evolution API (WhatsApp), Telegram Bot API, Instagram / Facebook Graph API, TikTok Business Messaging
+* **Channels:** Evolution API (WhatsApp), Telegram Bot API, Instagram / Facebook Graph API, TikTok Business Messaging, e-mail (`webklex/php-imap` + Symfony Mailer)
 * **Queues / cache:** database or Redis (Predis)
 * **Agent API:** Laravel Sanctum + OpenAI Functions-compatible Tool Registry
 * **Frontend:** Bootstrap & Blade Templates
@@ -1435,6 +1445,19 @@ sudo ./install.sh vps --domain sama.example.com --email you@example.com --admin-
 # After every `git pull`
 ./install.sh update          # use sudo on the VPS (it also restarts the workers)
 ```
+
+### Upgrading from an older version (CRM features)
+
+After `git pull` (or `./install.sh update`, which does the first two steps for you):
+
+1. `composer install --no-dev --optimize-autoloader` (new dependency: `webklex/php-imap`, pure PHP: the `imap` extension is **not** needed, but `iconv`, `mbstring` and `openssl` are).
+2. `php artisan migrate --force` — creates the tables of the sales pipeline, team inbox (labels, notes, assignment), tasks, consent register, quick replies, custom fields and segments, automations, message authorship and team goals. Nothing changes for existing data: every feature is opt-in (for instance campaigns only require consent after you switch it on in **Consent**).
+3. Make sure the **scheduler** runs (`* * * * * php artisan schedule:run`, already set up by `install.sh vps` and the Docker stack): it sends the follow-up reminders (`tasks:remind`, every minute) and fetches the mailboxes (`email:fetch`).
+4. `php artisan billing:sync-plans --force` if you use plans and billing, so the plan limits are refreshed.
+5. Optional `.env`: `DEAL_NEW_AFTER_DAYS` (silence after which a returning customer counts as a new lead, default 30) and `CONSENT_OPTIN_KEYWORDS` (see [Environment variables](#-environment-variables)).
+6. Restart the queue workers (`php artisan queue:restart`; the VPS script does it).
+
+Where to find each feature in the menu: **Pipeline** (funnel, forecast, priorities), **Chat** (assignment, labels, notes, quick replies with `/`), **Follow-ups**, **Automations**, **Segments**, **Consent**, **Quick replies**, **Team performance**. Team members only see what their role allows (see [Team & roles](#-team--roles-sub-users)).
 
 Run `./install.sh --help` for every option (`--db-*`, `--evolution-*`, `--groq-key`, `--no-ssl`, `--yes` for no questions...).
 What it does: checks PHP and extensions, installs dependencies, writes `.env` (a **new `APP_KEY` on every fresh install**; production
