@@ -123,8 +123,9 @@ class ContactController extends Controller
     {
         request()->validate(Contact::$rules);
         app(\App\Services\Billing\Entitlements::class)->authorizeUsage(Auth::user(), 'contacts');
-        $data = $request->all();
+        $data = $request->except('custom');
         $data['user_id'] = Auth::user()->id;
+        $data['custom'] = app(\App\Services\Contacts\CustomFields::class)->clean($data['user_id'], (array) $request->input('custom')) ?: null;
         $contact = Contact::create($data);
 
         return redirect()->route('contacts.index')
@@ -180,7 +181,10 @@ class ContactController extends Controller
     {
         request()->validate(Contact::$rules);
 
-        $contact->update($request->all());
+        $data = $request->except('custom');
+        // the custom fields of the form replace the stored ones (a cleared input removes the value)
+        $data['custom'] = app(\App\Services\Contacts\CustomFields::class)->clean((int) $contact->user_id, (array) $request->input('custom')) ?: null;
+        $contact->update($data);
 
         return redirect()->route('contacts.index')
             ->with('success', __('Contact updated successfully'));

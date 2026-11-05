@@ -35,7 +35,7 @@ class Contact extends Model
      *
      * @var array
      */
-    protected $fillable = ['name', 'contact', 'email', 'user_id', 'ignore_me', 'lid', 'status', 'score', 'profile_url', 'linked_contact_id', 'deactivated_reason', 'deactivated_at', 'score_breakdown', 'score_updated_at', 'score_locked', 'consent_status', 'consent_source', 'consent_at', 'consent_revoked_at'];
+    protected $fillable = ['name', 'contact', 'email', 'user_id', 'ignore_me', 'lid', 'status', 'score', 'profile_url', 'linked_contact_id', 'deactivated_reason', 'deactivated_at', 'score_breakdown', 'score_updated_at', 'score_locked', 'consent_status', 'consent_source', 'consent_at', 'consent_revoked_at', 'custom'];
 
 
     /** Contacts that may receive campaigns: when the account requires consent, only those with a recorded opt-in. */
@@ -124,6 +124,7 @@ class Contact extends Model
         'score_locked' => 'boolean',
         'consent_at' => 'datetime',
         'consent_revoked_at' => 'datetime',
+        'custom' => 'array',
     ];
 
     protected static function booted(): void

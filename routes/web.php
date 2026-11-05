@@ -211,6 +211,18 @@ Route::group(['namespace' => 'App\Http\Controllers', 'middleware' => ['auth', 's
         Route::post('/contacts/{contact}', [$cs, 'contact'])->whereNumber('contact')->name('contact');
     });
 
+    // Custom contact fields + saved segments
+    Route::prefix('audience')->name('audience.')->group(function () {
+        $au = \App\Http\Controllers\AudienceController::class;
+        Route::get('/', [$au, 'index'])->name('index');
+        Route::post('/fields', [$au, 'storeField'])->name('fields.store');
+        Route::delete('/fields/{field}', [$au, 'destroyField'])->whereNumber('field')->name('fields.destroy');
+        Route::post('/preview', [$au, 'preview'])->name('preview');
+        Route::post('/segments', [$au, 'storeSegment'])->name('segments.store');
+        Route::delete('/segments/{segment}', [$au, 'destroySegment'])->whereNumber('segment')->name('segments.destroy');
+        Route::get('/segments/{segment}/export', [$au, 'export'])->whereNumber('segment')->name('segments.export');
+    });
+
     // Follow-up tasks
     Route::prefix('tasks')->name('tasks.')->group(function () {
         $tk = \App\Http\Controllers\TasksController::class;

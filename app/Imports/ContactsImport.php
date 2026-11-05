@@ -68,6 +68,23 @@ class ContactsImport implements ToModel , WithHeadingRow
             $data += ['consent_status' => 'granted', 'consent_source' => $this->consentSource, 'consent_at' => now()];
         }
 
+        // columns named after one of the account's custom fields (its key or label) fill that field
+        $fields = $this->customFields ??= app(\App\Services\Contacts\CustomFields::class)->for((int) Auth::user()->id);
+        if ($fields->isNotEmpty()) {
+            $raw = [];
+            foreach ($fields as $f) {
+                foreach ([$f->key, \App\Services\Contacts\CustomFields::slug($f->label)] as $col) {
+                    if (array_key_exists($col, $row) && $row[$col] !== null) {
+                        $raw[$f->key] = $row[$col] instanceof \DateTimeInterface ? $row[$col]->format('Y-m-d') : (string) $row[$col];
+                        break;
+                    }
+                }
+            }
+            $data['custom'] = app(\App\Services\Contacts\CustomFields::class)->clean((int) Auth::user()->id, $raw) ?: null;
+        }
+
         return new Contact($data);
     }
+
+    private $customFields = null;
 }

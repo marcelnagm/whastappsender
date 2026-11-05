@@ -27,7 +27,7 @@ class ApprovalController extends ApiController
     public function audience(Request $request, CampaignItem $campaignItem)
     {
         $this->authorizeOwner($campaignItem);
-        $audience = CampaignAudience::normalize($request->only(['tiers', 'min_score', 'max_score', 'channels']));
+        $audience = CampaignAudience::normalize($request->only(['tiers', 'min_score', 'max_score', 'channels', 'segment_id']));
         $count = $this->audiences->count((int) $campaignItem->user_id, $audience);
 
         if ($request->boolean('save')) {
@@ -40,7 +40,7 @@ class ApprovalController extends ApiController
     public function submit(Request $request, CampaignItem $campaignItem)
     {
         $this->authorizeOwner($campaignItem);
-        $audience = $request->has('channels') || $request->has('tiers') ? CampaignAudience::normalize($request->only(['tiers', 'min_score', 'max_score', 'channels'])) : null;
+        $audience = $request->has('channels') || $request->has('tiers') ? CampaignAudience::normalize($request->only(['tiers', 'min_score', 'max_score', 'channels', 'segment_id'])) : null;
         $this->approval->submit($campaignItem, TeamContext::actor($request), $audience);
 
         return $this->success($this->approval->present($campaignItem->fresh()), 'Submitted for approval.');
@@ -50,7 +50,7 @@ class ApprovalController extends ApiController
     {
         $this->authorizeOwner($campaignItem);
         $audience = $request->has('channels') || $request->has('tiers') || $request->has('min_score') || $request->has('max_score')
-            ? $request->only(['tiers', 'min_score', 'max_score', 'channels']) : ($campaignItem->audience ?? []);
+            ? $request->only(['tiers', 'min_score', 'max_score', 'channels', 'segment_id']) : ($campaignItem->audience ?? []);
         $this->approval->approve($campaignItem, TeamContext::actor($request), $audience, $request->input('note'));
 
         return $this->success($this->approval->present($campaignItem->fresh()), 'Approved.');

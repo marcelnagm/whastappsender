@@ -96,6 +96,19 @@
 
         <div class="col-lg-8 col-md-7">
             @php
+                $cfShow = app(\App\Services\Contacts\CustomFields::class)->for((int) $contact->user_id)->filter(fn ($f) => isset(($contact->custom ?? [])[$f->key]));
+            @endphp
+            @if ($cfShow->isNotEmpty())
+                <div class="card border-0 shadow-sm rounded-4 mb-3"><div class="card-body">
+                    <h6 class="fw-bold mb-2"><i class="bi bi-sliders me-1"></i>{{ __('Custom fields') }}</h6>
+                    <div class="row g-2">
+                        @foreach ($cfShow as $cf)
+                            <div class="col-sm-6"><div class="small text-muted">{{ $cf->label }}</div><div>{{ \App\Services\Contacts\CustomFields::show($cf, $contact->custom[$cf->key]) }}</div></div>
+                        @endforeach
+                    </div>
+                </div></div>
+            @endif
+            @php
                 $cLogs = \Illuminate\Support\Facades\DB::table('consent_logs')->where('contact_id', $contact->id)->orderByDesc('id')->limit(5)->get();
                 $cs = $contact->consent_status ?: 'unknown';
             @endphp

@@ -96,6 +96,11 @@
         @endteamcan
         @teamcan('contacts.manage')
         <li class="nav-item">
+          <a href="{{ route('audience.index') }}" class="nav-link {{ request()->is('audience*') ? 'active text-secondary' : 'text-white' }}"><i class="bi bi-funnel me-1"></i> {{ __('Segments') }}</a>
+        </li>
+        @endteamcan
+        @teamcan('contacts.manage')
+        <li class="nav-item">
           <a href="{{ route('consent.index') }}" class="nav-link {{ request()->is('consent*') ? 'active text-secondary' : 'text-white' }}"><i class="bi bi-shield-check me-1"></i> {{ __('Consent') }}</a>
         </li>
         @endteamcan

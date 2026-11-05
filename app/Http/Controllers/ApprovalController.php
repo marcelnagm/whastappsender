@@ -37,6 +37,7 @@ class ApprovalController extends Controller
             'canLaunch' => $this->team->can('campaigns.send'),
             'tiers' => CampaignAudience::TIERS,
             'channels' => CampaignAudience::CHANNELS,
+            'segments' => \App\Models\ContactSegment::where('user_id', $item->user_id)->orderBy('name')->get(['id', 'name']),
         ]);
     }
 
@@ -86,6 +87,6 @@ class ApprovalController extends Controller
 
     private function audienceFrom(Request $request): array
     {
-        return CampaignAudience::normalize($request->only(['tiers', 'min_score', 'max_score', 'channels']));
+        return CampaignAudience::normalize($request->only(['tiers', 'min_score', 'max_score', 'channels', 'segment_id']));
     }
 }

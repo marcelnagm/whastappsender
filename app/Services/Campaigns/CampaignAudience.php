@@ -22,7 +22,7 @@ class CampaignAudience
     public const CHANNELS = ['whatsapp', 'telegram', 'instagram', 'facebook', 'tiktok'];
     public const TIERS = ['hot', 'warm', 'cold', 'frozen'];
 
-    /** @return array{tiers:string[],min_score:?int,max_score:?int,channels:string[]} */
+    /** @return array{tiers:string[],min_score:?int,max_score:?int,channels:string[],segment_id?:int} */
     public static function normalize(?array $in): array
     {
         $in ??= [];
@@ -33,12 +33,18 @@ class CampaignAudience
             [$min, $max] = [$max, $min];
         }
 
-        return [
+        $out = [
             'tiers' => array_values(array_intersect(self::TIERS, array_map('strval', (array) ($in['tiers'] ?? [])))),
             'min_score' => $min,
             'max_score' => $max,
             'channels' => $channels ?: ['whatsapp'],
         ];
+        // a saved segment narrows the audience further (its conditions on contact data / custom fields)
+        if (!empty($in['segment_id']) && (int) $in['segment_id'] > 0) {
+            $out['segment_id'] = (int) $in['segment_id'];
+        }
+
+        return $out;
     }
 
     /** Contacts of one channel that match the score filters (and can be reached now). */
@@ -50,6 +56,12 @@ class CampaignAudience
         $q = Contact::query()->where('user_id', $userId)->withConsent($userId)->where(fn ($w) => $w->whereNull('ignore_me')->orWhere('ignore_me', 0));
 
         $q->where('status', $channel === 'whatsapp' ? 'ativo' : $channel);
+
+        if (!empty($a['segment_id'])) {
+            $seg = \App\Models\ContactSegment::where('user_id', $userId)->find($a['segment_id']);
+            // a segment that no longer exists reaches nobody: better than silently messaging everyone
+            $seg ? app(\App\Services\Contacts\ContactFilter::class)->apply($q, $userId, (array) $seg->filters) : $q->whereRaw('1 = 0');
+        }
 
         if ($a['tiers']) {
             $q->where(function ($w) use ($a) {

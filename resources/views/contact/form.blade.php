@@ -90,6 +90,37 @@
                 </div>
             </div>
         </div>
+
+        @php
+            $cfields = app(\App\Services\Contacts\CustomFields::class)->for((int) auth()->id());
+            $cvalues = (array) ($contact->custom ?? []);
+        @endphp
+        @if ($cfields->isNotEmpty())
+            <h6 class="fw-bold mt-3 mb-2"><i class="bi bi-sliders me-1"></i>{{ __('Custom fields') }}</h6>
+            <div class="row g-3">
+                @foreach ($cfields as $cf)
+                    @php $cv = old('custom.' . $cf->key, $cvalues[$cf->key] ?? ''); @endphp
+                    <div class="col-md-6">
+                        <label class="form-label small mb-1" for="cf-{{ $cf->key }}">{{ $cf->label }}</label>
+                        @if ($cf->type === 'select')
+                            <select class="form-select border-0 shadow-sm" id="cf-{{ $cf->key }}" name="custom[{{ $cf->key }}]">
+                                <option value="">—</option>
+                                @foreach ((array) $cf->options as $opt)<option value="{{ $opt }}" @selected((string) $cv === (string) $opt)>{{ $opt }}</option>@endforeach
+                            </select>
+                        @elseif ($cf->type === 'boolean')
+                            <select class="form-select border-0 shadow-sm" id="cf-{{ $cf->key }}" name="custom[{{ $cf->key }}]">
+                                <option value="">—</option>
+                                <option value="1" @selected((string) $cv === '1')>{{ __('Yes') }}</option>
+                                <option value="0" @selected((string) $cv === '0')>{{ __('No') }}</option>
+                            </select>
+                        @else
+                            <input class="form-control border-0 shadow-sm" id="cf-{{ $cf->key }}" name="custom[{{ $cf->key }}]" value="{{ $cv }}"
+                                   type="{{ $cf->type === 'number' ? 'number' : ($cf->type === 'date' ? 'date' : 'text') }}" @if($cf->type === 'number') step="any" @endif>
+                        @endif
+                    </div>
+                @endforeach
+            </div>
+        @endif
     </div>
 
     <div class="card-footer bg-white border-0 p-4 pt-0 d-flex justify-content-end gap-2">

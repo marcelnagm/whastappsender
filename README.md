@@ -33,6 +33,7 @@
 | [Team inbox](#-team-inbox--deals-from-conversations) | Assign conversations (by hand or balanced), labels, internal notes, filters, and deals opened automatically from new conversations and contact forms |
 | [Follow-ups](#-follow-up-tasks--reminders) | Tasks with a due time for a contact or conversation, assigned to a person, with an in-app reminder when they fall due |
 | [Consent](#️-consent--opt-out) | Proof of who agreed to be messaged and how, opt-in / opt-out words on every channel, consent box on forms, "campaigns only to contacts with consent" switch, CSV export |
+| [Segments](#-custom-fields--segments) | Your own contact fields (text, number, date, choice, yes/no), saved segments with conditions, segment as campaign audience, CSV export |
 | [Quick replies](#-quick-replies) | Canned answers shared by the team: type `/shortcut` in the chat, with variables like the customer's name |
 | [Team & roles](#-team--roles-sub-users) | Sub-users working for the contract account (admin, approver, creator, sender, attendant, analyst) |
 | [Audience & approval](#-audience--approval-of-campaigns) | Choose the audience by score and channels; approval flow before sending |
@@ -918,6 +919,15 @@ Open **Follow-ups** in the menu (or use the **Follow-ups** block of the chat sid
 
 * * *
 
+## 🧩 Custom fields & segments
+
+Open **Segments** in the menu (administrator / campaign creator / owner).
+
+* **Custom fields:** create your own data for each contact (*city*, *plan*, *birthday*...) with a type: text, number, date, choice list or yes/no (up to 30). They appear on the contact form and profile, and the **import** fills them from a column named like the field.
+* **Segments:** a saved list of conditions (all must match) on score, consent, e-mail, creation date and your custom fields, with a live count while you build it (up to 50 segments). Each segment can be exported as CSV.
+* **As a campaign audience:** the approval screen gets a **Segment** selector (also `segment_id` in the audience API); it narrows the score/tier/channel filters and the consent and opt-out rules still apply. A deleted segment reaches nobody, so a campaign is never sent to everyone by accident.
+* Invalid conditions (unknown field, operator that doesn't fit the type, empty value) are dropped, never guessed.
+
 ## 🛡️ Consent & opt-out
 
 Bulk messaging needs permission: Meta's policies and Brazil's LGPD expect you to be able to show **who agreed, when and how**. Open **Consent** in the menu (administrator / campaign creator / owner).
@@ -1340,7 +1350,7 @@ Gateway credentials (Asaas, Efí, AbacatePay, Stone, Stripe, PagBank, Mercado Pa
 
 ## 🧪 Tests
 
-`vendor/bin/phpunit` (in-memory SQLite, no external services): fair queue planner and command, chat backend, Telegram, Instagram and TikTok channels (webhook secret/signature, OAuth, token refresh, inbound, AI reply through the same bot/account, reply window, settings), channel statistics and cross-channel contact links, unresponsive-contact deactivation, contact score ranking, Facebook Messenger, team roles and approval, audience by score and channel, plan queue priority, quick replies, consent register (opt-in / opt-out proof, keywords, forms), follow-up tasks and reminders, team inbox (balanced assignment, visibility, labels, internal notes) and deals opened from conversations and forms, sales pipeline, e-mail channel (SMTP send, IMAP mailbox through webklex/php-imap with a scripted server, message mapping, threading, AI reply, loop protection, contact unification), embeddable contact forms (public script/endpoint, spam protection, contact + chat creation, AI reply channel choice), the new channel / inbox / ranking API endpoints and MCP tools, avatar caching, billing lifecycle and plan enforcement, the Mercado Pago gateway (admin settings, Pix, card, recurrence, webhook) and the Asaas / Efí / AbacatePay / Stone (Pagar.me) / Stripe / PagBank gateways (HTTP faked).
+`vendor/bin/phpunit` (in-memory SQLite, no external services): fair queue planner and command, chat backend, Telegram, Instagram and TikTok channels (webhook secret/signature, OAuth, token refresh, inbound, AI reply through the same bot/account, reply window, settings), channel statistics and cross-channel contact links, unresponsive-contact deactivation, contact score ranking, Facebook Messenger, team roles and approval, audience by score and channel, plan queue priority, quick replies, consent register (opt-in / opt-out proof, keywords, forms), custom contact fields and segments, follow-up tasks and reminders, team inbox (balanced assignment, visibility, labels, internal notes) and deals opened from conversations and forms, sales pipeline, e-mail channel (SMTP send, IMAP mailbox through webklex/php-imap with a scripted server, message mapping, threading, AI reply, loop protection, contact unification), embeddable contact forms (public script/endpoint, spam protection, contact + chat creation, AI reply channel choice), the new channel / inbox / ranking API endpoints and MCP tools, avatar caching, billing lifecycle and plan enforcement, the Mercado Pago gateway (admin settings, Pix, card, recurrence, webhook) and the Asaas / Efí / AbacatePay / Stone (Pagar.me) / Stripe / PagBank gateways (HTTP faked).
 
 * * *
 

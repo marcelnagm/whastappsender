@@ -47,6 +47,16 @@
           <div class="col-6 col-md-3"><label class="form-label small">{{ __('Maximum score') }}</label><input type="number" min="0" max="100" name="max_score" class="form-control aud" value="{{ $audience['max_score'] }}"></div>
         </div>
 
+        @if ($segments->isNotEmpty())
+        <div class="mb-3">
+          <label class="form-label small">{{ __('Segment') }}</label>
+          <select name="segment_id" class="form-select aud">
+            <option value="">{{ __('All contacts') }}</option>
+            @foreach ($segments as $sg)<option value="{{ $sg->id }}" @selected(($audience['segment_id'] ?? null) == $sg->id)>{{ $sg->name }}</option>@endforeach
+          </select>
+        </div>
+        @endif
+
         <div class="alert alert-info border-0 mb-3"><strong id="aud-total">{{ $count['total'] }}</strong> {{ __('contact(s) will receive this message') }}
           <span class="small text-muted" id="aud-by">@foreach ($count['by_channel'] as $c => $n) {{ __(ucfirst($c)) }}: {{ $n }} @endforeach</span></div>
 
