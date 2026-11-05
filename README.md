@@ -36,6 +36,7 @@
 | [Segments](#-custom-fields--segments) | Your own contact fields (text, number, date, choice, yes/no), saved segments with conditions, segment as campaign audience, CSV export |
 | [Automations](#-automations) | "When X, do Y" rules: triggers on deals, labels and customer words; actions that create tasks, label, assign, move deals and notify; loop protection and run log |
 | [Team performance](#-team-performance--goals) | First-response time, conversations answered, deals won/lost and follow-ups per person, monthly goals with progress |
+| [Deal forecast](#-deal-forecast--priorities) | Chance to close for every open deal with the reasons behind it, weighted forecast, priority list with the next action, optional written advice from your AI agent |
 | [Quick replies](#-quick-replies) | Canned answers shared by the team: type `/shortcut` in the chat, with variables like the customer's name |
 | [Team & roles](#-team--roles-sub-users) | Sub-users working for the contract account (admin, approver, creator, sender, attendant, analyst) |
 | [Audience & approval](#-audience--approval-of-campaigns) | Choose the audience by score and channels; approval flow before sending |
@@ -920,6 +921,14 @@ Open **Follow-ups** in the menu (or use the **Follow-ups** block of the chat sid
 * Data: table `tasks` (run `php artisan migrate`).
 
 * * *
+
+## ✨ Deal forecast & priorities
+
+Every open deal on the **Pipeline** shows a **chance to close** badge (hover to see why) and the board shows a **Forecast** (value × chance). **Priorities** (link on that card) lists open deals ranked, with the **next action** for each.
+
+* **A transparent heuristic, not a black box:** points come from the stage reached (the further in the funnel, the higher), how recently the customer wrote (or silence for weeks), an active conversation, whether a follow-up is scheduled or overdue, how long the deal has been open, the expected close date and the contact's score. Each deal lists every reason with its points, the result is kept between 1% and 99% and won / lost deals are not scored.
+* **Next action:** a customer who is waiting for an answer comes first (and jumps the list), then overdue follow-ups, scheduling a follow-up, setting an expected date, or keep going.
+* **Ask AI:** a button on each priority asks your AI agent (the one on the conversation's number, or your first enabled agent) for a short recommendation from the recent conversation and the signals above. It only writes advice; it never changes the number, never sends anything to the customer, and fails softly when no agent is enabled or the provider errors (limited to 20 requests per minute).
 
 ## 🏆 Team performance & goals
 

@@ -7,6 +7,7 @@ use App\Models\Deal;
 use App\Models\Pipeline;
 use App\Models\PipelineStage;
 use App\Services\Pipeline\SalesPipeline;
+use App\Services\Forecast\DealForecast;
 use Illuminate\Http\Request;
 
 /** Sales funnel: Kanban board of deals, with drag and drop between stages. */
@@ -27,13 +28,44 @@ class PipelineController extends Controller
 
         $stages = PipelineStage::with(['deals' => fn ($q) => $q->with('contact:id,name,contact')])->where('pipeline_id', $current->id)->orderBy('position')->orderBy('id')->get();
 
+        $deals = $stages->flatMap->deals;
+        $forecast = app(DealForecast::class);
+        $scores = $forecast->scoreMany($deals);
+
         return view('pipeline.index', [
+            'scores' => $scores,
+            'weighted' => $forecast->weightedValue($deals, $scores),
             'pipelines' => $pipelines,
             'pipeline' => $current,
             'stages' => $stages,
             'summary' => $this->funnel->summary($current),
             'contacts' => Contact::where('user_id', $owner->id)->orderBy('name')->limit(300)->get(['id', 'name', 'contact']),
         ]);
+    }
+
+    /** Open deals ranked by chance to close, each with what to do next. */
+    public function priorities(Request $request)
+    {
+        $owner = $request->user();
+        $deals = Deal::with(['contact:id,name,contact,score', 'stage:id,name'])->where('user_id', $owner->id)->where('status', 'open')->get();
+        $forecast = app(DealForecast::class);
+        $scores = $forecast->scoreMany($deals);
+        // hot first; among equals the larger value, and a customer who is waiting jumps the queue
+        $ranked = $deals->sortByDesc(fn ($d) => [($scores[$d->id]['waiting_hours'] ?? 0) >= 1 ? 1 : 0, $scores[$d->id]['score'], (float) $d->value])->values();
+
+        return view('pipeline.priorities', ['deals' => $ranked, 'scores' => $scores, 'weighted' => $forecast->weightedValue($deals, $scores), 'total' => (float) $deals->sum('value')]);
+    }
+
+    /** Written recommendation of the AI agent for one deal. */
+    public function advice(Request $request, int $deal): \Illuminate\Http\JsonResponse
+    {
+        $owner = $request->user();
+        $d = Deal::with('contact:id,score')->where('user_id', $owner->id)->findOrFail($deal);
+        $forecast = app(DealForecast::class);
+        $f = $forecast->scoreMany(collect([$d]))[$d->id];
+        abort_if($f['score'] === null, 422, __('Only open deals have a forecast.'));
+
+        return response()->json($forecast->advice($d, $owner, $f));
     }
 
     public function storePipeline(Request $request)

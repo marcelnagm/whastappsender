@@ -33,6 +33,7 @@
     <div class="col-6 col-md-3"><div class="card shadow-sm"><div class="card-body py-2"><div class="small text-muted">{{ __('In progress') }}</div><strong data-s="open">{{ $summary['open'] }}</strong> · <span data-s="open_value">{{ $money($summary['open_value']) }}</span></div></div></div>
     <div class="col-6 col-md-3"><div class="card shadow-sm"><div class="card-body py-2"><div class="small text-muted">{{ __('Won') }}</div><strong data-s="won">{{ $summary['won'] }}</strong> · <span data-s="won_value">{{ $money($summary['won_value']) }}</span></div></div></div>
     <div class="col-6 col-md-3"><div class="card shadow-sm"><div class="card-body py-2"><div class="small text-muted">{{ __('Lost') }}</div><strong data-s="lost">{{ $summary['lost'] }}</strong></div></div></div>
+    <div class="col-6 col-md-3"><div class="card shadow-sm"><div class="card-body py-2"><div class="small text-muted">{{ __('Forecast') }} <a href="{{ route('pipeline.priorities') }}" class="text-decoration-none">· {{ __('Priorities') }}</a></div><strong>{{ $money($weighted) }}</strong></div></div></div>
     <div class="col-6 col-md-3"><div class="card shadow-sm"><div class="card-body py-2"><div class="small text-muted">{{ __('Win rate') }}</div><strong data-s="win_rate">{{ $summary['win_rate'] === null ? '—' : $summary['win_rate'].'%' }}</strong></div></div></div>
   </div>
 
@@ -52,7 +53,12 @@
                    data-edit="{{ json_encode(['id' => $d->id, 'title' => $d->title, 'value' => $d->value, 'contact_id' => $d->contact_id, 'date' => optional($d->expected_close_date)->format('Y-m-d')]) }}"
                    onclick="editDeal(JSON.parse(this.dataset.edit))"><i class="bi bi-pencil"></i></a>
               </div>
-              <div class="small">{{ $money($d->value) }}</div>
+              <div class="small">{{ $money($d->value) }}
+                @php $f = $scores[$d->id] ?? null; @endphp
+                @if ($f && $f['score'] !== null)
+                  <span class="badge float-end bg-{{ ['hot' => 'success', 'warm' => 'warning', 'cold' => 'secondary'][$f['level']] }}" title="{{ collect($f['reasons'])->map(fn ($r) => ($r['delta'] > 0 ? '+' : '') . $r['delta'] . ' ' . $r['text'])->implode(' · ') }}">{{ $f['score'] }}%</span>
+                @endif
+              </div>
               @if ($d->contact)<div class="small text-muted"><i class="bi bi-person"></i> {{ $d->contact->name }}</div>@endif
               @if ($d->expected_close_date)<div class="small text-muted"><i class="bi bi-calendar-event"></i> {{ $d->expected_close_date->format('d/m/Y') }}</div>@endif
               @if ($d->status === 'lost' && $d->lost_reason)<div class="small text-danger">{{ $d->lost_reason }}</div>@endif
