@@ -36,6 +36,8 @@
         <div class="col-md-4"><label class="form-label">{{ __('Button text') }}</label><input name="submit_label" class="form-control" value="{{ old('submit_label', $form->submit_label) }}" placeholder="{{ __('Send') }}"></div>
         <div class="col-md-4"><label class="form-label">{{ __('Accent color') }}</label><input type="color" name="accent_color" class="form-control form-control-color" value="{{ old('accent_color', $form->accent_color ?: '#0d6efd') }}"></div>
         <div class="col-md-4"><label class="form-label">{{ __('Redirect after sending (optional)') }}</label><input type="url" name="redirect_url" class="form-control" value="{{ old('redirect_url', $form->redirect_url) }}" placeholder="https://"></div>
+        <div class="col-12"><label class="form-label">{{ __('Consent text (optional)') }}</label><input name="consent_text" class="form-control" maxlength="300" value="{{ old('consent_text', $form->consent_text) }}" placeholder="{{ __('I agree to receive messages about my request and offers.') }}">
+          <div class="form-text">{{ __('When filled, the form shows a required checkbox with this text; the acceptance is recorded as proof of consent.') }}</div></div>
         <div class="col-12"><label class="form-label">{{ __('Message after sending') }}</label><input name="success_message" class="form-control" value="{{ old('success_message', $form->success_message) }}" placeholder="{{ __('Thank you! We will contact you shortly.') }}"></div>
       </div></div>
 

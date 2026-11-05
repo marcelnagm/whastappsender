@@ -19,10 +19,8 @@ class InboundAiBridge
     {
         $text = trim((string) $text);
 
-        // opt-out, same idea as #sair on WhatsApp
-        if (in_array(Str::lower($text), ['/stop', '#sair'], true)) {
-            $contact->update(['ignore_me' => 1]);
-
+        // opt-out / opt-in words (#sair, /stop, /start...), same as on WhatsApp
+        if (app(\App\Services\Consent\Consent::class)->handleKeyword($contact, $text)) {
             return;
         }
         if ($text === '' || (int) $contact->ignore_me === 1) {

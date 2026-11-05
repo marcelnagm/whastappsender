@@ -27,16 +27,24 @@
       var er = el('div', { class: 'e' }); inputs[f.key] = inp; errs[f.key] = er;
       form.appendChild(el('label', { for: id }, [f.label + (f.required ? ' *' : '')])); form.appendChild(inp); form.appendChild(er);
     });
+    var consent = null, consentErr = null;
+    if (d.consent) {
+      consent = el('input', { type: 'checkbox', id: 'sama-' + KEY + '-consent', style: 'width:auto;margin-right:8px' });
+      consentErr = el('div', { class: 'e' });
+      form.appendChild(el('label', { for: 'sama-' + KEY + '-consent', style: 'font-weight:400;margin-top:14px' }, [consent, d.consent]));
+      form.appendChild(consentErr);
+    }
     var hp = el('input', { type: 'text', name: '_hp', tabindex: '-1', autocomplete: 'off', 'aria-hidden': 'true' }); form.appendChild(el('div', { class: 'hp' }, [hp]));
     var btn = el('button', { type: 'submit' }, [d.submit_label]); form.appendChild(btn);
     form.addEventListener('submit', function (ev) {
       ev.preventDefault(); var body = { _hp: hp.value };
+      if (consent) { consentErr.textContent = ''; if (!consent.checked) { consentErr.textContent = d.consent_error || ''; return; } body._consent = true; }
       Object.keys(inputs).forEach(function (k) { body[k] = inputs[k].value; errs[k].textContent = ''; });
       btn.disabled = true; var label = btn.textContent; btn.textContent = d.sending;
       fetch(API, { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify(body) })
         .then(function (r) { return r.json().then(function (j) { return { s: r.status, j: j }; }); })
         .then(function (r) {
-          if (r.s === 422) { var e = r.j.errors || {}; Object.keys(e).forEach(function (k) { if (errs[k]) errs[k].textContent = e[k][0]; }); btn.disabled = false; btn.textContent = label; return; }
+          if (r.s === 422) { var e = r.j.errors || {}; Object.keys(e).forEach(function (k) { if (errs[k]) errs[k].textContent = e[k][0]; }); if (e._consent && consentErr) consentErr.textContent = e._consent[0]; btn.disabled = false; btn.textContent = label; return; }
           if (!r.j.ok) throw 0;
           if (r.j.redirect) { window.location.href = r.j.redirect; return; }
           form.replaceWith(el('div', { class: 'f' }, [el('div', { class: 'ok' }, [r.j.message])]));

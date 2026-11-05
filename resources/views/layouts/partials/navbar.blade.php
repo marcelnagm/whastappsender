@@ -89,6 +89,11 @@
           <a href="{{ route('pipeline.index') }}" class="nav-link {{ request()->is('pipeline*') ? 'active text-secondary' : 'text-white' }}"><i class="bi bi-kanban me-1"></i> {{ __('Pipeline') }}</a>
         </li>
         @endteamcan
+        @teamcan('contacts.manage')
+        <li class="nav-item">
+          <a href="{{ route('consent.index') }}" class="nav-link {{ request()->is('consent*') ? 'active text-secondary' : 'text-white' }}"><i class="bi bi-shield-check me-1"></i> {{ __('Consent') }}</a>
+        </li>
+        @endteamcan
         @teamcan('tasks')
         <li class="nav-item">
           <a href="{{ route('tasks.index') }}" class="nav-link {{ request()->is('tasks*') ? 'active text-secondary' : 'text-white' }}"><i class="bi bi-alarm me-1"></i> {{ __('Follow-ups') }}</a>

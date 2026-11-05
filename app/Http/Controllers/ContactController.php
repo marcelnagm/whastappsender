@@ -204,7 +204,7 @@ class ContactController extends Controller
     {
         if ($request->input('renover'))
             Contact::where('user_id', Auth::user()->id)->delete();
-        $import = new ContactsImport;
+        $import = new ContactsImport($request->boolean('consent') ? 'import' : null);
         Excel::import($import, $request->file('importer'));
 
         $note = $import->skipped > 0

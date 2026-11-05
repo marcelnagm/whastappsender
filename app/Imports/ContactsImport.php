@@ -9,6 +9,11 @@ use Maatwebsite\Excel\Concerns\WithHeadingRow;
 
 class ContactsImport implements ToModel , WithHeadingRow
 {
+    /** @param string|null $consentSource set when the person importing confirms these contacts agreed to be messaged */
+    public function __construct(private ?string $consentSource = null)
+    {
+    }
+
     /** Rows left out because the plan's contact limit was reached */
     public int $skipped = 0;
 
@@ -57,6 +62,10 @@ class ContactsImport implements ToModel , WithHeadingRow
                 return null;
             }
             $this->room--;
+        }
+
+        if ($this->consentSource) {
+            $data += ['consent_status' => 'granted', 'consent_source' => $this->consentSource, 'consent_at' => now()];
         }
 
         return new Contact($data);

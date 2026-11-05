@@ -144,7 +144,7 @@ class CampaignItemController extends ApiController
 
         $totalContatos = $campaignItem->audience
             ? app(\App\Services\Campaigns\CampaignAudience::class)->count((int) $campaignItem->user_id, $campaignItem->audience)['total']
-            : Contact::where('user_id', $campaignItem->user_id)->whereNull('ignore_me')->count();
+            : Contact::where('user_id', $campaignItem->user_id)->withConsent((int) $campaignItem->user_id)->whereNull('ignore_me')->count();
 
         if ($totalContatos === 0) {
             return $this->error('No validated contacts found.', 422);

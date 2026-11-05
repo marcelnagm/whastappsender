@@ -61,6 +61,11 @@ class FormSubmissionProcessor
             }
         }
 
+        // the person ticked the consent box: keep the proof on the contact
+        if ($s->consent_text && $contact) {
+            app(\App\Services\Consent\Consent::class)->grant($contact, 'form', '«' . $form->name . '»: ' . $s->consent_text, $s->ip);
+        }
+
         try {
             app(\App\Services\Pipeline\LeadDeals::class)->fromForm($user, $contact, $chat, '📝 ' . $form->name . ($name ? ' — ' . $name : ''));
         } catch (\Throwable $e) {

@@ -35,8 +35,18 @@ class Contact extends Model
      *
      * @var array
      */
-    protected $fillable = ['name', 'contact', 'email', 'user_id', 'ignore_me', 'lid', 'status', 'score', 'profile_url', 'linked_contact_id', 'deactivated_reason', 'deactivated_at', 'score_breakdown', 'score_updated_at', 'score_locked'];
+    protected $fillable = ['name', 'contact', 'email', 'user_id', 'ignore_me', 'lid', 'status', 'score', 'profile_url', 'linked_contact_id', 'deactivated_reason', 'deactivated_at', 'score_breakdown', 'score_updated_at', 'score_locked', 'consent_status', 'consent_source', 'consent_at', 'consent_revoked_at'];
 
+
+    /** Contacts that may receive campaigns: when the account requires consent, only those with a recorded opt-in. */
+    public function scopeWithConsent($query, int $userId)
+    {
+        if (User::whereKey($userId)->value('consent_required')) {
+            $query->where($query->getModel()->getTable() . '.consent_status', 'granted');
+        }
+
+        return $query;
+    }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasOne
@@ -112,10 +122,19 @@ class Contact extends Model
         'score_breakdown' => 'array',
         'score_updated_at' => 'datetime',
         'score_locked' => 'boolean',
+        'consent_at' => 'datetime',
+        'consent_revoked_at' => 'datetime',
     ];
 
     protected static function booted(): void
     {
+        // a contact created already with consent (import, API) leaves its proof
+        static::created(function (Contact $c) {
+            if ($c->consent_status === 'granted') {
+                app(\App\Services\Consent\Consent::class)->log($c, 'granted', $c->consent_source ?: 'api', $c->consent_source === 'import' ? __('Confirmed by the account when importing the list') : null);
+            }
+        });
+
         // a score typed by a person (form, API, import) is a decision: the automatic score never overwrites it.
         // The scorer writes with query-builder updates, which do not fire this event.
         static::saving(function (Contact $c) {

@@ -131,7 +131,7 @@ class CampaignItemController extends Controller
         // 1. Count eligible contacts: the audience chosen for this message, or everyone when none was chosen (single query)
         $totalContatos = $campaignItem->audience
             ? app(\App\Services\Campaigns\CampaignAudience::class)->count((int) $campaignItem->user_id, $campaignItem->audience)['total']
-            : Contact::where('user_id', $campaignItem->user_id)->whereNull('ignore_me')->count();
+            : Contact::where('user_id', $campaignItem->user_id)->withConsent((int) $campaignItem->user_id)->whereNull('ignore_me')->count();
 
         if ($totalContatos === 0) {
             return redirect()->back()->with('error', __('No validated contacts found for this user.'));

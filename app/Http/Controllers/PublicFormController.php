@@ -45,6 +45,8 @@ class PublicFormController extends Controller
             'submit_label' => $form->submit_label ?: __('Send'),
             'accent_color' => $this->color($form->accent_color),
             'sending' => __('Sending...'),
+            'consent' => $form->consent_text,
+            'consent_error' => __('You must accept to continue.'),
             'fields' => array_map(fn ($f) => [
                 'key' => $f['key'], 'label' => $f['label'], 'type' => $f['type'], 'required' => (bool) $f['required'],
                 'options' => $f['options'] ?? [], 'placeholder' => $f['placeholder'] ?? '',
@@ -69,6 +71,11 @@ class PublicFormController extends Controller
 
         $values = ContactFormFields::validateSubmission($form, $request->all()); // 422 with per-field errors
 
+        // the consent checkbox: required when the form has a consent text, and the exact text accepted is kept as proof
+        if ($form->consent_text && !filter_var($request->input('_consent'), FILTER_VALIDATE_BOOLEAN)) {
+            return response()->json(['message' => __('You must accept to continue.'), 'errors' => ['_consent' => [__('You must accept to continue.')]]], 422);
+        }
+
         $s = ContactFormSubmission::create([
             'contact_form_id' => $form->id,
             'user_id' => $form->user_id,
@@ -76,6 +83,7 @@ class PublicFormController extends Controller
             'origin' => Str::limit((string) ($request->headers->get('Origin') ?: $request->headers->get('Referer')), 250, ''),
             'ip' => $request->ip(),
             'status' => 'pending',
+            'consent_text' => $form->consent_text,
         ]);
         $form->increment('submissions_count');
 

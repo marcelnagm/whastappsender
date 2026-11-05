@@ -8,7 +8,7 @@ use Illuminate\Support\Str;
 class ContactForm extends Model
 {
     protected $fillable = ['user_id', 'name', 'title', 'description', 'fields', 'submit_label', 'success_message', 'redirect_url', 'accent_color',
-        'allowed_origins', 'instance_id', 'reply_channels', 'ai_reply', 'active'];
+        'allowed_origins', 'instance_id', 'reply_channels', 'ai_reply', 'active', 'consent_text'];
 
     protected $casts = ['fields' => 'array', 'reply_channels' => 'array', 'ai_reply' => 'boolean', 'active' => 'boolean'];
 

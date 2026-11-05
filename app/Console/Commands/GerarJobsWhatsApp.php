@@ -42,6 +42,7 @@ class GerarJobsWhatsApp extends Command
         $recipients = $audience
             ? app(\App\Services\Campaigns\CampaignAudience::class)->query((int) $campaignItem->user_id, $audience, 'whatsapp')
             : Contact::where('user_id', $campaignItem->user_id)
+                ->withConsent((int) $campaignItem->user_id)
                 ->whereNull('ignore_me') // Only mined / validated contacts
                 ->where('status','ativo'); // Only active WhatsApp numbers
 

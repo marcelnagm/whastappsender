@@ -90,7 +90,7 @@ final class TeamRoles
         ['chat', ['chat.*']],
         ['contacts.view', ['contacts.index', 'contacts.show', 'contacts.photo']],
         ['team', ['contacts.clear']],
-        ['contacts.manage', ['contacts.*']],
+        ['contacts.manage', ['contacts.*', 'consent.*']],
         ['campaigns.view', ['campaigns.index', 'campaigns.show', 'campaigns.report', 'campaign-items.index', 'campaign-items.show', 'campaign-items.logs', 'whatsapp-jobs.index']],
         ['campaigns.send', ['campaign-items.generate', 'campaign-items.generateAll', 'campaign-items.send', 'whatsapp-jobs.*']],
         ['campaigns.manage', ['campaigns.*', 'campaign-items.*']],

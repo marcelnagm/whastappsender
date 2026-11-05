@@ -86,7 +86,7 @@ class EmailInbound
         if ($answer && !$m['auto'] && $this->mayAnswer($instance, $from)) {
             // first message of a conversation: the subject says what it is about, so the AI gets it too
             $aiText = ($firstOfThread && $subject !== '' ? $subject . "\n\n" : '') . $reply;
-            InboundAiBridge::run($instance, $contact, $jid, $messageId, $reply === '' ? $aiText : (in_array(Str::lower($reply), ['/stop', '#sair'], true) ? $reply : $aiText), 'text');
+            InboundAiBridge::run($instance, $contact, $jid, $messageId, $reply === '' ? $aiText : (\App\Services\Consent\Consent::keyword($reply) ? $reply : $aiText), 'text');
         }
 
         return $message;

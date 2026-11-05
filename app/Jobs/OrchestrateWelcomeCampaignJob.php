@@ -34,6 +34,7 @@ class OrchestrateWelcomeCampaignJob implements ShouldQueue
         }
 
         $contacts = Contact::where('user_id', $campaignItem->user_id)
+            ->withConsent((int) $campaignItem->user_id)
             ->whereNull('ignore_me')
             ->where('status', 'ativo')
             ->select('id')

@@ -201,9 +201,10 @@ Log::info(json_encode($data));
             'textPreview' => mb_substr(trim((string) $text), 0, 200),
         ]);
 
-        if (strtolower(trim($text)) === '#sair') {
-            $this->processOptOut($instanceName, $whatsappId);
-            $this->debugWebhook('Opt-out processed (#sair)', [
+        // only what the customer types counts: an attendant writing "stop" must not opt the customer out
+        if (!($data['key']['fromMe'] ?? false) && \App\Services\Consent\Consent::keyword($text)) {
+            $this->processConsentKeyword((string) $instanceName, (string) $whatsappId, (string) $text);
+            $this->debugWebhook('Consent keyword processed', [
                 'instance' => $instanceName,
                 'whatsappId' => $whatsappId,
             ]);
@@ -277,10 +278,24 @@ Log::info(json_encode($data));
             : explode('@', $remoteJid)[0];
     }
 
-    private function processOptOut($instanceName, $whatsappId)
+    /** "#sair" / "#entrar" (and the configured words): only the contact of the account that owns this number is touched. */
+    private function processConsentKeyword(string $instanceName, string $whatsappId, string $text): void
     {
-        if (Contact::where('contact', $whatsappId)->update(['ignore_me' => 1])) {
-            Redis::sadd("blacklist:instance:{$instanceName}", $whatsappId);
+        $instance = Instance::where('instance_name', $instanceName)->first();
+        if (!$instance) {
+            return;
+        }
+
+        $consent = app(\App\Services\Consent\Consent::class);
+        foreach (Contact::where('user_id', $instance->user_id)->where('contact', $whatsappId)->get() as $contact) {
+            $action = $consent->handleKeyword($contact, $text);
+            try { // the database is the record; this set is only a fast copy for the send workers
+                $action === 'revoked'
+                    ? Redis::sadd("blacklist:instance:{$instanceName}", $whatsappId)
+                    : Redis::srem("blacklist:instance:{$instanceName}", $whatsappId);
+            } catch (\Throwable $e) {
+                Log::warning('Opt-out list not updated in Redis: ' . $e->getMessage());
+            }
         }
     }
 

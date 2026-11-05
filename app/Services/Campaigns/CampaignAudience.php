@@ -47,7 +47,7 @@ class CampaignAudience
         $a = self::normalize($audience);
 
         // ignore_me: null (or 0) = may be messaged; 1 = opted out
-        $q = Contact::query()->where('user_id', $userId)->where(fn ($w) => $w->whereNull('ignore_me')->orWhere('ignore_me', 0));
+        $q = Contact::query()->where('user_id', $userId)->withConsent($userId)->where(fn ($w) => $w->whereNull('ignore_me')->orWhere('ignore_me', 0));
 
         $q->where('status', $channel === 'whatsapp' ? 'ativo' : $channel);
 

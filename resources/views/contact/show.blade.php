@@ -95,6 +95,33 @@
         </div>
 
         <div class="col-lg-8 col-md-7">
+            @php
+                $cLogs = \Illuminate\Support\Facades\DB::table('consent_logs')->where('contact_id', $contact->id)->orderByDesc('id')->limit(5)->get();
+                $cs = $contact->consent_status ?: 'unknown';
+            @endphp
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-body">
+                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                        <h6 class="m-0 text-uppercase small fw-bold"><i class="bi bi-shield-check me-2 text-primary"></i>{{ __('Consent') }}
+                            <span class="badge ms-2 {{ $cs === 'granted' ? 'bg-success' : ($cs === 'revoked' ? 'bg-danger' : 'bg-secondary') }}">{{ $cs === 'granted' ? __('Granted') : ($cs === 'revoked' ? __('Opted out') : __('No record')) }}</span></h6>
+                        @teamcan('contacts.manage')
+                        <form method="POST" action="{{ route('consent.contact', $contact->id) }}" class="d-flex gap-2">@csrf
+                            <input name="evidence" class="form-control form-control-sm" maxlength="500" placeholder="{{ __('Note (optional)') }}">
+                            <button name="action" value="granted" class="btn btn-sm btn-outline-success text-nowrap">{{ __('Record consent') }}</button>
+                            <button name="action" value="revoked" class="btn btn-sm btn-outline-danger text-nowrap">{{ __('Opt out') }}</button>
+                        </form>
+                        @endteamcan
+                    </div>
+                    @if ($cLogs->isNotEmpty())
+                        <ul class="small text-muted mt-3 mb-0 ps-3">
+                            @foreach ($cLogs as $l)
+                                <li>{{ \Illuminate\Support\Carbon::parse($l->created_at)->format('d/m/Y H:i') }} · <strong>{{ $l->action === 'granted' ? __('Granted') : __('Revoked') }}</strong> · {{ $l->source }}@if ($l->evidence) · {{ \Illuminate\Support\Str::limit($l->evidence, 120) }}@endif</li>
+                            @endforeach
+                        </ul>
+                    @endif
+                </div>
+            </div>
+
             {{-- Recent jobs table --}}
             <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
                 <div class="card-header bg-white py-3 border-bottom">

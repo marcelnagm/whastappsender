@@ -191,6 +191,15 @@ Route::group(['namespace' => 'App\Http\Controllers', 'middleware' => ['auth', 's
         Route::delete('/deals/{deal}', [$pl, 'destroyDeal'])->whereNumber('deal')->name('deals.destroy');
     });
 
+    // Consent register (opt-in / opt-out proof)
+    Route::prefix('consent')->name('consent.')->group(function () {
+        $cs = \App\Http\Controllers\ConsentController::class;
+        Route::get('/', [$cs, 'index'])->name('index');
+        Route::post('/settings', [$cs, 'settings'])->name('settings');
+        Route::get('/export', [$cs, 'export'])->name('export');
+        Route::post('/contacts/{contact}', [$cs, 'contact'])->whereNumber('contact')->name('contact');
+    });
+
     // Follow-up tasks
     Route::prefix('tasks')->name('tasks.')->group(function () {
         $tk = \App\Http\Controllers\TasksController::class;

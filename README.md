@@ -32,6 +32,7 @@
 | [Sales pipeline](#-sales-pipeline-kanban) | Kanban funnel of deals: drag cards between stages, values, expected close date, won / lost with reason, win rate |
 | [Team inbox](#-team-inbox--deals-from-conversations) | Assign conversations (by hand or balanced), labels, internal notes, filters, and deals opened automatically from new conversations and contact forms |
 | [Follow-ups](#-follow-up-tasks--reminders) | Tasks with a due time for a contact or conversation, assigned to a person, with an in-app reminder when they fall due |
+| [Consent](#️-consent--opt-out) | Proof of who agreed to be messaged and how, opt-in / opt-out words on every channel, consent box on forms, "campaigns only to contacts with consent" switch, CSV export |
 | [Team & roles](#-team--roles-sub-users) | Sub-users working for the contract account (admin, approver, creator, sender, attendant, analyst) |
 | [Audience & approval](#-audience--approval-of-campaigns) | Choose the audience by score and channels; approval flow before sending |
 | [Fair Send Queue](#️-fair-send-queue) | Balanced batches across users and sessions, with plan priority |
@@ -916,6 +917,20 @@ Open **Follow-ups** in the menu (or use the **Follow-ups** block of the chat sid
 
 * * *
 
+## 🛡️ Consent & opt-out
+
+Bulk messaging needs permission: Meta's policies and Brazil's LGPD expect you to be able to show **who agreed, when and how**. Open **Consent** in the menu (administrator / campaign creator / owner).
+
+* **Status per contact:** *No record* (the default, as before), *Granted* or *Opted out*, plus an **append-only log** (date, source, evidence, IP, who recorded it). The contact page shows the status and the last records and lets you **Record consent** or **Opt out** by hand.
+* **Where consent comes from:** a **contact form with a consent box** (set a *Consent text* on the form: the visitor must tick it and the exact text accepted, form and IP are stored); the **opt-in words** a customer sends (`#entrar`, `#aceito`, `/start`); a manual record on the contact; or the **import** (`POST /contact/import` with `consent=1` when you confirm the list agreed).
+* **Opt-out words** (a message that is *exactly* one of them, any case): `#sair`, `/stop`, `#parar`, `#stop`, `parar`, `stop`. On any channel (WhatsApp, Telegram, Instagram, Facebook, TikTok, e-mail) the contact is marked *Opted out*, receives no campaign and no AI reply, and **the same person on their other channels is opted out too**. What an attendant types never counts. A keyword only affects the contact of the account that owns the number (other accounts that message the same person are not touched). Customise the lists with `CONSENT_OPTOUT_KEYWORDS` / `CONSENT_OPTIN_KEYWORDS`.
+* **Switch "Campaigns only reach contacts with recorded consent"** (off by default, so nothing changes until you decide): when on, contacts without a *Granted* record are left out of campaign audiences, the send-queue generation and the welcome message; the audience count shown at launch already excludes them. Opted-out contacts are always excluded, switch or not.
+* **Proof:** *Export proof (CSV)* downloads every record (cells that could run as a spreadsheet formula are neutralised).
+* Contacts that had already opted out before this release were marked *Opted out* by the migration (`php artisan migrate`).
+* Not included yet: a confirmation message to the customer after `#sair`, and an unsubscribe footer appended to campaign texts.
+
+* * *
+
 ## 👥 Team & roles (sub-users)
 
 A **contract user** (the account owner) can add **sub-users** who work for that account. A member signs in with **their own login**, but everything runs on the
@@ -1268,6 +1283,13 @@ Mailbox credentials are **not** in `.env`: each user types them in the **Email**
 | `FORMS_DEFAULT_COUNTRY_CODE` | 55 | Prefix added to phone numbers typed without a country code (empty = leave as typed) |
 | `FORMS_THROTTLE_PER_MINUTE` | 10 | Submissions accepted per minute from one IP address (spam protection of the public endpoint) |
 
+### Consent
+
+| Variable | Default | Controls |
+|---|---|---|
+| `CONSENT_OPTOUT_KEYWORDS` | `#sair,/stop,#parar,#stop,parar,stop` | Messages (whole text, any case, comma separated) that opt the customer out on every channel |
+| `CONSENT_OPTIN_KEYWORDS` | `#entrar,#aceito,/start` | Messages that record the customer's consent |
+
 ### Deals (sales pipeline)
 
 | Variable | Default | Controls |
@@ -1307,7 +1329,7 @@ Gateway credentials (Asaas, Efí, AbacatePay, Stone, Stripe, PagBank, Mercado Pa
 
 ## 🧪 Tests
 
-`vendor/bin/phpunit` (in-memory SQLite, no external services): fair queue planner and command, chat backend, Telegram, Instagram and TikTok channels (webhook secret/signature, OAuth, token refresh, inbound, AI reply through the same bot/account, reply window, settings), channel statistics and cross-channel contact links, unresponsive-contact deactivation, contact score ranking, Facebook Messenger, team roles and approval, audience by score and channel, plan queue priority, follow-up tasks and reminders, team inbox (balanced assignment, visibility, labels, internal notes) and deals opened from conversations and forms, sales pipeline, e-mail channel (SMTP send, IMAP mailbox through webklex/php-imap with a scripted server, message mapping, threading, AI reply, loop protection, contact unification), embeddable contact forms (public script/endpoint, spam protection, contact + chat creation, AI reply channel choice), the new channel / inbox / ranking API endpoints and MCP tools, avatar caching, billing lifecycle and plan enforcement, the Mercado Pago gateway (admin settings, Pix, card, recurrence, webhook) and the Asaas / Efí / AbacatePay / Stone (Pagar.me) / Stripe / PagBank gateways (HTTP faked).
+`vendor/bin/phpunit` (in-memory SQLite, no external services): fair queue planner and command, chat backend, Telegram, Instagram and TikTok channels (webhook secret/signature, OAuth, token refresh, inbound, AI reply through the same bot/account, reply window, settings), channel statistics and cross-channel contact links, unresponsive-contact deactivation, contact score ranking, Facebook Messenger, team roles and approval, audience by score and channel, plan queue priority, consent register (opt-in / opt-out proof, keywords, forms), follow-up tasks and reminders, team inbox (balanced assignment, visibility, labels, internal notes) and deals opened from conversations and forms, sales pipeline, e-mail channel (SMTP send, IMAP mailbox through webklex/php-imap with a scripted server, message mapping, threading, AI reply, loop protection, contact unification), embeddable contact forms (public script/endpoint, spam protection, contact + chat creation, AI reply channel choice), the new channel / inbox / ranking API endpoints and MCP tools, avatar caching, billing lifecycle and plan enforcement, the Mercado Pago gateway (admin settings, Pix, card, recurrence, webhook) and the Asaas / Efí / AbacatePay / Stone (Pagar.me) / Stripe / PagBank gateways (HTTP faked).
 
 * * *
 
