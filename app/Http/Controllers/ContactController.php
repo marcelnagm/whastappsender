@@ -143,7 +143,7 @@ class ContactController extends Controller
         if (class_exists('\Debugbar')) {
             \Debugbar::disable();
         }
-        $contact = Contact::findOrFail($id);
+        $contact = $this->owned($id);
         $contact->syncFromEvolution();
         return response($contact->profile_url, 200)
             ->header('Content-Type', 'text/plain');
@@ -152,9 +152,10 @@ class ContactController extends Controller
 
     public function show($id)
     {
-        $contact = Contact::find($id);
+        $contact = $this->owned($id);
+        $timeline = app(\App\Services\Contacts\ContactTimeline::class)->for($contact);
 
-        return view('contact.show', compact('contact'));
+        return view('contact.show', compact('contact', 'timeline'));
     }
 
     /**
@@ -165,7 +166,7 @@ class ContactController extends Controller
      */
     public function edit($id)
     {
-        $contact = Contact::find($id);
+        $contact = $this->owned($id);
 
         return view('contact.edit', compact('contact'));
     }
@@ -179,9 +180,10 @@ class ContactController extends Controller
      */
     public function update(Request $request, Contact $contact)
     {
+        $this->owned($contact->id);
         request()->validate(Contact::$rules);
 
-        $data = $request->except('custom');
+        $data = $request->except(['custom', 'user_id']);
         // the custom fields of the form replace the stored ones (a cleared input removes the value)
         $data['custom'] = app(\App\Services\Contacts\CustomFields::class)->clean((int) $contact->user_id, (array) $request->input('custom')) ?: null;
         $contact->update($data);
@@ -197,7 +199,7 @@ class ContactController extends Controller
      */
     public function destroy($id)
     {
-        $contact = Contact::find($id)->delete();
+        $this->owned($id)->delete();
 
         return redirect()->route('contacts.index')
             ->with('success', __('Contact deleted successfully'));
@@ -225,5 +227,11 @@ class ContactController extends Controller
 
         return redirect()->route('contacts.index')
             ->with('success', __('Contacts Cleared'));
+    }
+
+    /** A contact of the logged account (admins reach any); someone else's id is a 404. */
+    private function owned($id): Contact
+    {
+        return Contact::when(auth()->user()->role !== 'admin', fn ($q) => $q->where('user_id', auth()->id()))->findOrFail($id);
     }
 }

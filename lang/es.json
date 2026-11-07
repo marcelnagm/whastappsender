@@ -1589,5 +1589,18 @@
     "Send test": "Enviar prueba",
     "Test event queued.": "Evento de prueba en cola.",
     "Use a public https address.": "Usa una dirección https pública.",
-    "failures": "fallos"
+    "failures": "fallos",
+    "Consent granted": "Consentimiento otorgado",
+    "Consent revoked": "Consentimiento revocado",
+    "Contact created": "Contacto creado",
+    "Deal created": "Negocio creado",
+    "Deal lost": "Negocio perdido",
+    "Deal won": "Negocio ganado",
+    "Internal note": "Nota interna",
+    "Nothing recorded yet.": "Nada registrado aún.",
+    "Received": "Recibido",
+    "Satisfaction grade": "Nota de satisfacción",
+    "Task": "Tarea",
+    "Task done": "Tarea completada",
+    "Timeline": "Línea de tiempo"
 }

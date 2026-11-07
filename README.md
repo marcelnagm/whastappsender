@@ -42,6 +42,7 @@
 | [Proposals](#-proposals-quotes) | Quote built from a deal's items, public link with online accept / decline, notices and automation triggers, print / save as PDF |
 | [Lead sources](#-lead-sources) | Where each deal came from (channel, form + UTM campaign, or typed) and the funnel result per source: created, won, win rate, value, days to win |
 | [Duplicate contacts](#-duplicate-contacts) | Finds people registered twice (same e-mail or phone written differently) and merges them keeping conversations, deals, tasks and consent proof |
+| [Contact timeline](#-contact-timeline) | One history per person: messages, notes, deals, proposals, tasks, consent and surveys |
 | [Outbound webhooks](#-outbound-webhooks) | Push CRM events to Zapier, n8n or Make, signed with HMAC and retried |
 | [Follow-up sequences](#-follow-up-sequences) | Multi-step follow-ups with waits that stop by themselves when the customer replies |
 | [Satisfaction survey](#-satisfaction-survey) | Close conversations and ask for a CSAT (1–5) or NPS (0–10) grade; the numeric reply is recorded |
@@ -979,6 +980,10 @@ Bulk messaging needs permission: Meta's policies and Brazil's LGPD expect you to
 * Not included yet: a confirmation message to the customer after `#sair`, and an unsubscribe footer appended to campaign texts.
 
 * * *
+
+## 🕒 Contact timeline
+
+The contact's profile page (**Contacts → open a contact**) shows a **Timeline**: messages sent and received, internal notes, deals created/won/lost, proposals, tasks, consent changes and satisfaction grades, newest first. Security: contact pages, edit, update and delete now only reach contacts of your own account (another account's id is a 404).
 
 ## 🔌 Outbound webhooks
 

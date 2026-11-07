@@ -95,6 +95,22 @@
         </div>
 
         <div class="col-lg-8 col-md-7">
+            @if (isset($timeline))
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-body p-4">
+                    <h6 class="fw-bold mb-3"><i class="bi bi-clock-history me-1"></i> {{ __('Timeline') }}</h6>
+                    @forelse ($timeline as $ev)
+                        <div class="d-flex gap-2 mb-2 small">
+                            <i class="bi {{ $ev['icon'] }} text-primary"></i>
+                            <div><span class="text-muted">{{ $ev['at']->format('d/m/Y H:i') }}</span> · {{ $ev['text'] }}</div>
+                        </div>
+                    @empty
+                        <p class="text-muted small mb-0">{{ __('Nothing recorded yet.') }}</p>
+                    @endforelse
+                </div>
+            </div>
+            @endif
+
             @php
                 $cfShow = app(\App\Services\Contacts\CustomFields::class)->for((int) $contact->user_id)->filter(fn ($f) => isset(($contact->custom ?? [])[$f->key]));
             @endphp
