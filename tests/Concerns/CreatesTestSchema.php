@@ -185,6 +185,7 @@ trait CreatesTestSchema
             '2026_11_07_180000_create_outbound_webhooks.php',
             '2026_11_07_200000_create_companies.php',
             '2026_11_07_220000_create_stale_deals.php',
+            '2026_11_08_100000_add_task_recurrence.php',
             '2026_11_05_160000_add_message_sender_and_team_goals.php',
         ] as $file) {
             (require database_path('migrations/' . $file))->up();

@@ -42,6 +42,7 @@
 | [Proposals](#-proposals-quotes) | Quote built from a deal's items, public link with online accept / decline, notices and automation triggers, print / save as PDF |
 | [Lead sources](#-lead-sources) | Where each deal came from (channel, form + UTM campaign, or typed) and the funnel result per source: created, won, win rate, value, days to win |
 | [Duplicate contacts](#-duplicate-contacts) | Finds people registered twice (same e-mail or phone written differently) and merges them keeping conversations, deals, tasks and consent proof |
+| [Recurring tasks](#-recurring-tasks) | Tasks that repeat daily, weekly or monthly: completing one creates the next |
 | [Stalled deals](#-stalled-deals) | Daily warning about open deals without activity; `deal.stale` automation trigger |
 | [Mentions](#-mentions-in-notes) | `@name` in an internal note notifies that colleague |
 | [Companies](#-companies) | B2B accounts that group contacts and deals, with funnel and won value |
@@ -983,6 +984,10 @@ Bulk messaging needs permission: Meta's policies and Brazil's LGPD expect you to
 * Not included yet: a confirmation message to the customer after `#sair`, and an unsubscribe footer appended to campaign texts.
 
 * * *
+
+## 🔂 Recurring tasks
+
+When creating a task with a due date, choose **Every day / week / month**. Completing it creates the next occurrence (once, even if you reopen and complete again) with the same title, notes, person, contact and deal. A task completed late skips the dates already past, so the next one is never born overdue; monthly tasks on day 31 fall on the last day of shorter months.
 
 ## ⌛ Stalled deals
 

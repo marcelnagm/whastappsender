@@ -1634,5 +1634,11 @@
     "Stalled": "Parados",
     "Stalled after": "Parado después de",
     "Stalled deals": "Negocios parados",
-    "days": "días"
+    "days": "días",
+    "Repeat": "Repetir",
+    "Does not repeat": "No se repite",
+    "Every day": "Cada día",
+    "Every week": "Cada semana",
+    "Every month": "Cada mes",
+    "Repeats": "Se repite"
 }

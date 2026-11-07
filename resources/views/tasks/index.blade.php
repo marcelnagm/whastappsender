@@ -19,7 +19,7 @@
     @csrf
     <div class="row g-2 align-items-end">
       <div class="col-md-4"><label class="form-label small mb-1">{{ __('What to do') }}</label><input name="title" class="form-control" maxlength="160" required placeholder="{{ __('Call back about the quote') }}"></div>
-      <div class="col-md-2"><label class="form-label small mb-1">{{ __('When') }}</label><input type="datetime-local" name="due_at" class="form-control"></div>
+      <div class="col-md-2"><label class="form-label small mb-1">{{ __('When') }}</label><input type="datetime-local" name="due_at" class="form-control"><select name="recurrence" class="form-select form-select-sm mt-1" title="{{ __('Repeat') }}"><option value="">{{ __('Does not repeat') }}</option><option value="daily">{{ __('Every day') }}</option><option value="weekly">{{ __('Every week') }}</option><option value="monthly">{{ __('Every month') }}</option></select></div>
       <div class="col-md-2"><label class="form-label small mb-1">{{ __('Who') }}</label>
         <select name="assigned_to" class="form-select">@foreach ($people as $p)<option value="{{ $p->id }}" @selected($p->id === $me->id)>{{ $p->name }}</option>@endforeach</select></div>
       <div class="col-md-3"><label class="form-label small mb-1">{{ __('Contact (optional)') }}</label>
@@ -46,6 +46,7 @@
             <div class="{{ $t->isDone() ? 'text-decoration-line-through text-muted' : 'fw-semibold' }}">{{ $t->title }}</div>
             <div class="small text-muted">
               @if ($t->due_at)<span class="{{ $t->isOverdue() ? 'text-danger fw-semibold' : '' }}"><i class="bi bi-clock"></i> {{ $t->due_at->format('d/m/Y H:i') }}</span> · @endif
+              @if ($t->recurrence)<i class="bi bi-arrow-repeat" title="{{ __('Repeats') }}"></i> {{ ['daily' => __('Every day'), 'weekly' => __('Every week'), 'monthly' => __('Every month')][$t->recurrence] ?? '' }} · @endif
               <i class="bi bi-person"></i> {{ optional($t->assignee)->name ?: '—' }}
               @if ($t->contact) · <i class="bi bi-person-lines-fill"></i> <a href="{{ route('contacts.show', $t->contact_id) }}">{{ $t->contact->name }}</a>@endif
             </div>

@@ -50,6 +50,7 @@ class TasksController extends Controller
         $data = $request->validate([
             'title' => 'required|string|max:160', 'notes' => 'nullable|string|max:2000', 'due_at' => 'nullable|date',
             'assigned_to' => 'nullable|integer', 'contact_id' => 'nullable|integer', 'chat_id' => 'nullable|integer', 'deal_id' => 'nullable|integer',
+            'recurrence' => 'nullable|in:daily,weekly,monthly',
         ]);
         $task = $this->tasks->create($request->user(), TeamContext::actor($request), $data);
 

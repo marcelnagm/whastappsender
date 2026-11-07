@@ -22,6 +22,8 @@ class FollowUps
     /**
      * @param array{title:string,notes?:?string,due_at?:?string,assigned_to?:?int,contact_id?:?int,chat_id?:?int,deal_id?:?int} $data
      */
+    public const RECURRENCES = ['daily', 'weekly', 'monthly'];
+
     public function create(User $owner, User $actor, array $data): Task
     {
         $assignee = $data['assigned_to'] ?? $actor->id;
@@ -40,6 +42,7 @@ class FollowUps
             'user_id' => $owner->id, 'title' => mb_substr(trim($data['title']), 0, 160), 'notes' => $data['notes'] ?? null,
             'due_at' => $this->parseDue($data['due_at'] ?? null), 'assigned_to' => (int) $assignee, 'created_by' => $actor->id,
             'contact_id' => $contactId ?: null, 'chat_id' => $chat?->id, 'deal_id' => $data['deal_id'] ?? null,
+            'recurrence' => in_array($data['recurrence'] ?? null, self::RECURRENCES, true) && !empty($data['due_at']) ? $data['recurrence'] : null,
         ]);
     }
 
@@ -52,8 +55,34 @@ class FollowUps
     public function toggle(Task $task, User $actor): Task
     {
         $task->forceFill($task->isDone() ? ['done_at' => null, 'done_by' => null] : ['done_at' => now(), 'done_by' => $actor->id])->save();
+        if ($task->isDone()) {
+            $this->spawnNext($task);
+        }
 
         return $task;
+    }
+
+    /** A recurring task that is completed creates its next occurrence (once, however often it is toggled). */
+    private function spawnNext(Task $task): void
+    {
+        if (!$task->recurrence || $task->next_task_id || !$task->due_at) {
+            return;
+        }
+        $next = $task->due_at->copy();
+        // jump over occurrences already in the past so that a late completion does not create an overdue task
+        do {
+            $next = match ($task->recurrence) {
+                'daily' => $next->addDay(),
+                'weekly' => $next->addWeek(),
+                default => $next->addMonthNoOverflow(),
+            };
+        } while ($next->lte(now()));
+
+        $copy = Task::create([
+            'user_id' => $task->user_id, 'title' => $task->title, 'notes' => $task->notes, 'due_at' => $next, 'assigned_to' => $task->assigned_to,
+            'created_by' => $task->created_by, 'contact_id' => $task->contact_id, 'chat_id' => $task->chat_id, 'deal_id' => $task->deal_id, 'recurrence' => $task->recurrence,
+        ]);
+        $task->forceFill(['next_task_id' => $copy->id])->save();
     }
 
     /** A new due time asks for a new reminder. */
