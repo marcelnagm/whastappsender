@@ -58,6 +58,9 @@
         <li class="nav-item">
           <a href="{{ route('hours.edit') }}" class="nav-link {{ request()->is('hours*') ? 'active text-secondary' : 'text-white' }}"><i class="bi bi-clock me-1"></i> {{ __('Opening hours') }}</a>
         </li>
+        <li class="nav-item">
+          <a href="{{ route('sla.index') }}" class="nav-link {{ request()->is('sla*') ? 'active text-secondary' : 'text-white' }}"><i class="bi bi-stopwatch me-1"></i> {{ __('Response SLA') }}</a>
+        </li>
         @endteamcan
         @teamcan('reports')
         <li class="nav-item">

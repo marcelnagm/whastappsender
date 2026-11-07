@@ -280,6 +280,10 @@ Route::group(['namespace' => 'App\Http\Controllers', 'middleware' => ['auth', 's
     Route::get('hours', [\App\Http\Controllers\ServiceHoursController::class, 'edit'])->name('hours.edit');
     Route::put('hours', [\App\Http\Controllers\ServiceHoursController::class, 'update'])->name('hours.update');
 
+    // First-response SLA
+    Route::get('sla', [\App\Http\Controllers\SlaController::class, 'index'])->name('sla.index');
+    Route::put('sla', [\App\Http\Controllers\SlaController::class, 'update'])->name('sla.update');
+
     // Follow-up tasks
     Route::prefix('tasks')->name('tasks.')->group(function () {
         $tk = \App\Http\Controllers\TasksController::class;

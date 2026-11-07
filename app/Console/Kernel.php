@@ -51,6 +51,8 @@ class Kernel extends ConsoleKernel
 
         // Chat messages scheduled for a time
         $schedule->command('chat:send-scheduled')->everyMinute()->withoutOverlapping()->onOneServer();
+        // First-response SLA alerts and escalations
+        $schedule->command('sla:check')->everyMinute()->withoutOverlapping()->onOneServer();
 
         // Follow-up tasks that fell due: notify whoever is responsible
         $schedule->command('tasks:remind')->everyMinute()->withoutOverlapping()->onOneServer();

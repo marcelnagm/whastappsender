@@ -42,6 +42,7 @@
 | [Proposals](#-proposals-quotes) | Quote built from a deal's items, public link with online accept / decline, notices and automation triggers, print / save as PDF |
 | [Lead sources](#-lead-sources) | Where each deal came from (channel, form + UTM campaign, or typed) and the funnel result per source: created, won, win rate, value, days to win |
 | [Duplicate contacts](#-duplicate-contacts) | Finds people registered twice (same e-mail or phone written differently) and merges them keeping conversations, deals, tasks and consent proof |
+| [Response SLA](#-response-sla) | Alert and escalation when a customer waits too long for the first answer, counting only opening hours |
 | [Scheduled messages](#-scheduled-messages) | Type now, send later from the chat: at a chosen time, in your name, cancelled if the customer answers first |
 | [Quick replies](#-quick-replies) | Canned answers shared by the team: type `/shortcut` in the chat, with variables like the customer's name |
 | [Team & roles](#-team--roles-sub-users) | Sub-users working for the contract account (admin, approver, creator, sender, attendant, analyst) |
@@ -975,6 +976,10 @@ Bulk messaging needs permission: Meta's policies and Brazil's LGPD expect you to
 * Not included yet: a confirmation message to the customer after `#sair`, and an unsubscribe footer appended to campaign texts.
 
 * * *
+
+## ⏱️ Response SLA
+
+**Response SLA** (menu, team permission): turn on the monitoring, set after how many minutes without a first answer the assignee (or the owner) is alerted, and after how many *more* minutes it is escalated to a chosen person (optionally moving the conversation to them). With **Count only opening hours** the clock only runs inside the hours set in *Opening hours*. Any outbound message except campaigns counts as an answer. The page shows who is waiting now (on time / overdue / escalated) and the breaches of the last 30 days per person. Alerts arrive as in-app notifications; `php artisan sla:check` runs every minute from the scheduler.
 
 ## ⏰ Scheduled messages
 
