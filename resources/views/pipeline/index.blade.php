@@ -21,6 +21,7 @@
         @foreach ($pipelines as $p)<option value="{{ $p->id }}" @selected($p->id === $pipeline->id)>{{ $p->name }}</option>@endforeach
       </select>
       <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#dealModal" onclick="newDeal()"><i class="bi bi-plus-lg me-1"></i>{{ __('New deal') }}</button>
+      <a href="{{ route('pipeline.sources') }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-signpost-split me-1"></i>{{ __('Lead sources') }}</a>
       <a href="{{ route('proposals.index') }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-file-earmark-text me-1"></i>{{ __('Proposals') }}</a>
       <a href="{{ route('pipeline.products.index') }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-box-seam me-1"></i>{{ __('Products') }}</a>
       <button class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#setupModal"><i class="bi bi-gear me-1"></i>{{ __('Customize') }}</button>
@@ -52,7 +53,7 @@
               <div class="d-flex justify-content-between gap-2">
                 <strong class="text-break">{{ $d->title }}</strong>
                 <a href="#" class="small text-decoration-none" data-bs-toggle="modal" data-bs-target="#dealModal"
-                   data-edit="{{ json_encode(['id' => $d->id, 'title' => $d->title, 'value' => $d->value, 'contact_id' => $d->contact_id, 'date' => optional($d->expected_close_date)->format('Y-m-d')]) }}"
+                   data-edit="{{ json_encode(['id' => $d->id, 'title' => $d->title, 'value' => $d->value, 'contact_id' => $d->contact_id, 'origin' => $d->origin, 'date' => optional($d->expected_close_date)->format('Y-m-d')]) }}"
                    onclick="editDeal(JSON.parse(this.dataset.edit))"><i class="bi bi-pencil"></i></a>
               </div>
               <div class="small">{{ $money($d->value) }}
@@ -61,6 +62,7 @@
                   <span class="badge float-end bg-{{ ['hot' => 'success', 'warm' => 'warning', 'cold' => 'secondary'][$f['level']] }}" title="{{ collect($f['reasons'])->map(fn ($r) => ($r['delta'] > 0 ? '+' : '') . $r['delta'] . ' ' . $r['text'])->implode(' · ') }}">{{ $f['score'] }}%</span>
                 @endif
               </div>
+              @if ($d->origin)<div class="small text-muted"><i class="bi bi-signpost-split"></i> {{ $d->origin }}</div>@endif
               @if ($d->contact)<div class="small text-muted"><i class="bi bi-person"></i> {{ $d->contact->name }}</div>@endif
               @if ($d->expected_close_date)<div class="small text-muted"><i class="bi bi-calendar-event"></i> {{ $d->expected_close_date->format('d/m/Y') }}</div>@endif
               @if ($d->status === 'lost' && $d->lost_reason)<div class="small text-danger">{{ $d->lost_reason }}</div>@endif
@@ -95,6 +97,8 @@
           <a href="{{ route('pipeline.products.index') }}" class="small ms-2">{{ __('Products') }}</a></div>
       </div>
     </div>
+    <div><label class="form-label">{{ __('Origin') }}</label><input name="origin" id="dOrigin" class="form-control" maxlength="80" list="originList" placeholder="{{ __('Where the lead came from') }}">
+      <datalist id="originList">@foreach ($origins as $o)<option value="{{ $o }}">@endforeach</datalist></div>
     <div><label class="form-label">{{ __('Contact') }}</label>
       <select name="contact_id" id="dContact" class="form-select"><option value="">—</option>
         @foreach ($contacts as $c)<option value="{{ $c->id }}">{{ $c->name }} ({{ $c->contact }})</option>@endforeach
@@ -155,7 +159,7 @@ function setDeal(url, method, title, d) {
   document.getElementById('dealMethod').value = method;
   document.getElementById('dealTitle').textContent = title;
   document.getElementById('dTitle').value = d.title || ''; document.getElementById('dValue').value = d.value || '';
-  document.getElementById('dDate').value = d.date || ''; document.getElementById('dContact').value = d.contact_id || '';
+  document.getElementById('dDate').value = d.date || ''; document.getElementById('dOrigin').value = d.origin || ''; document.getElementById('dContact').value = d.contact_id || '';
   const del = document.getElementById('dealDeleteBtn');
   loadItems(d.id || null);
   const pb = document.getElementById('dealProposalBtn');

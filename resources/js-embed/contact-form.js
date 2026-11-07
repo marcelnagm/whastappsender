@@ -34,10 +34,11 @@
       form.appendChild(el('label', { for: 'sama-' + KEY + '-consent', style: 'font-weight:400;margin-top:14px' }, [consent, d.consent]));
       form.appendChild(consentErr);
     }
+    function utm() { var o = {}; try { var q = new URLSearchParams(window.location.search); ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content'].forEach(function (k) { var v = q.get(k); if (v) o[k] = v.slice(0, 80); }); o.page = (window.location.pathname || '').slice(0, 120); } catch (e) {} return o; }
     var hp = el('input', { type: 'text', name: '_hp', tabindex: '-1', autocomplete: 'off', 'aria-hidden': 'true' }); form.appendChild(el('div', { class: 'hp' }, [hp]));
     var btn = el('button', { type: 'submit' }, [d.submit_label]); form.appendChild(btn);
     form.addEventListener('submit', function (ev) {
-      ev.preventDefault(); var body = { _hp: hp.value };
+      ev.preventDefault(); var body = { _hp: hp.value, _utm: utm() };
       if (consent) { consentErr.textContent = ''; if (!consent.checked) { consentErr.textContent = d.consent_error || ''; return; } body._consent = true; }
       Object.keys(inputs).forEach(function (k) { body[k] = inputs[k].value; errs[k].textContent = ''; });
       btn.disabled = true; var label = btn.textContent; btn.textContent = d.sending;

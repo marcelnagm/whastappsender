@@ -189,6 +189,7 @@ Route::group(['namespace' => 'App\Http\Controllers', 'middleware' => ['auth', 's
         $pl = \App\Http\Controllers\PipelineController::class;
         Route::get('/', [$pl, 'index'])->name('index');
         Route::get('/priorities', [$pl, 'priorities'])->name('priorities');
+        Route::get('/sources', [$pl, 'sources'])->name('sources');
         Route::post('/deals/{deal}/advice', [$pl, 'advice'])->whereNumber('deal')->middleware('throttle:20,1')->name('deals.advice');
         Route::post('/pipelines', [$pl, 'storePipeline'])->name('pipelines.store');
         Route::delete('/pipelines/{pipeline}', [$pl, 'destroyPipeline'])->whereNumber('pipeline')->name('pipelines.destroy');

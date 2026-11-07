@@ -33,6 +33,7 @@ class PipelineController extends Controller
         $scores = $forecast->scoreMany($deals);
 
         return view('pipeline.index', [
+            'origins' => app(\App\Services\Reports\SourceReport::class)->known($owner),
             'scores' => $scores,
             'weighted' => $forecast->weightedValue($deals, $scores),
             'pipelines' => $pipelines,
@@ -54,6 +55,15 @@ class PipelineController extends Controller
         $ranked = $deals->sortByDesc(fn ($d) => [($scores[$d->id]['waiting_hours'] ?? 0) >= 1 ? 1 : 0, $scores[$d->id]['score'], (float) $d->value])->values();
 
         return view('pipeline.priorities', ['deals' => $ranked, 'scores' => $scores, 'weighted' => $forecast->weightedValue($deals, $scores), 'total' => (float) $deals->sum('value')]);
+    }
+
+    /** Funnel result per lead origin. */
+    public function sources(Request $request)
+    {
+        $days = in_array((string) $request->query('period'), ['30', '90', '365'], true) ? (int) $request->query('period') : 90;
+        $report = app(\App\Services\Reports\SourceReport::class);
+
+        return view('pipeline.sources', ['data' => $report->build($request->user(), now()->subDays($days - 1)->startOfDay(), now()->endOfDay()), 'days' => $days]);
     }
 
     /** Written recommendation of the AI agent for one deal. */
@@ -174,6 +184,7 @@ class PipelineController extends Controller
             'value' => 'nullable|numeric|min:0|max:9999999999',
             'contact_id' => 'nullable|integer',
             'expected_close_date' => 'nullable|date',
+            'origin' => 'nullable|string|max:80',
         ]);
         $data['value'] = $data['value'] ?? 0;
         $data['contact_id'] = !empty($data['contact_id']) && Contact::where('user_id', $request->user()->id)->where('id', $data['contact_id'])->exists() ? (int) $data['contact_id'] : null;

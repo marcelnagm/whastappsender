@@ -1457,5 +1457,15 @@
     "Your full name": "Seu nome completo",
     "by": "por",
     "Draft": "Rascunho",
-    "Viewed": "Visualizada"
+    "Viewed": "Visualizada",
+    "Avg days to win": "Dias até ganhar (média)",
+    "Created": "Criados",
+    "Deals created": "Negócios criados",
+    "Deals created in the period, grouped by where the lead came from: the channel of the conversation, the contact form with its UTM campaign, or what you typed on the deal.": "Negócios criados no período, agrupados por onde o lead veio: o canal da conversa, o formulário de contato com sua campanha UTM, ou o que você digitou no negócio.",
+    "Last 12 months": "Últimos 12 meses",
+    "Lead sources": "Origem dos leads",
+    "No deals in this period.": "Nenhum negócio neste período.",
+    "Not informed": "Não informada",
+    "Origin": "Origem",
+    "Where the lead came from": "De onde o lead veio"
 }

@@ -40,6 +40,7 @@
 | [Opening hours](#-opening-hours-away-message--greeting) | Business hours of the account, automatic away message outside them and greeting on the first message of a new conversation |
 | [Products & deal items](#-products--deal-items) | Product catalog and the items of each deal: quantity, price, discount; the deal value becomes the total of its items |
 | [Proposals](#-proposals-quotes) | Quote built from a deal's items, public link with online accept / decline, notices and automation triggers, print / save as PDF |
+| [Lead sources](#-lead-sources) | Where each deal came from (channel, form + UTM campaign, or typed) and the funnel result per source: created, won, win rate, value, days to win |
 | [Quick replies](#-quick-replies) | Canned answers shared by the team: type `/shortcut` in the chat, with variables like the customer's name |
 | [Team & roles](#-team--roles-sub-users) | Sub-users working for the contract account (admin, approver, creator, sender, attendant, analyst) |
 | [Audience & approval](#-audience--approval-of-campaigns) | Choose the audience by score and channels; approval flow before sending |
@@ -972,6 +973,16 @@ Bulk messaging needs permission: Meta's policies and Brazil's LGPD expect you to
 * Not included yet: a confirmation message to the customer after `#sair`, and an unsubscribe footer appended to campaign texts.
 
 * * *
+
+## 🧭 Lead sources
+
+Every deal has an **Origin** (editable in its window, with suggestions from the ones you already used). It is filled automatically:
+
+* **Conversations:** the channel of the number the customer wrote to (WhatsApp, Telegram, Instagram, Facebook, TikTok, Email).
+* **Contact forms:** the embed script now sends the UTM parameters of the page (`utm_source`, `utm_medium`, `utm_campaign`, `utm_term`, `utm_content`) and its path; only those keys are kept, as short plain text, on the submission. The deal's origin becomes `google / cpc / black-friday` (or *Form: name* when the page had no UTM). No change to the pasted snippet is needed.
+* **Manual:** whatever you type.
+
+**Pipeline → Lead sources** shows, for deals created in the last 30 / 90 days / 12 months, per origin: created, open, won, lost, **win rate**, **value won** and **average days to win**, best revenue first, with totals; deals without origin are grouped as *Not informed*. The origin also shows on each Kanban card.
 
 ## 📄 Proposals (quotes)
 

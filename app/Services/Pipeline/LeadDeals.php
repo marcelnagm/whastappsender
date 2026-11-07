@@ -45,7 +45,7 @@ class LeadDeals
     }
 
     /** A form arrived. $chat is where it landed (null when it was only stored). */
-    public function fromForm(User $owner, ?Contact $contact, ?Chat $chat, string $title): ?Deal
+    public function fromForm(User $owner, ?Contact $contact, ?Chat $chat, string $title, ?string $origin = null): ?Deal
     {
         if (!$owner->deal_auto_form || (!$contact && !$chat)) {
             return null;
@@ -55,7 +55,7 @@ class LeadDeals
             return null;
         }
 
-        return $this->create($probe, $owner, 'form', $title ?: null);
+        return $this->create($probe, $owner, 'form', $title ?: null, null, $origin ?: __('Form'));
     }
 
     /** Button in the chat: always allowed, but one open deal per person. */
@@ -64,7 +64,15 @@ class LeadDeals
         return $this->openDealFor($chat) ? null : $this->create($chat, $owner, 'chat', null, $pipeline);
     }
 
-    private function create(Chat $chat, User $owner, string $source, ?string $title = null, ?Pipeline $pipeline = null): Deal
+    /** "google / cpc / black-friday" from the UTMs of the page, else the form's name. */
+    public static function originFromForm(string $formName, array $utm): string
+    {
+        $parts = array_filter([$utm['utm_source'] ?? null, $utm['utm_medium'] ?? null, $utm['utm_campaign'] ?? null]);
+
+        return mb_substr($parts ? implode(' / ', $parts) : __('Form') . ': ' . $formName, 0, 80);
+    }
+
+    private function create(Chat $chat, User $owner, string $source, ?string $title = null, ?Pipeline $pipeline = null, ?string $origin = null): Deal
     {
         $chat->loadMissing('contact');
         $pipeline ??= $this->funnel->defaultFor($owner);
@@ -75,6 +83,7 @@ class LeadDeals
             'chat_id' => $chat->exists ? $chat->id : null,
             'assigned_to' => $chat->assigned_to,
             'source' => $source,
+            'origin' => $origin ?? ($chat->exists ? $chat->instance?->channelLabel() : null),
         ]);
     }
 }

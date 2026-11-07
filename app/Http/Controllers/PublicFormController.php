@@ -84,12 +84,29 @@ class PublicFormController extends Controller
             'ip' => $request->ip(),
             'status' => 'pending',
             'consent_text' => $form->consent_text,
+            'utm' => $this->utm($request->input('_utm')),
         ]);
         $form->increment('submissions_count');
 
         ProcessContactFormSubmissionJob::dispatch($s->id)->onQueue('default');
 
         return response()->json($ok);
+    }
+
+    /** Only the known UTM keys, as short plain strings */
+    private function utm(mixed $in): ?array
+    {
+        if (!is_array($in)) {
+            return null;
+        }
+        $out = [];
+        foreach (['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'page'] as $k) {
+            if (isset($in[$k]) && is_scalar($in[$k]) && trim((string) $in[$k]) !== '') {
+                $out[$k] = Str::limit(strip_tags(trim((string) $in[$k])), 120, '');
+            }
+        }
+
+        return $out ?: null;
     }
 
     private function find(string $key): ContactForm

@@ -67,7 +67,7 @@ class FormSubmissionProcessor
         }
 
         try {
-            app(\App\Services\Pipeline\LeadDeals::class)->fromForm($user, $contact, $chat, '📝 ' . $form->name . ($name ? ' — ' . $name : ''));
+            app(\App\Services\Pipeline\LeadDeals::class)->fromForm($user, $contact, $chat, '📝 ' . $form->name . ($name ? ' — ' . $name : ''), \App\Services\Pipeline\LeadDeals::originFromForm($form->name, (array) $s->utm));
         } catch (\Throwable $e) {
             Log::warning('Deal not opened for a form submission: ' . $e->getMessage());
         }
