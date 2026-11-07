@@ -1619,5 +1619,8 @@
     "Open deals": "Negocios abiertos",
     "Remove this company? Contacts stay.": "¿Eliminar esta empresa? Los contactos permanecen.",
     "Search": "Buscar",
-    "Website / domain": "Sitio / dominio"
+    "Website / domain": "Sitio / dominio",
+    "Mention": "Mención",
+    ":name mentioned you in :chat: :text": ":name te mencionó en :chat: :text",
+    "Only your team sees this. Use @name to notify a colleague.": "Solo tu equipo ve esto. Usa @nombre para avisar a un colega."
 }

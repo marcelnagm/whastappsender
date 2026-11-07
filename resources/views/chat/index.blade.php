@@ -295,7 +295,7 @@
         createDeal: @json(__('Create deal')),
         dealCreated: @json(__('Deal created.')),
         notesTitle: @json(__('Internal notes')),
-        notePlaceholder: @json(__('Only your team sees this')),
+        notePlaceholder: @json(__('Only your team sees this. Use @name to notify a colleague.')),
         addNote: @json(__('Add note')),
         confirmNote: @json(__('Delete this note?')),
         settingsTitle: @json(__('Inbox settings')),
@@ -309,6 +309,6 @@
         autoDealForm: @json(__('Open a deal when a contact form arrives')),
     };
 </script>
-<script src="{{ url('assets/js/chat.js') }}?v=8"></script>
+<script src="{{ url('assets/js/chat.js') }}?v=9"></script>
 @endif
 @endsection

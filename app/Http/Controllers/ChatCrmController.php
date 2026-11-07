@@ -131,6 +131,8 @@ class ChatCrmController extends Controller
         $data = $request->validate(['body' => 'required|string|max:4000']);
         $note = ChatNote::create(['user_id' => Auth::id(), 'chat_id' => $chat->id, 'author_id' => TeamContext::actor($request)->id, 'body' => trim($data['body'])]);
 
+        app(\App\Services\Chat\Mentions::class)->notify($note, $chat, Auth::user());
+
         return response()->json(['id' => $note->id]);
     }
 

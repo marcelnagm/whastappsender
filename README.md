@@ -42,6 +42,7 @@
 | [Proposals](#-proposals-quotes) | Quote built from a deal's items, public link with online accept / decline, notices and automation triggers, print / save as PDF |
 | [Lead sources](#-lead-sources) | Where each deal came from (channel, form + UTM campaign, or typed) and the funnel result per source: created, won, win rate, value, days to win |
 | [Duplicate contacts](#-duplicate-contacts) | Finds people registered twice (same e-mail or phone written differently) and merges them keeping conversations, deals, tasks and consent proof |
+| [Mentions](#-mentions-in-notes) | `@name` in an internal note notifies that colleague |
 | [Companies](#-companies) | B2B accounts that group contacts and deals, with funnel and won value |
 | [Contact timeline](#-contact-timeline) | One history per person: messages, notes, deals, proposals, tasks, consent and surveys |
 | [Outbound webhooks](#-outbound-webhooks) | Push CRM events to Zapier, n8n or Make, signed with HMAC and retried |
@@ -981,6 +982,10 @@ Bulk messaging needs permission: Meta's policies and Brazil's LGPD expect you to
 * Not included yet: a confirmation message to the customer after `#sair`, and an unsubscribe footer appended to campaign texts.
 
 * * *
+
+## 🔔 Mentions in notes
+
+In a conversation's **Internal notes**, write `@maria` (first name) or `@maria-souza` (full name, needed when two people share a first name) and that team member gets an in-app notification linking to the conversation. The author is never notified and unknown handles are ignored.
 
 ## 🏢 Companies
 
