@@ -1467,5 +1467,21 @@
     "No deals in this period.": "Nenhum negócio neste período.",
     "Not informed": "Não informada",
     "Origin": "Origem",
-    "Where the lead came from": "De onde o lead veio"
+    "Where the lead came from": "De onde o lead veio",
+    "A WhatsApp contact and a channel contact are linked, not merged.": "Um contato do WhatsApp e um contato de canal são vinculados, não mesclados.",
+    "Choose two different contacts.": "Escolha dois contatos diferentes.",
+    "Duplicate contacts": "Contatos duplicados",
+    "Duplicates": "Duplicados",
+    "Marked as different people.": "Marcados como pessoas diferentes.",
+    "Merge into the selected one": "Mesclar no selecionado",
+    "Merge these contacts? This cannot be undone.": "Mesclar estes contatos? Isso não pode ser desfeito.",
+    "No duplicates found.": "Nenhum duplicado encontrado.",
+    "People registered more than once: same e-mail, or the same phone written differently (country code, extra 9). Choose the record that stays: conversations, deals, tasks and consent proof of the others move to it, and empty fields are filled. An opt-out always survives.": "Pessoas cadastradas mais de uma vez: mesmo e-mail, ou o mesmo telefone escrito de formas diferentes (código do país, 9 extra). Escolha o registro que fica: conversas, negócios, tarefas e prova de consentimento dos outros passam para ele, e campos vazios são preenchidos. Um opt-out sempre permanece.",
+    "Same e-mail": "Mesmo e-mail",
+    "Same e-mail and phone": "Mesmo e-mail e telefone",
+    "Same phone": "Mesmo telefone",
+    "They are different people": "São pessoas diferentes",
+    "chats": "conversas",
+    "deals": "negócios",
+    ":n contact merged.|:n contacts merged.": ":n contato mesclado.|:n contatos mesclados."
 }

@@ -41,6 +41,7 @@
 | [Products & deal items](#-products--deal-items) | Product catalog and the items of each deal: quantity, price, discount; the deal value becomes the total of its items |
 | [Proposals](#-proposals-quotes) | Quote built from a deal's items, public link with online accept / decline, notices and automation triggers, print / save as PDF |
 | [Lead sources](#-lead-sources) | Where each deal came from (channel, form + UTM campaign, or typed) and the funnel result per source: created, won, win rate, value, days to win |
+| [Duplicate contacts](#-duplicate-contacts) | Finds people registered twice (same e-mail or phone written differently) and merges them keeping conversations, deals, tasks and consent proof |
 | [Quick replies](#-quick-replies) | Canned answers shared by the team: type `/shortcut` in the chat, with variables like the customer's name |
 | [Team & roles](#-team--roles-sub-users) | Sub-users working for the contract account (admin, approver, creator, sender, attendant, analyst) |
 | [Audience & approval](#-audience--approval-of-campaigns) | Choose the audience by score and channels; approval flow before sending |
@@ -973,6 +974,15 @@ Bulk messaging needs permission: Meta's policies and Brazil's LGPD expect you to
 * Not included yet: a confirmation message to the customer after `#sair`, and an unsubscribe footer appended to campaign texts.
 
 * * *
+
+## 🧬 Duplicate contacts
+
+**Contacts → the ⧉ button** (administrator / campaign creator / owner) lists people registered more than once:
+
+* **How they are found:** the same e-mail (case and spaces ignored) or the same phone written differently: punctuation, with / without country code `55`, with / without the extra 9 of mobile numbers. Channel contacts (`tg:`, `ig:`...) are never compared as phones. A person found by both e-mail and phone is a single group.
+* **Merge:** pick the record that stays and merge the others into it. **Conversations, deals, tasks, campaign jobs, form submissions, AI sessions and consent proof move to it**; contacts linked from other channels now point at it; empty fields are filled (a number used as name is replaced by a real name, e-mail, higher automatic score, custom fields where the kept one is empty). **An opt-out always survives** (if either record opted out, the result is opted out), otherwise any recorded opt-in is kept. A WhatsApp contact and a channel contact are *linked*, never merged.
+* **They are different people:** hides that group from the suggestions.
+* Every merge keeps a snapshot of the removed record in `contact_merges` for audit; merging is final. Only contacts of your own account are touched.
 
 ## 🧭 Lead sources
 

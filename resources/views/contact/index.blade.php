@@ -48,6 +48,7 @@
                             <i class="bi bi-search"></i>
                         </button>
                     </form>
+                    <a href="{{ route('contacts.duplicates') }}" class="btn btn-outline-secondary btn-sm" title="{{ __('Duplicates') }}"><i class="bi bi-intersect"></i></a>
                     <a href="{{ route('contacts.create') }}" class="btn btn-success btn-sm fw-bold px-3 shadow-sm">
                         <i class="bi bi-plus-lg"></i> {{ __('NEW') }}
                     </a>
