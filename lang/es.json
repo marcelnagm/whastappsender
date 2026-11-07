@@ -1483,5 +1483,18 @@
     "They are different people": "Son personas distintas",
     "chats": "conversaciones",
     "deals": "negocios",
-    ":n contact merged.|:n contacts merged.": ":n contacto fusionado.|:n contactos fusionados."
+    ":n contact merged.|:n contacts merged.": ":n contacto fusionado.|:n contactos fusionados.",
+    "Cancel if the customer replies first": "Cancelar si el cliente responde antes",
+    "Cancel this message": "Cancelar este mensaje",
+    "Canceled by a person": "Cancelado por una persona",
+    "Choose a time at least one minute from now.": "Elige una hora con al menos un minuto de antelación.",
+    "Choose a time within :n days.": "Elige una hora dentro de :n días.",
+    "Limit of :n scheduled messages reached.": "Límite de :n mensajes programados alcanzado.",
+    "Message scheduled.": "Mensaje programado.",
+    "Message to send later": "Mensaje para enviar después",
+    "Schedule": "Programar",
+    "Scheduled messages": "Mensajes programados",
+    "The conversation no longer exists.": "La conversación ya no existe.",
+    "The customer replied first.": "El cliente respondió antes.",
+    "Type the message and choose a time.": "Escribe el mensaje y elige la hora."
 }

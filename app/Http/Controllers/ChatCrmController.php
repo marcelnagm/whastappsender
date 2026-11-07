@@ -40,6 +40,7 @@ class ChatCrmController extends Controller
                 'id' => $n->id, 'body' => $n->body, 'author' => optional($n->author)->name ?: __('Team'), 'at' => $n->created_at->toIso8601String(),
                 'mine' => (int) $n->author_id === (int) $me->id,
             ])->values(),
+            'scheduled' => ScheduledMessagesController::list($chat),
             'can_deals' => $canDeals,
             'deal' => $deal && $canDeals ? ['id' => $deal->id, 'title' => $deal->title, 'stage' => optional($deal->stage)->name, 'url' => route('pipeline.index', ['pipeline' => $deal->pipeline_id])] : null,
             'pipelines' => $canDeals ? Pipeline::where('user_id', $owner->id)->orderBy('id')->get(['id', 'name']) : [],

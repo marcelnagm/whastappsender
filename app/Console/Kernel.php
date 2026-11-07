@@ -49,6 +49,9 @@ class Kernel extends ConsoleKernel
         // Mailboxes (IMAP) of the e-mail channel: import new messages, answer with the AI
         $schedule->command('email:fetch')->cron(config('email.fetch_cron', '* * * * *'))->withoutOverlapping()->onOneServer();
 
+        // Chat messages scheduled for a time
+        $schedule->command('chat:send-scheduled')->everyMinute()->withoutOverlapping()->onOneServer();
+
         // Follow-up tasks that fell due: notify whoever is responsible
         $schedule->command('tasks:remind')->everyMinute()->withoutOverlapping()->onOneServer();
 

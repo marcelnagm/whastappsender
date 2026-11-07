@@ -42,6 +42,7 @@
 | [Proposals](#-proposals-quotes) | Quote built from a deal's items, public link with online accept / decline, notices and automation triggers, print / save as PDF |
 | [Lead sources](#-lead-sources) | Where each deal came from (channel, form + UTM campaign, or typed) and the funnel result per source: created, won, win rate, value, days to win |
 | [Duplicate contacts](#-duplicate-contacts) | Finds people registered twice (same e-mail or phone written differently) and merges them keeping conversations, deals, tasks and consent proof |
+| [Scheduled messages](#-scheduled-messages) | Type now, send later from the chat: at a chosen time, in your name, cancelled if the customer answers first |
 | [Quick replies](#-quick-replies) | Canned answers shared by the team: type `/shortcut` in the chat, with variables like the customer's name |
 | [Team & roles](#-team--roles-sub-users) | Sub-users working for the contract account (admin, approver, creator, sender, attendant, analyst) |
 | [Audience & approval](#-audience--approval-of-campaigns) | Choose the audience by score and channels; approval flow before sending |
@@ -975,6 +976,15 @@ Bulk messaging needs permission: Meta's policies and Brazil's LGPD expect you to
 
 * * *
 
+## ⏰ Scheduled messages
+
+In the chat's right panel, **Scheduled messages**: type the text, pick date and time and press **Schedule**. The list shows what is waiting (cancel with ×).
+
+* **Sent in your name** at the chosen time (with your signature, shown as sent by you, and pausing the AI agent on that conversation just like a message typed by hand). Up to 100 pending per account, from one minute up to 90 days ahead, text only.
+* **Cancel if the customer replies first** (on by default): a follow-up nudge is not sent to someone who already answered; it is marked *canceled* with the reason.
+* **Safe failures:** if the conversation is gone or the channel's reply window is closed at that moment (Instagram / Facebook / TikTok), the message is marked *failed* with the reason instead of being sent.
+* Needs the scheduler: `chat:send-scheduled` runs every minute (see the upgrade checklist). Visibility follows the chat: an attendant restricted to his own conversations cannot schedule on someone else's.
+
 ## 🧬 Duplicate contacts
 
 **Contacts → the ⧉ button** (administrator / campaign creator / owner) lists people registered more than once:
@@ -1503,7 +1513,7 @@ After `git pull` (or `./install.sh update`, which does the first two steps for y
 
 1. `composer install --no-dev --optimize-autoloader` (new dependency: `webklex/php-imap`, pure PHP: the `imap` extension is **not** needed, but `iconv`, `mbstring` and `openssl` are).
 2. `php artisan migrate --force` — creates the tables of the sales pipeline, team inbox (labels, notes, assignment), tasks, consent register, quick replies, custom fields and segments, automations, message authorship and team goals. Nothing changes for existing data: every feature is opt-in (for instance campaigns only require consent after you switch it on in **Consent**).
-3. Make sure the **scheduler** runs (`* * * * * php artisan schedule:run`, already set up by `install.sh vps` and the Docker stack): it sends the follow-up reminders (`tasks:remind`, every minute) and fetches the mailboxes (`email:fetch`).
+3. Make sure the **scheduler** runs (`* * * * * php artisan schedule:run`, already set up by `install.sh vps` and the Docker stack): it sends the follow-up reminders (`tasks:remind`) and the scheduled chat messages (`chat:send-scheduled`), both every minute, and fetches the mailboxes (`email:fetch`).
 4. `php artisan billing:sync-plans --force` if you use plans and billing, so the plan limits are refreshed.
 5. Optional `.env`: `DEAL_NEW_AFTER_DAYS` (silence after which a returning customer counts as a new lead, default 30) and `CONSENT_OPTIN_KEYWORDS` (see [Environment variables](#-environment-variables)).
 6. Restart the queue workers (`php artisan queue:restart`; the VPS script does it).

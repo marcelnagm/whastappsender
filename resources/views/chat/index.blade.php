@@ -266,6 +266,13 @@
         followPlaceholder: @json(__('What to do (e.g. call back)')),
         followAdd: @json(__('Add follow-up')),
         followSaved: @json(__('Task created.')),
+        schedTitle: @json(__('Scheduled messages')),
+        schedPlaceholder: @json(__('Message to send later')),
+        schedCancelOnReply: @json(__('Cancel if the customer replies first')),
+        schedAdd: @json(__('Schedule')),
+        schedSaved: @json(__('Message scheduled.')),
+        schedMissing: @json(__('Type the message and choose a time.')),
+        schedCancel: @json(__('Cancel this message')),
         markDone: @json(__('Mark as done')),
         unassigned: @json(__('Unassigned')),
         assignedTo: @json(__('Handled by')),
@@ -293,6 +300,6 @@
         autoDealForm: @json(__('Open a deal when a contact form arrives')),
     };
 </script>
-<script src="{{ url('assets/js/chat.js') }}?v=5"></script>
+<script src="{{ url('assets/js/chat.js') }}?v=6"></script>
 @endif
 @endsection

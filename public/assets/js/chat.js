@@ -1263,6 +1263,28 @@
       host.appendChild(tk);
     }
 
+    // scheduled messages
+    var sch = h('div', 'mb-2');
+    sch.appendChild(h('label', 'form-label small mb-1 d-block', T.schedTitle));
+    (d.scheduled || []).forEach(function (m) {
+      var row = h('div', 'wa-task');
+      var x = h('button', 'wa-tagx', '×'); x.type = 'button'; x.title = T.schedCancel;
+      x.addEventListener('click', async function () { try { await api(cfg.chatBase + '/' + chat.id + '/scheduled/' + m.id, { method: 'DELETE' }); again(); } catch (e) { toast(e.message); } });
+      row.appendChild(x);
+      row.appendChild(h('span', 'small', ' ' + m.at + ' · ' + m.body));
+      sch.appendChild(row);
+    });
+    var sb = h('textarea', 'form-control form-control-sm mt-1'); sb.rows = 2; sb.maxLength = 4096; sb.placeholder = T.schedPlaceholder;
+    var sd = h('input', 'form-control form-control-sm mt-1'); sd.type = 'datetime-local';
+    var sc = h('label', 'small d-block mt-1'); var sck = h('input'); sck.type = 'checkbox'; sck.checked = true; sc.appendChild(sck); sc.appendChild(document.createTextNode(' ' + T.schedCancelOnReply));
+    var sa = h('button', 'btn btn-sm btn-outline-secondary mt-1', T.schedAdd); sa.type = 'button';
+    sa.addEventListener('click', async function () {
+      if (!sb.value.trim() || !sd.value) { toast(T.schedMissing); return; }
+      try { await api(cfg.chatBase + '/' + chat.id + '/scheduled', { method: 'POST', body: { body: sb.value, send_at: sd.value, cancel_on_reply: sck.checked } }); toast(T.schedSaved); again(); } catch (e) { toast(e.message); }
+    });
+    sch.appendChild(sb); sch.appendChild(sd); sch.appendChild(sc); sch.appendChild(sa);
+    host.appendChild(sch);
+
     // internal notes
     var notes = h('div', 'mb-2');
     notes.appendChild(h('label', 'form-label small mb-1 d-block', T.notesTitle));

@@ -71,6 +71,8 @@ Route::middleware(['auth', 'subscription.writable', 'plan.feature:chat'])->prefi
 
         Route::get('/chats/{chat}/messages', [$chat, 'messages'])->name('messages');
         Route::post('/chats/{chat}/send', [$chat, 'send'])->name('send');
+        Route::post('/chats/{chat}/scheduled', [\App\Http\Controllers\ScheduledMessagesController::class, 'store'])->name('scheduled.store');
+        Route::delete('/chats/{chat}/scheduled/{scheduled}', [\App\Http\Controllers\ScheduledMessagesController::class, 'destroy'])->whereNumber('scheduled')->name('scheduled.destroy');
         Route::post('/chats/{chat}/read', [$chat, 'markRead'])->name('read');
         Route::post('/chats/{chat}/presence', [$chat, 'presence'])->name('presence');
         Route::get('/chats/{chat}/contact', [$chat, 'contactInfo'])->name('contact');
