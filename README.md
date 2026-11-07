@@ -42,6 +42,7 @@
 | [Proposals](#-proposals-quotes) | Quote built from a deal's items, public link with online accept / decline, notices and automation triggers, print / save as PDF |
 | [Lead sources](#-lead-sources) | Where each deal came from (channel, form + UTM campaign, or typed) and the funnel result per source: created, won, win rate, value, days to win |
 | [Duplicate contacts](#-duplicate-contacts) | Finds people registered twice (same e-mail or phone written differently) and merges them keeping conversations, deals, tasks and consent proof |
+| [Knowledge base](#-knowledge-base) | Reusable answers found from the chat with `?word` |
 | [Bulk contact actions](#-bulk-contact-actions) | Select contacts and set their company or mark them as opted out in one go |
 | [Recurring tasks](#-recurring-tasks) | Tasks that repeat daily, weekly or monthly: completing one creates the next |
 | [Stalled deals](#-stalled-deals) | Daily warning about open deals without activity; `deal.stale` automation trigger |
@@ -985,6 +986,10 @@ Bulk messaging needs permission: Meta's policies and Brazil's LGPD expect you to
 * Not included yet: a confirmation message to the customer after `#sair`, and an unsubscribe footer appended to campaign texts.
 
 * * *
+
+## 📖 Knowledge base
+
+**Knowledge base** (menu, automations permission): write articles (title, text, extra keywords) your team reuses. Everybody with chat access types `?` followed by words at the start of the message box (for example `?delivery time`); matching articles appear (all words must match title, text or keywords, most used first) and Tab/Enter/click puts the text in the message to edit and send. It works like the `/` quick replies, for longer answers.
 
 ## ☑️ Bulk contact actions
 

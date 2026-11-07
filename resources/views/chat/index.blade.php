@@ -30,6 +30,7 @@
      data-url-api-base="{{ url('chat/api') }}"
      data-url-tasks="{{ url('tasks') }}"
      data-url-replies="{{ url('replies') }}"
+     data-url-kb="{{ url('kb') }}"
      data-url-message-base="{{ url('chat/api/messages') }}"
      data-url-index="{{ route('chat.index') }}">
 
@@ -309,6 +310,6 @@
         autoDealForm: @json(__('Open a deal when a contact form arrives')),
     };
 </script>
-<script src="{{ url('assets/js/chat.js') }}?v=9"></script>
+<script src="{{ url('assets/js/chat.js') }}?v=10"></script>
 @endif
 @endsection

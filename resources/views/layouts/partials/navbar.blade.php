@@ -131,6 +131,9 @@
           <a href="{{ route('automations.index') }}" class="nav-link {{ request()->is('automations*') ? 'active text-secondary' : 'text-white' }}"><i class="bi bi-diagram-3 me-1"></i> {{ __('Automations') }}</a>
         </li>
         <li class="nav-item">
+          <a href="{{ route('kb.index') }}" class="nav-link {{ request()->is('kb*') ? 'active text-secondary' : 'text-white' }}"><i class="bi bi-book me-1"></i> {{ __('Knowledge base') }}</a>
+        </li>
+        <li class="nav-item">
           <a href="{{ route('sequences.index') }}" class="nav-link {{ request()->is('sequences*') ? 'active text-secondary' : 'text-white' }}"><i class="bi bi-arrow-repeat me-1"></i> {{ __('Follow-up sequences') }}</a>
         </li>
         @endteamcan

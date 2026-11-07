@@ -1646,5 +1646,14 @@
     "Choose a company of your account.": "Escolha uma empresa da sua conta.",
     "Mark as opted out": "Marcar como descadastrado",
     "Mark the selected contacts as opted out?": "Marcar os contatos selecionados como descadastrados?",
-    "none": "nenhuma"
+    "none": "nenhuma",
+    "Answers your team reuses. In the chat, type ? followed by a word (for example ?delivery) to find and insert one.": "Respostas que sua equipe reutiliza. No chat, digite ? seguido de uma palavra (por exemplo ?entrega) para encontrar e inserir uma.",
+    "Article removed.": "Artigo removido.",
+    "Article saved.": "Artigo salvo.",
+    "Extra keywords": "Palavras-chave extras",
+    "Knowledge base": "Base de conhecimento",
+    "New article title": "Título do novo artigo",
+    "Remove this article?": "Remover este artigo?",
+    "Text sent to the customer": "Texto enviado ao cliente",
+    "uses": "usos"
 }

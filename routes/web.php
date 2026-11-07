@@ -233,6 +233,17 @@ Route::group(['namespace' => 'App\Http\Controllers', 'middleware' => ['auth', 's
         Route::delete('/{proposal}', [$pr, 'destroy'])->whereNumber('proposal')->name('destroy');
     });
 
+    // Knowledge base (articles found with "?term" in the chat)
+    Route::prefix('kb')->name('kb.')->group(function () {
+        $kb = \App\Http\Controllers\KbController::class;
+        Route::get('/', [$kb, 'index'])->name('index');
+        Route::get('/search', [$kb, 'search'])->name('search');
+        Route::post('/', [$kb, 'store'])->name('store');
+        Route::put('/{article}', [$kb, 'update'])->whereNumber('article')->name('update');
+        Route::post('/{article}/used', [$kb, 'used'])->whereNumber('article')->name('used');
+        Route::delete('/{article}', [$kb, 'destroy'])->whereNumber('article')->name('destroy');
+    });
+
     // Quick replies (canned answers typed with "/")
     Route::prefix('replies')->name('replies.')->group(function () {
         $qr = \App\Http\Controllers\QuickRepliesController::class;

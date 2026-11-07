@@ -31,6 +31,7 @@
     apiBase: D.urlApiBase,
     tasksBase: D.urlTasks,
     repliesBase: D.urlReplies,
+    kbBase: D.urlKb,
     messageBase: D.urlMessageBase,
     urlIndex: D.urlIndex
   };
@@ -1658,14 +1659,14 @@
   function qrPick(item) {
     qrClose();
     el.input.value = item.text; autosize(); syncButtons(); el.input.focus();
-    api(cfg.repliesBase + '/' + item.id + '/used', { method: 'POST' }).catch(function () { /* cosmetic */ });
+    api((item.kb ? cfg.kbBase : cfg.repliesBase) + '/' + item.id + '/used', { method: 'POST' }).catch(function () { /* cosmetic */ });
   }
   function qrPaint() {
     if (!qr.box) { qr.box = h('div', 'wa-qr'); el.input.closest('.wa-composer').appendChild(qr.box); }
     qr.box.replaceChildren();
     qr.items.forEach(function (it, i) {
       var row = h('div', 'wa-qr-item' + (i === qr.idx ? ' active' : ''));
-      row.appendChild(h('code', null, '/' + it.shortcut));
+      row.appendChild(h('code', null, it.kb ? '?' : '/' + it.shortcut));
       row.appendChild(h('strong', null, ' ' + it.title));
       row.appendChild(h('div', 'wa-qr-text', it.text));
       row.addEventListener('mousedown', function (ev) { ev.preventDefault(); qrPick(it); });
@@ -1673,13 +1674,14 @@
     });
   }
   function qrSearch() {
-    var m = /^\/([^\s]*)$/.exec(el.input.value);
-    if (!m || !S.active || !cfg.repliesBase) { qrClose(); return; }
+    var kbMode = /^\?/.test(el.input.value);
+    var m = kbMode ? /^\?(.*)$/.exec(el.input.value) : /^\/([^\s]*)$/.exec(el.input.value);
+    if (!m || !S.active || !(kbMode ? cfg.kbBase : cfg.repliesBase)) { qrClose(); return; }
     clearTimeout(qr.timer);
     qr.timer = setTimeout(async function () {
       try {
-        var d = await api(cfg.repliesBase + '/search?chat=' + S.active.id + '&q=' + encodeURIComponent(m[1]));
-        if (!/^\/([^\s]*)$/.test(el.input.value)) return;
+        var d = await api(kbMode ? cfg.kbBase + '/search?q=' + encodeURIComponent(m[1].trim()) : cfg.repliesBase + '/search?chat=' + S.active.id + '&q=' + encodeURIComponent(m[1]));
+        if (!(kbMode ? /^\?/ : /^\/([^\s]*)$/).test(el.input.value)) return;
         qr.items = d.items || []; qr.idx = 0;
         if (qr.items.length) qrPaint(); else qrClose();
       } catch (e) { qrClose(); }
