@@ -1622,5 +1622,17 @@
     "Website / domain": "Sitio / dominio",
     "Mention": "Mención",
     ":name mentioned you in :chat: :text": ":name te mencionó en :chat: :text",
-    "Only your team sees this. Use @name to notify a colleague.": "Solo tu equipo ve esto. Usa @nombre para avisar a un colega."
+    "Only your team sees this. Use @name to notify a colleague.": "Solo tu equipo ve esto. Usa @nombre para avisar a un colega.",
+    "A deal is stalled": "Un negocio está parado",
+    "Deal stalled for :n days: :title": "Negocio parado hace :n días: :title",
+    "Funnel": "Embudo",
+    "Idle": "Parado",
+    "No stalled deals.": "Ningún negocio parado.",
+    "Notify about stalled deals": "Avisar sobre negocios parados",
+    "Open deals without changes or messages for some days. The person in charge is notified once per stalled period.": "Negocios abiertos sin cambios ni mensajes desde hace días. El responsable recibe un aviso una vez por periodo parado.",
+    "Stage": "Etapa",
+    "Stalled": "Parados",
+    "Stalled after": "Parado después de",
+    "Stalled deals": "Negocios parados",
+    "days": "días"
 }

@@ -13,7 +13,7 @@ class OutboundWebhooks
 {
     public const EVENTS = [
         'message.received', 'deal.created', 'deal.stage', 'deal.won', 'deal.lost', 'tag.added',
-        'proposal.accepted', 'proposal.declined', 'conversation.closed', 'survey.answered',
+        'proposal.accepted', 'proposal.declined', 'deal.stale', 'conversation.closed', 'survey.answered',
     ];
     public const MAX_HOOKS = 10;
     public const DISABLE_AFTER = 15;

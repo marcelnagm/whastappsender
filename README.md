@@ -42,6 +42,7 @@
 | [Proposals](#-proposals-quotes) | Quote built from a deal's items, public link with online accept / decline, notices and automation triggers, print / save as PDF |
 | [Lead sources](#-lead-sources) | Where each deal came from (channel, form + UTM campaign, or typed) and the funnel result per source: created, won, win rate, value, days to win |
 | [Duplicate contacts](#-duplicate-contacts) | Finds people registered twice (same e-mail or phone written differently) and merges them keeping conversations, deals, tasks and consent proof |
+| [Stalled deals](#-stalled-deals) | Daily warning about open deals without activity; `deal.stale` automation trigger |
 | [Mentions](#-mentions-in-notes) | `@name` in an internal note notifies that colleague |
 | [Companies](#-companies) | B2B accounts that group contacts and deals, with funnel and won value |
 | [Contact timeline](#-contact-timeline) | One history per person: messages, notes, deals, proposals, tasks, consent and surveys |
@@ -982,6 +983,10 @@ Bulk messaging needs permission: Meta's policies and Brazil's LGPD expect you to
 * Not included yet: a confirmation message to the customer after `#sair`, and an unsubscribe footer appended to campaign texts.
 
 * * *
+
+## ⌛ Stalled deals
+
+In the funnel, **Stalled** lists open deals with no change and no message on their conversation for N days. Turn on **Notify about stalled deals** and the person in charge (or the owner) gets one notification per stalled period (`php artisan deals:stale`, daily at 09:00 from the scheduler). Also available as the automation trigger **A deal is stalled** (`deal.stale`) and as an outbound webhook event.
 
 ## 🔔 Mentions in notes
 

@@ -45,6 +45,23 @@ class PipelineController extends Controller
     }
 
     /** Open deals ranked by chance to close, each with what to do next. */
+    public function stale(Request $request)
+    {
+        $owner = $request->user();
+        $cfg = \App\Models\StaleDealSetting::for($owner->id);
+        $rows = app(\App\Services\Pipeline\StaleDeals::class)->stale($owner->id, max(1, $cfg->days));
+
+        return view('pipeline.stale', compact('cfg', 'rows'));
+    }
+
+    public function staleSettings(Request $request)
+    {
+        $data = $request->validate(['days' => 'required|integer|min:1|max:365']);
+        \App\Models\StaleDealSetting::updateOrCreate(['user_id' => $request->user()->id], ['enabled' => $request->boolean('enabled'), 'days' => $data['days']]);
+
+        return back()->with('success', __('Saved.'));
+    }
+
     public function priorities(Request $request)
     {
         $owner = $request->user();
