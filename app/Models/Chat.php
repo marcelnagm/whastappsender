@@ -29,6 +29,8 @@ class Chat extends Model
         'email_refs',
         'assigned_to',
         'assigned_at',
+        'closed_at',
+        'closed_by',
     ];
 
     protected $casts = [
@@ -39,6 +41,7 @@ class Chat extends Model
         'avatar_checked_at' => 'datetime',
         'avatar_next_check_at' => 'datetime',
         'assigned_at' => 'datetime',
+        'closed_at' => 'datetime',
         'greeted_at' => 'datetime',
         'away_sent_at' => 'datetime',
     ];

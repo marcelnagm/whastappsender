@@ -180,6 +180,7 @@ trait CreatesTestSchema
             '2026_11_06_180000_create_duplicate_tools.php',
             '2026_11_07_100000_create_scheduled_messages_table.php',
             '2026_11_07_120000_create_sla_tables.php',
+            '2026_11_07_140000_create_csat_tables.php',
             '2026_11_05_160000_add_message_sender_and_team_goals.php',
         ] as $file) {
             (require database_path('migrations/' . $file))->up();

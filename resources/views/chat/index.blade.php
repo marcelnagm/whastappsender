@@ -277,6 +277,9 @@
         unassigned: @json(__('Unassigned')),
         assignedTo: @json(__('Handled by')),
         assignToMe: @json(__('Assign to me')),
+        closeChat: @json(__('Close conversation')),
+        reopenChat: @json(__('Reopen conversation')),
+        closedSurvey: @json(__('Conversation closed. Survey sent.')),
         saved: @json(__('Saved.')),
         tagsTitle: @json(__('Labels')),
         addTag: @json(__('Add a label…')),
@@ -300,6 +303,6 @@
         autoDealForm: @json(__('Open a deal when a contact form arrives')),
     };
 </script>
-<script src="{{ url('assets/js/chat.js') }}?v=6"></script>
+<script src="{{ url('assets/js/chat.js') }}?v=7"></script>
 @endif
 @endsection

@@ -88,6 +88,8 @@ Route::middleware(['auth', 'subscription.writable', 'plan.feature:chat'])->prefi
         $crm = \App\Http\Controllers\ChatCrmController::class;
         Route::get('/chats/{chat}/crm', [$crm, 'show'])->name('crm');
         Route::post('/chats/{chat}/assign', [$crm, 'assign'])->name('assign');
+        Route::post('/chats/{chat}/close', [$crm, 'close'])->name('close');
+        Route::post('/chats/{chat}/reopen', [$crm, 'reopen'])->name('reopen');
         Route::put('/chats/{chat}/tags', [$crm, 'syncTags'])->name('tags.sync');
         Route::post('/tags', [$crm, 'storeTag'])->name('tags.store');
         Route::delete('/tags/{tag}', [$crm, 'destroyTag'])->name('tags.destroy');
@@ -279,6 +281,10 @@ Route::group(['namespace' => 'App\Http\Controllers', 'middleware' => ['auth', 's
     // Opening hours + automatic greeting / away message
     Route::get('hours', [\App\Http\Controllers\ServiceHoursController::class, 'edit'])->name('hours.edit');
     Route::put('hours', [\App\Http\Controllers\ServiceHoursController::class, 'update'])->name('hours.update');
+
+    // Satisfaction survey
+    Route::get('csat', [\App\Http\Controllers\CsatController::class, 'index'])->name('csat.index');
+    Route::put('csat', [\App\Http\Controllers\CsatController::class, 'update'])->name('csat.update');
 
     // First-response SLA
     Route::get('sla', [\App\Http\Controllers\SlaController::class, 'index'])->name('sla.index');

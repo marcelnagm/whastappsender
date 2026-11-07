@@ -23,6 +23,13 @@ class InboundHooks
             if (!$chat || !$owner) {
                 return;
             }
+            if (app(Csat::class)->capture($chat, $m)) {
+                return;
+            }
+            if ($chat->closed_at) {
+                app(Csat::class)->reopen($chat);
+                $chat = $chat->fresh();
+            }
             app(ChatAssignment::class)->autoAssign($chat, $owner);
             app(AutoMessages::class)->onInbound($chat, $owner, $m);
             $deals = app(LeadDeals::class);

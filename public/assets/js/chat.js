@@ -1194,6 +1194,13 @@
     mineBtn.addEventListener('click', function () { assign.value = d.me; assign.dispatchEvent(new Event('change')); });
     if (!d.assigned || d.assigned.id !== d.me) host.appendChild(mineBtn);
 
+    // close / reopen (closing may send the satisfaction survey)
+    var closeBtn = h('button', 'btn btn-sm ' + (d.closed ? 'btn-outline-primary' : 'btn-outline-success') + ' mb-2 ms-1', d.closed ? T.reopenChat : T.closeChat); closeBtn.type = 'button';
+    closeBtn.addEventListener('click', async function () {
+      try { var r = await api(cfg.chatBase + '/' + chat.id + (d.closed ? '/reopen' : '/close'), { method: 'POST' }); toast(!d.closed && r.survey ? T.closedSurvey : T.saved); again(); } catch (e) { toast(e.message); }
+    });
+    host.appendChild(closeBtn);
+
     // labels
     var tagWrap = h('div', 'mb-2');
     tagWrap.appendChild(h('label', 'form-label small mb-1 d-block', T.tagsTitle));

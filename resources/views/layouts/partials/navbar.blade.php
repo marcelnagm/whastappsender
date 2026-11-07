@@ -61,6 +61,9 @@
         <li class="nav-item">
           <a href="{{ route('sla.index') }}" class="nav-link {{ request()->is('sla*') ? 'active text-secondary' : 'text-white' }}"><i class="bi bi-stopwatch me-1"></i> {{ __('Response SLA') }}</a>
         </li>
+        <li class="nav-item">
+          <a href="{{ route('csat.index') }}" class="nav-link {{ request()->is('csat*') ? 'active text-secondary' : 'text-white' }}"><i class="bi bi-emoji-smile me-1"></i> {{ __('Satisfaction survey') }}</a>
+        </li>
         @endteamcan
         @teamcan('reports')
         <li class="nav-item">

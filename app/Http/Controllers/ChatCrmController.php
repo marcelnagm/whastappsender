@@ -41,6 +41,7 @@ class ChatCrmController extends Controller
                 'mine' => (int) $n->author_id === (int) $me->id,
             ])->values(),
             'scheduled' => ScheduledMessagesController::list($chat),
+            'closed' => (bool) $chat->closed_at,
             'can_deals' => $canDeals,
             'deal' => $deal && $canDeals ? ['id' => $deal->id, 'title' => $deal->title, 'stage' => optional($deal->stage)->name, 'url' => route('pipeline.index', ['pipeline' => $deal->pipeline_id])] : null,
             'pipelines' => $canDeals ? Pipeline::where('user_id', $owner->id)->orderBy('id')->get(['id', 'name']) : [],
@@ -55,6 +56,22 @@ class ChatCrmController extends Controller
                 'deal_auto_chat' => (bool) $owner->deal_auto_chat, 'deal_auto_form' => (bool) $owner->deal_auto_form,
             ] : null,
         ]);
+    }
+
+    public function close(Request $request, Chat $chat): JsonResponse
+    {
+        $this->authorizeChat($chat);
+        $survey = app(\App\Services\Chat\Csat::class)->close($chat, TeamContext::actor($request));
+
+        return response()->json(['closed' => true, 'survey' => (bool) $survey]);
+    }
+
+    public function reopen(Request $request, Chat $chat): JsonResponse
+    {
+        $this->authorizeChat($chat);
+        app(\App\Services\Chat\Csat::class)->reopen($chat);
+
+        return response()->json(['closed' => false]);
     }
 
     public function assign(Request $request, Chat $chat): JsonResponse

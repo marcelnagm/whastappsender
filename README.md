@@ -42,6 +42,7 @@
 | [Proposals](#-proposals-quotes) | Quote built from a deal's items, public link with online accept / decline, notices and automation triggers, print / save as PDF |
 | [Lead sources](#-lead-sources) | Where each deal came from (channel, form + UTM campaign, or typed) and the funnel result per source: created, won, win rate, value, days to win |
 | [Duplicate contacts](#-duplicate-contacts) | Finds people registered twice (same e-mail or phone written differently) and merges them keeping conversations, deals, tasks and consent proof |
+| [Satisfaction survey](#-satisfaction-survey) | Close conversations and ask for a CSAT (1–5) or NPS (0–10) grade; the numeric reply is recorded |
 | [Response SLA](#-response-sla) | Alert and escalation when a customer waits too long for the first answer, counting only opening hours |
 | [Scheduled messages](#-scheduled-messages) | Type now, send later from the chat: at a chosen time, in your name, cancelled if the customer answers first |
 | [Quick replies](#-quick-replies) | Canned answers shared by the team: type `/shortcut` in the chat, with variables like the customer's name |
@@ -976,6 +977,10 @@ Bulk messaging needs permission: Meta's policies and Brazil's LGPD expect you to
 * Not included yet: a confirmation message to the customer after `#sair`, and an unsubscribe footer appended to campaign texts.
 
 * * *
+
+## 😊 Satisfaction survey
+
+In the chat's right panel use **Close conversation** (and **Reopen**). With **Satisfaction survey** (menu, team permission) turned on, closing sends the question to the customer (only if they wrote and the channel's reply window is open) and the next message made only of a number in range (CSAT 1–5 or NPS 0–10) is recorded as the answer, thanked, and does not reopen the chat. Any other message reopens the conversation and the question expires after the configured hours. The page shows answers, response rate, average, % satisfied (CSAT) or NPS, grade per attendant and the latest answers.
 
 ## ⏱️ Response SLA
 
