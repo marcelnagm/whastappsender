@@ -1378,5 +1378,19 @@
     "The customer has not written": "O cliente não escreveu",
     "The customer wrote in the last 3 days": "O cliente escreveu nos últimos 3 dias",
     "The customer wrote in the last day": "O cliente escreveu no último dia",
-    "The customer wrote in the last week": "O cliente escreveu na última semana"
+    "The customer wrote in the last week": "O cliente escreveu na última semana",
+    "Away message (outside opening hours)": "Mensagem de ausência (fora do horário)",
+    "Greeting (first message of a new conversation)": "Boas-vindas (primeira mensagem de uma conversa nova)",
+    "Hello [[first_name]], welcome to [[company]]! An attendant will be with you shortly.": "Olá [[first_name]], bem-vindo(a) à [[company]]! Um atendente falará com você em instantes.",
+    "Hi [[first_name]]! We are closed now. We open [[hours]] and will answer you then.": "Oi [[first_name]]! Estamos fechados agora. Abrimos [[hours]] e responderemos você nesse horário.",
+    "Invalid timezone.": "Fuso horário inválido.",
+    "Not again to the same conversation within": "Não repetir na mesma conversa em menos de",
+    "Opening hours": "Horário de atendimento",
+    "Opening hours saved.": "Horário de atendimento salvo.",
+    "To": "Até",
+    "Type the away message.": "Digite a mensagem de ausência.",
+    "Type the greeting message.": "Digite a mensagem de boas-vindas.",
+    "Variables": "Variáveis",
+    "When your team is available. Outside these hours customers can get an automatic away message; at the first message of a new conversation they can get a greeting. Automatic messages never count as an attendant answering, are not sent to contacts who opted out, and the greeting is skipped when the AI agent is answering.": "Quando sua equipe está disponível. Fora desse horário o cliente pode receber uma mensagem automática de ausência; na primeira mensagem de uma conversa nova, uma saudação. Mensagens automáticas nunca contam como resposta de atendente, não são enviadas a quem pediu para sair e a saudação é pulada quando o agente de IA responde.",
+    "hours": "horas"
 }

@@ -24,6 +24,7 @@ class InboundHooks
                 return;
             }
             app(ChatAssignment::class)->autoAssign($chat, $owner);
+            app(AutoMessages::class)->onInbound($chat, $owner, $m);
             $deals = app(LeadDeals::class);
             $deals->fromInbound($chat->fresh(), $owner, $m);
             if ($m->body) {

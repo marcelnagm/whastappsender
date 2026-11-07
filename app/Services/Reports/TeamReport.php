@@ -58,6 +58,9 @@ class TeamReport
                 $waits[$m->chat_id] ??= $ts;
                 continue;
             }
+            if ($m->source === 'auto') {
+                continue; // away / greeting: the customer is still waiting for a person
+            }
             $who = $m->sent_by ?: (int) ($assigned[$m->chat_id] ?? 0);
             if ($m->source !== 'ai' && $m->source !== 'campaign') {
                 $key = isset($rows[$who]) ? $who : self::UNASSIGNED;

@@ -8,7 +8,8 @@ use Carbon\Carbon;
 /** Is the agent allowed to answer right now? Days/hours/timezone are per agent (= per instance, or all instances). */
 class AiBusinessHours
 {
-    public static function isOpen(?AiProfile $profile = null, ?Carbon $now = null): bool
+    /** @param AiProfile|\App\Models\ServiceHours|null $profile anything with timezone / business_days / business_start / business_end */
+    public static function isOpen(?object $profile = null, ?Carbon $now = null): bool
     {
         $c = config('ai.business_hours');
         $tz = ($profile?->timezone) ?: $c['timezone'];

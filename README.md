@@ -37,6 +37,7 @@
 | [Automations](#-automations) | "When X, do Y" rules: triggers on deals, labels and customer words; actions that create tasks, label, assign, move deals and notify; loop protection and run log |
 | [Team performance](#-team-performance--goals) | First-response time, conversations answered, deals won/lost and follow-ups per person, monthly goals with progress |
 | [Deal forecast](#-deal-forecast--priorities) | Chance to close for every open deal with the reasons behind it, weighted forecast, priority list with the next action, optional written advice from your AI agent |
+| [Opening hours](#-opening-hours-away-message--greeting) | Business hours of the account, automatic away message outside them and greeting on the first message of a new conversation |
 | [Quick replies](#-quick-replies) | Canned answers shared by the team: type `/shortcut` in the chat, with variables like the customer's name |
 | [Team & roles](#-team--roles-sub-users) | Sub-users working for the contract account (admin, approver, creator, sender, attendant, analyst) |
 | [Audience & approval](#-audience--approval-of-campaigns) | Choose the audience by score and channels; approval flow before sending |
@@ -969,6 +970,15 @@ Bulk messaging needs permission: Meta's policies and Brazil's LGPD expect you to
 * Not included yet: a confirmation message to the customer after `#sair`, and an unsubscribe footer appended to campaign texts.
 
 * * *
+
+## 🕘 Opening hours, away message & greeting
+
+Open **Opening hours** in the menu (administrator / owner): timezone, days and hours your team is available.
+
+* **Away message:** a customer who writes outside the hours gets your text once (and not again to the same conversation for N hours, default 8).
+* **Greeting:** the first message of a brand-new conversation, during opening hours, gets your welcome text.
+* **Variables:** `{{name}}`, `{{first_name}}`, `{{company}}`, `{{today}}`, `{{hours}}`; an unknown `{{word}}` is left as typed and a phone number is never used as a name.
+* **Safe by design:** they leave through the channel and number the customer wrote to; they are marked *automatic*, so they never count as an attendant's first response in **Team performance**; they are not sent to contacts who opted out, to groups, or when your own message started the conversation; the greeting is skipped when an AI agent is answering, and the away message is skipped when the agent answers outside hours too (its own *business hours only* switch decides).
 
 ## ⚡ Quick replies
 

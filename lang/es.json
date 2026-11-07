@@ -1378,5 +1378,19 @@
     "The customer has not written": "El cliente no ha escrito",
     "The customer wrote in the last 3 days": "El cliente escribió en los últimos 3 días",
     "The customer wrote in the last day": "El cliente escribió en el último día",
-    "The customer wrote in the last week": "El cliente escribió en la última semana"
+    "The customer wrote in the last week": "El cliente escribió en la última semana",
+    "Away message (outside opening hours)": "Mensaje de ausencia (fuera de horario)",
+    "Greeting (first message of a new conversation)": "Saludo (primer mensaje de una conversación nueva)",
+    "Hello [[first_name]], welcome to [[company]]! An attendant will be with you shortly.": "Hola [[first_name]], ¡bienvenido(a) a [[company]]! Un agente te atenderá en breve.",
+    "Hi [[first_name]]! We are closed now. We open [[hours]] and will answer you then.": "¡Hola [[first_name]]! Ahora estamos cerrados. Abrimos [[hours]] y te responderemos entonces.",
+    "Invalid timezone.": "Zona horaria inválida.",
+    "Not again to the same conversation within": "No repetir en la misma conversación antes de",
+    "Opening hours": "Horario de atención",
+    "Opening hours saved.": "Horario de atención guardado.",
+    "To": "Hasta",
+    "Type the away message.": "Escribe el mensaje de ausencia.",
+    "Type the greeting message.": "Escribe el mensaje de saludo.",
+    "Variables": "Variables",
+    "When your team is available. Outside these hours customers can get an automatic away message; at the first message of a new conversation they can get a greeting. Automatic messages never count as an attendant answering, are not sent to contacts who opted out, and the greeting is skipped when the AI agent is answering.": "Cuándo está disponible tu equipo. Fuera de ese horario el cliente puede recibir un mensaje automático de ausencia; en el primer mensaje de una conversación nueva, un saludo. Los mensajes automáticos nunca cuentan como respuesta de un agente, no se envían a quien pidió salir y el saludo se omite cuando responde el agente de IA.",
+    "hours": "horas"
 }

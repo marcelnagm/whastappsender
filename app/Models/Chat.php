@@ -39,6 +39,8 @@ class Chat extends Model
         'avatar_checked_at' => 'datetime',
         'avatar_next_check_at' => 'datetime',
         'assigned_at' => 'datetime',
+        'greeted_at' => 'datetime',
+        'away_sent_at' => 'datetime',
     ];
 
     public function user()

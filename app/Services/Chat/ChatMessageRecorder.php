@@ -92,6 +92,7 @@ class ChatMessageRecorder
                     'user_id' => $instance->user_id,
                     'message_id' => $messageId,
                     'from_me' => $fromMe,
+                    'source' => $fromMe ? $this->automaticSource($messageId) : null,
                     'type' => $parsed['type'],
                     'body' => $parsed['body'],
                     'mimetype' => $parsed['mimetype'],
@@ -445,6 +446,14 @@ class ChatMessageRecorder
         ]);
 
         return $target;
+    }
+
+    /** 'ai' / 'auto' when the id belongs to a message our AI agent or an away/greeting rule sent (the webhook echo has no author), else null. */
+    private function automaticSource(string $messageId): ?string
+    {
+        $m = \App\Models\AiMessage::where('channel_message_id', $messageId)->first(['provider']);
+
+        return $m ? ($m->provider === 'auto' ? 'auto' : 'ai') : null;
     }
 
     /**

@@ -242,6 +242,10 @@ Route::group(['namespace' => 'App\Http\Controllers', 'middleware' => ['auth', 's
         Route::delete('/goals/{goal}', [$tr, 'destroyGoal'])->whereNumber('goal')->name('goals.destroy');
     });
 
+    // Opening hours + automatic greeting / away message
+    Route::get('hours', [\App\Http\Controllers\ServiceHoursController::class, 'edit'])->name('hours.edit');
+    Route::put('hours', [\App\Http\Controllers\ServiceHoursController::class, 'update'])->name('hours.update');
+
     // Follow-up tasks
     Route::prefix('tasks')->name('tasks.')->group(function () {
         $tk = \App\Http\Controllers\TasksController::class;

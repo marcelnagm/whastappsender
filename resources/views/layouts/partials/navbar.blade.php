@@ -54,6 +54,11 @@
           <a href="{{ route('chat.index') }}" class="nav-link {{ request()->is('chat*') ? 'active text-secondary' : 'text-white' }}"><i class="bi bi-chat-dots me-1"></i> {{ __('Chat') }}</a>
         </li>
         @endteamcan
+        @teamcan('team')
+        <li class="nav-item">
+          <a href="{{ route('hours.edit') }}" class="nav-link {{ request()->is('hours*') ? 'active text-secondary' : 'text-white' }}"><i class="bi bi-clock me-1"></i> {{ __('Opening hours') }}</a>
+        </li>
+        @endteamcan
         @teamcan('reports')
         <li class="nav-item">
           <a href="{{ route('stats.index') }}" class="nav-link {{ request()->is('stats*') ? 'active text-secondary' : 'text-white' }}"><i class="bi bi-bar-chart-line me-1"></i> {{ __('Statistics') }}</a>
