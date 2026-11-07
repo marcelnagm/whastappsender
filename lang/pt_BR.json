@@ -1640,5 +1640,11 @@
     "Every day": "Todo dia",
     "Every week": "Toda semana",
     "Every month": "Todo mês",
-    "Repeats": "Repete"
+    "Repeats": "Repete",
+    ":n contact(s) updated.": ":n contato(s) atualizado(s).",
+    "Bulk action by a person": "Ação em massa feita por uma pessoa",
+    "Choose a company of your account.": "Escolha uma empresa da sua conta.",
+    "Mark as opted out": "Marcar como descadastrado",
+    "Mark the selected contacts as opted out?": "Marcar os contatos selecionados como descadastrados?",
+    "none": "nenhuma"
 }

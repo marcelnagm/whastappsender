@@ -42,6 +42,7 @@
 | [Proposals](#-proposals-quotes) | Quote built from a deal's items, public link with online accept / decline, notices and automation triggers, print / save as PDF |
 | [Lead sources](#-lead-sources) | Where each deal came from (channel, form + UTM campaign, or typed) and the funnel result per source: created, won, win rate, value, days to win |
 | [Duplicate contacts](#-duplicate-contacts) | Finds people registered twice (same e-mail or phone written differently) and merges them keeping conversations, deals, tasks and consent proof |
+| [Bulk contact actions](#-bulk-contact-actions) | Select contacts and set their company or mark them as opted out in one go |
 | [Recurring tasks](#-recurring-tasks) | Tasks that repeat daily, weekly or monthly: completing one creates the next |
 | [Stalled deals](#-stalled-deals) | Daily warning about open deals without activity; `deal.stale` automation trigger |
 | [Mentions](#-mentions-in-notes) | `@name` in an internal note notifies that colleague |
@@ -984,6 +985,10 @@ Bulk messaging needs permission: Meta's policies and Brazil's LGPD expect you to
 * Not included yet: a confirmation message to the customer after `#sair`, and an unsubscribe footer appended to campaign texts.
 
 * * *
+
+## ☑️ Bulk contact actions
+
+In the contact list, tick the contacts and use the bar at the bottom: besides activate/deactivate/remove you can set (or clear) the **Company** of all of them, or **mark them as opted out** (each one gets a consent log entry with the person who did it). Only contacts of your account are changed, up to 1000 per action.
 
 ## 🔂 Recurring tasks
 

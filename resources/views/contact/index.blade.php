@@ -17,6 +17,11 @@
                 <button type="button" class="btn btn-secondary btn-sm fw-bold rounded-pill" onclick="submitBulk('inativo')">
                     <i class="bi bi-slash-circle me-1"></i> {{ __('DEACTIVATE') }}
                 </button>
+                @php $bulkCompanies = \App\Models\Company::where('user_id', auth()->id())->orderBy('name')->get(['id', 'name']); @endphp
+                @if ($bulkCompanies->isNotEmpty())
+                <select id="bulkCompany" class="form-select form-select-sm rounded-pill" style="width:140px" onchange="submitBulkUpdate('company')"><option value="">{{ __('Company') }}…</option><option value="0">— {{ __('none') }}</option>@foreach ($bulkCompanies as $bc)<option value="{{ $bc->id }}">{{ $bc->name }}</option>@endforeach</select>
+                @endif
+                <button type="button" class="btn btn-outline-warning btn-sm fw-bold rounded-pill" onclick="submitBulkUpdate('optout')" title="{{ __('Mark as opted out') }}"><i class="bi bi-slash-circle"></i></button>
                 <button type="button" class="btn btn-danger btn-sm fw-bold rounded-pill" onclick="submitBulk('delete')">
                     <i class="bi bi-trash me-1"></i> {{ __('REMOVE') }}
                 </button>
@@ -216,6 +221,19 @@
         } else {
             bar.classList.add('d-none');
         }
+    }
+
+    function submitBulkUpdate(action) {
+        const ids = Array.from(document.querySelectorAll('.contact-checkbox:checked')).map(cb => cb.value);
+        if (ids.length === 0) return;
+        const sel = document.getElementById('bulkCompany');
+        if (action === 'company' && (!sel || sel.value === '')) return;
+        if (action === 'optout' && !confirm(@json(__('Mark the selected contacts as opted out?')))) return;
+        const f = document.getElementById('bulkActionForm');
+        f.action = "{{ route('contacts.bulk-update') }}";
+        document.getElementById('bulkIdsInput').value = JSON.stringify(ids);
+        f.insertAdjacentHTML('beforeend', '<input type="hidden" name="action" value="' + action + '"><input type="hidden" name="company_id" value="' + (action === 'company' ? sel.value : '') + '">');
+        f.submit();
     }
 
     function submitBulk(action) {

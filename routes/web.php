@@ -380,6 +380,7 @@ Route::group(['namespace' => 'App\Http\Controllers', 'middleware' => ['auth', 's
     Route::post('/contact/bulk-delete', 'App\Http\Controllers\ContactController@bulkDelete')
         ->name('contacts.bulk-delete')
         ->middleware(['auth']); // Garanta que apenas usuários logados acessem
+    Route::post('/contact/bulk-update', 'App\Http\Controllers\ContactController@bulkUpdate')->name('contacts.bulk-update')->middleware(['auth']);
     Route::post('/contact/bulk-status', 'App\Http\Controllers\ContactController@bulkStatus')
         ->name('contacts.bulk-status')
         ->middleware(['auth']); // Garanta que apenas usuários logados acessem

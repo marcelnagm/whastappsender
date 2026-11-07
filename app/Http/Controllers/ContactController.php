@@ -50,6 +50,22 @@ class ContactController extends Controller
         }
     }
 
+    /** Company assignment / opt-out for the selected contacts. */
+    public function bulkUpdate(Request $request)
+    {
+        $data = $request->validate(['ids' => 'required|string', 'action' => 'required|in:company,optout', 'company_id' => 'nullable|integer']);
+        $ids = json_decode($data['ids'], true);
+        if (!is_array($ids) || !$ids) {
+            return back()->with('error', __('No contacts selected.'));
+        }
+        $svc = app(\App\Services\Contacts\ContactBulk::class);
+        $n = $data['action'] === 'company'
+            ? $svc->setCompany($request->user(), $ids, !empty($data['company_id']) ? (int) $data['company_id'] : null)
+            : $svc->optOut($request->user(), \App\Services\Team\TeamContext::actor($request), $ids);
+
+        return back()->with('success', __(':n contact(s) updated.', ['n' => $n]));
+    }
+
     /**
      * Permanently remove multiple contacts.
      * Bulk delete with user scope protection.
