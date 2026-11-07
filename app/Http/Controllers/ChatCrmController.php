@@ -42,6 +42,7 @@ class ChatCrmController extends Controller
             ])->values(),
             'scheduled' => ScheduledMessagesController::list($chat),
             'closed' => (bool) $chat->closed_at,
+            'sequences' => SequencesController::forChat($chat),
             'can_deals' => $canDeals,
             'deal' => $deal && $canDeals ? ['id' => $deal->id, 'title' => $deal->title, 'stage' => optional($deal->stage)->name, 'url' => route('pipeline.index', ['pipeline' => $deal->pipeline_id])] : null,
             'pipelines' => $canDeals ? Pipeline::where('user_id', $owner->id)->orderBy('id')->get(['id', 'name']) : [],

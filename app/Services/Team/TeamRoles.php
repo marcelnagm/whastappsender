@@ -100,7 +100,7 @@ final class TeamRoles
         ['forms', ['forms.*']],
         ['deals', ['pipeline.*', 'proposals.*']],
         ['tasks', ['tasks.*']],
-        ['automations', ['automations.*']],
+        ['automations', ['automations.*', 'sequences.*']],
         ['channels', ['telegram.*', 'tiktok.*', 'facebook.*', 'email.*', 'instagram.*', 'instances.*', 'whatsapp.*']],
         ['ai', ['ai.*']],
         ['team', ['team.*', 'team-report.*', 'hours.*', 'sla.*', 'csat.*']],

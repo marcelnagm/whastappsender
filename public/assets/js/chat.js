@@ -1292,6 +1292,29 @@
     sch.appendChild(sb); sch.appendChild(sd); sch.appendChild(sc); sch.appendChild(sa);
     host.appendChild(sch);
 
+    // follow-up sequences
+    var sq = h('div', 'mb-2');
+    sq.appendChild(h('label', 'form-label small mb-1 d-block', T.seqTitle));
+    var sqd = d.sequences || { available: [], running: [] };
+    sqd.running.forEach(function (r) {
+      var row = h('div', 'wa-task');
+      var x = h('button', 'wa-tagx', '×'); x.type = 'button'; x.title = T.seqStop;
+      x.addEventListener('click', async function () { try { await api(cfg.chatBase + '/' + chat.id + '/sequences/' + r.id, { method: 'DELETE' }); again(); } catch (e) { toast(e.message); } });
+      row.appendChild(x);
+      row.appendChild(h('span', 'small', ' ' + r.name + ' · ' + T.seqNext + ' ' + r.next));
+      sq.appendChild(row);
+    });
+    if (sqd.available.length) {
+      var sel = selectOf([['', T.seqChoose]].concat(sqd.available.map(function (s) { return [s.id, s.name]; })), '');
+      var sgo = h('button', 'btn btn-sm btn-outline-secondary mt-1', T.seqStart); sgo.type = 'button';
+      sgo.addEventListener('click', async function () {
+        if (!sel.value) return;
+        try { await api(cfg.chatBase + '/' + chat.id + '/sequences', { method: 'POST', body: { sequence_id: parseInt(sel.value, 10) } }); toast(T.seqStarted); again(); } catch (e) { toast(e.message); }
+      });
+      sq.appendChild(sel); sq.appendChild(sgo);
+    }
+    host.appendChild(sq);
+
     // internal notes
     var notes = h('div', 'mb-2');
     notes.appendChild(h('label', 'form-label small mb-1 d-block', T.notesTitle));

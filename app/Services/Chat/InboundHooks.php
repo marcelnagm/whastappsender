@@ -23,6 +23,7 @@ class InboundHooks
             if (!$chat || !$owner) {
                 return;
             }
+            app(Sequences::class)->stopOnReply($chat);
             if (app(Csat::class)->capture($chat, $m)) {
                 return;
             }

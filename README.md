@@ -42,6 +42,7 @@
 | [Proposals](#-proposals-quotes) | Quote built from a deal's items, public link with online accept / decline, notices and automation triggers, print / save as PDF |
 | [Lead sources](#-lead-sources) | Where each deal came from (channel, form + UTM campaign, or typed) and the funnel result per source: created, won, win rate, value, days to win |
 | [Duplicate contacts](#-duplicate-contacts) | Finds people registered twice (same e-mail or phone written differently) and merges them keeping conversations, deals, tasks and consent proof |
+| [Follow-up sequences](#-follow-up-sequences) | Multi-step follow-ups with waits that stop by themselves when the customer replies |
 | [Satisfaction survey](#-satisfaction-survey) | Close conversations and ask for a CSAT (1–5) or NPS (0–10) grade; the numeric reply is recorded |
 | [Response SLA](#-response-sla) | Alert and escalation when a customer waits too long for the first answer, counting only opening hours |
 | [Scheduled messages](#-scheduled-messages) | Type now, send later from the chat: at a chosen time, in your name, cancelled if the customer answers first |
@@ -977,6 +978,10 @@ Bulk messaging needs permission: Meta's policies and Brazil's LGPD expect you to
 * Not included yet: a confirmation message to the customer after `#sair`, and an unsubscribe footer appended to campaign texts.
 
 * * *
+
+## 🔁 Follow-up sequences
+
+**Follow-up sequences** (menu, automations permission): create a sequence of up to 10 steps, each with a wait (minutes after the previous step) and a message (`{{name}}`, `{{first_name}}`). In the chat's right panel pick the sequence and press **Start**; the steps go out in the name of who started it. The sequence stops by itself when the customer writes anything, when they opt out, when the channel's reply window closes, or when someone presses × on it. `php artisan sequences:run` runs every minute from the scheduler.
 
 ## 😊 Satisfaction survey
 

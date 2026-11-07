@@ -277,6 +277,12 @@
         unassigned: @json(__('Unassigned')),
         assignedTo: @json(__('Handled by')),
         assignToMe: @json(__('Assign to me')),
+        seqTitle: @json(__('Follow-up sequence')),
+        seqChoose: @json(__('Choose a sequence')),
+        seqStart: @json(__('Start')),
+        seqStarted: @json(__('Sequence started.')),
+        seqStop: @json(__('Stop this sequence')),
+        seqNext: @json(__('next:')),
         closeChat: @json(__('Close conversation')),
         reopenChat: @json(__('Reopen conversation')),
         closedSurvey: @json(__('Conversation closed. Survey sent.')),
@@ -303,6 +309,6 @@
         autoDealForm: @json(__('Open a deal when a contact form arrives')),
     };
 </script>
-<script src="{{ url('assets/js/chat.js') }}?v=7"></script>
+<script src="{{ url('assets/js/chat.js') }}?v=8"></script>
 @endif
 @endsection

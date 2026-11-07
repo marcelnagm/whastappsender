@@ -88,6 +88,8 @@ Route::middleware(['auth', 'subscription.writable', 'plan.feature:chat'])->prefi
         $crm = \App\Http\Controllers\ChatCrmController::class;
         Route::get('/chats/{chat}/crm', [$crm, 'show'])->name('crm');
         Route::post('/chats/{chat}/assign', [$crm, 'assign'])->name('assign');
+        Route::post('/chats/{chat}/sequences', [\App\Http\Controllers\SequencesController::class, 'enroll'])->name('sequence.enroll');
+        Route::delete('/chats/{chat}/sequences/{enrollment}', [\App\Http\Controllers\SequencesController::class, 'stop'])->whereNumber('enrollment')->name('sequence.stop');
         Route::post('/chats/{chat}/close', [$crm, 'close'])->name('close');
         Route::post('/chats/{chat}/reopen', [$crm, 'reopen'])->name('reopen');
         Route::put('/chats/{chat}/tags', [$crm, 'syncTags'])->name('tags.sync');
@@ -268,6 +270,15 @@ Route::group(['namespace' => 'App\Http\Controllers', 'middleware' => ['auth', 's
         Route::post('/', [$am, 'store'])->name('store');
         Route::post('/{automation}/toggle', [$am, 'toggle'])->whereNumber('automation')->name('toggle');
         Route::delete('/{automation}', [$am, 'destroy'])->whereNumber('automation')->name('destroy');
+    });
+
+    // Follow-up sequences
+    Route::prefix('sequences')->name('sequences.')->group(function () {
+        $sq = \App\Http\Controllers\SequencesController::class;
+        Route::get('/', [$sq, 'index'])->name('index');
+        Route::post('/', [$sq, 'store'])->name('store');
+        Route::put('/{sequence}', [$sq, 'update'])->whereNumber('sequence')->name('update');
+        Route::delete('/{sequence}', [$sq, 'destroy'])->whereNumber('sequence')->name('destroy');
     });
 
     // Team performance: first response, answered conversations, deals, goals
