@@ -42,6 +42,7 @@
 | [Proposals](#-proposals-quotes) | Quote built from a deal's items, public link with online accept / decline, notices and automation triggers, print / save as PDF |
 | [Lead sources](#-lead-sources) | Where each deal came from (channel, form + UTM campaign, or typed) and the funnel result per source: created, won, win rate, value, days to win |
 | [Duplicate contacts](#-duplicate-contacts) | Finds people registered twice (same e-mail or phone written differently) and merges them keeping conversations, deals, tasks and consent proof |
+| [Companies](#-companies) | B2B accounts that group contacts and deals, with funnel and won value |
 | [Contact timeline](#-contact-timeline) | One history per person: messages, notes, deals, proposals, tasks, consent and surveys |
 | [Outbound webhooks](#-outbound-webhooks) | Push CRM events to Zapier, n8n or Make, signed with HMAC and retried |
 | [Follow-up sequences](#-follow-up-sequences) | Multi-step follow-ups with waits that stop by themselves when the customer replies |
@@ -980,6 +981,10 @@ Bulk messaging needs permission: Meta's policies and Brazil's LGPD expect you to
 * Not included yet: a confirmation message to the customer after `#sair`, and an unsubscribe footer appended to campaign texts.
 
 * * *
+
+## 🏢 Companies
+
+**Companies** (menu): register organizations (name, domain, industry, phone, notes) and link contacts to them, either from the company page (**Add a contact**) or with the **Company** field of the contact form. The company page shows its people, its deals (they follow the contact's company automatically), the value in the funnel and the value won. Removing a company keeps the contacts and deals.
 
 ## 🕒 Contact timeline
 

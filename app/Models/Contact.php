@@ -35,7 +35,7 @@ class Contact extends Model
      *
      * @var array
      */
-    protected $fillable = ['name', 'contact', 'email', 'user_id', 'ignore_me', 'lid', 'status', 'score', 'profile_url', 'linked_contact_id', 'deactivated_reason', 'deactivated_at', 'score_breakdown', 'score_updated_at', 'score_locked', 'consent_status', 'consent_source', 'consent_at', 'consent_revoked_at', 'custom'];
+    protected $fillable = ['name', 'contact', 'email', 'user_id', 'ignore_me', 'lid', 'status', 'score', 'profile_url', 'linked_contact_id', 'deactivated_reason', 'deactivated_at', 'score_breakdown', 'score_updated_at', 'score_locked', 'consent_status', 'consent_source', 'consent_at', 'consent_revoked_at', 'custom', 'company_id'];
 
 
     /** Contacts that may receive campaigns: when the account requires consent, only those with a recorded opt-in. */
@@ -129,6 +129,17 @@ class Contact extends Model
 
     protected static function booted(): void
     {
+        // a contact only joins a company of its own account; the deals of the person follow
+        static::saving(function (Contact $c) {
+            if ($c->company_id && !\App\Models\Company::where('id', $c->company_id)->where('user_id', $c->user_id)->exists()) {
+                $c->company_id = null;
+            }
+        });
+        static::saved(function (Contact $c) {
+            if ($c->wasChanged('company_id')) {
+                \App\Models\Deal::where('contact_id', $c->id)->where('user_id', $c->user_id)->update(['company_id' => $c->company_id]);
+            }
+        });
         // a contact created already with consent (import, API) leaves its proof
         static::created(function (Contact $c) {
             if ($c->consent_status === 'granted') {

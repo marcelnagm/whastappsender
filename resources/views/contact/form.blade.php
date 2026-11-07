@@ -7,6 +7,13 @@
     
     <div class="card-body bg-light-subtle p-4">
         <div class="row g-3">
+            @php $companies = \App\Models\Company::where('user_id', auth()->id())->orderBy('name')->get(['id', 'name']); @endphp
+            @if ($companies->isNotEmpty())
+            <div class="col-12">
+                <label class="form-label small">{{ __('Company') }}</label>
+                <select name="company_id" class="form-select border-0 shadow-sm"><option value="">—</option>@foreach ($companies as $co)<option value="{{ $co->id }}" @selected(old('company_id', $contact->company_id) == $co->id)>{{ $co->name }}</option>@endforeach</select>
+            </div>
+            @endif
             {{-- Row 1: name & WhatsApp --}}
             <div class="col-md-6">
                 <div class="form-floating mb-3">

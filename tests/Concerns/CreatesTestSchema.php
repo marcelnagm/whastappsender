@@ -183,6 +183,7 @@ trait CreatesTestSchema
             '2026_11_07_140000_create_csat_tables.php',
             '2026_11_07_160000_create_follow_up_sequences.php',
             '2026_11_07_180000_create_outbound_webhooks.php',
+            '2026_11_07_200000_create_companies.php',
             '2026_11_05_160000_add_message_sender_and_team_goals.php',
         ] as $file) {
             (require database_path('migrations/' . $file))->up();

@@ -88,9 +88,9 @@ final class TeamRoles
     private const WEB = [
         ['any', ['logout.perform', 'notifications.clear', 'home.index', 'language.switch']],
         ['chat', ['chat.*', 'replies.*']],
-        ['contacts.view', ['contacts.index', 'contacts.show', 'contacts.photo']],
+        ['contacts.view', ['contacts.index', 'contacts.show', 'contacts.photo', 'companies.index', 'companies.show']],
         ['team', ['contacts.clear']],
-        ['contacts.manage', ['contacts.*', 'consent.*', 'audience.*']],
+        ['contacts.manage', ['contacts.*', 'consent.*', 'audience.*', 'companies.*']],
         ['campaigns.view', ['campaigns.index', 'campaigns.show', 'campaigns.report', 'campaign-items.index', 'campaign-items.show', 'campaign-items.logs', 'whatsapp-jobs.index']],
         ['campaigns.send', ['campaign-items.generate', 'campaign-items.generateAll', 'campaign-items.send', 'whatsapp-jobs.*']],
         ['campaigns.manage', ['campaigns.*', 'campaign-items.*']],

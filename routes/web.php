@@ -272,6 +272,18 @@ Route::group(['namespace' => 'App\Http\Controllers', 'middleware' => ['auth', 's
         Route::delete('/{automation}', [$am, 'destroy'])->whereNumber('automation')->name('destroy');
     });
 
+    // Companies (B2B accounts)
+    Route::prefix('companies')->name('companies.')->group(function () {
+        $co = \App\Http\Controllers\CompaniesController::class;
+        Route::get('/', [$co, 'index'])->name('index');
+        Route::post('/', [$co, 'store'])->name('store');
+        Route::get('/{company}', [$co, 'show'])->whereNumber('company')->name('show');
+        Route::put('/{company}', [$co, 'update'])->whereNumber('company')->name('update');
+        Route::delete('/{company}', [$co, 'destroy'])->whereNumber('company')->name('destroy');
+        Route::post('/{company}/contacts', [$co, 'attach'])->whereNumber('company')->name('attach');
+        Route::delete('/{company}/contacts/{contact}', [$co, 'detach'])->whereNumber('company')->whereNumber('contact')->name('detach');
+    });
+
     // Outbound webhooks (Zapier, n8n, Make...)
     Route::prefix('webhooks-out')->name('webhooks-out.')->group(function () {
         $wh = \App\Http\Controllers\OutboundWebhooksController::class;
