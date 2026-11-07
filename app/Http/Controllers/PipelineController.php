@@ -138,7 +138,11 @@ class PipelineController extends Controller
     public function updateDeal(Request $request, int $deal)
     {
         $d = $this->deal($request, $deal);
-        $d->fill($this->dealData($request))->save();
+        $data = $this->dealData($request);
+        if ($d->items()->exists()) {
+            unset($data['value']); // the value of a deal with items is their total
+        }
+        $d->fill($data)->save();
 
         return redirect()->route('pipeline.index', ['pipeline' => $d->pipeline_id])->with('success', __('Deal saved.'));
     }

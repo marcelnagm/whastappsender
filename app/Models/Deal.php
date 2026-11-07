@@ -16,6 +16,11 @@ class Deal extends Model
         return $this->belongsTo(PipelineStage::class, 'stage_id');
     }
 
+    public function items()
+    {
+        return $this->hasMany(DealItem::class)->orderBy('id');
+    }
+
     public function contact()
     {
         return $this->belongsTo(Contact::class);

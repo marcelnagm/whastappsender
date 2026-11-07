@@ -38,6 +38,7 @@
 | [Team performance](#-team-performance--goals) | First-response time, conversations answered, deals won/lost and follow-ups per person, monthly goals with progress |
 | [Deal forecast](#-deal-forecast--priorities) | Chance to close for every open deal with the reasons behind it, weighted forecast, priority list with the next action, optional written advice from your AI agent |
 | [Opening hours](#-opening-hours-away-message--greeting) | Business hours of the account, automatic away message outside them and greeting on the first message of a new conversation |
+| [Products & deal items](#-products--deal-items) | Product catalog and the items of each deal: quantity, price, discount; the deal value becomes the total of its items |
 | [Quick replies](#-quick-replies) | Canned answers shared by the team: type `/shortcut` in the chat, with variables like the customer's name |
 | [Team & roles](#-team--roles-sub-users) | Sub-users working for the contract account (admin, approver, creator, sender, attendant, analyst) |
 | [Audience & approval](#-audience--approval-of-campaigns) | Choose the audience by score and channels; approval flow before sending |
@@ -970,6 +971,14 @@ Bulk messaging needs permission: Meta's policies and Brazil's LGPD expect you to
 * Not included yet: a confirmation message to the customer after `#sair`, and an unsubscribe footer appended to campaign texts.
 
 * * *
+
+## 📦 Products & deal items
+
+Open **Pipeline → Products** to build the catalog (name, SKU, unit, price; inactive products stop being offered). In a deal's window (pencil on the card) an **Items** block lets you add a catalog product or type a free item, with quantity, price (the catalog price unless you type another) and a discount %.
+
+* **The value follows the items:** while a deal has items its value is their total (and the value field is locked); with no items, the typed value is kept, also after you remove the last item.
+* **Snapshots:** an item keeps the name and price it was sold at. Editing or deleting a product later never rewrites deals that already have it.
+* Up to 500 products per account and 50 items per deal. Anyone with access to the pipeline can manage them. Items are the base for the proposals described in the next features.
 
 ## 🕘 Opening hours, away message & greeting
 

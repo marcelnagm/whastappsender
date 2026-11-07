@@ -21,6 +21,7 @@
         @foreach ($pipelines as $p)<option value="{{ $p->id }}" @selected($p->id === $pipeline->id)>{{ $p->name }}</option>@endforeach
       </select>
       <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#dealModal" onclick="newDeal()"><i class="bi bi-plus-lg me-1"></i>{{ __('New deal') }}</button>
+      <a href="{{ route('pipeline.products.index') }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-box-seam me-1"></i>{{ __('Products') }}</a>
       <button class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#setupModal"><i class="bi bi-gear me-1"></i>{{ __('Customize') }}</button>
     </div>
   </div>
@@ -79,6 +80,19 @@
     <div class="row g-2">
       <div class="col-6"><label class="form-label">{{ __('Value') }}</label><input name="value" id="dValue" type="number" step="0.01" min="0" class="form-control"></div>
       <div class="col-6"><label class="form-label">{{ __('Expected close') }}</label><input name="expected_close_date" id="dDate" type="date" class="form-control"></div>
+    </div>
+    <div class="d-none" id="itemsBox">
+      <label class="form-label mb-1">{{ __('Items') }}</label>
+      <div id="itemsList" class="small mb-2"></div>
+      <div class="row g-1">
+        <div class="col-12"><select id="iProduct" class="form-select form-select-sm"></select></div>
+        <div class="col-5"><input id="iName" class="form-control form-control-sm" placeholder="{{ __('Or type a name') }}" maxlength="120"></div>
+        <div class="col-3"><input id="iPrice" type="number" step="0.01" min="0" class="form-control form-control-sm" placeholder="{{ __('Price') }}"></div>
+        <div class="col-2"><input id="iQty" type="number" step="any" min="0.01" value="1" class="form-control form-control-sm" title="{{ __('Quantity') }}"></div>
+        <div class="col-2"><input id="iDisc" type="number" step="any" min="0" max="100" value="0" class="form-control form-control-sm" title="{{ __('Discount %') }}"></div>
+        <div class="col-12"><button type="button" class="btn btn-sm btn-outline-primary" id="iAdd"><i class="bi bi-plus"></i> {{ __('Add item') }}</button>
+          <a href="{{ route('pipeline.products.index') }}" class="small ms-2">{{ __('Products') }}</a></div>
+      </div>
     </div>
     <div><label class="form-label">{{ __('Contact') }}</label>
       <select name="contact_id" id="dContact" class="form-select"><option value="">—</option>
@@ -139,8 +153,43 @@ function setDeal(url, method, title, d) {
   document.getElementById('dTitle').value = d.title || ''; document.getElementById('dValue').value = d.value || '';
   document.getElementById('dDate').value = d.date || ''; document.getElementById('dContact').value = d.contact_id || '';
   const del = document.getElementById('dealDeleteBtn');
+  loadItems(d.id || null);
   if (d.id) { del.classList.remove('d-none'); document.getElementById('dealDelete').action = dealBase + '/' + d.id; } else del.classList.add('d-none');
 }
+let curDeal = null, catalog = [];
+const itemsUrl = () => dealBase + '/' + curDeal + '/items';
+const jsonH = {'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': @json(csrf_token())};
+function drawItems(d) {
+  catalog = d.products;
+  const list = document.getElementById('itemsList'); list.innerHTML = '';
+  d.items.forEach(i => {
+    const row = document.createElement('div'); row.className = 'd-flex justify-content-between align-items-center border-bottom py-1';
+    const t = document.createElement('span'); t.textContent = i.quantity + ' × ' + i.name + ' (' + money(i.unit_price) + (i.discount_pct ? ' −' + i.discount_pct + '%' : '') + ')';
+    const r = document.createElement('span'); r.textContent = money(i.total) + ' ';
+    const x = document.createElement('button'); x.type = 'button'; x.className = 'btn btn-sm btn-link text-danger p-0'; x.innerHTML = '<i class="bi bi-x"></i>';
+    x.onclick = async () => drawItems(await (await fetch(itemsUrl() + '/' + i.id, {method: 'DELETE', headers: jsonH})).json());
+    r.appendChild(x); row.appendChild(t); row.appendChild(r); list.appendChild(row);
+  });
+  if (d.items.length) { const tot = document.createElement('div'); tot.className = 'text-end fw-bold pt-1'; tot.textContent = @json(__('Total')) + ': ' + money(d.total); list.appendChild(tot); }
+  const sel = document.getElementById('iProduct'); sel.innerHTML = '<option value="">— ' + @json(__('Product')) + ' —</option>';
+  catalog.forEach(p => { const o = document.createElement('option'); o.value = p.id; o.textContent = p.name + ' · ' + money(p.price); sel.appendChild(o); });
+  document.getElementById('dValue').value = d.value || ''; document.getElementById('dValue').readOnly = d.items.length > 0;
+}
+async function loadItems(id) {
+  curDeal = id; const box = document.getElementById('itemsBox');
+  if (!id) { box.classList.add('d-none'); document.getElementById('dValue').readOnly = false; return; }
+  box.classList.remove('d-none');
+  drawItems(await (await fetch(itemsUrl(), {headers: {'Accept': 'application/json'}})).json());
+}
+document.getElementById('iProduct').addEventListener('change', e => { const p = catalog.find(x => String(x.id) === e.target.value); if (p) document.getElementById('iPrice').value = p.price; });
+document.getElementById('iAdd').addEventListener('click', async () => {
+  const body = {product_id: document.getElementById('iProduct').value || null, name: document.getElementById('iName').value || null, unit_price: document.getElementById('iPrice').value || null,
+    quantity: document.getElementById('iQty').value || 1, discount_pct: document.getElementById('iDisc').value || 0};
+  const r = await fetch(itemsUrl(), {method: 'POST', headers: jsonH, body: JSON.stringify(body)});
+  if (!r.ok) { alert((await r.json()).message || @json(__('Could not add the item.'))); return; }
+  ['iProduct', 'iName', 'iPrice'].forEach(k => document.getElementById(k).value = ''); document.getElementById('iQty').value = 1; document.getElementById('iDisc').value = 0;
+  drawItems(await r.json());
+});
 function newDeal() { setDeal(dealStore, 'POST', @json(__('New deal')), {}); }
 function editDeal(d) { setDeal(dealBase + '/' + d.id, 'PUT', @json(__('Edit deal')), d); }
 

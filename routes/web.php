@@ -191,6 +191,17 @@ Route::group(['namespace' => 'App\Http\Controllers', 'middleware' => ['auth', 's
         Route::put('/deals/{deal}', [$pl, 'updateDeal'])->whereNumber('deal')->name('deals.update');
         Route::post('/deals/{deal}/move', [$pl, 'moveDeal'])->whereNumber('deal')->name('deals.move');
         Route::delete('/deals/{deal}', [$pl, 'destroyDeal'])->whereNumber('deal')->name('deals.destroy');
+        // what a deal sells, and the catalog
+        $di = \App\Http\Controllers\DealItemsController::class;
+        Route::get('/deals/{deal}/items', [$di, 'index'])->whereNumber('deal')->name('deals.items.index');
+        Route::post('/deals/{deal}/items', [$di, 'store'])->whereNumber('deal')->name('deals.items.store');
+        Route::put('/deals/{deal}/items/{item}', [$di, 'update'])->whereNumber(['deal', 'item'])->name('deals.items.update');
+        Route::delete('/deals/{deal}/items/{item}', [$di, 'destroy'])->whereNumber(['deal', 'item'])->name('deals.items.destroy');
+        $pr = \App\Http\Controllers\ProductsController::class;
+        Route::get('/products', [$pr, 'index'])->name('products.index');
+        Route::post('/products', [$pr, 'store'])->name('products.store');
+        Route::put('/products/{product}', [$pr, 'update'])->whereNumber('product')->name('products.update');
+        Route::delete('/products/{product}', [$pr, 'destroy'])->whereNumber('product')->name('products.destroy');
     });
 
     // Quick replies (canned answers typed with "/")
