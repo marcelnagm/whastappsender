@@ -39,6 +39,7 @@
 | [Deal forecast](#-deal-forecast--priorities) | Chance to close for every open deal with the reasons behind it, weighted forecast, priority list with the next action, optional written advice from your AI agent |
 | [Opening hours](#-opening-hours-away-message--greeting) | Business hours of the account, automatic away message outside them and greeting on the first message of a new conversation |
 | [Products & deal items](#-products--deal-items) | Product catalog and the items of each deal: quantity, price, discount; the deal value becomes the total of its items |
+| [Proposals](#-proposals-quotes) | Quote built from a deal's items, public link with online accept / decline, notices and automation triggers, print / save as PDF |
 | [Quick replies](#-quick-replies) | Canned answers shared by the team: type `/shortcut` in the chat, with variables like the customer's name |
 | [Team & roles](#-team--roles-sub-users) | Sub-users working for the contract account (admin, approver, creator, sender, attendant, analyst) |
 | [Audience & approval](#-audience--approval-of-campaigns) | Choose the audience by score and channels; approval flow before sending |
@@ -972,6 +973,15 @@ Bulk messaging needs permission: Meta's policies and Brazil's LGPD expect you to
 
 * * *
 
+## 📄 Proposals (quotes)
+
+In a deal's window (with items) press **Proposal**: a quote is created from a **snapshot** of the items (later edits to the deal do not change what was sent; **Update from the deal** copies them again until the customer answers).
+
+* **Owner page:** edit title, introduction, terms and *valid until* (15 days by default); **copy the link** or open **WhatsApp** with the message ready (both mark it as *sent*); **Preview** shows exactly what the customer sees without counting as an opening. The list under **Pipeline → Proposals** shows waiting / accepted (with value) / declined.
+* **Customer page** (`/p/{token}`, no login, 40-character random token, `noindex`): items, total, terms; the customer types his name, ticks the agreement and **accepts**, or **declines** with an optional reason. The answer is final (409 afterwards), stores name, time and IP, and an expired proposal can no longer be answered. The page prints cleanly (**Print or save as PDF** in the browser; no PDF library is required).
+* **You are notified** in the app when it is opened (once), accepted or declined, and **automations** gain the triggers *a proposal is accepted* / *declined* (for example: create a "Invoice" task, move the deal to Won). The deal is never closed by the customer alone.
+* `CRM_CURRENCY` (default `R$`) is the symbol shown before the totals.
+
 ## 📦 Products & deal items
 
 Open **Pipeline → Products** to build the catalog (name, SKU, unit, price; inactive products stop being offered). In a deal's window (pencil on the card) an **Items** block lets you add a catalog product or type a free item, with quantity, price (the catalog price unless you type another) and a discount %.
@@ -1363,6 +1373,7 @@ Mailbox credentials are **not** in `.env`: each user types them in the **Email**
 | Variable | Default | Controls |
 |---|---|---|
 | `DEAL_NEW_AFTER_DAYS` | 30 | With *open a deal automatically* on: a customer who writes again after this many days of silence counts as a new lead (a deal still open is never duplicated) |
+| `CRM_CURRENCY` | `R$` | Symbol shown before the totals of proposals |
 
 ### Plans and billing
 

@@ -21,6 +21,7 @@
         @foreach ($pipelines as $p)<option value="{{ $p->id }}" @selected($p->id === $pipeline->id)>{{ $p->name }}</option>@endforeach
       </select>
       <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#dealModal" onclick="newDeal()"><i class="bi bi-plus-lg me-1"></i>{{ __('New deal') }}</button>
+      <a href="{{ route('proposals.index') }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-file-earmark-text me-1"></i>{{ __('Proposals') }}</a>
       <a href="{{ route('pipeline.products.index') }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-box-seam me-1"></i>{{ __('Products') }}</a>
       <button class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#setupModal"><i class="bi bi-gear me-1"></i>{{ __('Customize') }}</button>
     </div>
@@ -100,11 +101,13 @@
       </select></div>
   </div>
   <div class="modal-footer justify-content-between">
+    <button type="submit" form="dealProposal" class="btn btn-outline-secondary btn-sm d-none" id="dealProposalBtn"><i class="bi bi-file-earmark-text me-1"></i>{{ __('Proposal') }}</button>
     <button type="submit" form="dealDelete" class="btn btn-outline-danger btn-sm d-none" id="dealDeleteBtn" onclick="return confirm('{{ __('Remove this deal?') }}')">{{ __('Delete') }}</button>
     <button class="btn btn-primary">{{ __('Save') }}</button>
   </div>
 </form>
-<form id="dealDelete" method="post">@csrf @method('DELETE')</form></div></div>
+<form id="dealDelete" method="post">@csrf @method('DELETE')</form>
+<form id="dealProposal" method="post">@csrf</form></div></div>
 
 {{-- customize --}}
 <div class="modal fade" id="setupModal" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content">
@@ -146,6 +149,7 @@
 const money = v => Number(v).toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
 const dealStore = @json(route('pipeline.deals.store', $pipeline->id));
 const dealBase = @json(url('pipeline/deals'));
+const proposalBase = @json(url('proposals/deal'));
 function setDeal(url, method, title, d) {
   const f = document.getElementById('dealForm'); f.action = url;
   document.getElementById('dealMethod').value = method;
@@ -154,6 +158,8 @@ function setDeal(url, method, title, d) {
   document.getElementById('dDate').value = d.date || ''; document.getElementById('dContact').value = d.contact_id || '';
   const del = document.getElementById('dealDeleteBtn');
   loadItems(d.id || null);
+  const pb = document.getElementById('dealProposalBtn');
+  if (d.id) { pb.classList.remove('d-none'); document.getElementById('dealProposal').action = proposalBase + '/' + d.id; } else pb.classList.add('d-none');
   if (d.id) { del.classList.remove('d-none'); document.getElementById('dealDelete').action = dealBase + '/' + d.id; } else del.classList.add('d-none');
 }
 let curDeal = null, catalog = [];

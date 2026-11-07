@@ -98,7 +98,7 @@ final class TeamRoles
         ['campaigns.approve', ['approvals.*']],
         ['reports', ['stats.*', 'team-report.index']],
         ['forms', ['forms.*']],
-        ['deals', ['pipeline.*']],
+        ['deals', ['pipeline.*', 'proposals.*']],
         ['tasks', ['tasks.*']],
         ['automations', ['automations.*']],
         ['channels', ['telegram.*', 'tiktok.*', 'facebook.*', 'email.*', 'instagram.*', 'instances.*', 'whatsapp.*']],

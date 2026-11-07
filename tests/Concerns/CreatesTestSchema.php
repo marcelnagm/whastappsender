@@ -175,6 +175,7 @@ trait CreatesTestSchema
             '2026_11_05_140000_create_automations_tables.php',
             '2026_11_06_100000_create_service_hours.php',
             '2026_11_06_120000_create_products_and_deal_items.php',
+            '2026_11_06_140000_create_proposals_table.php',
             '2026_11_05_160000_add_message_sender_and_team_goals.php',
         ] as $file) {
             (require database_path('migrations/' . $file))->up();

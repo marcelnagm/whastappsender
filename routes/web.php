@@ -45,6 +45,14 @@ Route::get('/language/{locale}', [\App\Http\Controllers\LanguageController::clas
 // Public JS import of an embeddable contact form (CORS open; the form itself checks allowed sites)
 Route::get('/f/{key}.js', [\App\Http\Controllers\PublicFormController::class, 'script'])->where('key', '[a-z0-9]+')->name('forms.script');
 
+// Public proposal (quote) page: the token is the access; answers are throttled
+Route::prefix('p')->name('proposals.public.')->group(function () {
+    $pp = \App\Http\Controllers\PublicProposalController::class;
+    Route::get('/{token}', [$pp, 'show'])->name('show');
+    Route::post('/{token}/accept', [$pp, 'accept'])->middleware('throttle:10,1')->name('accept');
+    Route::post('/{token}/decline', [$pp, 'decline'])->middleware('throttle:10,1')->name('decline');
+});
+
 // WhatsApp Web-style chat (CRM). The browser only talks to Laravel; Laravel talks to the Evolution API.
 Route::middleware(['auth', 'subscription.writable', 'plan.feature:chat'])->prefix('chat')->name('chat.')->group(function () {
     $chat = \App\Http\Controllers\ChatController::class;
@@ -202,6 +210,18 @@ Route::group(['namespace' => 'App\Http\Controllers', 'middleware' => ['auth', 's
         Route::post('/products', [$pr, 'store'])->name('products.store');
         Route::put('/products/{product}', [$pr, 'update'])->whereNumber('product')->name('products.update');
         Route::delete('/products/{product}', [$pr, 'destroy'])->whereNumber('product')->name('products.destroy');
+    });
+
+    // Proposals (quotes) built from the items of a deal
+    Route::prefix('proposals')->name('proposals.')->group(function () {
+        $pr = \App\Http\Controllers\ProposalsController::class;
+        Route::get('/', [$pr, 'index'])->name('index');
+        Route::post('/deal/{deal}', [$pr, 'store'])->whereNumber('deal')->name('store');
+        Route::get('/{proposal}', [$pr, 'show'])->whereNumber('proposal')->name('show');
+        Route::put('/{proposal}', [$pr, 'update'])->whereNumber('proposal')->name('update');
+        Route::post('/{proposal}/refresh', [$pr, 'refresh'])->whereNumber('proposal')->name('refresh');
+        Route::post('/{proposal}/sent', [$pr, 'sent'])->whereNumber('proposal')->name('sent');
+        Route::delete('/{proposal}', [$pr, 'destroy'])->whereNumber('proposal')->name('destroy');
     });
 
     // Quick replies (canned answers typed with "/")
