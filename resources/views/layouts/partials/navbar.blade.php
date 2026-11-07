@@ -64,6 +64,9 @@
         <li class="nav-item">
           <a href="{{ route('csat.index') }}" class="nav-link {{ request()->is('csat*') ? 'active text-secondary' : 'text-white' }}"><i class="bi bi-emoji-smile me-1"></i> {{ __('Satisfaction survey') }}</a>
         </li>
+        <li class="nav-item">
+          <a href="{{ route('webhooks-out.index') }}" class="nav-link {{ request()->is('webhooks-out*') ? 'active text-secondary' : 'text-white' }}"><i class="bi bi-plug me-1"></i> {{ __('Outbound webhooks') }}</a>
+        </li>
         @endteamcan
         @teamcan('reports')
         <li class="nav-item">

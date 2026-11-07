@@ -272,6 +272,16 @@ Route::group(['namespace' => 'App\Http\Controllers', 'middleware' => ['auth', 's
         Route::delete('/{automation}', [$am, 'destroy'])->whereNumber('automation')->name('destroy');
     });
 
+    // Outbound webhooks (Zapier, n8n, Make...)
+    Route::prefix('webhooks-out')->name('webhooks-out.')->group(function () {
+        $wh = \App\Http\Controllers\OutboundWebhooksController::class;
+        Route::get('/', [$wh, 'index'])->name('index');
+        Route::post('/', [$wh, 'store'])->name('store');
+        Route::post('/{webhook}/toggle', [$wh, 'toggle'])->whereNumber('webhook')->name('toggle');
+        Route::post('/{webhook}/test', [$wh, 'test'])->whereNumber('webhook')->middleware('throttle:10,1')->name('test');
+        Route::delete('/{webhook}', [$wh, 'destroy'])->whereNumber('webhook')->name('destroy');
+    });
+
     // Follow-up sequences
     Route::prefix('sequences')->name('sequences.')->group(function () {
         $sq = \App\Http\Controllers\SequencesController::class;

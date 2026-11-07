@@ -1572,5 +1572,22 @@
     "day": "dia",
     "next:": "próxima:",
     "running": "em andamento",
-    "stopped because the customer replied": "paradas porque o cliente respondeu"
+    "stopped because the customer replied": "paradas porque o cliente respondeu",
+    "Add endpoint": "Adicionar endpoint",
+    "Endpoint created.": "Endpoint criado.",
+    "Endpoint removed.": "Endpoint removido.",
+    "Event": "Evento",
+    "Events": "Eventos",
+    "Latest deliveries": "Últimas entregas",
+    "Limit of :n endpoints reached.": "Limite de :n endpoints atingido.",
+    "No deliveries yet.": "Nenhuma entrega ainda.",
+    "Outbound webhooks": "Webhooks de saída",
+    "Remove this endpoint?": "Remover este endpoint?",
+    "Result": "Resultado",
+    "Secret": "Segredo",
+    "Send events to Zapier, n8n, Make or your own system. Each call is a JSON POST signed in the X-Sama-Signature header (HMAC-SHA256 of the body with the secret). To read or change data use the REST API with an API key.": "Envie eventos ao Zapier, n8n, Make ou ao seu sistema. Cada chamada é um POST JSON assinado no cabeçalho X-Sama-Signature (HMAC-SHA256 do corpo com o segredo). Para ler ou alterar dados use a API REST com uma chave de API.",
+    "Send test": "Enviar teste",
+    "Test event queued.": "Evento de teste enfileirado.",
+    "Use a public https address.": "Use um endereço https público.",
+    "failures": "falhas"
 }

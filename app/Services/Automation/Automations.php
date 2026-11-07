@@ -41,6 +41,7 @@ class Automations
     public function fire(string $event, User|int $owner, array $ctx): void
     {
         $ownerId = $owner instanceof User ? $owner->id : $owner;
+        app(\App\Services\Webhooks\OutboundWebhooks::class)->emit($event, $ownerId, $ctx);
         if (self::$depth >= self::MAX_DEPTH) {
             return;
         }

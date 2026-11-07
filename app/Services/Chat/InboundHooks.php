@@ -23,6 +23,7 @@ class InboundHooks
             if (!$chat || !$owner) {
                 return;
             }
+            app(\App\Services\Webhooks\OutboundWebhooks::class)->emit('message.received', $owner->id, ['chat' => $chat, 'message' => $m]);
             app(Sequences::class)->stopOnReply($chat);
             if (app(Csat::class)->capture($chat, $m)) {
                 return;

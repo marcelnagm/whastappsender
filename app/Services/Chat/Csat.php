@@ -19,6 +19,7 @@ class Csat
             return null;
         }
         $chat->forceFill(['closed_at' => now(), 'closed_by' => $by->id])->save();
+        app(\App\Services\Webhooks\OutboundWebhooks::class)->emit('conversation.closed', $chat->user_id, ['chat' => $chat]);
 
         return $this->ask($chat);
     }
@@ -72,6 +73,7 @@ class Csat
             return false;
         }
         $survey->update(['status' => 'answered', 'score' => $score, 'answered_at' => now()]);
+        app(\App\Services\Webhooks\OutboundWebhooks::class)->emit('survey.answered', $chat->user_id, ['chat' => $chat, 'score' => $score, 'scale' => $survey->scale]);
         $this->say($chat, $cfg->thanksText());
 
         return true;

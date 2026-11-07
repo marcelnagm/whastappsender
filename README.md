@@ -42,6 +42,7 @@
 | [Proposals](#-proposals-quotes) | Quote built from a deal's items, public link with online accept / decline, notices and automation triggers, print / save as PDF |
 | [Lead sources](#-lead-sources) | Where each deal came from (channel, form + UTM campaign, or typed) and the funnel result per source: created, won, win rate, value, days to win |
 | [Duplicate contacts](#-duplicate-contacts) | Finds people registered twice (same e-mail or phone written differently) and merges them keeping conversations, deals, tasks and consent proof |
+| [Outbound webhooks](#-outbound-webhooks) | Push CRM events to Zapier, n8n or Make, signed with HMAC and retried |
 | [Follow-up sequences](#-follow-up-sequences) | Multi-step follow-ups with waits that stop by themselves when the customer replies |
 | [Satisfaction survey](#-satisfaction-survey) | Close conversations and ask for a CSAT (1–5) or NPS (0–10) grade; the numeric reply is recorded |
 | [Response SLA](#-response-sla) | Alert and escalation when a customer waits too long for the first answer, counting only opening hours |
@@ -978,6 +979,10 @@ Bulk messaging needs permission: Meta's policies and Brazil's LGPD expect you to
 * Not included yet: a confirmation message to the customer after `#sair`, and an unsubscribe footer appended to campaign texts.
 
 * * *
+
+## 🔌 Outbound webhooks
+
+**Outbound webhooks** (menu, team permission): add an HTTPS URL, pick the events (`message.received`, `deal.created`, `deal.stage`, `deal.won`, `deal.lost`, `tag.added`, `proposal.accepted`, `proposal.declined`, `conversation.closed`, `survey.answered`) and copy the generated secret. Every event is a JSON `POST` with headers `X-Sama-Event`, `X-Sama-Delivery` and `X-Sama-Signature: sha256=<HMAC-SHA256 of the raw body with the secret>`; verify it before trusting the call. Failed calls are retried 4 times (1 min, 5 min, 30 min) and an endpoint is paused after 15 deliveries that failed in a row. Only public HTTPS addresses are accepted (no private or local networks). Use **Send test** to check the integration; the page lists the latest deliveries. To read or write data from Zapier/n8n use the REST API (`/api/v1`) with an API key (Bearer token). Needs the queue worker running.
 
 ## 🔁 Follow-up sequences
 
