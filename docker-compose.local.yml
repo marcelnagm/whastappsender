@@ -176,6 +176,64 @@ services:
       - "127.0.0.1:${MAIL_PORT:-1025}:1025"
       - "127.0.0.1:${MAILPIT_UI_PORT:-8025}:8025"
 
+  # Typebot (chatbot flow builder) - optional, started with:  ./start-local.sh --typebot
+  # builder (editor) http://localhost:8083   viewer (runs the flows, called by the CRM) http://localhost:8084
+  # Login e-mails (magic link) arrive in Mailpit: http://localhost:8025
+  typebot-db:
+    image: postgres:16-alpine
+    container_name: sama_local_typebot_db
+    profiles: ["typebot"]
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: typebot
+      POSTGRES_USER: typebot
+      POSTGRES_PASSWORD: typebot_local_dev
+    volumes:
+      - typebot_pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U typebot -d typebot"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  typebot-builder:
+    image: baptistearno/typebot-builder:latest
+    container_name: sama_local_typebot_builder
+    profiles: ["typebot"]
+    restart: unless-stopped
+    depends_on:
+      typebot-db:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:${TYPEBOT_BUILDER_PORT:-8083}:3000"
+    environment:
+      DATABASE_URL: postgresql://typebot:typebot_local_dev@typebot-db:5432/typebot
+      ENCRYPTION_SECRET: ${TYPEBOT_ENCRYPTION_SECRET:-local-dev-typebot-secret-32chars!}
+      NEXTAUTH_URL: http://localhost:${TYPEBOT_BUILDER_PORT:-8083}
+      NEXT_PUBLIC_VIEWER_URL: http://localhost:${TYPEBOT_VIEWER_PORT:-8084}
+      ADMIN_EMAIL: ${TYPEBOT_ADMIN_EMAIL:-admin@localhost.test}
+      SMTP_HOST: mailpit
+      SMTP_PORT: "1025"
+      SMTP_SECURE: "false"
+      SMTP_AUTH_DISABLED: "true"
+      NEXT_PUBLIC_SMTP_FROM: typebot@localhost.test
+
+  typebot-viewer:
+    image: baptistearno/typebot-viewer:latest
+    container_name: sama_local_typebot_viewer
+    profiles: ["typebot"]
+    restart: unless-stopped
+    depends_on:
+      typebot-db:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:${TYPEBOT_VIEWER_PORT:-8084}:3000"
+    environment:
+      DATABASE_URL: postgresql://typebot:typebot_local_dev@typebot-db:5432/typebot
+      ENCRYPTION_SECRET: ${TYPEBOT_ENCRYPTION_SECRET:-local-dev-typebot-secret-32chars!}
+      NEXTAUTH_URL: http://localhost:${TYPEBOT_BUILDER_PORT:-8083}
+      NEXT_PUBLIC_VIEWER_URL: http://localhost:${TYPEBOT_VIEWER_PORT:-8084}
+
   # Optional database UI:  docker compose -f docker-compose.local.yml --profile tools up -d
   phpmyadmin:
     image: phpmyadmin:latest
@@ -198,3 +256,4 @@ volumes:
   evolution_pg:
   evolution_instances:
   minio_data:
+  typebot_pg:

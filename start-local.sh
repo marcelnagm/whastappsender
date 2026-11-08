@@ -19,6 +19,7 @@
 #   --admin-email E      create / promote this administrator after migrating (password is printed)
 #   --no-redis           keep the database queue / file cache (Redis container is still started, just unused)
 #   --tools              also start phpMyAdmin (http://localhost:8082)
+#   --typebot            also start Typebot: builder http://localhost:8083, viewer http://localhost:8084
 #   --php                also start `php artisan serve`, the queue workers and the scheduler in the background
 #
 # The credentials live in the Laravel .env (docker compose reads the same file), so there is one source of truth.
@@ -37,7 +38,7 @@ CMD="up"
 if [[ "${1:-}" =~ ^(up|check|status|logs|down|reset)$ ]]; then CMD="$1"; shift; fi
 LOG_SVC=""; [[ "$CMD" == "logs" && "${1:-}" != --* && -n "${1:-}" ]] && { LOG_SVC="$1"; shift; }
 
-FIX_ENV=0; ASSUME_YES=0; MIGRATE=1; ADMIN_EMAIL=""; TOOLS=0; START_PHP=0; USE_REDIS=1
+FIX_ENV=0; ASSUME_YES=0; MIGRATE=1; ADMIN_EMAIL=""; TOOLS=0; TYPEBOT=0; START_PHP=0; USE_REDIS=1
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --fix-env) FIX_ENV=1; shift;;
@@ -46,6 +47,7 @@ while [[ $# -gt 0 ]]; do
     --admin-email) ADMIN_EMAIL="$2"; shift 2;;
     --no-redis) USE_REDIS=0; shift;;
     --tools) TOOLS=1; shift;;
+    --typebot) TYPEBOT=1; shift;;
     --php) START_PHP=1; shift;;
     -h|--help) sed -n '3,25p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 0;;
     *) echo "Unknown option: $1 (try --help)" >&2; exit 1;;
@@ -263,7 +265,7 @@ check_ports() {
 
 start_stack() {
   step "4/6  Starting the services"
-  local profile=(); [[ $TOOLS -eq 1 ]] && profile=(--profile tools)
+  local profile=(); [[ $TOOLS -eq 1 ]] && profile=(--profile tools); [[ $TYPEBOT -eq 1 ]] && profile+=(--profile typebot)
   dc "${profile[@]}" up -d
   ok "Containers started"
 }
@@ -423,6 +425,7 @@ summary() {
     Mailpit inbox    http://localhost:8025
 EOM
   [[ $TOOLS -eq 1 ]] && echo "    phpMyAdmin       http://localhost:8082"
+  [[ $TYPEBOT -eq 1 ]] && echo "    Typebot builder  http://localhost:8083   (viewer for the CRM: http://localhost:8084)"
   cat <<EOM
 
   Run PHP yourself (3 terminals) - serve MUST listen on 0.0.0.0 so Evolution (in Docker) can post webhooks to it:
@@ -464,7 +467,7 @@ case "$CMD" in
     ;;
   down)
     stop_php
-    dc --profile tools down
+    dc --profile tools --profile typebot down
     ok "Services stopped (data kept). Start again with ./start-local.sh"
     ;;
   reset)
@@ -475,7 +478,7 @@ case "$CMD" in
       [[ "${_a:-}" =~ ^[yYsS] ]] || die "Cancelled."
     fi
     stop_php
-    dc --profile tools down -v
+    dc --profile tools --profile typebot down -v
     ok "Everything removed. Run ./start-local.sh to start from scratch."
     ;;
 esac

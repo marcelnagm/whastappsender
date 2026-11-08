@@ -1008,6 +1008,12 @@ Build the conversation in [Typebot](https://typebot.io) (cloud or self-hosted) a
 
 On hand-over the AI agent is paused for that customer, an optional message is sent, the conversation is assigned (to the chosen person or by the normal distribution), an internal note and an in-app notification are created, the automation trigger **The bot handed over to a person** (`bot.handoff`) and the outbound webhook event `bot.handoff` fire. Closing the conversation resets the flow; a finished or handed-over conversation does not restart until it has been idle for the configured minutes. While the flow is active the AI agent stays quiet; when it ends without hand-over, the AI agent (if enabled) may continue. Needs the queue worker.
 
+**Self-hosted Typebot in the Docker stacks:**
+
+- **Production** (`.docker/docker-compose.yml`): adds `typebot-db` (PostgreSQL, `./data/typebot-db`), `typebot-builder` and `typebot-viewer`. Nginx publishes them with the same certificate as the app: builder `https://YOUR-DOMAIN:8443` (editor, log in by e-mail link through the app's `MAIL_*` SMTP) and viewer `https://YOUR-DOMAIN:8444`. Set `TYPEBOT_DB_PASSWORD`, `TYPEBOT_ENCRYPTION_SECRET`, `TYPEBOT_BUILDER_URL`, `TYPEBOT_VIEWER_URL` and `TYPEBOT_ADMIN_EMAIL` in `.env` (open ports 8443/8444 in the firewall), then `docker compose up -d`. In the CRM's **Typebot** page use the viewer URL as the address.
+- **Local** (`docker-compose.local.yml`): `./start-local.sh --typebot` (profile `typebot`, bound to 127.0.0.1, no variables needed). In the CRM use `http://localhost:8084` as the address; plain http/localhost addresses are accepted only when `APP_ENV=local`, anywhere else the address must be public https. Log in at http://localhost:8083 with `admin@localhost.test`; the link is in Mailpit (http://localhost:8025).
+- Handoff and callbacks: the flow calls the CRM's `handoff_url`, so for a local Typebot to reach your machine use a tunnel or `host.docker.internal`; in production the CRM's `APP_URL` must be reachable from the Typebot container.
+
 ## 💾 Data export
 
 **Data export** (menu, team permission) downloads CSV backups (UTF-8 with BOM, `;` separator) of **contacts, companies, deals, tasks, messages** (up to 200,000 per file) and **consent history**, streamed so large accounts do not exhaust memory. Only the account's own rows are exported, cells starting with `= + - @` are prefixed with `'` to block spreadsheet formula injection, and every download goes to the *Audit log*.
@@ -1633,7 +1639,7 @@ php artisan schedule:work
 ```
 
 `./start-local.sh --php` starts those three for you in the background. Other commands: `check` (verify only), `status`, `logs [service]`,
-`down` (stop, keep data), `reset` (stop **and delete** the local data), `--tools` adds phpMyAdmin (http://localhost:8082).
+`down` (stop, keep data), `reset` (stop **and delete** the local data), `--tools` adds phpMyAdmin (http://localhost:8082), `--typebot` adds Typebot (builder http://localhost:8083, viewer http://localhost:8084; login links arrive in Mailpit).
 
 The credentials live in the Laravel `.env` (docker compose reads the same file). Before starting anything the script refuses values that
 would hurt: a `DB_HOST` that is not your machine (a `DB_HOST` copied from an old `.env` could point to another server, so migrations would run
@@ -1839,6 +1845,9 @@ The Compose files refuse to start until these variables exist in `.env` (next to
 | `REDIS_PASSWORD` | Redis (`.docker/` stack) |
 | `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` | MinIO user / password |
 | `WHATSAPP_APIKEY` | Evolution API key |
+| `TYPEBOT_DB_PASSWORD` | PostgreSQL of Typebot (`.docker/` stack) |
+| `TYPEBOT_ENCRYPTION_SECRET` | Typebot encryption secret (exactly 32 characters: `openssl rand -base64 24`) |
+| `TYPEBOT_BUILDER_URL`, `TYPEBOT_VIEWER_URL`, `TYPEBOT_ADMIN_EMAIL` | Typebot public addresses (e.g. `https://sama.app.br:8443` / `:8444`) and the administrator e-mail |
 
 Generate each one with `openssl rand -base64 24 | tr -d '/+='`.
 

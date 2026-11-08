@@ -56,6 +56,8 @@ services:
       - "9000:9000" 
       - "8080:8080"
       - "8081:8081"
+      - "8443:8443"   # Typebot builder (editor)
+      - "8444:8444"   # Typebot viewer (runs the flows)
     volumes:
       - ./app:/var/www
       - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf
@@ -153,6 +155,64 @@ services:
     environment:
       - PMA_ARBITRARY=1
       - PMA_HOST=mysql
+    networks:
+      - evolution_network
+
+  # TYPEBOT (chatbot flow builder). The CRM talks to the viewer; users design flows in the builder.
+  # Public URLs (through Nginx, same certificate as the app): builder https://HOST:8443  viewer https://HOST:8444
+  typebot-db:
+    image: postgres:16-alpine
+    container_name: typebot_db
+    restart: always
+    environment:
+      POSTGRES_DB: typebot
+      POSTGRES_USER: typebot
+      POSTGRES_PASSWORD: ${TYPEBOT_DB_PASSWORD:?Set TYPEBOT_DB_PASSWORD in .env}
+    volumes:
+      - ./data/typebot-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U typebot -d typebot"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    networks:
+      - evolution_network
+
+  typebot-builder:
+    image: baptistearno/typebot-builder:latest
+    container_name: typebot_builder
+    restart: always
+    depends_on:
+      typebot-db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://typebot:${TYPEBOT_DB_PASSWORD}@typebot-db:5432/typebot
+      ENCRYPTION_SECRET: ${TYPEBOT_ENCRYPTION_SECRET:?Set TYPEBOT_ENCRYPTION_SECRET in .env (32 chars)}
+      NEXTAUTH_URL: ${TYPEBOT_BUILDER_URL:?Set TYPEBOT_BUILDER_URL in .env (e.g. https://sama.app.br:8443)}
+      NEXT_PUBLIC_VIEWER_URL: ${TYPEBOT_VIEWER_URL:?Set TYPEBOT_VIEWER_URL in .env (e.g. https://sama.app.br:8444)}
+      ADMIN_EMAIL: ${TYPEBOT_ADMIN_EMAIL:?Set TYPEBOT_ADMIN_EMAIL in .env}
+      DISABLE_SIGNUP: ${TYPEBOT_DISABLE_SIGNUP:-false}
+      SMTP_HOST: ${TYPEBOT_SMTP_HOST:-${MAIL_HOST:-}}
+      SMTP_PORT: ${TYPEBOT_SMTP_PORT:-${MAIL_PORT:-587}}
+      SMTP_USERNAME: ${TYPEBOT_SMTP_USERNAME:-${MAIL_USERNAME:-}}
+      SMTP_PASSWORD: ${TYPEBOT_SMTP_PASSWORD:-${MAIL_PASSWORD:-}}
+      SMTP_SECURE: ${TYPEBOT_SMTP_SECURE:-false}
+      NEXT_PUBLIC_SMTP_FROM: ${TYPEBOT_SMTP_FROM:-${MAIL_FROM_ADDRESS:-noreply@localhost}}
+    networks:
+      - evolution_network
+
+  typebot-viewer:
+    image: baptistearno/typebot-viewer:latest
+    container_name: typebot_viewer
+    restart: always
+    depends_on:
+      typebot-db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://typebot:${TYPEBOT_DB_PASSWORD}@typebot-db:5432/typebot
+      ENCRYPTION_SECRET: ${TYPEBOT_ENCRYPTION_SECRET:?Set TYPEBOT_ENCRYPTION_SECRET in .env (32 chars)}
+      NEXTAUTH_URL: ${TYPEBOT_BUILDER_URL}
+      NEXT_PUBLIC_VIEWER_URL: ${TYPEBOT_VIEWER_URL}
     networks:
       - evolution_network
 

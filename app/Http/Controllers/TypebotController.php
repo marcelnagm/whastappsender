@@ -35,7 +35,8 @@ class TypebotController extends Controller
             'instance_id' => 'nullable|integer', 'handoff_keywords' => 'nullable|string|max:255', 'on_finish' => 'required|in:none,handoff',
             'handoff_message' => 'nullable|string|max:1000', 'handoff_to' => 'nullable|integer', 'expire_minutes' => 'required|integer|min:5|max:10080',
         ]);
-        if (!OutboundWebhooks::urlAllowed($data['base_url'])) {
+        // local development talks to the Docker Typebot (http://localhost:8084); everywhere else it must be public https (no SSRF)
+        if (!app()->environment('local') && !OutboundWebhooks::urlAllowed($data['base_url'])) {
             return back()->withErrors(['base_url' => __('Use a public https address.')])->withInput();
         }
         if (!empty($data['instance_id']) && !Instance::where('user_id', $owner->id)->whereKey($data['instance_id'])->exists()) {
