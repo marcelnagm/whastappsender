@@ -1029,7 +1029,7 @@ Not everything happens in the chat. On a **contact** page, **Log an activity** r
 
 ## 🎂 Birthdays
 
-The contact form has a **Birthday** field. Every day at 08:00 `contacts:birthdays`, `deals:renewals` fires the automation trigger **"A contact has a birthday today"** (and the webhook event `contact.birthday`) once a year for each person celebrating, skipping people who opted out; Feb 29 is celebrated on Feb 28 in common years. Build the rule in **Automations** (send a message, add a label, create a task...): when the person has a conversation, it is the one used by the actions. **Contacts → Birthdays** lists the next 7/30/90 days.
+The contact form has a **Birthday** field. Every day at 08:00 `contacts:birthdays` fires the automation trigger **"A contact has a birthday today"** (and the webhook event `contact.birthday`) once a year for each person celebrating, skipping people who opted out; Feb 29 is celebrated on Feb 28 in common years. Build the rule in **Automations** (send a message, add a label, create a task...): when the person has a conversation, it is the one used by the actions. **Contacts → Birthdays** lists the next 7/30/90 days.
 
 Needs the scheduler (`contacts:birthdays`, `deals:renewals`) and the migration (`contacts.birthday`, `birthday_notified_year`).
 
@@ -1675,7 +1675,7 @@ After `git pull` (or `./install.sh update`, which does the first two steps for y
 
 1. `composer install --no-dev --optimize-autoloader` (new dependency: `webklex/php-imap`, pure PHP: the `imap` extension is **not** needed, but `iconv`, `mbstring` and `openssl` are).
 2. `php artisan migrate --force` — creates the tables of the sales pipeline, team inbox (labels, notes, assignment), tasks, consent register, quick replies, custom fields and segments, automations, message authorship and team goals. Nothing changes for existing data: every feature is opt-in (for instance campaigns only require consent after you switch it on in **Consent**).
-3. Make sure the **scheduler** runs (`* * * * * php artisan schedule:run`, already set up by `install.sh vps` and the Docker stack): it sends the follow-up reminders (`tasks:remind`) and the scheduled chat messages (`chat:send-scheduled`), both every minute, plus `sla:check` and `sequences:run` (every minute), `deals:stale` (daily) and `audit:prune` (weekly), and fetches the mailboxes (`email:fetch`). The **queue worker** must also run (outbound webhooks, chat sends).
+3. Make sure the **scheduler** runs (`* * * * * php artisan schedule:run`, already set up by `install.sh vps` and the Docker stack): it sends the follow-up reminders (`tasks:remind`) and the scheduled chat messages (`chat:send-scheduled`), both every minute, plus `sla:check`, `chat:wake` and `sequences:run` (every minute), `deals:stale`, `deals:renewals` and `contacts:birthdays` (daily) and `audit:prune` (weekly), and fetches the mailboxes (`email:fetch`). The **queue worker** must also run (outbound webhooks, chat sends).
 4. `php artisan billing:sync-plans --force` if you use plans and billing, so the plan limits are refreshed.
 5. Optional `.env`: `DEAL_NEW_AFTER_DAYS` (silence after which a returning customer counts as a new lead, default 30) and `CONSENT_OPTIN_KEYWORDS` (see [Environment variables](#-environment-variables)).
 6. Restart the queue workers (`php artisan queue:restart`; the VPS script does it).
