@@ -42,6 +42,7 @@
 | [Proposals](#-proposals-quotes) | Quote built from a deal's items, public link with online accept / decline, notices and automation triggers, print / save as PDF |
 | [Lead sources](#-lead-sources) | Where each deal came from (channel, form + UTM campaign, or typed) and the funnel result per source: created, won, win rate, value, days to win |
 | [Duplicate contacts](#-duplicate-contacts) | Finds people registered twice (same e-mail or phone written differently) and merges them keeping conversations, deals, tasks and consent proof |
+| [Data export](#-data-export) | CSV backup of contacts, companies, deals, tasks, messages and consent history |
 | [Audit log](#-audit-log) | Who deleted or changed what (team, integrations, settings, exports) |
 | [Meeting booking](#-meeting-booking) | Public page where customers pick a free time; creates the contact and a task |
 | [Knowledge base](#-knowledge-base) | Reusable answers found from the chat with `?word` |
@@ -989,6 +990,10 @@ Bulk messaging needs permission: Meta's policies and Brazil's LGPD expect you to
 
 * * *
 
+## 💾 Data export
+
+**Data export** (menu, team permission) downloads CSV backups (UTF-8 with BOM, `;` separator) of **contacts, companies, deals, tasks, messages** (up to 200,000 per file) and **consent history**, streamed so large accounts do not exhaust memory. Only the account's own rows are exported, cells starting with `= + - @` are prefixed with `'` to block spreadsheet formula injection, and every download goes to the *Audit log*.
+
 ## 🛡️ Audit log
 
 **Audit log** (menu, team permission) lists who did what: every deletion, and changes to the team, webhooks, bookings, opening hours, SLA, survey, companies, sequences, knowledge base, automations, audiences, proposals, bulk contact actions and data exports. Each line has date, person (the real team member, not the account owner), route, item id and IP; **contents are never stored**. Filter by person or action. Entries older than a year are removed weekly (`php artisan audit:prune --days=365`).
@@ -1578,7 +1583,7 @@ After `git pull` (or `./install.sh update`, which does the first two steps for y
 
 1. `composer install --no-dev --optimize-autoloader` (new dependency: `webklex/php-imap`, pure PHP: the `imap` extension is **not** needed, but `iconv`, `mbstring` and `openssl` are).
 2. `php artisan migrate --force` — creates the tables of the sales pipeline, team inbox (labels, notes, assignment), tasks, consent register, quick replies, custom fields and segments, automations, message authorship and team goals. Nothing changes for existing data: every feature is opt-in (for instance campaigns only require consent after you switch it on in **Consent**).
-3. Make sure the **scheduler** runs (`* * * * * php artisan schedule:run`, already set up by `install.sh vps` and the Docker stack): it sends the follow-up reminders (`tasks:remind`) and the scheduled chat messages (`chat:send-scheduled`), both every minute, and fetches the mailboxes (`email:fetch`).
+3. Make sure the **scheduler** runs (`* * * * * php artisan schedule:run`, already set up by `install.sh vps` and the Docker stack): it sends the follow-up reminders (`tasks:remind`) and the scheduled chat messages (`chat:send-scheduled`), both every minute, plus `sla:check` and `sequences:run` (every minute), `deals:stale` (daily) and `audit:prune` (weekly), and fetches the mailboxes (`email:fetch`). The **queue worker** must also run (outbound webhooks, chat sends).
 4. `php artisan billing:sync-plans --force` if you use plans and billing, so the plan limits are refreshed.
 5. Optional `.env`: `DEAL_NEW_AFTER_DAYS` (silence after which a returning customer counts as a new lead, default 30) and `CONSENT_OPTIN_KEYWORDS` (see [Environment variables](#-environment-variables)).
 6. Restart the queue workers (`php artisan queue:restart`; the VPS script does it).

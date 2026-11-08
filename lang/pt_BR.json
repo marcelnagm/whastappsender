@@ -1681,5 +1681,11 @@
     "Action (for example contacts.destroy)": "Ação (por exemplo contacts.destroy)",
     "Audit log": "Log de auditoria",
     "Filter": "Filtrar",
-    "Who changed what: deletions, team, integrations and settings. Contents are never stored.": "Quem alterou o quê: exclusões, equipe, integrações e configurações. O conteúdo nunca é guardado."
+    "Who changed what: deletions, team, integrations and settings. Contents are never stored.": "Quem alterou o quê: exclusões, equipe, integrações e configurações. O conteúdo nunca é guardado.",
+    "Consent history": "Histórico de consentimento",
+    "Data export": "Exportação de dados",
+    "Download a CSV backup of your data (UTF-8, separator ;). Every download is recorded in the audit log.": "Baixe um backup CSV dos seus dados (UTF-8, separador ;). Cada download fica registrado no log de auditoria.",
+    "Messages": "Mensagens",
+    "Messages: up to :n per file.": "Mensagens: até :n por arquivo.",
+    "Tasks": "Tarefas"
 }

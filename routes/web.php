@@ -306,6 +306,10 @@ Route::group(['namespace' => 'App\Http\Controllers', 'middleware' => ['auth', 's
         Route::delete('/{company}/contacts/{contact}', [$co, 'detach'])->whereNumber('company')->whereNumber('contact')->name('detach');
     });
 
+    // Data export (CSV backup)
+    Route::get('exports', [\App\Http\Controllers\ExportController::class, 'index'])->name('exports.index');
+    Route::get('exports/{type}', [\App\Http\Controllers\ExportController::class, 'download'])->name('export.download');
+
     // Audit log
     Route::get('audit', [\App\Http\Controllers\AuditController::class, 'index'])->name('audit.index');
 

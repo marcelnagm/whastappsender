@@ -104,7 +104,7 @@ final class TeamRoles
         ['automations', ['automations.*', 'sequences.*']],
         ['channels', ['telegram.*', 'tiktok.*', 'facebook.*', 'email.*', 'instagram.*', 'instances.*', 'whatsapp.*']],
         ['ai', ['ai.*']],
-        ['team', ['team.*', 'team-report.*', 'hours.*', 'sla.*', 'csat.*', 'webhooks-out.*', 'bookings.*', 'audit.*']],
+        ['team', ['team.*', 'team-report.*', 'hours.*', 'sla.*', 'csat.*', 'webhooks-out.*', 'bookings.*', 'audit.*', 'exports.*', 'export.*']],
     ];
 
     /** API paths (after "api/v1/"), by method kind: R = read, W = write. First match wins. */
