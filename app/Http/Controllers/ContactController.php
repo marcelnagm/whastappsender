@@ -53,15 +53,17 @@ class ContactController extends Controller
     /** Company assignment / opt-out for the selected contacts. */
     public function bulkUpdate(Request $request)
     {
-        $data = $request->validate(['ids' => 'required|string', 'action' => 'required|in:company,optout', 'company_id' => 'nullable|integer']);
+        $data = $request->validate(['ids' => 'required|string', 'action' => 'required|in:company,optout,lifecycle', 'company_id' => 'nullable|integer', 'stage' => 'nullable|string|max:20']);
         $ids = json_decode($data['ids'], true);
         if (!is_array($ids) || !$ids) {
             return back()->with('error', __('No contacts selected.'));
         }
         $svc = app(\App\Services\Contacts\ContactBulk::class);
-        $n = $data['action'] === 'company'
-            ? $svc->setCompany($request->user(), $ids, !empty($data['company_id']) ? (int) $data['company_id'] : null)
-            : $svc->optOut($request->user(), \App\Services\Team\TeamContext::actor($request), $ids);
+        $n = match ($data['action']) {
+            'company' => $svc->setCompany($request->user(), $ids, !empty($data['company_id']) ? (int) $data['company_id'] : null),
+            'lifecycle' => $svc->setLifecycle($request->user(), $ids, $data['stage'] ?? null),
+            default => $svc->optOut($request->user(), \App\Services\Team\TeamContext::actor($request), $ids),
+        };
 
         return back()->with('success', __(':n contact(s) updated.', ['n' => $n]));
     }
@@ -108,11 +110,15 @@ class ContactController extends Controller
                 });
             })
             ->when(in_array($request->input('tier'), ['hot', 'warm', 'cold', 'frozen'], true), fn ($q) => $q->tier($request->input('tier')))
+            ->when(in_array($request->input('stage'), \App\Services\Contacts\Lifecycle::STAGES, true), fn ($q) => $request->input('stage') === 'lead'
+                ? $q->where(fn ($w) => $w->whereNull('lifecycle_stage')->orWhere('lifecycle_stage', 'lead')) : $q->where('lifecycle_stage', $request->input('stage')))
             ->when($request->input('sort') === 'score', fn ($q) => $q->orderByDesc('score'))
             ->orderBy('name', 'asc')
             ->paginate(20)->withQueryString(); // 20 per page for usability
 
-        return view('contact.index', compact('contacts'))
+        $lifecycle = app(\App\Services\Contacts\Lifecycle::class)->counts($request->user());
+
+        return view('contact.index', compact('contacts', 'lifecycle'))
             ->with('i', (request()->input('page', 1) - 1) * $contacts->perPage());
     }
 

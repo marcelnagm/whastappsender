@@ -42,6 +42,7 @@
 | [Proposals](#-proposals-quotes) | Quote built from a deal's items, public link with online accept / decline, notices and automation triggers, print / save as PDF |
 | [Lead sources](#-lead-sources) | Where each deal came from (channel, form + UTM campaign, or typed) and the funnel result per source: created, won, win rate, value, days to win |
 | [Duplicate contacts](#-duplicate-contacts) | Finds people registered twice (same e-mail or phone written differently) and merges them keeping conversations, deals, tasks and consent proof |
+| [Lifecycle stages](#-lifecycle-stages) | Lead → qualified → opportunity → customer, moved by deals, filter and bulk action |
 | [Win/loss analysis](#-winloss-analysis) | Why deals are lost, win rate by origin and by person, catalog of lost reasons |
 | [Typebot flows](#-typebot-flows) | Typebot conversation flows on every channel, with hand-over to a person |
 | [Data export](#-data-export) | CSV backup of contacts, companies, deals, tasks, messages and consent history |
@@ -991,6 +992,12 @@ Bulk messaging needs permission: Meta's policies and Brazil's LGPD expect you to
 * Not included yet: a confirmation message to the customer after `#sair`, and an unsubscribe footer appended to campaign texts.
 
 * * *
+
+## 🧭 Lifecycle stages
+
+Every person has a **lifecycle stage**: *Lead → Qualified → Opportunity → Customer* (or *Churned*). People without a stage count as *Lead*. The CRM moves them forward by itself: a deal linked to the person makes them an **Opportunity**, a **won** deal makes them a **Customer** (also when they were *Churned*). The automatic path never moves anyone backwards; a person can set any stage with the **Stage…** selector of the bulk bar on the contacts list (select contacts → choose the stage; "— none" clears it).
+
+On **Contacts** the stage chips at the top filter the list and show how many people are in each stage; each row shows the stage badge. Nothing to configure; the migration only adds two columns (`lifecycle_stage`, `lifecycle_changed_at`).
 
 ## 🏆 Win/loss analysis
 

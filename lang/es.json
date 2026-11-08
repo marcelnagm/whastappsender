@@ -1737,5 +1737,11 @@
     "No reason given": "Sin motivo indicado",
     "Reasons offered when losing a deal": "Motivos ofrecidos al perder un negocio",
     "Win/loss": "Ganados/perdidos",
-    "Win/loss analysis": "Análisis de ganados y perdidos"
+    "Win/loss analysis": "Análisis de ganados y perdidos",
+    "Churned": "Perdido (churn)",
+    "Customer": "Cliente",
+    "Lead": "Lead",
+    "Lifecycle": "Ciclo de vida",
+    "Opportunity": "Oportunidad",
+    "Qualified": "Calificado"
 }

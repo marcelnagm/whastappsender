@@ -38,6 +38,20 @@ class ContactBulk
         return $n;
     }
 
+    /** Sets the lifecycle stage ('' clears it). Returns how many contacts changed. */
+    public function setLifecycle(User $owner, array $ids, ?string $stage): int
+    {
+        $stage = $stage ?: null;
+        abort_if($stage !== null && !in_array($stage, Lifecycle::STAGES, true), 422);
+        $svc = app(Lifecycle::class);
+        $n = 0;
+        $this->mine($owner, $ids)->get()->each(function (Contact $c) use ($svc, $stage, &$n) {
+            $n += $svc->set($c, $stage) ? 1 : 0;
+        });
+
+        return $n;
+    }
+
     public function optOut(User $owner, User $actor, array $ids): int
     {
         $n = 0;

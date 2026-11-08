@@ -21,6 +21,7 @@
                 @if ($bulkCompanies->isNotEmpty())
                 <select id="bulkCompany" class="form-select form-select-sm rounded-pill" style="width:140px" onchange="submitBulkUpdate('company')"><option value="">{{ __('Company') }}…</option><option value="0">— {{ __('none') }}</option>@foreach ($bulkCompanies as $bc)<option value="{{ $bc->id }}">{{ $bc->name }}</option>@endforeach</select>
                 @endif
+                <select id="bulkStage" class="form-select form-select-sm rounded-pill" style="width:140px" onchange="submitBulkUpdate('lifecycle')"><option value="">{{ __('Stage') }}…</option><option value="-">— {{ __('none') }}</option>@foreach (\App\Services\Contacts\Lifecycle::labels() as $k => $l)<option value="{{ $k }}">{{ $l }}</option>@endforeach</select>
                 <button type="button" class="btn btn-outline-warning btn-sm fw-bold rounded-pill" onclick="submitBulkUpdate('optout')" title="{{ __('Mark as opted out') }}"><i class="bi bi-slash-circle"></i></button>
                 <button type="button" class="btn btn-danger btn-sm fw-bold rounded-pill" onclick="submitBulk('delete')">
                     <i class="bi bi-trash me-1"></i> {{ __('REMOVE') }}
@@ -60,6 +61,13 @@
                 </div>
             </div>
 
+            <div class="d-flex flex-wrap gap-1 align-items-center small mb-2">
+                <span class="text-muted me-1">{{ __('Lifecycle') }}:</span>
+                @foreach (\App\Services\Contacts\Lifecycle::labels() as $k => $l)
+                    <a href="{{ route('contacts.index', array_merge(request()->except('stage', 'page'), ['stage' => $k])) }}" class="btn btn-sm {{ request('stage') === $k ? 'btn-primary' : 'btn-outline-secondary' }}">{{ $l }} <span class="badge text-bg-light">{{ $lifecycle[$k] ?? 0 }}</span></a>
+                @endforeach
+                @if (request('stage'))<a href="{{ route('contacts.index', request()->except('stage', 'page')) }}" class="btn btn-sm btn-link">{{ __('Clear') }}</a>@endif
+            </div>
             <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
                 <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-bottom">
                     <h6 class="m-0 font-weight-bold text-primary">{{ __('Leads (') }}{{ $contacts->total() }})</h6>
@@ -133,6 +141,7 @@
                                                 <i class="bi bi-whatsapp me-1"></i>{{ $contact->contact }}
                                             </a>
                                             <span class="text-muted x-small">{{ $contact->email ?? '---' }}</span>
+                                            <span class="x-small"><span class="badge text-bg-light border">{{ \App\Services\Contacts\Lifecycle::labels()[$contact->lifecycle_stage ?: 'lead'] }}</span></span>
                                         </div>
                                     </td>
                                     <td class="text-center">
@@ -228,11 +237,13 @@
         if (ids.length === 0) return;
         const sel = document.getElementById('bulkCompany');
         if (action === 'company' && (!sel || sel.value === '')) return;
+        const st = document.getElementById('bulkStage');
+        if (action === 'lifecycle' && (!st || st.value === '')) return;
         if (action === 'optout' && !confirm(@json(__('Mark the selected contacts as opted out?')))) return;
         const f = document.getElementById('bulkActionForm');
         f.action = "{{ route('contacts.bulk-update') }}";
         document.getElementById('bulkIdsInput').value = JSON.stringify(ids);
-        f.insertAdjacentHTML('beforeend', '<input type="hidden" name="action" value="' + action + '"><input type="hidden" name="company_id" value="' + (action === 'company' ? sel.value : '') + '">');
+        f.insertAdjacentHTML('beforeend', '<input type="hidden" name="action" value="' + action + '"><input type="hidden" name="company_id" value="' + (action === 'company' ? sel.value : '') + '"><input type="hidden" name="stage" value="' + (action === 'lifecycle' ? (st.value === '-' ? '' : st.value) : '') + '">');
         f.submit();
     }
 
