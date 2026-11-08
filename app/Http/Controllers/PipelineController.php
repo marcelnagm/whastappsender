@@ -158,9 +158,10 @@ class PipelineController extends Controller
     public function updateStage(Request $request, int $stage)
     {
         $s = $this->stage($request, $stage);
-        $data = $request->validate(['name' => 'required|string|max:80', 'kind' => 'nullable|in:open,won,lost', 'color' => ['nullable', 'regex:/^#[0-9a-fA-F]{6}$/']]);
+        $data = $request->validate(['name' => 'required|string|max:80', 'kind' => 'nullable|in:open,won,lost', 'color' => ['nullable', 'regex:/^#[0-9a-fA-F]{6}$/'], 'checklist' => 'nullable|string|max:4000', 'checklist_required' => 'nullable|boolean']);
         $kind = $data['kind'] ?? $s->kind;
-        $s->update(['name' => $data['name'], 'kind' => $kind, 'color' => $data['color'] ?? $s->color]);
+        $s->update(['name' => $data['name'], 'kind' => $kind, 'color' => $data['color'] ?? $s->color,
+            'checklist' => \App\Services\Pipeline\StageChecklist::parse($data['checklist'] ?? '') ?: null, 'checklist_required' => $request->boolean('checklist_required')]);
         Deal::where('stage_id', $s->id)->update(['status' => $kind]); // the deals in it follow the stage
 
         return redirect()->route('pipeline.index', ['pipeline' => $s->pipeline_id])->with('success', __('Stage saved.'));

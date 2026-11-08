@@ -59,6 +59,7 @@ class SalesPipeline
     {
         abort_unless($stage->pipeline_id === $deal->pipeline_id && $stage->user_id === $deal->user_id, 422);
 
+        app(StageChecklist::class)->guard($deal, $stage);   // a required checklist must be done before moving on
         $wasStage = $deal->stage_id;
         $wasStatus = $deal->status;
         $this->place($deal, $stage, $lostReason);

@@ -1753,5 +1753,9 @@
     "Snoozed": "Pospuestas",
     "Snoozed conversation is back: :name": "Conversación pospuesta de vuelta: :name",
     "Snoozed until": "Pospuesta hasta",
-    "Tomorrow 9:00": "Mañana 9:00"
+    "Tomorrow 9:00": "Mañana 9:00",
+    "Checklist": "Checklist",
+    "Finish the checklist of \":stage\" first: :items": "Completa primero el checklist de \":stage\": :items",
+    "One step per line": "Un paso por línea",
+    "Required to move the deal forward": "Obligatorio para avanzar el negocio"
 }

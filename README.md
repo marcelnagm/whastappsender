@@ -44,6 +44,7 @@
 | [Duplicate contacts](#-duplicate-contacts) | Finds people registered twice (same e-mail or phone written differently) and merges them keeping conversations, deals, tasks and consent proof |
 | [Lifecycle stages](#-lifecycle-stages) | Lead → qualified → opportunity → customer, moved by deals, filter and bulk action |
 | [Snoozed conversations](#-snoozed-conversations) | Take a conversation out of the inbox until a time or the next customer message |
+| [Stage checklists](#-stage-checklists-playbooks) | Steps per stage, ticked on each deal, optionally required before moving forward |
 | [Win/loss analysis](#-winloss-analysis) | Why deals are lost, win rate by origin and by person, catalog of lost reasons |
 | [Typebot flows](#-typebot-flows) | Typebot conversation flows on every channel, with hand-over to a person |
 | [Data export](#-data-export) | CSV backup of contacts, companies, deals, tasks, messages and consent history |
@@ -1005,6 +1006,10 @@ On **Contacts** the stage chips at the top filter the list and show how many peo
 In the chat panel of a conversation, the **Snooze…** selector (in 1 hour, in 3 hours, tomorrow 9:00, next week) takes it out of the inbox. It comes back by itself when the time arrives (the person in charge, or the owner, gets a notification) or **as soon as the customer writes again**. **Bring back now** undoes it earlier. Snoozed conversations stay reachable in the conversation filter **Snoozed**.
 
 Needs the scheduler (`chat:wake` runs every minute) and the migration (`chats.snoozed_until`).
+
+## ✅ Stage checklists (playbooks)
+
+In **Funnel → Customize**, each stage has a **Checklist** (one step per line, up to 20) and an option **Required to move the deal forward**. Open a deal: it shows the checklist of the stage it is in and the team ticks the steps off (progress is kept per stage; changing the text of a step makes it a new, unticked step). With the option on, dragging the deal out of that stage is refused with the list of missing steps; sending it to a *Lost* stage is always allowed. Nothing to schedule; the migration adds `pipeline_stages.checklist`, `checklist_required` and the `deal_checks` table.
 
 ## 🏆 Win/loss analysis
 

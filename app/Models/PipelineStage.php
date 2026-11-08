@@ -8,7 +8,9 @@ class PipelineStage extends Model
 {
     public const KINDS = ['open', 'won', 'lost'];
 
-    protected $fillable = ['user_id', 'pipeline_id', 'name', 'kind', 'color', 'position'];
+    protected $fillable = ['user_id', 'pipeline_id', 'name', 'kind', 'color', 'position', 'checklist', 'checklist_required'];
+
+    protected $casts = ['checklist' => 'array', 'checklist_required' => 'boolean'];
 
     public function pipeline()
     {

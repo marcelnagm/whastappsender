@@ -84,6 +84,7 @@
       <div class="col-6"><label class="form-label">{{ __('Value') }}</label><input name="value" id="dValue" type="number" step="0.01" min="0" class="form-control"></div>
       <div class="col-6"><label class="form-label">{{ __('Expected close') }}</label><input name="expected_close_date" id="dDate" type="date" class="form-control"></div>
     </div>
+    <div class="d-none" id="checkBox"><label class="form-label mb-1">{{ __('Checklist') }}</label><div id="checkList" class="small"></div></div>
     <div class="d-none" id="itemsBox">
       <label class="form-label mb-1">{{ __('Items') }}</label>
       <div id="itemsList" class="small mb-2"></div>
@@ -119,13 +120,17 @@
   <div class="modal-body vstack gap-3">
     <div class="small text-muted">{{ __('Won and Lost stages close the deal when a card is dropped on them; the other stages keep it open.') }}</div>
     @foreach ($stages as $s)
-      <form method="post" action="{{ route('pipeline.stages.update', $s->id) }}" class="d-flex gap-2 align-items-center">
+      <form method="post" action="{{ route('pipeline.stages.update', $s->id) }}" class="d-flex flex-wrap gap-2 align-items-center">
         @csrf @method('PUT')
         <input name="name" value="{{ $s->name }}" class="form-control form-control-sm" required maxlength="80">
         <select name="kind" class="form-select form-select-sm w-auto"><option value="open" @selected($s->kind==='open')>{{ __('Open') }}</option><option value="won" @selected($s->kind==='won')>{{ __('Won') }}</option><option value="lost" @selected($s->kind==='lost')>{{ __('Lost') }}</option></select>
         <input type="color" name="color" value="{{ $s->color ?: '#6c757d' }}" class="form-control form-control-color form-control-sm">
         <button class="btn btn-sm btn-outline-primary">{{ __('Save') }}</button>
         <button class="btn btn-sm btn-outline-danger" form="delStage{{ $s->id }}" onclick="return confirm('{{ __('Remove this stage?') }}')"><i class="bi bi-trash"></i></button>
+        <details class="w-100" @if ($s->checklist) open @endif><summary class="small text-muted">{{ __('Checklist') }}@if ($s->checklist) ({{ count($s->checklist) }})@endif</summary>
+          <textarea name="checklist" rows="3" maxlength="4000" class="form-control form-control-sm mt-1" placeholder="{{ __('One step per line') }}">{{ implode("\n", (array) $s->checklist) }}</textarea>
+          <div class="form-check mt-1 small"><input type="checkbox" class="form-check-input" name="checklist_required" value="1" id="req{{ $s->id }}" @checked($s->checklist_required)><label class="form-check-label" for="req{{ $s->id }}">{{ __('Required to move the deal forward') }}</label></div>
+        </details>
       </form>
       <form id="delStage{{ $s->id }}" method="post" action="{{ route('pipeline.stages.destroy', $s->id) }}">@csrf @method('DELETE')</form>
     @endforeach
@@ -185,10 +190,25 @@ function drawItems(d) {
   catalog.forEach(p => { const o = document.createElement('option'); o.value = p.id; o.textContent = p.name + ' · ' + money(p.price); sel.appendChild(o); });
   document.getElementById('dValue').value = d.value || ''; document.getElementById('dValue').readOnly = d.items.length > 0;
 }
+const checkUrl = id => dealBase + '/' + id + '/checklist';
+function drawChecklist(id, items) {
+  const box = document.getElementById('checkBox'), list = document.getElementById('checkList'); list.innerHTML = '';
+  box.classList.toggle('d-none', !items.length);
+  items.forEach(i => {
+    const l = document.createElement('label'); l.className = 'd-flex gap-2 align-items-center py-1';
+    const c = document.createElement('input'); c.type = 'checkbox'; c.className = 'form-check-input m-0'; c.checked = i.done;
+    c.onchange = async () => { const r = await fetch(checkUrl(id) + '/' + i.hash, {method: 'PUT', headers: jsonH, body: JSON.stringify({done: c.checked})}); if (r.ok) drawChecklist(id, (await r.json()).items); };
+    l.appendChild(c); l.appendChild(document.createTextNode(i.title)); list.appendChild(l);
+  });
+}
+async function loadChecklist(id) {
+  try { drawChecklist(id, (await (await fetch(checkUrl(id), {headers: {'Accept': 'application/json'}})).json()).items); } catch (e) {}
+}
 async function loadItems(id) {
   curDeal = id; const box = document.getElementById('itemsBox');
-  if (!id) { box.classList.add('d-none'); document.getElementById('dValue').readOnly = false; return; }
+  if (!id) { box.classList.add('d-none'); document.getElementById('checkBox').classList.add('d-none'); document.getElementById('dValue').readOnly = false; return; }
   box.classList.remove('d-none');
+  loadChecklist(id);
   drawItems(await (await fetch(itemsUrl(), {headers: {'Accept': 'application/json'}})).json());
 }
 document.getElementById('iProduct').addEventListener('change', e => { const p = catalog.find(x => String(x.id) === e.target.value); if (p) document.getElementById('iPrice').value = p.price; });
@@ -224,9 +244,9 @@ document.querySelectorAll('.kb-list').forEach(list => {
     try {
       const r = await fetch(dealBase + '/' + card.dataset.deal + '/move', {method: 'POST', headers: {'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': @json(csrf_token())},
         body: JSON.stringify({stage_id: list.dataset.stage, position, lost_reason: reason})});
-      if (!r.ok) throw new Error();
+      if (!r.ok) { const j = await r.json().catch(() => ({})); throw new Error(j.message || ''); }
       location.reload();
-    } catch (err) { origin.insertBefore(card, next); alert(@json(__('Could not move the deal.'))); }
+    } catch (err) { origin.insertBefore(card, next); alert(err.message || @json(__('Could not move the deal.'))); }
   });
 });
 </script>
