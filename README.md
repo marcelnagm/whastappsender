@@ -1596,6 +1596,7 @@ git clone https://github.com/marcelnagm/whastappsender.git && cd whastappsender 
 
 # Fresh Debian/Ubuntu VPS (as root): Nginx + PHP-FPM + MySQL + Supervisor workers + scheduler + Let's Encrypt SSL
 sudo ./install.sh vps --domain sama.example.com --email you@example.com --admin-email you@example.com
+# add --typebot to also generate the Typebot secrets in .docker/.env (see "Typebot flows")
 
 # After every `git pull`
 ./install.sh update          # use sudo on the VPS (it also restarts the workers)

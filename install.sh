@@ -16,6 +16,7 @@
 #   --admin-email E --admin-password PW   first administrator (password generated when omitted)
 #   --evolution-url HOST --evolution-port PORT --evolution-key KEY --evolution-protocol http|https
 #   --no-redis                  VPS: do not install Redis; keep the database queue and file cache
+#   --typebot                   VPS: prepare the self-hosted Typebot of the Docker stack (.docker/.env secrets + instructions)
 #   --groq-key KEY              Groq API key for the AI features
 #   --start                     local: start the web server, queue workers and scheduler (./start.sh) at the end
 #   --yes                       never ask questions (use defaults / flags)
@@ -33,7 +34,7 @@ DOMAIN=""; EMAIL=""; SSL=1
 DB_HOST=""; DB_PORT=""; DB_NAME=""; DB_USER=""; DB_PASS=""; DB_ROOT_PASS=""; CREATE_DB=0
 ADMIN_EMAIL=""; ADMIN_PASSWORD=""
 EVO_URL=""; EVO_PORT=""; EVO_KEY=""; EVO_PROTO=""; GROQ_KEY=""
-USE_REDIS=1; START=0; ASSUME_YES=0; SKIP_COMPOSER=0; SKIP_MIGRATE=0
+USE_REDIS=1; TYPEBOT=0; START=0; ASSUME_YES=0; SKIP_COMPOSER=0; SKIP_MIGRATE=0
 
 usage() { sed -n '3,28p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; }
 
@@ -57,6 +58,7 @@ while [[ $# -gt 0 ]]; do
     --evolution-protocol) EVO_PROTO="$2"; shift 2;;
     --groq-key) GROQ_KEY="$2"; shift 2;;
     --no-redis) USE_REDIS=0; shift;;
+    --typebot) TYPEBOT=1; shift;;
     --start) START=1; shift;;
     --yes|-y|--non-interactive) ASSUME_YES=1; shift;;
     --skip-composer) SKIP_COMPOSER=1; shift;;
@@ -254,8 +256,38 @@ install_local() {
     • GROQ_API_KEY in .env for the AI features
     • Plans and payments (optional): BILLING_ENABLED=true, then Admin → Payment gateway
 EOM
+  typebot_instructions localhost
   [[ $START -eq 1 ]] && { echo; c_info "Starting services..."; (cd "$APP_DIR" && bash ./start.sh); }
   return 0
+}
+
+# ---- Typebot (self-hosted flow builder, Docker stack in .docker/) ----
+# Writes the secrets the stack requires to .docker/.env (kept if already there) and prints what is left to do.
+typebot_instructions() {
+  local host="${1:-YOUR-DOMAIN}"
+  cat <<EOM
+
+  Typebot (chatbot flows) - see README "Typebot flows":
+    • Production: the Docker stack in .docker/ runs it (builder https://${host}:8443, viewer https://${host}:8444).
+      ./install.sh vps --typebot   writes the TYPEBOT_* values to .docker/.env; then open ports 8443/8444 and run
+      (cd .docker && docker compose up -d). Log in to the builder with the TYPEBOT_ADMIN_EMAIL link (SMTP = MAIL_* in .env).
+    • In the CRM, menu Typebot: address = the viewer URL (https://${host}:8444), public id = the published bot.
+    • Local development:  ./start-local.sh --typebot   (builder http://localhost:8083, viewer http://localhost:8084,
+      login links in Mailpit http://localhost:8025; use http://localhost:8084 as the address with APP_ENV=local).
+EOM
+}
+
+typebot_prepare() {
+  local host="$1" denv="$APP_DIR/.docker/.env"
+  [[ -d "$APP_DIR/.docker" ]] || { c_warn "No .docker/ folder: Typebot is not prepared."; return 0; }
+  touch "$denv"; chmod 600 "$denv"
+  tb_set() { grep -qE "^$1=" "$denv" || printf '%s=%s\n' "$1" "$2" >>"$denv"; }
+  tb_set TYPEBOT_DB_PASSWORD "$(rand 24)"
+  tb_set TYPEBOT_ENCRYPTION_SECRET "$(rand 32)"
+  tb_set TYPEBOT_BUILDER_URL "https://${host}:8443"
+  tb_set TYPEBOT_VIEWER_URL "https://${host}:8444"
+  tb_set TYPEBOT_ADMIN_EMAIL "${EMAIL:-admin@${host}}"
+  c_ok "Typebot values stored in .docker/.env (existing values kept)"
 }
 
 # ================================================================= VPS
@@ -516,6 +548,8 @@ SUP
       ${url}/api/webhooks/mercadopago
     • Updating later:  git pull && sudo ./install.sh update
 EOM
+  [[ $TYPEBOT -eq 1 ]] && typebot_prepare "$DOMAIN"
+  typebot_instructions "$DOMAIN"
 }
 
 # ================================================================= UPDATE
