@@ -49,6 +49,7 @@ class SalesPipeline
         $deal->position = 1 + (int) Deal::where('stage_id', $stage->id)->max('position');
         $this->place($deal, $stage);
         $deal->save();
+        \App\Services\Reports\FunnelReport::record($deal);
         app(\App\Services\Automation\Automations::class)->fire('deal.created', $p->user_id, ['deal' => $deal, 'stage_id' => $stage->id]);
 
         return $deal;
@@ -74,6 +75,7 @@ class SalesPipeline
         }
 
         $deal = $deal->fresh();
+        \App\Services\Reports\FunnelReport::record($deal);
         if ($wasStage !== $stage->id) {
             $auto = app(\App\Services\Automation\Automations::class);
             $ctx = ['deal' => $deal, 'stage_id' => $stage->id];

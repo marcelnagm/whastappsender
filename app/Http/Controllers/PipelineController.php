@@ -84,6 +84,19 @@ class PipelineController extends Controller
         return view('pipeline.sources', ['data' => $report->build($request->user(), now()->subDays($days - 1)->startOfDay(), now()->endOfDay()), 'days' => $days]);
     }
 
+    /** Conversion between stages, time in each stage and sales velocity. */
+    public function funnel(Request $request)
+    {
+        $owner = $request->user();
+        $pipelines = Pipeline::where('user_id', $owner->id)->orderBy('id')->get();
+        $pipeline = $pipelines->firstWhere('id', (int) $request->query('pipeline')) ?: $pipelines->first();
+        abort_unless($pipeline, 404);
+        $days = in_array((string) $request->query('period'), ['30', '90', '365'], true) ? (int) $request->query('period') : 90;
+
+        return view('pipeline.funnel', ['pipelines' => $pipelines, 'pipeline' => $pipeline, 'days' => $days,
+            'data' => app(\App\Services\Reports\FunnelReport::class)->build($pipeline, now()->subDays($days - 1)->startOfDay(), now()->endOfDay())]);
+    }
+
     /** Why deals are won or lost. */
     public function winLoss(Request $request)
     {

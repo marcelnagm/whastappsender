@@ -1757,5 +1757,15 @@
     "Checklist": "Checklist",
     "Finish the checklist of \":stage\" first: :items": "Completa primero el checklist de \":stage\": :items",
     "One step per line": "Un paso por línea",
-    "Required to move the deal forward": "Obligatorio para avanzar el negocio"
+    "Required to move the deal forward": "Obligatorio para avanzar el negocio",
+    "Average deal": "Ticket promedio",
+    "Avg. days in stage": "Días promedio en la etapa",
+    "Conversion": "Conversión",
+    "Deals that reached it": "Negocios que llegaron",
+    "Funnel conversion": "Conversión del embudo",
+    "How many deals reach each stage, how many move on, how long they stay and how fast the pipeline turns into revenue. History starts when this feature was installed.": "Cuántos negocios llegan a cada etapa, cuántos avanzan, cuánto tiempo permanecen y qué tan rápido el embudo se convierte en ingresos. El historial empieza cuando se instaló esta función.",
+    "Moved on": "Avanzaron",
+    "Sales cycle": "Ciclo de ventas",
+    "Velocity = open deals × win rate × average deal ÷ sales cycle (revenue the pipeline tends to produce per day).": "Velocidad = negocios abiertos × tasa de ganancia × ticket promedio ÷ ciclo de ventas (ingresos que el embudo tiende a generar por día).",
+    "Velocity per day": "Velocidad por día"
 }

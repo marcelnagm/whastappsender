@@ -194,6 +194,7 @@ trait CreatesTestSchema
             '2026_11_10_120000_add_contact_lifecycle.php',
             '2026_11_10_140000_add_chat_snooze.php',
             '2026_11_10_160000_create_stage_checklists.php',
+            '2026_11_10_180000_create_deal_stage_entries.php',
             '2026_11_05_160000_add_message_sender_and_team_goals.php',
         ] as $file) {
             (require database_path('migrations/' . $file))->up();

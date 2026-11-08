@@ -207,6 +207,7 @@ Route::group(['namespace' => 'App\Http\Controllers', 'middleware' => ['auth', 's
         Route::get('/', [$pl, 'index'])->name('index');
         Route::get('/priorities', [$pl, 'priorities'])->name('priorities');
         Route::get('/sources', [$pl, 'sources'])->name('sources');
+        Route::get('/conversion', [$pl, 'funnel'])->name('funnel');
         Route::get('/win-loss', [$pl, 'winLoss'])->name('winloss');
         Route::post('/lost-reasons', [$pl, 'storeLostReason'])->name('lost-reasons.store');
         Route::delete('/lost-reasons/{reason}', [$pl, 'destroyLostReason'])->whereNumber('reason')->name('lost-reasons.destroy');

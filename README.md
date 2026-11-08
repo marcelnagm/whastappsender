@@ -45,6 +45,7 @@
 | [Lifecycle stages](#-lifecycle-stages) | Lead → qualified → opportunity → customer, moved by deals, filter and bulk action |
 | [Snoozed conversations](#-snoozed-conversations) | Take a conversation out of the inbox until a time or the next customer message |
 | [Stage checklists](#-stage-checklists-playbooks) | Steps per stage, ticked on each deal, optionally required before moving forward |
+| [Funnel conversion](#-funnel-conversion-and-sales-velocity) | Conversion and time per stage, sales cycle and velocity |
 | [Win/loss analysis](#-winloss-analysis) | Why deals are lost, win rate by origin and by person, catalog of lost reasons |
 | [Typebot flows](#-typebot-flows) | Typebot conversation flows on every channel, with hand-over to a person |
 | [Data export](#-data-export) | CSV backup of contacts, companies, deals, tasks, messages and consent history |
@@ -1010,6 +1011,12 @@ Needs the scheduler (`chat:wake` runs every minute) and the migration (`chats.sn
 ## ✅ Stage checklists (playbooks)
 
 In **Funnel → Customize**, each stage has a **Checklist** (one step per line, up to 20) and an option **Required to move the deal forward**. Open a deal: it shows the checklist of the stage it is in and the team ticks the steps off (progress is kept per stage; changing the text of a step makes it a new, unticked step). With the option on, dragging the deal out of that stage is refused with the list of missing steps; sending it to a *Lost* stage is always allowed. Nothing to schedule; the migration adds `pipeline_stages.checklist`, `checklist_required` and the `deal_checks` table.
+
+## 📈 Funnel conversion and sales velocity
+
+**Funnel → Conversion** (`/pipeline/conversion`) analyses one pipeline over 30/90/365 days: for each open stage, how many deals **reached** it, how many **moved on** to a later stage, the **conversion %** and the **average days** deals stay there; on top, win rate, average deal, **sales cycle** (creation → won) and **velocity per day** (open deals × win rate × average deal ÷ cycle).
+
+It uses a history of stage changes (`deal_stage_entries`) written whenever a deal is created or moved, so numbers start from the day the migration runs; deals that existed before only count from their next move.
 
 ## 🏆 Win/loss analysis
 
