@@ -1767,5 +1767,13 @@
     "Moved on": "Avanzaron",
     "Sales cycle": "Ciclo de ventas",
     "Velocity = open deals × win rate × average deal ÷ sales cycle (revenue the pipeline tends to produce per day).": "Velocidad = negocios abiertos × tasa de ganancia × ticket promedio ÷ ciclo de ventas (ingresos que el embudo tiende a generar por día).",
-    "Velocity per day": "Velocidad por día"
+    "Velocity per day": "Velocidad por día",
+    "Activity logged.": "Actividad registrada.",
+    "Call": "Llamada",
+    "E-mail": "E-mail",
+    "Log an activity": "Registrar actividad",
+    "Meeting": "Reunión",
+    "Other": "Otro",
+    "Outcome (e.g. no answer, interested)": "Resultado (ej.: no contestó, interesado)",
+    "Visit": "Visita"
 }

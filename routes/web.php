@@ -372,6 +372,8 @@ Route::group(['namespace' => 'App\Http\Controllers', 'middleware' => ['auth', 's
 
     // Follow-up tasks
     Route::prefix('tasks')->name('tasks.')->group(function () {
+        Route::post('/activities', [\App\Http\Controllers\ActivitiesController::class, 'store'])->name('activities.store');
+        Route::delete('/activities/{activity}', [\App\Http\Controllers\ActivitiesController::class, 'destroy'])->whereNumber('activity')->name('activities.destroy');
         $tk = \App\Http\Controllers\TasksController::class;
         Route::get('/', [$tk, 'index'])->name('index');
         Route::post('/', [$tk, 'store'])->name('store');

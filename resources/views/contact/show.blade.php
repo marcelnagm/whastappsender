@@ -95,6 +95,19 @@
         </div>
 
         <div class="col-lg-8 col-md-7">
+            @teamcan('tasks')
+            <div class="card border-0 shadow-sm rounded-4 mb-4"><div class="card-body p-4">
+                <h6 class="fw-bold mb-3"><i class="bi bi-telephone me-1"></i> {{ __('Log an activity') }}</h6>
+                <form method="POST" action="{{ route('tasks.activities.store') }}" class="row g-2">@csrf
+                    <input type="hidden" name="contact_id" value="{{ $contact->id }}">
+                    <div class="col-6 col-md-3"><select name="type" class="form-select form-select-sm">@foreach (\App\Models\Activity::labels() as $k => $l)<option value="{{ $k }}">{{ $l }}</option>@endforeach</select></div>
+                    <div class="col-6 col-md-3"><input name="duration_min" type="number" min="1" max="1440" class="form-control form-control-sm" placeholder="{{ __('Minutes') }}"></div>
+                    <div class="col-12 col-md-6"><input name="outcome" maxlength="120" class="form-control form-control-sm" placeholder="{{ __('Outcome (e.g. no answer, interested)') }}"></div>
+                    <div class="col-12"><textarea name="notes" rows="2" maxlength="2000" class="form-control form-control-sm" placeholder="{{ __('Notes') }}"></textarea></div>
+                    <div class="col-12"><button class="btn btn-sm btn-primary">{{ __('Save') }}</button></div>
+                </form>
+            </div></div>
+            @endteamcan
             @if (isset($timeline))
             <div class="card border-0 shadow-sm rounded-4 mb-4">
                 <div class="card-body p-4">

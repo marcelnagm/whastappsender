@@ -51,6 +51,12 @@ class ContactTimeline
             $add($t->done_at, 'task', 'bi-check2-all', __('Task done') . ': ' . $t->title);
         });
 
+        \App\Models\Activity::where('user_id', $uid)->where('contact_id', $contact->id)->get()->each(function ($a) use ($add) {
+            $txt = \App\Models\Activity::labels()[$a->type] ?? $a->type;
+            $txt .= ($a->duration_min ? ' (' . $a->duration_min . ' min)' : '') . ($a->outcome ? ' · ' . $a->outcome : '') . ($a->notes ? ': ' . mb_substr($a->notes, 0, 140) : '');
+            $add($a->occurred_at, 'activity', \App\Models\Activity::TYPES[$a->type] ?? 'bi-pencil', $txt);
+        });
+
         DB::table('consent_logs')->where('user_id', $uid)->where('contact_id', $contact->id)->get()->each(
             fn ($c) => $add($c->created_at, 'consent', 'bi-shield-check', ($c->action === 'granted' ? __('Consent granted') : __('Consent revoked')) . ' (' . $c->source . ')')
         );

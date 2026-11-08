@@ -46,6 +46,7 @@
 | [Snoozed conversations](#-snoozed-conversations) | Take a conversation out of the inbox until a time or the next customer message |
 | [Stage checklists](#-stage-checklists-playbooks) | Steps per stage, ticked on each deal, optionally required before moving forward |
 | [Funnel conversion](#-funnel-conversion-and-sales-velocity) | Conversion and time per stage, sales cycle and velocity |
+| [Activity log](#-activity-log) | Calls, meetings and visits logged on the contact and in the timeline |
 | [Win/loss analysis](#-winloss-analysis) | Why deals are lost, win rate by origin and by person, catalog of lost reasons |
 | [Typebot flows](#-typebot-flows) | Typebot conversation flows on every channel, with hand-over to a person |
 | [Data export](#-data-export) | CSV backup of contacts, companies, deals, tasks, messages and consent history |
@@ -1017,6 +1018,10 @@ In **Funnel → Customize**, each stage has a **Checklist** (one step per line, 
 **Funnel → Conversion** (`/pipeline/conversion`) analyses one pipeline over 30/90/365 days: for each open stage, how many deals **reached** it, how many **moved on** to a later stage, the **conversion %** and the **average days** deals stay there; on top, win rate, average deal, **sales cycle** (creation → won) and **velocity per day** (open deals × win rate × average deal ÷ cycle).
 
 It uses a history of stage changes (`deal_stage_entries`) written whenever a deal is created or moved, so numbers start from the day the migration runs; deals that existed before only count from their next move.
+
+## 📞 Activity log
+
+Not everything happens in the chat. On a **contact** page, **Log an activity** records a *call, meeting, e-mail, visit or other* with minutes, outcome and notes (available to anyone with the tasks permission, agents included). Activities appear in the contact's **Timeline** and, when the person has an open deal, count as a sign of life for the stalled-deal alerts. They can be removed by the account. No schedule needed (`activities` table).
 
 ## 🏆 Win/loss analysis
 
