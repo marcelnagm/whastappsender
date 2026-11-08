@@ -42,6 +42,7 @@
 | [Proposals](#-proposals-quotes) | Quote built from a deal's items, public link with online accept / decline, notices and automation triggers, print / save as PDF |
 | [Lead sources](#-lead-sources) | Where each deal came from (channel, form + UTM campaign, or typed) and the funnel result per source: created, won, win rate, value, days to win |
 | [Duplicate contacts](#-duplicate-contacts) | Finds people registered twice (same e-mail or phone written differently) and merges them keeping conversations, deals, tasks and consent proof |
+| [Meeting booking](#-meeting-booking) | Public page where customers pick a free time; creates the contact and a task |
 | [Knowledge base](#-knowledge-base) | Reusable answers found from the chat with `?word` |
 | [Bulk contact actions](#-bulk-contact-actions) | Select contacts and set their company or mark them as opted out in one go |
 | [Recurring tasks](#-recurring-tasks) | Tasks that repeat daily, weekly or monthly: completing one creates the next |
@@ -986,6 +987,10 @@ Bulk messaging needs permission: Meta's policies and Brazil's LGPD expect you to
 * Not included yet: a confirmation message to the customer after `#sair`, and an unsubscribe footer appended to campaign texts.
 
 * * *
+
+## 📅 Meeting booking
+
+**Bookings** (menu, team permission): turn on **Accept bookings**, set the meeting title, length, minimum notice and how many days ahead, and share the **public link** (`/b/<code>`). The page offers only free times inside your *Opening hours* (days and time zone), the customer leaves name, phone and optionally e-mail, and gets a confirmation page with a cancel button. Each booking creates (or finds, by phone) the contact, a task due at the meeting time and an in-app notification; two people can never take the same time. Canceling removes the open task and frees the time. The public pages are not indexed and the forms are rate limited.
 
 ## 📖 Knowledge base
 

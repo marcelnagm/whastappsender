@@ -53,6 +53,15 @@ Route::prefix('p')->name('proposals.public.')->group(function () {
     Route::post('/{token}/decline', [$pp, 'decline'])->middleware('throttle:10,1')->name('decline');
 });
 
+// Public meeting booking (no login)
+Route::prefix('b')->name('booking-public.')->group(function () {
+    $bp = \App\Http\Controllers\PublicBookingController::class;
+    Route::get('/c/{token}', [$bp, 'confirmation'])->name('confirmation');
+    Route::post('/c/{token}/cancel', [$bp, 'cancel'])->middleware('throttle:10,1')->name('cancel');
+    Route::get('/{slug}', [$bp, 'show'])->name('show');
+    Route::post('/{slug}', [$bp, 'store'])->middleware('throttle:10,1')->name('store');
+});
+
 // WhatsApp Web-style chat (CRM). The browser only talks to Laravel; Laravel talks to the Evolution API.
 Route::middleware(['auth', 'subscription.writable', 'plan.feature:chat'])->prefix('chat')->name('chat.')->group(function () {
     $chat = \App\Http\Controllers\ChatController::class;
@@ -296,6 +305,11 @@ Route::group(['namespace' => 'App\Http\Controllers', 'middleware' => ['auth', 's
         Route::post('/{company}/contacts', [$co, 'attach'])->whereNumber('company')->name('attach');
         Route::delete('/{company}/contacts/{contact}', [$co, 'detach'])->whereNumber('company')->whereNumber('contact')->name('detach');
     });
+
+    // Meeting booking (admin side)
+    Route::get('bookings', [\App\Http\Controllers\BookingsController::class, 'index'])->name('bookings.index');
+    Route::put('bookings', [\App\Http\Controllers\BookingsController::class, 'update'])->name('bookings.update');
+    Route::post('bookings/{booking}/cancel', [\App\Http\Controllers\BookingsController::class, 'cancel'])->whereNumber('booking')->name('bookings.cancel');
 
     // Outbound webhooks (Zapier, n8n, Make...)
     Route::prefix('webhooks-out')->name('webhooks-out.')->group(function () {
