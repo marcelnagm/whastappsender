@@ -42,6 +42,7 @@
 | [Proposals](#-proposals-quotes) | Quote built from a deal's items, public link with online accept / decline, notices and automation triggers, print / save as PDF |
 | [Lead sources](#-lead-sources) | Where each deal came from (channel, form + UTM campaign, or typed) and the funnel result per source: created, won, win rate, value, days to win |
 | [Duplicate contacts](#-duplicate-contacts) | Finds people registered twice (same e-mail or phone written differently) and merges them keeping conversations, deals, tasks and consent proof |
+| [Audit log](#-audit-log) | Who deleted or changed what (team, integrations, settings, exports) |
 | [Meeting booking](#-meeting-booking) | Public page where customers pick a free time; creates the contact and a task |
 | [Knowledge base](#-knowledge-base) | Reusable answers found from the chat with `?word` |
 | [Bulk contact actions](#-bulk-contact-actions) | Select contacts and set their company or mark them as opted out in one go |
@@ -987,6 +988,10 @@ Bulk messaging needs permission: Meta's policies and Brazil's LGPD expect you to
 * Not included yet: a confirmation message to the customer after `#sair`, and an unsubscribe footer appended to campaign texts.
 
 * * *
+
+## 🛡️ Audit log
+
+**Audit log** (menu, team permission) lists who did what: every deletion, and changes to the team, webhooks, bookings, opening hours, SLA, survey, companies, sequences, knowledge base, automations, audiences, proposals, bulk contact actions and data exports. Each line has date, person (the real team member, not the account owner), route, item id and IP; **contents are never stored**. Filter by person or action. Entries older than a year are removed weekly (`php artisan audit:prune --days=365`).
 
 ## 📅 Meeting booking
 

@@ -137,6 +137,9 @@
           <a href="{{ route('bookings.index') }}" class="nav-link {{ request()->is('bookings*') ? 'active text-secondary' : 'text-white' }}"><i class="bi bi-calendar-check me-1"></i> {{ __('Bookings') }}</a>
         </li>
         <li class="nav-item">
+          <a href="{{ route('audit.index') }}" class="nav-link {{ request()->is('audit*') ? 'active text-secondary' : 'text-white' }}"><i class="bi bi-shield-lock me-1"></i> {{ __('Audit log') }}</a>
+        </li>
+        <li class="nav-item">
           <a href="{{ route('sequences.index') }}" class="nav-link {{ request()->is('sequences*') ? 'active text-secondary' : 'text-white' }}"><i class="bi bi-arrow-repeat me-1"></i> {{ __('Follow-up sequences') }}</a>
         </li>
         @endteamcan

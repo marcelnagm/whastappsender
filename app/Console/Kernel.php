@@ -51,6 +51,7 @@ class Kernel extends ConsoleKernel
 
         // Chat messages scheduled for a time
         $schedule->command('chat:send-scheduled')->everyMinute()->withoutOverlapping()->onOneServer();
+        $schedule->command('audit:prune')->weekly()->onOneServer();
         // Deals without activity
         $schedule->command('deals:stale')->dailyAt('09:00')->withoutOverlapping()->onOneServer();
         // Follow-up sequences

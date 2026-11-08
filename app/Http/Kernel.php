@@ -36,6 +36,7 @@ class Kernel extends HttpKernel
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
             // team members continue as the account owner, limited by their role
             \App\Http\Middleware\ResolveTeamContext::class . ':web',
+            \App\Http\Middleware\AuditTrail::class,
         ],
 
         'api' => [

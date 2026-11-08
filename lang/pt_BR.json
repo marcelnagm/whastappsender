@@ -1677,5 +1677,9 @@
     "This time is no longer available. Pick another.": "Este horário não está mais disponível. Escolha outro.",
     "Upcoming": "Próximos",
     "Your booking is confirmed.": "Seu agendamento está confirmado.",
-    "Your name": "Seu nome"
+    "Your name": "Seu nome",
+    "Action (for example contacts.destroy)": "Ação (por exemplo contacts.destroy)",
+    "Audit log": "Log de auditoria",
+    "Filter": "Filtrar",
+    "Who changed what: deletions, team, integrations and settings. Contents are never stored.": "Quem alterou o quê: exclusões, equipe, integrações e configurações. O conteúdo nunca é guardado."
 }

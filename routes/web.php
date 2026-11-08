@@ -306,6 +306,9 @@ Route::group(['namespace' => 'App\Http\Controllers', 'middleware' => ['auth', 's
         Route::delete('/{company}/contacts/{contact}', [$co, 'detach'])->whereNumber('company')->whereNumber('contact')->name('detach');
     });
 
+    // Audit log
+    Route::get('audit', [\App\Http\Controllers\AuditController::class, 'index'])->name('audit.index');
+
     // Meeting booking (admin side)
     Route::get('bookings', [\App\Http\Controllers\BookingsController::class, 'index'])->name('bookings.index');
     Route::put('bookings', [\App\Http\Controllers\BookingsController::class, 'update'])->name('bookings.update');
