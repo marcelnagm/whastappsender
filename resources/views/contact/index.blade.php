@@ -62,7 +62,7 @@
             </div>
 
             <div class="d-flex flex-wrap gap-1 align-items-center small mb-2">
-                <span class="text-muted me-1">{{ __('Lifecycle') }}:</span>
+                <a href="{{ route('contacts.birthdays') }}" class="btn btn-sm btn-outline-secondary me-2"><i class="bi bi-gift"></i> {{ __('Birthdays') }}</a><span class="text-muted me-1">{{ __('Lifecycle') }}:</span>
                 @foreach (\App\Services\Contacts\Lifecycle::labels() as $k => $l)
                     <a href="{{ route('contacts.index', array_merge(request()->except('stage', 'page'), ['stage' => $k])) }}" class="btn btn-sm {{ request('stage') === $k ? 'btn-primary' : 'btn-outline-secondary' }}">{{ $l }} <span class="badge text-bg-light">{{ $lifecycle[$k] ?? 0 }}</span></a>
                 @endforeach

@@ -25,7 +25,7 @@ use Illuminate\Support\Facades\Log;
  */
 class Automations
 {
-    public const TRIGGERS = ['deal.created', 'deal.stage', 'deal.won', 'deal.lost', 'tag.added', 'message.keyword', 'proposal.accepted', 'proposal.declined', 'deal.stale', 'bot.handoff'];
+    public const TRIGGERS = ['deal.created', 'deal.stage', 'deal.won', 'deal.lost', 'tag.added', 'message.keyword', 'proposal.accepted', 'proposal.declined', 'deal.stale', 'bot.handoff', 'contact.birthday'];
     public const ACTIONS = ['create_task', 'add_tag', 'assign', 'move_deal', 'notify'];
     public const MAX_DEPTH = 3;
     public const MAX_ACTIONS = 5;
@@ -54,7 +54,7 @@ class Automations
             return;
         }
 
-        $subject = isset($ctx['deal']) ? 'deal #' . $ctx['deal']->id : (isset($ctx['chat']) ? 'chat #' . $ctx['chat']->id : 'event');
+        $subject = isset($ctx['deal']) ? 'deal #' . $ctx['deal']->id : (isset($ctx['contact']) ? 'contact #' . $ctx['contact']->id : (isset($ctx['chat']) ? 'chat #' . $ctx['chat']->id : 'event'));
 
         foreach ($rules as $rule) {
             if (!$this->matches($rule, $ctx)) {

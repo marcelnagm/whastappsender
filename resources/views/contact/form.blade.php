@@ -67,6 +67,13 @@
                 </div>
             </div>
 
+            <div class="col-md-4">
+                <div class="form-floating mb-3">
+                    {{ Form::date('birthday', optional($contact->birthday)->format('Y-m-d'), ['class' => 'form-control border-0 shadow-sm', 'id' => 'birthday', 'placeholder' => 'Birthday']) }}
+                    {{ Form::label('birthday', __('Birthday')) }}
+                </div>
+            </div>
+
             {{-- Row 3: status & score --}}
             <div class="col-md-6">
                 <div class="form-floating mb-3">

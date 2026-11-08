@@ -18,6 +18,10 @@ class Payloads
             $out['deal'] = ['id' => $d->id, 'title' => $d->title, 'value' => (float) $d->value, 'status' => $d->status, 'stage' => optional($d->stage)->name, 'origin' => $d->origin,
                 'contact' => $d->contact ? ['id' => $d->contact->id, 'name' => $d->contact->name, 'phone' => $d->contact->contact] : null];
         }
+        if (isset($ctx['contact']) && $ctx['contact'] instanceof \App\Models\Contact) {
+            $k = $ctx['contact'];
+            $out['contact'] = ['id' => $k->id, 'name' => $k->name, 'phone' => $k->contact, 'email' => $k->email, 'birthday' => optional($k->birthday)->toDateString()];
+        }
         if (isset($ctx['chat']) && $ctx['chat'] instanceof Chat) {
             $c = $ctx['chat'];
             $out['chat'] = ['id' => $c->id, 'name' => $c->name, 'phone' => $c->phone, 'assigned_to' => $c->assigned_to];

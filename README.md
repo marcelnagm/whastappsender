@@ -47,6 +47,7 @@
 | [Stage checklists](#-stage-checklists-playbooks) | Steps per stage, ticked on each deal, optionally required before moving forward |
 | [Funnel conversion](#-funnel-conversion-and-sales-velocity) | Conversion and time per stage, sales cycle and velocity |
 | [Activity log](#-activity-log) | Calls, meetings and visits logged on the contact and in the timeline |
+| [Birthdays](#-birthdays) | Birthday field, daily automation trigger and upcoming list |
 | [Win/loss analysis](#-winloss-analysis) | Why deals are lost, win rate by origin and by person, catalog of lost reasons |
 | [Typebot flows](#-typebot-flows) | Typebot conversation flows on every channel, with hand-over to a person |
 | [Data export](#-data-export) | CSV backup of contacts, companies, deals, tasks, messages and consent history |
@@ -1022,6 +1023,12 @@ It uses a history of stage changes (`deal_stage_entries`) written whenever a dea
 ## 📞 Activity log
 
 Not everything happens in the chat. On a **contact** page, **Log an activity** records a *call, meeting, e-mail, visit or other* with minutes, outcome and notes (available to anyone with the tasks permission, agents included). Activities appear in the contact's **Timeline** and, when the person has an open deal, count as a sign of life for the stalled-deal alerts. They can be removed by the account. No schedule needed (`activities` table).
+
+## 🎂 Birthdays
+
+The contact form has a **Birthday** field. Every day at 08:00 `contacts:birthdays` fires the automation trigger **"A contact has a birthday today"** (and the webhook event `contact.birthday`) once a year for each person celebrating, skipping people who opted out; Feb 29 is celebrated on Feb 28 in common years. Build the rule in **Automations** (send a message, add a label, create a task...): when the person has a conversation, it is the one used by the actions. **Contacts → Birthdays** lists the next 7/30/90 days.
+
+Needs the scheduler (`contacts:birthdays`) and the migration (`contacts.birthday`, `birthday_notified_year`).
 
 ## 🏆 Win/loss analysis
 

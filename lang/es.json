@@ -1775,5 +1775,12 @@
     "Meeting": "Reunión",
     "Other": "Otro",
     "Outcome (e.g. no answer, interested)": "Resultado (ej.: no contestó, interesado)",
-    "Visit": "Visita"
+    "Visit": "Visita",
+    "A contact has a birthday today": "Un contacto cumple años hoy",
+    "Birthday": "Cumpleaños",
+    "Birthdays": "Cumpleaños",
+    "Fill the birthday on the contact. Every morning the automation \"A contact has a birthday today\" runs for the people celebrating, so you can send a message, add a label or create a task.": "Completa el cumpleaños en el contacto. Cada mañana la automatización \"Un contacto cumple años hoy\" se ejecuta para quienes cumplen, y puedes enviar un mensaje, agregar una etiqueta o crear una tarea.",
+    "No birthdays in the period.": "Ningún cumpleaños en el período.",
+    "in :n days": "en :n días",
+    "years": "años"
 }
