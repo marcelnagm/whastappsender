@@ -36,7 +36,7 @@
     <div class="col-6 col-md-3"><div class="card shadow-sm"><div class="card-body py-2"><div class="small text-muted">{{ __('In progress') }}</div><strong data-s="open">{{ $summary['open'] }}</strong> · <span data-s="open_value">{{ $money($summary['open_value']) }}</span></div></div></div>
     <div class="col-6 col-md-3"><div class="card shadow-sm"><div class="card-body py-2"><div class="small text-muted">{{ __('Won') }}</div><strong data-s="won">{{ $summary['won'] }}</strong> · <span data-s="won_value">{{ $money($summary['won_value']) }}</span></div></div></div>
     <div class="col-6 col-md-3"><div class="card shadow-sm"><div class="card-body py-2"><div class="small text-muted">{{ __('Lost') }}</div><strong data-s="lost">{{ $summary['lost'] }}</strong></div></div></div>
-    <div class="col-6 col-md-3"><div class="card shadow-sm"><div class="card-body py-2"><div class="small text-muted">{{ __('Forecast') }} <a href="{{ route('pipeline.priorities') }}" class="text-decoration-none">· {{ __('Priorities') }}</a> <a href="{{ route('pipeline.stale') }}" class="text-decoration-none">· {{ __('Stalled') }}</a> <a href="{{ route('pipeline.winloss') }}" class="text-decoration-none">· {{ __('Win/loss') }}</a> <a href="{{ route('pipeline.funnel', ['pipeline' => $pipeline->id]) }}" class="text-decoration-none">· {{ __('Conversion') }}</a></div><strong>{{ $money($weighted) }}</strong></div></div></div>
+    <div class="col-6 col-md-3"><div class="card shadow-sm"><div class="card-body py-2"><div class="small text-muted">{{ __('Forecast') }} <a href="{{ route('pipeline.priorities') }}" class="text-decoration-none">· {{ __('Priorities') }}</a> <a href="{{ route('pipeline.stale') }}" class="text-decoration-none">· {{ __('Stalled') }}</a> <a href="{{ route('pipeline.winloss') }}" class="text-decoration-none">· {{ __('Win/loss') }}</a> <a href="{{ route('pipeline.funnel', ['pipeline' => $pipeline->id]) }}" class="text-decoration-none">· {{ __('Conversion') }}</a> <a href="{{ route('pipeline.renewals') }}" class="text-decoration-none">· {{ __('Renewals') }}</a></div><strong>{{ $money($weighted) }}</strong></div></div></div>
     <div class="col-6 col-md-3"><div class="card shadow-sm"><div class="card-body py-2"><div class="small text-muted">{{ __('Win rate') }}</div><strong data-s="win_rate">{{ $summary['win_rate'] === null ? '—' : $summary['win_rate'].'%' }}</strong></div></div></div>
   </div>
 
@@ -53,7 +53,7 @@
               <div class="d-flex justify-content-between gap-2">
                 <strong class="text-break">{{ $d->title }}</strong>
                 <a href="#" class="small text-decoration-none" data-bs-toggle="modal" data-bs-target="#dealModal"
-                   data-edit="{{ json_encode(['id' => $d->id, 'title' => $d->title, 'value' => $d->value, 'contact_id' => $d->contact_id, 'origin' => $d->origin, 'date' => optional($d->expected_close_date)->format('Y-m-d')]) }}"
+                   data-edit="{{ json_encode(['id' => $d->id, 'title' => $d->title, 'value' => $d->value, 'contact_id' => $d->contact_id, 'origin' => $d->origin, 'cycle' => $d->billing_cycle, 'date' => optional($d->expected_close_date)->format('Y-m-d')]) }}"
                    onclick="editDeal(JSON.parse(this.dataset.edit))"><i class="bi bi-pencil"></i></a>
               </div>
               <div class="small">{{ $money($d->value) }}
@@ -98,6 +98,7 @@
           <a href="{{ route('pipeline.products.index') }}" class="small ms-2">{{ __('Products') }}</a></div>
       </div>
     </div>
+    <div><label class="form-label">{{ __('Subscription') }}</label><select name="billing_cycle" id="dCycle" class="form-select"><option value="">{{ __('One-off sale') }}</option>@foreach (\App\Services\Pipeline\Renewals::labels() as $k => $l)<option value="{{ $k }}">{{ $l }}</option>@endforeach</select></div>
     <div><label class="form-label">{{ __('Origin') }}</label><input name="origin" id="dOrigin" class="form-control" maxlength="80" list="originList" placeholder="{{ __('Where the lead came from') }}">
       <datalist id="originList">@foreach ($origins as $o)<option value="{{ $o }}">@endforeach</datalist></div>
     <div><label class="form-label">{{ __('Contact') }}</label>
@@ -164,7 +165,7 @@ function setDeal(url, method, title, d) {
   document.getElementById('dealMethod').value = method;
   document.getElementById('dealTitle').textContent = title;
   document.getElementById('dTitle').value = d.title || ''; document.getElementById('dValue').value = d.value || '';
-  document.getElementById('dDate').value = d.date || ''; document.getElementById('dOrigin').value = d.origin || ''; document.getElementById('dContact').value = d.contact_id || '';
+  document.getElementById('dDate').value = d.date || ''; document.getElementById('dOrigin').value = d.origin || ''; document.getElementById('dCycle').value = d.cycle || ''; document.getElementById('dContact').value = d.contact_id || '';
   const del = document.getElementById('dealDeleteBtn');
   loadItems(d.id || null);
   const pb = document.getElementById('dealProposalBtn');

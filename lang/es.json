@@ -1790,5 +1790,21 @@
     "Erased contact": "Contacto borrado",
     "I confirm": "Confirmo",
     "Personal data erased (:n messages wiped).": "Datos personales borrados (:n mensajes limpiados).",
-    "Privacy (LGPD)": "Privacidad (LGPD)"
+    "Privacy (LGPD)": "Privacidad (LGPD)",
+    "A subscription is about to renew": "Una suscripción está por renovarse",
+    "Active subscriptions": "Suscripciones activas",
+    "Cancel this subscription?": "¿Cancelar esta suscripción?",
+    "Cancelled": "Canceladas",
+    "Cycle": "Ciclo",
+    "Nothing renews in the period.": "Nada se renueva en el período.",
+    "One-off sale": "Venta única",
+    "Quarterly": "Trimestral",
+    "Renewal": "Renovación",
+    "Renewals": "Renovaciones",
+    "Renewed": "Renovó",
+    "Renewed.": "Renovado.",
+    "Renews": "Se renueva",
+    "Subscription": "Suscripción",
+    "Subscription cancelled.": "Suscripción cancelada.",
+    "Won deals with a billing cycle are subscriptions. Fifteen days before the renewal date a task is created for the person in charge. Mark each one as renewed or cancelled.": "Los negocios ganados con ciclo de cobro son suscripciones. Quince días antes de la fecha de renovación se crea una tarea para el responsable. Marca cada una como renovada o cancelada."
 }

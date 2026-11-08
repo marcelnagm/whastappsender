@@ -243,7 +243,9 @@ class PipelineController extends Controller
             'contact_id' => 'nullable|integer',
             'expected_close_date' => 'nullable|date',
             'origin' => 'nullable|string|max:80',
+            'billing_cycle' => 'nullable|in:monthly,quarterly,yearly',
         ]);
+        $data['billing_cycle'] = $data['billing_cycle'] ?? null;
         $data['value'] = $data['value'] ?? 0;
         $data['contact_id'] = !empty($data['contact_id']) && Contact::where('user_id', $request->user()->id)->where('id', $data['contact_id'])->exists() ? (int) $data['contact_id'] : null;
 

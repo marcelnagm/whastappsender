@@ -25,7 +25,7 @@ use Illuminate\Support\Facades\Log;
  */
 class Automations
 {
-    public const TRIGGERS = ['deal.created', 'deal.stage', 'deal.won', 'deal.lost', 'tag.added', 'message.keyword', 'proposal.accepted', 'proposal.declined', 'deal.stale', 'bot.handoff', 'contact.birthday'];
+    public const TRIGGERS = ['deal.created', 'deal.stage', 'deal.won', 'deal.lost', 'tag.added', 'message.keyword', 'proposal.accepted', 'proposal.declined', 'deal.stale', 'bot.handoff', 'contact.birthday', 'deal.renewal'];
     public const ACTIONS = ['create_task', 'add_tag', 'assign', 'move_deal', 'notify'];
     public const MAX_DEPTH = 3;
     public const MAX_ACTIONS = 5;

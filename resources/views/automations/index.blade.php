@@ -4,7 +4,7 @@
 
 @section('content')
 @php
-  $trLabels = ['contact.birthday' => __('A contact has a birthday today'), 'deal.stale' => __('A deal is stalled'), 'bot.handoff' => __('The bot handed over to a person'), 'proposal.accepted' => __('A proposal is accepted'), 'proposal.declined' => __('A proposal is declined'), 'deal.created' => __('A deal is created'), 'deal.stage' => __('A deal moves to a stage'), 'deal.won' => __('A deal is won'), 'deal.lost' => __('A deal is lost'),
+  $trLabels = ['deal.renewal' => __('A subscription is about to renew'), 'contact.birthday' => __('A contact has a birthday today'), 'deal.stale' => __('A deal is stalled'), 'bot.handoff' => __('The bot handed over to a person'), 'proposal.accepted' => __('A proposal is accepted'), 'proposal.declined' => __('A proposal is declined'), 'deal.created' => __('A deal is created'), 'deal.stage' => __('A deal moves to a stage'), 'deal.won' => __('A deal is won'), 'deal.lost' => __('A deal is lost'),
                'tag.added' => __('A label is applied to a conversation'), 'message.keyword' => __('A customer writes a word')];
   $acLabels = ['create_task' => __('Create a follow-up task'), 'add_tag' => __('Apply a label'), 'assign' => __('Assign the conversation'), 'move_deal' => __('Move the deal to a stage'), 'notify' => __('Notify someone')];
   $stagesJson = json_encode($stages->map(fn ($s) => ['id' => $s->id, 'name' => $s->name])->values());
