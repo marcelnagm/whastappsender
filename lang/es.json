@@ -1806,5 +1806,14 @@
     "Renews": "Se renueva",
     "Subscription": "Suscripción",
     "Subscription cancelled.": "Suscripción cancelada.",
-    "Won deals with a billing cycle are subscriptions. Fifteen days before the renewal date a task is created for the person in charge. Mark each one as renewed or cancelled.": "Los negocios ganados con ciclo de cobro son suscripciones. Quince días antes de la fecha de renovación se crea una tarea para el responsable. Marca cada una como renovada o cancelada."
+    "Won deals with a billing cycle are subscriptions. Fifteen days before the renewal date a task is created for the person in charge. Mark each one as renewed or cancelled.": "Los negocios ganados con ciclo de cobro son suscripciones. Quince días antes de la fecha de renovación se crea una tarea para el responsable. Marca cada una como renovada o cancelada.",
+    "Deal lost: :title": "Negocio perdido: :title",
+    "Deal moved to \":stage\": :title": "Negocio movido a \":stage\": :title",
+    "Deal won: :title": "Negocio ganado: :title",
+    "Follow": "Seguir",
+    "Followers": "Seguidores",
+    "Proposal accepted: :title": "Propuesta aceptada: :title",
+    "Proposal declined: :title": "Propuesta rechazada: :title",
+    "Renewal coming up: :title": "Renovación próxima: :title",
+    "Unfollow": "Dejar de seguir"
 }

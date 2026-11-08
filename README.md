@@ -50,6 +50,7 @@
 | [Birthdays](#-birthdays) | Birthday field, daily automation trigger and upcoming list |
 | [Data-subject requests (LGPD)](#-data-subject-requests-lgpd) | Download or erase all personal data of a contact |
 | [Subscriptions and renewals](#-subscriptions-and-renewals) | Billing cycle on deals, MRR/ARR, renewal tasks and churn |
+| [Deal followers](#-deal-followers) | Follow a deal and get notified of stage changes, results and renewals |
 | [Win/loss analysis](#-winloss-analysis) | Why deals are lost, win rate by origin and by person, catalog of lost reasons |
 | [Typebot flows](#-typebot-flows) | Typebot conversation flows on every channel, with hand-over to a person |
 | [Data export](#-data-export) | CSV backup of contacts, companies, deals, tasks, messages and consent history |
@@ -1046,6 +1047,10 @@ In a deal, **Subscription** sets a billing cycle (monthly, quarterly, yearly); *
 On the page, **Renewed** moves the date by one cycle and re-arms the reminder; **Cancel** records the churn and, when the person has no other active subscription, sets their lifecycle stage to *Churned*.
 
 Needs the scheduler (`deals:renewals`) and the migration (`deals.billing_cycle`, `renews_at`, `renewal_notified_at`, `churned_at`).
+
+## 🔔 Deal followers
+
+Open a deal and press **Follow** (the window lists who follows it). Followers get an in-app notification when the deal **changes stage**, is **won or lost**, its **proposal is accepted or declined** or a **renewal is coming up**; the person who made the change is not notified about their own action. Following needs no setup (table `deal_followers`) and works for owner and team members alike.
 
 ## 🏆 Win/loss analysis
 

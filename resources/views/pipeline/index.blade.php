@@ -84,6 +84,7 @@
       <div class="col-6"><label class="form-label">{{ __('Value') }}</label><input name="value" id="dValue" type="number" step="0.01" min="0" class="form-control"></div>
       <div class="col-6"><label class="form-label">{{ __('Expected close') }}</label><input name="expected_close_date" id="dDate" type="date" class="form-control"></div>
     </div>
+    <div class="d-none" id="followBox"><div class="d-flex align-items-center gap-2 flex-wrap"><button type="button" class="btn btn-sm btn-outline-secondary" id="followBtn"></button><span class="small text-muted" id="followWho"></span></div></div>
     <div class="d-none" id="checkBox"><label class="form-label mb-1">{{ __('Checklist') }}</label><div id="checkList" class="small"></div></div>
     <div class="d-none" id="itemsBox">
       <label class="form-label mb-1">{{ __('Items') }}</label>
@@ -202,14 +203,23 @@ function drawChecklist(id, items) {
     l.appendChild(c); l.appendChild(document.createTextNode(i.title)); list.appendChild(l);
   });
 }
+const followUrl = id => dealBase + '/' + id + '/followers';
+function drawFollow(id, d) {
+  const box = document.getElementById('followBox'), btn = document.getElementById('followBtn');
+  box.classList.remove('d-none');
+  btn.innerHTML = '<i class="bi ' + (d.following ? 'bi-bell-slash' : 'bi-bell') + '"></i> ' + (d.following ? @json(__('Unfollow')) : @json(__('Follow')));
+  document.getElementById('followWho').textContent = d.followers.length ? @json(__('Followers')) + ': ' + d.followers.map(f => f.name).join(', ') : '';
+  btn.onclick = async () => { const r = await fetch(followUrl(id), {method: 'PUT', headers: jsonH, body: JSON.stringify({follow: !d.following})}); if (r.ok) drawFollow(id, await r.json()); };
+}
+async function loadFollow(id) { try { drawFollow(id, await (await fetch(followUrl(id), {headers: {'Accept': 'application/json'}})).json()); } catch (e) {} }
 async function loadChecklist(id) {
   try { drawChecklist(id, (await (await fetch(checkUrl(id), {headers: {'Accept': 'application/json'}})).json()).items); } catch (e) {}
 }
 async function loadItems(id) {
   curDeal = id; const box = document.getElementById('itemsBox');
-  if (!id) { box.classList.add('d-none'); document.getElementById('checkBox').classList.add('d-none'); document.getElementById('dValue').readOnly = false; return; }
+  if (!id) { box.classList.add('d-none'); document.getElementById('checkBox').classList.add('d-none'); document.getElementById('followBox').classList.add('d-none'); document.getElementById('dValue').readOnly = false; return; }
   box.classList.remove('d-none');
-  loadChecklist(id);
+  loadChecklist(id); loadFollow(id);
   drawItems(await (await fetch(itemsUrl(), {headers: {'Accept': 'application/json'}})).json());
 }
 document.getElementById('iProduct').addEventListener('change', e => { const p = catalog.find(x => String(x.id) === e.target.value); if (p) document.getElementById('iPrice').value = p.price; });

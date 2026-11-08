@@ -42,6 +42,11 @@ class Automations
     {
         $ownerId = $owner instanceof User ? $owner->id : $owner;
         app(\App\Services\Webhooks\OutboundWebhooks::class)->emit($event, $ownerId, $ctx);
+        try {
+            app(\App\Services\Pipeline\DealFollowers::class)->onEvent($event, $ctx);
+        } catch (\Throwable $e) {
+            \Log::warning('Deal followers notice failed: ' . $e->getMessage());
+        }
         if (self::$depth >= self::MAX_DEPTH) {
             return;
         }

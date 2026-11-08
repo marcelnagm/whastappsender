@@ -228,6 +228,8 @@ Route::group(['namespace' => 'App\Http\Controllers', 'middleware' => ['auth', 's
         Route::delete('/deals/{deal}', [$pl, 'destroyDeal'])->whereNumber('deal')->name('deals.destroy');
         // what a deal sells, and the catalog
         $di = \App\Http\Controllers\DealItemsController::class;
+        Route::get('/deals/{deal}/followers', [\App\Http\Controllers\DealFollowersController::class, 'index'])->whereNumber('deal')->name('deals.followers.index');
+        Route::put('/deals/{deal}/followers', [\App\Http\Controllers\DealFollowersController::class, 'toggle'])->whereNumber('deal')->name('deals.followers.toggle');
         Route::get('/deals/{deal}/checklist', [\App\Http\Controllers\DealChecklistController::class, 'index'])->whereNumber('deal')->name('deals.checklist.index');
         Route::put('/deals/{deal}/checklist/{hash}', [\App\Http\Controllers\DealChecklistController::class, 'toggle'])->whereNumber('deal')->where('hash', '[0-9a-f]{32}')->name('deals.checklist.toggle');
         Route::get('/deals/{deal}/items', [$di, 'index'])->whereNumber('deal')->name('deals.items.index');
