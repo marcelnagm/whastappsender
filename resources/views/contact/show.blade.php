@@ -95,6 +95,17 @@
         </div>
 
         <div class="col-lg-8 col-md-7">
+            @teamcan('contacts.manage')
+            <div class="card border-0 shadow-sm rounded-4 mb-4"><div class="card-body p-4">
+                <h6 class="fw-bold mb-2"><i class="bi bi-shield-lock me-1"></i> {{ __('Privacy (LGPD)') }}</h6>
+                <p class="small text-muted">{{ __('Answer a data request: download everything kept about this person, or erase it. Erasing removes name, phone, e-mail, messages and notes, keeps deals and the consent history, and blocks future messages. It cannot be undone.') }}</p>
+                <a href="{{ route('contacts.privacy.export', $contact->id) }}" class="btn btn-sm btn-outline-secondary me-2"><i class="bi bi-download"></i> {{ __('Download data') }}</a>
+                <form method="POST" action="{{ route('contacts.privacy.erase', $contact->id) }}" class="d-inline-flex gap-2 align-items-center" onsubmit="return confirm(@json(__('Erase the personal data of this contact? This cannot be undone.')))">@csrf
+                    <label class="small"><input type="checkbox" name="confirm" value="1" required> {{ __('I confirm') }}</label>
+                    <button class="btn btn-sm btn-outline-danger"><i class="bi bi-eraser"></i> {{ __('Erase personal data') }}</button>
+                </form>
+            </div></div>
+            @endteamcan
             @teamcan('tasks')
             <div class="card border-0 shadow-sm rounded-4 mb-4"><div class="card-body p-4">
                 <h6 class="fw-bold mb-3"><i class="bi bi-telephone me-1"></i> {{ __('Log an activity') }}</h6>

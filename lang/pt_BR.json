@@ -1782,5 +1782,13 @@
     "Fill the birthday on the contact. Every morning the automation \"A contact has a birthday today\" runs for the people celebrating, so you can send a message, add a label or create a task.": "Preencha o aniversário no contato. Toda manhã a automação \"Um contato faz aniversário hoje\" roda para quem está de parabéns, e você pode enviar uma mensagem, adicionar uma etiqueta ou criar uma tarefa.",
     "No birthdays in the period.": "Nenhum aniversário no período.",
     "in :n days": "em :n dias",
-    "years": "anos"
+    "years": "anos",
+    "Answer a data request: download everything kept about this person, or erase it. Erasing removes name, phone, e-mail, messages and notes, keeps deals and the consent history, and blocks future messages. It cannot be undone.": "Atenda a uma solicitação de dados: baixe tudo o que é guardado sobre esta pessoa ou apague. Apagar remove nome, telefone, e-mail, mensagens e notas, mantém os negócios e o histórico de consentimento e bloqueia novas mensagens. Não dá para desfazer.",
+    "Download data": "Baixar dados",
+    "Erase personal data": "Apagar dados pessoais",
+    "Erase the personal data of this contact? This cannot be undone.": "Apagar os dados pessoais deste contato? Isso não pode ser desfeito.",
+    "Erased contact": "Contato apagado",
+    "I confirm": "Confirmo",
+    "Personal data erased (:n messages wiped).": "Dados pessoais apagados (:n mensagens limpas).",
+    "Privacy (LGPD)": "Privacidade (LGPD)"
 }

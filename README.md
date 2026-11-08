@@ -48,6 +48,7 @@
 | [Funnel conversion](#-funnel-conversion-and-sales-velocity) | Conversion and time per stage, sales cycle and velocity |
 | [Activity log](#-activity-log) | Calls, meetings and visits logged on the contact and in the timeline |
 | [Birthdays](#-birthdays) | Birthday field, daily automation trigger and upcoming list |
+| [Data-subject requests (LGPD)](#-data-subject-requests-lgpd) | Download or erase all personal data of a contact |
 | [Win/loss analysis](#-winloss-analysis) | Why deals are lost, win rate by origin and by person, catalog of lost reasons |
 | [Typebot flows](#-typebot-flows) | Typebot conversation flows on every channel, with hand-over to a person |
 | [Data export](#-data-export) | CSV backup of contacts, companies, deals, tasks, messages and consent history |
@@ -1029,6 +1030,13 @@ Not everything happens in the chat. On a **contact** page, **Log an activity** r
 The contact form has a **Birthday** field. Every day at 08:00 `contacts:birthdays` fires the automation trigger **"A contact has a birthday today"** (and the webhook event `contact.birthday`) once a year for each person celebrating, skipping people who opted out; Feb 29 is celebrated on Feb 28 in common years. Build the rule in **Automations** (send a message, add a label, create a task...): when the person has a conversation, it is the one used by the actions. **Contacts → Birthdays** lists the next 7/30/90 days.
 
 Needs the scheduler (`contacts:birthdays`) and the migration (`contacts.birthday`, `birthday_notified_year`).
+
+## 🛡️ Data-subject requests (LGPD)
+
+On a **contact** page (contacts.manage permission), the **Privacy (LGPD)** card answers requests from the person:
+
+- **Download data** — a JSON with everything kept: contact data, conversations and messages, deals, tasks, activities and the consent history.
+- **Erase personal data** (needs the confirmation box) — name, phone, e-mail, birthday, custom fields, message texts, media files, notes and conversation addresses are wiped; the contact is blocked from any further message and a "revoked / data erasure" entry goes to the consent history. Deals (title, value, status) are kept for your books. It cannot be undone. The audit log records who did it.
 
 ## 🏆 Win/loss analysis
 

@@ -418,6 +418,8 @@ Route::group(['namespace' => 'App\Http\Controllers', 'middleware' => ['auth', 's
     Route::resource('/campaigns', 'App\Http\Controllers\CampaignController')->middleware(['auth']);
     Route::resource('/contacts', 'App\Http\Controllers\ContactController')->middleware(['auth']);
     Route::resource('/campaign-items', 'App\Http\Controllers\CampaignItemController')->middleware(['auth']);;
+    Route::get('/contact/{id}/data', [\App\Http\Controllers\ContactPrivacyController::class, 'export'])->whereNumber('id')->name('contacts.privacy.export')->middleware(['auth']);
+    Route::post('/contact/{id}/erase', [\App\Http\Controllers\ContactPrivacyController::class, 'erase'])->whereNumber('id')->name('contacts.privacy.erase')->middleware(['auth']);
     Route::get('/contact/birthdays', [\App\Http\Controllers\BirthdaysController::class, 'index'])->name('contacts.birthdays')->middleware(['auth']);
     Route::get('/contact/duplicates', [\App\Http\Controllers\ContactDuplicatesController::class, 'index'])->name('contacts.duplicates')->middleware(['auth']);
     Route::post('/contact/duplicates/merge', [\App\Http\Controllers\ContactDuplicatesController::class, 'merge'])->name('contacts.duplicates.merge')->middleware(['auth']);
