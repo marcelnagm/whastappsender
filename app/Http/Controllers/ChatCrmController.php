@@ -42,6 +42,8 @@ class ChatCrmController extends Controller
             ])->values(),
             'scheduled' => ScheduledMessagesController::list($chat),
             'closed' => (bool) $chat->closed_at,
+            'snoozed_until' => optional($chat->snoozed_until)->format('d/m H:i'),
+            'snooze_presets' => \App\Services\Chat\Snooze::presets(),
             'sequences' => SequencesController::forChat($chat),
             'can_deals' => $canDeals,
             'deal' => $deal && $canDeals ? ['id' => $deal->id, 'title' => $deal->title, 'stage' => optional($deal->stage)->name, 'url' => route('pipeline.index', ['pipeline' => $deal->pipeline_id])] : null,
@@ -73,6 +75,26 @@ class ChatCrmController extends Controller
         app(\App\Services\Chat\Csat::class)->reopen($chat);
 
         return response()->json(['closed' => false]);
+    }
+
+    public function snooze(Request $request, Chat $chat): JsonResponse
+    {
+        $this->authorizeChat($chat);
+        $data = $request->validate(['preset' => 'required|string|max:20']);
+        $svc = app(\App\Services\Chat\Snooze::class);
+        $until = $svc->until($data['preset']);
+        abort_if(!$until, 422, __('Choose when to bring it back.'));
+        $svc->snooze($chat, $until);
+
+        return response()->json(['snoozed_until' => $until->toIso8601String()]);
+    }
+
+    public function unsnooze(Request $request, Chat $chat): JsonResponse
+    {
+        $this->authorizeChat($chat);
+        app(\App\Services\Chat\Snooze::class)->wake($chat);
+
+        return response()->json(['snoozed_until' => null]);
     }
 
     public function assign(Request $request, Chat $chat): JsonResponse

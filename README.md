@@ -43,6 +43,7 @@
 | [Lead sources](#-lead-sources) | Where each deal came from (channel, form + UTM campaign, or typed) and the funnel result per source: created, won, win rate, value, days to win |
 | [Duplicate contacts](#-duplicate-contacts) | Finds people registered twice (same e-mail or phone written differently) and merges them keeping conversations, deals, tasks and consent proof |
 | [Lifecycle stages](#-lifecycle-stages) | Lead → qualified → opportunity → customer, moved by deals, filter and bulk action |
+| [Snoozed conversations](#-snoozed-conversations) | Take a conversation out of the inbox until a time or the next customer message |
 | [Win/loss analysis](#-winloss-analysis) | Why deals are lost, win rate by origin and by person, catalog of lost reasons |
 | [Typebot flows](#-typebot-flows) | Typebot conversation flows on every channel, with hand-over to a person |
 | [Data export](#-data-export) | CSV backup of contacts, companies, deals, tasks, messages and consent history |
@@ -998,6 +999,12 @@ Bulk messaging needs permission: Meta's policies and Brazil's LGPD expect you to
 Every person has a **lifecycle stage**: *Lead → Qualified → Opportunity → Customer* (or *Churned*). People without a stage count as *Lead*. The CRM moves them forward by itself: a deal linked to the person makes them an **Opportunity**, a **won** deal makes them a **Customer** (also when they were *Churned*). The automatic path never moves anyone backwards; a person can set any stage with the **Stage…** selector of the bulk bar on the contacts list (select contacts → choose the stage; "— none" clears it).
 
 On **Contacts** the stage chips at the top filter the list and show how many people are in each stage; each row shows the stage badge. Nothing to configure; the migration only adds two columns (`lifecycle_stage`, `lifecycle_changed_at`).
+
+## 😴 Snoozed conversations
+
+In the chat panel of a conversation, the **Snooze…** selector (in 1 hour, in 3 hours, tomorrow 9:00, next week) takes it out of the inbox. It comes back by itself when the time arrives (the person in charge, or the owner, gets a notification) or **as soon as the customer writes again**. **Bring back now** undoes it earlier. Snoozed conversations stay reachable in the conversation filter **Snoozed**.
+
+Needs the scheduler (`chat:wake` runs every minute) and the migration (`chats.snoozed_until`).
 
 ## 🏆 Win/loss analysis
 

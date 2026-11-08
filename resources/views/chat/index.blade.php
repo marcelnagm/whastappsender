@@ -88,6 +88,7 @@
                 <option value="all">{{ __('All conversations') }}</option>
                 <option value="mine">{{ __('Assigned to me') }}</option>
                 <option value="unassigned">{{ __('Unassigned') }}</option>
+                <option value="snoozed">{{ __('Snoozed') }}</option>
             </select>
         </div>
 
@@ -284,6 +285,9 @@
         seqStarted: @json(__('Sequence started.')),
         seqStop: @json(__('Stop this sequence')),
         seqNext: @json(__('next:')),
+        snoozeTitle: @json(__('Snooze')),
+        snoozedUntil: @json(__('Snoozed until')),
+        unsnooze: @json(__('Bring back now')),
         closeChat: @json(__('Close conversation')),
         reopenChat: @json(__('Reopen conversation')),
         closedSurvey: @json(__('Conversation closed. Survey sent.')),
@@ -310,6 +314,6 @@
         autoDealForm: @json(__('Open a deal when a contact form arrives')),
     };
 </script>
-<script src="{{ url('assets/js/chat.js') }}?v=10"></script>
+<script src="{{ url('assets/js/chat.js') }}?v=11"></script>
 @endif
 @endsection

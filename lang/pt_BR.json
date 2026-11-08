@@ -1743,5 +1743,15 @@
     "Lead": "Lead",
     "Lifecycle": "Ciclo de vida",
     "Opportunity": "Oportunidade",
-    "Qualified": "Qualificado"
+    "Qualified": "Qualificado",
+    "Bring back now": "Trazer de volta agora",
+    "Choose when to bring it back.": "Escolha quando trazer de volta.",
+    "In 1 hour": "Em 1 hora",
+    "In 3 hours": "Em 3 horas",
+    "Next week": "Próxima semana",
+    "Snooze": "Adiar",
+    "Snoozed": "Adiadas",
+    "Snoozed conversation is back: :name": "Conversa adiada voltou: :name",
+    "Snoozed until": "Adiada até",
+    "Tomorrow 9:00": "Amanhã 9:00"
 }

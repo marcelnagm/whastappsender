@@ -28,6 +28,7 @@ class InboundHooks
             if (app(Csat::class)->capture($chat, $m)) {
                 return;
             }
+            app(Snooze::class)->wake($chat);   // the customer wrote: the conversation is back in the inbox
             if ($chat->closed_at) {
                 app(Csat::class)->reopen($chat);
                 $chat = $chat->fresh();

@@ -106,6 +106,9 @@ class ChatController extends Controller
             ->where('instance_id', $instance->id)
             ->where('archived', false)
             ->whereNotNull('last_message_at')
+            // snoozed conversations leave the inbox until their time comes (or the customer writes); they have their own filter
+            ->when($filter === 'snoozed', fn ($query) => $query->where('snoozed_until', '>', now()),
+                fn ($query) => $query->where(fn ($w) => $w->whereNull('snoozed_until')->orWhere('snoozed_until', '<=', now())))
             ->when($q !== '', function ($query) use ($q, $digits) {
                 $query->where(function ($w) use ($q, $digits) {
                     $w->where('name', 'like', "%{$q}%");
@@ -799,6 +802,7 @@ class ChatController extends Controller
             'phone' => $chat->phone,
             'avatar' => $chat->avatar(),
             'unread' => (int) $chat->unread_count,
+            'snoozed' => (bool) ($chat->snoozed_until && $chat->snoozed_until->isFuture()),
             'in_crm' => (bool) $chat->contact_id,
             'assigned' => $chat->assigned_to ? ['id' => (int) $chat->assigned_to, 'name' => optional($chat->assignee)->name] : null,
             'tags' => $chat->tags->map(fn ($t) => ['id' => $t->id, 'name' => $t->name, 'color' => $t->color])->values(),

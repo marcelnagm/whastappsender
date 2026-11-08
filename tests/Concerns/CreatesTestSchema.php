@@ -192,6 +192,7 @@ trait CreatesTestSchema
             '2026_11_09_120000_create_typebot_tables.php',
             '2026_11_10_100000_create_lost_reasons.php',
             '2026_11_10_120000_add_contact_lifecycle.php',
+            '2026_11_10_140000_add_chat_snooze.php',
             '2026_11_05_160000_add_message_sender_and_team_goals.php',
         ] as $file) {
             (require database_path('migrations/' . $file))->up();

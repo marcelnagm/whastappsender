@@ -30,6 +30,7 @@ class Chat extends Model
         'assigned_to',
         'assigned_at',
         'closed_at',
+        'snoozed_until',
         'closed_by',
     ];
 
@@ -42,6 +43,7 @@ class Chat extends Model
         'avatar_next_check_at' => 'datetime',
         'assigned_at' => 'datetime',
         'closed_at' => 'datetime',
+        'snoozed_until' => 'datetime',
         'greeted_at' => 'datetime',
         'away_sent_at' => 'datetime',
     ];

@@ -1202,6 +1202,22 @@
     });
     host.appendChild(closeBtn);
 
+    // snooze: leaves the inbox until the time comes or the customer writes again
+    if (d.snoozed_until) {
+      var wakeBtn = h('button', 'btn btn-sm btn-outline-warning mb-2 ms-1', T.unsnooze + ' (' + T.snoozedUntil + ' ' + d.snoozed_until + ')'); wakeBtn.type = 'button';
+      wakeBtn.addEventListener('click', async function () { try { await api(cfg.chatBase + '/' + chat.id + '/snooze', { method: 'DELETE' }); toast(T.saved); loadChats(); again(); } catch (e) { toast(e.message); } });
+      host.appendChild(wakeBtn);
+    } else if (d.snooze_presets) {
+      var snz = h('select', 'form-select form-select-sm d-inline-block mb-2 ms-1'); snz.style.width = 'auto';
+      snz.appendChild(h('option', '', T.snoozeTitle + '…')).value = '';
+      Object.keys(d.snooze_presets).forEach(function (k) { var o = h('option', '', d.snooze_presets[k]); o.value = k; snz.appendChild(o); });
+      snz.addEventListener('change', async function () {
+        if (!snz.value) return;
+        try { await api(cfg.chatBase + '/' + chat.id + '/snooze', { method: 'POST', body: { preset: snz.value } }); toast(T.saved); loadChats(); again(); } catch (e) { toast(e.message); }
+      });
+      host.appendChild(snz);
+    }
+
     // labels
     var tagWrap = h('div', 'mb-2');
     tagWrap.appendChild(h('label', 'form-label small mb-1 d-block', T.tagsTitle));
