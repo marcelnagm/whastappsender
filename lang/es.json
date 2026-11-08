@@ -1726,5 +1726,16 @@
     "Typebot viewer address": "Dirección del viewer de Typebot",
     "When the flow ends": "Cuando termine el flujo",
     "Words that call a person": "Palabras que llaman a una persona",
-    "https://typebot.io, or your own installation": "https://typebot.io, o tu propia instalación"
+    "https://typebot.io, or your own installation": "https://typebot.io, o tu propia instalación",
+    "By lead origin": "Por origen del lead",
+    "By person in charge": "Por responsable",
+    "Deals closed in the period: why they were lost and who wins more.": "Negocios cerrados en el período: por qué se perdieron y quién gana más.",
+    "Deleted.": "Eliminado.",
+    "E.g. Price too high": "Ej.: Precio demasiado alto",
+    "Lost reasons": "Motivos de pérdida",
+    "No lost deals in the period.": "Ningún negocio perdido en el período.",
+    "No reason given": "Sin motivo indicado",
+    "Reasons offered when losing a deal": "Motivos ofrecidos al perder un negocio",
+    "Win/loss": "Ganados/perdidos",
+    "Win/loss analysis": "Análisis de ganados y perdidos"
 }

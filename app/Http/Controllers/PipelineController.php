@@ -33,6 +33,7 @@ class PipelineController extends Controller
         $scores = $forecast->scoreMany($deals);
 
         return view('pipeline.index', [
+            'lostReasons' => app(\App\Services\Reports\WinLossReport::class)->options($owner),
             'origins' => app(\App\Services\Reports\SourceReport::class)->known($owner),
             'scores' => $scores,
             'weighted' => $forecast->weightedValue($deals, $scores),
@@ -81,6 +82,32 @@ class PipelineController extends Controller
         $report = app(\App\Services\Reports\SourceReport::class);
 
         return view('pipeline.sources', ['data' => $report->build($request->user(), now()->subDays($days - 1)->startOfDay(), now()->endOfDay()), 'days' => $days]);
+    }
+
+    /** Why deals are won or lost. */
+    public function winLoss(Request $request)
+    {
+        $days = in_array((string) $request->query('period'), ['30', '90', '365'], true) ? (int) $request->query('period') : 90;
+        $owner = $request->user();
+        $report = app(\App\Services\Reports\WinLossReport::class);
+
+        return view('pipeline.winloss', ['data' => $report->build($owner, now()->subDays($days - 1)->startOfDay(), now()->endOfDay()), 'days' => $days,
+            'catalog' => \App\Models\LostReason::where('user_id', $owner->id)->orderBy('name')->get()]);
+    }
+
+    public function storeLostReason(Request $request)
+    {
+        $data = $request->validate(['name' => 'required|string|max:120']);
+        \App\Models\LostReason::firstOrCreate(['user_id' => $request->user()->id, 'name' => trim($data['name'])]);
+
+        return back()->with('success', __('Saved.'));
+    }
+
+    public function destroyLostReason(Request $request, int $reason)
+    {
+        \App\Models\LostReason::where('user_id', $request->user()->id)->whereKey($reason)->delete();
+
+        return back()->with('success', __('Deleted.'));
     }
 
     /** Written recommendation of the AI agent for one deal. */

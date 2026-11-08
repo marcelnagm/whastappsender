@@ -42,6 +42,7 @@
 | [Proposals](#-proposals-quotes) | Quote built from a deal's items, public link with online accept / decline, notices and automation triggers, print / save as PDF |
 | [Lead sources](#-lead-sources) | Where each deal came from (channel, form + UTM campaign, or typed) and the funnel result per source: created, won, win rate, value, days to win |
 | [Duplicate contacts](#-duplicate-contacts) | Finds people registered twice (same e-mail or phone written differently) and merges them keeping conversations, deals, tasks and consent proof |
+| [Win/loss analysis](#-winloss-analysis) | Why deals are lost, win rate by origin and by person, catalog of lost reasons |
 | [Typebot flows](#-typebot-flows) | Typebot conversation flows on every channel, with hand-over to a person |
 | [Data export](#-data-export) | CSV backup of contacts, companies, deals, tasks, messages and consent history |
 | [Audit log](#-audit-log) | Who deleted or changed what (team, integrations, settings, exports) |
@@ -990,6 +991,12 @@ Bulk messaging needs permission: Meta's policies and Brazil's LGPD expect you to
 * Not included yet: a confirmation message to the customer after `#sair`, and an unsubscribe footer appended to campaign texts.
 
 * * *
+
+## 🏆 Win/loss analysis
+
+Menu **Funnel → Win/loss** (`/pipeline/win-loss`, deals permission). For the deals closed in the last 30/90/365 days it shows won and lost counts and value, the **win rate**, the **lost reasons** (grouped ignoring case and spaces, with share and lost value) and the win rate **by lead origin** and **by person in charge**.
+
+When you drag a deal to a *lost* column the prompt now lists the reasons you can type: the catalog of the account (managed at the bottom of the same page, "Reasons offered when losing a deal") plus the ones already used. Reasons stay free text, so old deals keep working. Nothing to configure or schedule.
 
 ## 🤖 Typebot flows
 

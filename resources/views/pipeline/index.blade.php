@@ -36,7 +36,7 @@
     <div class="col-6 col-md-3"><div class="card shadow-sm"><div class="card-body py-2"><div class="small text-muted">{{ __('In progress') }}</div><strong data-s="open">{{ $summary['open'] }}</strong> · <span data-s="open_value">{{ $money($summary['open_value']) }}</span></div></div></div>
     <div class="col-6 col-md-3"><div class="card shadow-sm"><div class="card-body py-2"><div class="small text-muted">{{ __('Won') }}</div><strong data-s="won">{{ $summary['won'] }}</strong> · <span data-s="won_value">{{ $money($summary['won_value']) }}</span></div></div></div>
     <div class="col-6 col-md-3"><div class="card shadow-sm"><div class="card-body py-2"><div class="small text-muted">{{ __('Lost') }}</div><strong data-s="lost">{{ $summary['lost'] }}</strong></div></div></div>
-    <div class="col-6 col-md-3"><div class="card shadow-sm"><div class="card-body py-2"><div class="small text-muted">{{ __('Forecast') }} <a href="{{ route('pipeline.priorities') }}" class="text-decoration-none">· {{ __('Priorities') }}</a> <a href="{{ route('pipeline.stale') }}" class="text-decoration-none">· {{ __('Stalled') }}</a></div><strong>{{ $money($weighted) }}</strong></div></div></div>
+    <div class="col-6 col-md-3"><div class="card shadow-sm"><div class="card-body py-2"><div class="small text-muted">{{ __('Forecast') }} <a href="{{ route('pipeline.priorities') }}" class="text-decoration-none">· {{ __('Priorities') }}</a> <a href="{{ route('pipeline.stale') }}" class="text-decoration-none">· {{ __('Stalled') }}</a> <a href="{{ route('pipeline.winloss') }}" class="text-decoration-none">· {{ __('Win/loss') }}</a></div><strong>{{ $money($weighted) }}</strong></div></div></div>
     <div class="col-6 col-md-3"><div class="card shadow-sm"><div class="card-body py-2"><div class="small text-muted">{{ __('Win rate') }}</div><strong data-s="win_rate">{{ $summary['win_rate'] === null ? '—' : $summary['win_rate'].'%' }}</strong></div></div></div>
   </div>
 
@@ -203,6 +203,7 @@ document.getElementById('iAdd').addEventListener('click', async () => {
 function newDeal() { setDeal(dealStore, 'POST', @json(__('New deal')), {}); }
 function editDeal(d) { setDeal(dealBase + '/' + d.id, 'PUT', @json(__('Edit deal')), d); }
 
+const lostOptions = @json($lostReasons ?? []);
 let dragged = null;
 document.querySelectorAll('.kb-card').forEach(c => {
   c.addEventListener('dragstart', () => { dragged = c; c.classList.add('dragging'); });
@@ -219,7 +220,7 @@ document.querySelectorAll('.kb-list').forEach(list => {
     after ? list.insertBefore(card, after) : list.appendChild(card);
     const position = [...list.querySelectorAll('.kb-card')].indexOf(card);
     let reason = null;
-    if (list.dataset.kind === 'lost') { reason = prompt(@json(__('Why was it lost? (optional)'))); if (reason === null) reason = ''; }
+    if (list.dataset.kind === 'lost') { reason = prompt(@json(__('Why was it lost? (optional)')) + (lostOptions.length ? '\n' + lostOptions.join(' | ') : '')); if (reason === null) reason = ''; }
     try {
       const r = await fetch(dealBase + '/' + card.dataset.deal + '/move', {method: 'POST', headers: {'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': @json(csrf_token())},
         body: JSON.stringify({stage_id: list.dataset.stage, position, lost_reason: reason})});
