@@ -42,6 +42,7 @@
 | [Proposals](#-proposals-quotes) | Quote built from a deal's items, public link with online accept / decline, notices and automation triggers, print / save as PDF |
 | [Lead sources](#-lead-sources) | Where each deal came from (channel, form + UTM campaign, or typed) and the funnel result per source: created, won, win rate, value, days to win |
 | [Duplicate contacts](#-duplicate-contacts) | Finds people registered twice (same e-mail or phone written differently) and merges them keeping conversations, deals, tasks and consent proof |
+| [Typebot flows](#-typebot-flows) | Typebot conversation flows on every channel, with hand-over to a person |
 | [Data export](#-data-export) | CSV backup of contacts, companies, deals, tasks, messages and consent history |
 | [Audit log](#-audit-log) | Who deleted or changed what (team, integrations, settings, exports) |
 | [Meeting booking](#-meeting-booking) | Public page where customers pick a free time; creates the contact and a task |
@@ -989,6 +990,23 @@ Bulk messaging needs permission: Meta's policies and Brazil's LGPD expect you to
 * Not included yet: a confirmation message to the customer after `#sair`, and an unsubscribe footer appended to campaign texts.
 
 * * *
+
+## 🤖 Typebot flows
+
+Build the conversation in [Typebot](https://typebot.io) (cloud or self-hosted) and let it answer new conversations on **every channel** (WhatsApp, Telegram, Instagram, Facebook, TikTok, e-mail). The CRM relays each customer message to Typebot's public Chat API (`startChat` / `continueChat`) from a queued job and sends the bubbles back through the normal chat pipeline (`source = bot`), so they appear in the inbox, count for reports and respect the reply window. This is the channel-agnostic alternative to Evolution's built-in Typebot integration (which only covers WhatsApp and bypasses the CRM).
+
+**Setup** (menu **Typebot**, automations permission): publish the bot, paste its *public id* (Typebot → Share → last part of the link) and the viewer address (`https://typebot.io` or your own), optionally restrict it to one number or to hours when you are closed, save and press **Test the connection**.
+
+**Flow side:** create the variables `name`, `first_name`, `phone`, `chat_id` and `handoff_url`; they are prefilled when the flow starts. Text, images/videos/audio (sent as their link), redirects (sent as the link) and choice buttons (sent as a numbered list; the customer answers "2" or "1,3") are supported. File upload and payment inputs hand over to a person.
+
+**Hand over to a person**, any of these:
+1. a Typebot **HTTP request** block `POST {{handoff_url}}` (optional JSON `{"note": "..."}` is saved as an internal note); the address is signed per conversation, no login or key needed;
+2. a **keyword** the customer types (for example `atendente, humano`);
+3. **the end of the flow** (option *Hand over to a person*);
+4. a team member **answering from the CRM** (the flow steps aside by itself);
+5. any **failure** of Typebot: the customer is never left talking to a wall.
+
+On hand-over the AI agent is paused for that customer, an optional message is sent, the conversation is assigned (to the chosen person or by the normal distribution), an internal note and an in-app notification are created, the automation trigger **The bot handed over to a person** (`bot.handoff`) and the outbound webhook event `bot.handoff` fire. Closing the conversation resets the flow; a finished or handed-over conversation does not restart until it has been idle for the configured minutes. While the flow is active the AI agent stays quiet; when it ends without hand-over, the AI agent (if enabled) may continue. Needs the queue worker.
 
 ## 💾 Data export
 

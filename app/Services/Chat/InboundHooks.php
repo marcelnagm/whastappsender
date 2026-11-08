@@ -32,8 +32,11 @@ class InboundHooks
                 app(Csat::class)->reopen($chat);
                 $chat = $chat->fresh();
             }
-            app(ChatAssignment::class)->autoAssign($chat, $owner);
-            app(AutoMessages::class)->onInbound($chat, $owner, $m);
+            // a conversation answered by the Typebot flow is neither greeted nor distributed until a person is called in
+            if (!app(\App\Services\Bots\TypebotBot::class)->onInbound($chat, $owner, $m)) {
+                app(ChatAssignment::class)->autoAssign($chat, $owner);
+                app(AutoMessages::class)->onInbound($chat, $owner, $m);
+            }
             $deals = app(LeadDeals::class);
             $deals->fromInbound($chat->fresh(), $owner, $m);
             if ($m->body) {

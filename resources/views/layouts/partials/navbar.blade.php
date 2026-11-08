@@ -145,6 +145,9 @@
         <li class="nav-item">
           <a href="{{ route('sequences.index') }}" class="nav-link {{ request()->is('sequences*') ? 'active text-secondary' : 'text-white' }}"><i class="bi bi-arrow-repeat me-1"></i> {{ __('Follow-up sequences') }}</a>
         </li>
+        <li class="nav-item">
+          <a href="{{ route('typebot.index') }}" class="nav-link {{ request()->is('typebot*') ? 'active text-secondary' : 'text-white' }}"><i class="bi bi-robot me-1"></i> Typebot</a>
+        </li>
         @endteamcan
         @teamcan('tasks')
         <li class="nav-item">

@@ -44,6 +44,12 @@ class ChatMessage extends Model
         static::created(function (ChatMessage $m) {
             if (!$m->from_me) {
                 \App\Services\Chat\InboundHooks::onInbound($m);
+            } elseif ($m->source === 'human' && $m->chat) {
+                // a team member answered from the CRM: the Typebot flow steps aside
+                try {
+                    app(\App\Services\Bots\TypebotBot::class)->humanReplied($m->chat);
+                } catch (\Throwable $e) {
+                }
             }
         });
     }

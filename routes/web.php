@@ -310,6 +310,11 @@ Route::group(['namespace' => 'App\Http\Controllers', 'middleware' => ['auth', 's
     Route::get('exports', [\App\Http\Controllers\ExportController::class, 'index'])->name('exports.index');
     Route::get('exports/{type}', [\App\Http\Controllers\ExportController::class, 'download'])->name('export.download');
 
+    // Typebot (conversation flows)
+    Route::get('typebot', [\App\Http\Controllers\TypebotController::class, 'index'])->name('typebot.index');
+    Route::put('typebot', [\App\Http\Controllers\TypebotController::class, 'update'])->name('typebot.update');
+    Route::post('typebot/test', [\App\Http\Controllers\TypebotController::class, 'test'])->middleware('throttle:10,1')->name('typebot.test');
+
     // Audit log
     Route::get('audit', [\App\Http\Controllers\AuditController::class, 'index'])->name('audit.index');
 

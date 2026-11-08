@@ -63,6 +63,12 @@ class AiAutoReplyService
             return;
         }
 
+        // the Typebot flow is talking to this customer: the AI agent waits until it finishes or hands over
+        if (\App\Services\Bots\TypebotBot::isActive((int) $user->id, (int) ($contact->id ?? 0), (int) $instance->id)) {
+            $this->debugFlow('Aborted: Typebot flow active', ['contact_id' => $contact->id ?? null]);
+            return;
+        }
+
         // Which agent (provider, model, prompt) answers on THIS number: the one assigned to it, else the "any instance" one
         $profile = app(AiProfileResolver::class)->forInstance($user, $instance);
         if (!$profile) {

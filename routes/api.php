@@ -48,6 +48,9 @@ Route::prefix('public/forms')->group(function () {
     Route::post('/{key}', [$pf, 'submit'])->where('key', '[a-z0-9]+')->middleware('throttle:forms');
 });
 
+// Typebot flows call this (HTTP Request block) to hand the conversation to a person; the signed address is the credential
+Route::post('/public/typebot/handoff/{chat}/{sig}', [\App\Http\Controllers\TypebotController::class, 'handoff'])->whereNumber('chat')->where('sig', '[a-f0-9]{32}')->middleware('throttle:30,1')->name('typebot.handoff');
+
 Route::prefix('v1')->group(function () {
     Route::post('/auth/login', [AuthController::class, 'login']);
 

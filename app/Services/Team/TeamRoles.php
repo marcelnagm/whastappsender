@@ -88,7 +88,7 @@ final class TeamRoles
     private const WEB = [
         ['any', ['logout.perform', 'notifications.clear', 'home.index', 'language.switch']],
         ['chat', ['chat.*', 'replies.*', 'kb.search', 'kb.used']],
-        ['automations', ['kb.*']],
+        ['automations', ['kb.*', 'typebot.*']],
         ['contacts.view', ['contacts.index', 'contacts.show', 'contacts.photo', 'companies.index', 'companies.show']],
         ['team', ['contacts.clear']],
         ['contacts.manage', ['contacts.*', 'consent.*', 'audience.*', 'companies.*']],

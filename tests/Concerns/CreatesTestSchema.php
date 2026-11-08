@@ -189,6 +189,7 @@ trait CreatesTestSchema
             '2026_11_08_120000_create_kb_articles.php',
             '2026_11_08_140000_create_bookings.php',
             '2026_11_09_100000_create_audit_logs.php',
+            '2026_11_09_120000_create_typebot_tables.php',
             '2026_11_05_160000_add_message_sender_and_team_goals.php',
         ] as $file) {
             (require database_path('migrations/' . $file))->up();
