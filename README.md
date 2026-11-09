@@ -51,6 +51,7 @@
 | [Data-subject requests (LGPD)](#-data-subject-requests-lgpd) | Download or erase all personal data of a contact |
 | [Subscriptions and renewals](#-subscriptions-and-renewals) | Billing cycle on deals, MRR/ARR, renewal tasks and churn |
 | [Deal followers](#-deal-followers) | Follow a deal and get notified of stage changes, results and renewals |
+| [AI that learns the business (RAG) — plan](docs/RAG-IA-NEGOCIO.md) | Sketch only: knowledge base + insights, vector database, models per business type |
 | [Win/loss analysis](#-winloss-analysis) | Why deals are lost, win rate by origin and by person, catalog of lost reasons |
 | [Typebot flows](#-typebot-flows) | Typebot conversation flows on every channel, with hand-over to a person |
 | [Data export](#-data-export) | CSV backup of contacts, companies, deals, tasks, messages and consent history |
