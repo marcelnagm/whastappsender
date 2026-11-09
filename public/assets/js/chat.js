@@ -495,7 +495,7 @@
   // so audio/video that is playing is not interrupted)
   // ------------------------------------------------------------------
   function contentSig(m) {
-    return [m.body, m.deleted ? 1 : 0, (m.reactions || []).join(','), m.media_url, m.error, m.type].join('|');
+    return [m.body, m.deleted ? 1 : 0, (m.reactions || []).join(','), m.media_url, m.error, m.type, m.ai_feedback].join('|');
   }
 
   function cmp(a, b) {
@@ -621,6 +621,7 @@
     var meta = h('span', 'wa-meta');
     meta.appendChild(h('span', null, fmtTime(m.ts)));
     if (m.from_me) meta.appendChild(ticksEl(m.status));
+    if (m.ai && m.ai_feedback) meta.insertBefore(h('span', null, m.ai_feedback > 0 ? '👍' : '👎'), meta.firstChild);
     bubble.appendChild(meta);
 
     if (m.from_me && m.status === 'error') {
@@ -756,12 +757,28 @@
     if (m.media_url) {
       item('download', T.download, function () { window.open(m.media_url, '_blank', 'noopener'); });
     }
+    if (m.ai) {
+      item('hand-thumbs-up', m.ai_feedback > 0 ? T.aiGoodUndo : T.aiGood, function () { aiFeedback(m, m.ai_feedback > 0 ? 0 : 1); });
+      item('hand-thumbs-down', m.ai_feedback < 0 ? T.aiBadUndo : T.aiBad, function () {
+        if (m.ai_feedback < 0) return aiFeedback(m, 0);
+        var note = window.prompt(T.aiBadPrompt || '', '');
+        if (note === null) return;
+        aiFeedback(m, -1, note);
+      });
+    }
     if (m.from_me && m.message_id) {
       item('trash', T.remove, function () { removeMessage(m); });
     }
 
     bubble.appendChild(menu);
     openMenuEl = menu;
+  }
+
+  async function aiFeedback(m, value, note) {
+    try {
+      var data = await api(cfg.messageBase + '/' + m.id + '/ai-feedback', { method: 'POST', body: { value: value, note: note || null } });
+      if (data && data.message) { upsert(data.message, true); layout(); toast(T.aiThanks); }
+    } catch (e) { toast(e.message); }
   }
 
   async function react(m, emoji) {

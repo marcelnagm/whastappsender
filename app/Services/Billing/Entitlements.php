@@ -23,8 +23,9 @@ class Entitlements
     public const MONTHLY = [
         'messages_per_month' => 'messages',
         'ai_replies_per_month' => 'ai_replies',
+        'insights_per_month' => 'insights',
     ];
-    public const LIVE = ['instances', 'contacts', 'team_members'];
+    public const LIVE = ['instances', 'contacts', 'team_members', 'knowledge_sources'];
 
     public function enabled(): bool
     {
@@ -92,6 +93,7 @@ class Entitlements
         return match (true) {
             $key === 'instances' => Instance::where('user_id', $user->id)->count(),
             $key === 'contacts' => Contact::where('user_id', $user->id)->count(),
+            $key === 'knowledge_sources' => \App\Models\KnowledgeSource::where('user_id', $user->id)->count(),
             $key === 'team_members' => User::where('parent_user_id', $user->id)->count(),
             isset(self::MONTHLY[$key]) => (int) UsageCounter::where('user_id', $user->id)
                 ->where('metric', self::MONTHLY[$key])

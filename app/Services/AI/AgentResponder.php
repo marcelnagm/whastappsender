@@ -32,6 +32,9 @@ class AgentResponder
                 $system .= app(\App\Services\Rag\KnowledgeContext::class)->forHistory($profile, $history);
             }
             $result = $this->llm->chat($profile, $system, $history);
+            if ($profile->user_id) {
+                AiUsageLog::record((int) $profile->user_id, 'reply', $profile->exists ? $profile : null, $profile->provider, $profile->model, $result['tokens_in'] ?? null, $result['tokens_out'] ?? null);
+            }
 
             return $base + ['reply' => $result['reply'], 'error' => null, 'tokens_in' => $result['tokens_in'], 'tokens_out' => $result['tokens_out'], 'raw' => $result['raw']];
         } catch (LlmException $e) {

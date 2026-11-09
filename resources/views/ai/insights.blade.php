@@ -35,6 +35,40 @@
         </div>
     </form>
 
+    <div class="row g-3 mb-4">
+        <div class="col-md-6"><div class="card h-100"><div class="card-body">
+            <h2 class="h6">{{ __('AI usage this month') }}</h2>
+            <div class="small">{{ __('Reports') }}: <strong>{{ $quota['used'] }}</strong> {{ $quota['limit'] === null ? __('(no limit)') : '/ ' . $quota['limit'] }}</div>
+            <div class="small">{{ __('Customer replies') }}: <strong>{{ $usage['by_kind']['reply']['calls'] ?? 0 }}</strong> · {{ number_format($usage['by_kind']['reply']['tokens'] ?? 0, 0, ',', '.') }} tokens</div>
+            <div class="small">{{ __('Reports') }}: <strong>{{ $usage['by_kind']['insight']['calls'] ?? 0 }}</strong> · {{ number_format($usage['by_kind']['insight']['tokens'] ?? 0, 0, ',', '.') }} tokens</div>
+            @foreach (array_slice($usage['by_model'], 0, 4) as $m)<div class="small text-muted">{{ $m['model'] }} · {{ $m['calls'] }} · {{ number_format($m['tokens'], 0, ',', '.') }} tokens</div>@endforeach
+        </div></div></div>
+        <div class="col-md-6"><div class="card h-100"><div class="card-body">
+            <h2 class="h6">{{ __('Quality of AI answers (30 days)') }}</h2>
+            <div class="small mb-1">👍 <strong>{{ $feedback['up'] }}</strong> &nbsp; 👎 <strong>{{ $feedback['down'] }}</strong> <span class="text-muted">— {{ __('rate answers in the chat: open the message menu of an AI answer') }}</span></div>
+            @foreach ($feedback['bad'] as $b)
+                <div class="small border-top pt-1 mt-1"><a href="{{ route('chat.index', ['chat' => $b->chat_id]) }}">{{ \Illuminate\Support\Str::limit($b->body, 90) }}</a>@if ($b->ai_feedback_note)<div class="text-muted">“{{ $b->ai_feedback_note }}”</div>@endif</div>
+            @endforeach
+            @if ($feedback['bad']->isNotEmpty())<div class="small text-muted mt-1">{{ __('Turn repeated problems into FAQs in Business knowledge.') }}</div>@endif
+        </div></div></div>
+    </div>
+
+    <form method="POST" action="{{ route('ai.insights.schedule') }}" class="card card-body mb-4">
+        @csrf @method('PUT')
+        <h2 class="h6">{{ __('Automatic report') }}</h2>
+        <div class="row g-2 align-items-end">
+            <div class="col-md-3"><div class="form-check form-switch"><input type="checkbox" class="form-check-input" name="enabled" value="1" id="sch-on" @checked($schedule->enabled ?? false)><label class="form-check-label" for="sch-on">{{ __('Send it to me by e-mail') }}</label></div></div>
+            <div class="col-md-2"><select name="frequency" class="form-select form-select-sm">
+                <option value="weekly" @selected(($schedule->frequency ?? 'weekly') === 'weekly')>{{ __('Every Monday') }}</option>
+                <option value="monthly" @selected(($schedule->frequency ?? '') === 'monthly')>{{ __('1st of the month') }}</option></select></div>
+            <div class="col-md-3"><select name="business_type" class="form-select form-select-sm">@foreach ($types as $k => $t)<option value="{{ $k }}" @selected(($schedule->business_type ?? $lastType) === $k)>{{ $t[0] }}</option>@endforeach</select></div>
+            <div class="col-md-2"><select name="days" class="form-select form-select-sm">@foreach ([7 => __('Last 7 days'), 30 => __('Last 30 days'), 90 => __('Last 90 days'), 365 => __('Last 12 months')] as $d => $l)<option value="{{ $d }}" @selected(($schedule->period_days ?? 30) === $d)>{{ $l }}</option>@endforeach</select></div>
+            <div class="col-md-2 d-grid"><button class="btn btn-sm btn-outline-primary">{{ __('Save') }}</button></div>
+        </div>
+        @if ($schedule && $schedule->last_error)<div class="small text-danger mt-2">{{ __('Last attempt failed') }}: {{ $schedule->last_error }}</div>@endif
+        @if ($schedule && $schedule->last_run_at)<div class="small text-muted mt-2">{{ __('Last sent') }}: {{ $schedule->last_run_at->format('d/m/Y') }}</div>@endif
+    </form>
+
     @if ($report)
         <div class="d-flex justify-content-between align-items-center mb-2">
             <div class="small text-muted">{{ $types[$report->business_type][0] ?? $report->business_type }} · {{ __(':n days', ['n' => $report->period_days]) }} · {{ $report->created_at->format('d/m/Y H:i') }} · {{ $report->model }}</div>

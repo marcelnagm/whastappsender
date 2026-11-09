@@ -369,6 +369,19 @@ class ChatController extends Controller
         return response()->json(['message' => $message->fresh()->toApi()]);
     }
 
+    /** 👍 / 👎 on an answer written by an AI agent (value 1, -1 or 0 to clear), with an optional note on what was wrong. */
+    public function aiFeedback(Request $request, ChatMessage $message): JsonResponse
+    {
+        $this->authorizeMessage($message);
+        abort_unless($message->source === 'ai', 422);
+        $d = $request->validate(['value' => 'required|integer|in:-1,0,1', 'note' => 'nullable|string|max:300']);
+
+        $message->update(['ai_feedback' => $d['value'] ?: null, 'ai_feedback_note' => $d['value'] === -1 ? ($d['note'] ?? null) : null,
+            'ai_feedback_by' => $d['value'] ? Auth::id() : null]);
+
+        return response()->json(['message' => $message->fresh()->toApi()]);
+    }
+
     public function react(Request $request, ChatMessage $message): JsonResponse
     {
         $this->authorizeMessage($message);

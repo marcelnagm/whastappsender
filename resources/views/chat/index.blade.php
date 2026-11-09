@@ -188,6 +188,8 @@
         today: @json(__('Today')),
         yesterday: @json(__('Yesterday')),
         you: @json(__('You')),
+        aiGood: @json(__('Good AI answer')), aiGoodUndo: @json(__('Remove 👍')), aiBad: @json(__('Bad AI answer')), aiBadUndo: @json(__('Remove 👎')),
+        aiBadPrompt: @json(__('What was wrong with this answer? (optional)')), aiThanks: @json(__('Thanks, feedback saved')),
         photo: @json(__('Photo')),
         video: @json(__('Video')),
         audio: @json(__('Voice message')),

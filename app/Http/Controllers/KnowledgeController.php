@@ -35,6 +35,7 @@ class KnowledgeController extends Controller
 
     public function storeFaq(Request $request)
     {
+        $this->guardSources($request);
         $d = $request->validate(['question' => 'required|string|max:300', 'answer' => 'required|string|max:8000', 'dismiss' => 'nullable|integer']);
         $uid = $request->user()->id;
         $this->queue(KnowledgeSource::create(['user_id' => $uid, 'type' => 'faq', 'title' => $d['question'], 'content' => $d['question'] . "\n\n" . $d['answer'], 'status' => 'pending']));
@@ -47,6 +48,7 @@ class KnowledgeController extends Controller
 
     public function storeText(Request $request)
     {
+        $this->guardSources($request);
         $d = $request->validate(['title' => 'required|string|max:200', 'content' => 'required|string|max:' . (int) config('rag.max_source_chars')]);
         $this->queue(KnowledgeSource::create(['user_id' => $request->user()->id, 'type' => 'text', 'title' => $d['title'], 'content' => $d['content'], 'status' => 'pending']));
 
@@ -55,6 +57,7 @@ class KnowledgeController extends Controller
 
     public function storeFile(Request $request, TextExtractor $extractor)
     {
+        $this->guardSources($request);
         $request->validate(['file' => 'required|file|max:' . (int) config('rag.max_upload_kb') . '|mimes:' . implode(',', TextExtractor::EXTENSIONS) . ',md,csv,txt']);
         $file = $request->file('file');
         try {
@@ -70,6 +73,7 @@ class KnowledgeController extends Controller
 
     public function storeSite(Request $request)
     {
+        $this->guardSources($request);
         $d = $request->validate(['url' => 'required|url|max:255']);
         if (!\App\Services\Rag\PublicUrl::allowed($d['url'])) {
             return back()->withErrors(['url' => __('This address cannot be read (only public websites are allowed).')])->withInput();
@@ -135,6 +139,12 @@ class KnowledgeController extends Controller
         }
 
         return back()->withInput()->with('ask', $r);
+    }
+
+    /** The plan caps how many sources (FAQ, text, file, site) an account can teach the AI. @throws \App\Exceptions\PlanLimitException */
+    private function guardSources(Request $request): void
+    {
+        app(\App\Services\Billing\Entitlements::class)->authorizeUsage($request->user(), 'knowledge_sources');
     }
 
     private function queue(KnowledgeSource $s): void

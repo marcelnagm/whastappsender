@@ -90,6 +90,8 @@ class Plan extends Model
             'contacts' => __('Contacts'),
             'messages_per_month' => __('Messages per month'),
             'ai_replies_per_month' => __('AI replies per month'),
+            'insights_per_month' => __('AI reports per month'),
+            'knowledge_sources' => __('Business knowledge sources'),
             'team_members' => __('Team members'),
             'queue_priority' => __('Send queue priority'),
         ];

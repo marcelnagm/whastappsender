@@ -54,6 +54,7 @@
 | [AI that learns the business (RAG) — plan](docs/RAG-IA-NEGOCIO.md) | Sketch only: knowledge base + insights, vector database, models per business type |
 | [Business knowledge for the AI (RAG)](#-business-knowledge-for-the-ai-rag) | FAQs, files and KB taught to the AI agents; unanswered-question loop |
 | [Business insights (AI report)](#business-insights-ai-report) | AI-written report with your numbers, findings and recommended actions |
+| [AI usage, limits and quality](#ai-usage-limits-and-quality) | AI cost log, plan limits, report models, 👍/👎 on answers and scheduled reports |
 | [Win/loss analysis](#-winloss-analysis) | Why deals are lost, win rate by origin and by person, catalog of lost reasons |
 | [Typebot flows](#-typebot-flows) | Typebot conversation flows on every channel, with hand-over to a person |
 | [Data export](#-data-export) | CSV backup of contacts, companies, deals, tasks, messages and consent history |
@@ -1084,6 +1085,20 @@ The AI reads the numbers of your business and writes a short report: key figures
 - All figures (customers, conversations, deals, win rate, lost reasons, origins, people, top products, MRR/renewals, questions the AI could not answer) are **computed by the system from your own data**; the AI only interprets them and is told never to invent numbers. The *Numbers the AI received* box under each report shows exactly what it was given, so you can check it against the text.
 - The AI answers in a fixed format (key figures, table, bars, text, recommendation). The system keeps only these known blocks, strips any HTML and draws them with its own components, so nothing the AI writes is ever executed. If the AI ignores the format, the answer is shown as plain text.
 - Each account only sees its own reports; a report costs one call to the AI provider you configured.
+
+## 🧮 AI usage, limits and quality
+
+Controls for the AI: what it costs, what each plan allows, which model writes the reports, how good its answers are, and reports that arrive by themselves.
+
+**Usage and cost** (*AI agents → Business insights*, top panels)
+- Every call to an AI provider (customer replies and reports) is logged in `ai_usage` with provider, model and tokens, and summed for the current month by type and model.
+- **Plan limits** (`config/billing.php`, also editable per plan): `insights_per_month` (AI reports; Free 0, Starter 2, Pro 20, Business 200) and `knowledge_sources` (FAQs, texts, files and sites taught to the AI; Free 3, Starter 10, Pro 100, Business unlimited). They appear on the billing screen. Re-running `php artisan billing:sync-plans` is not required: plans saved earlier fall back to these values. Billing off (`BILLING_ENABLED=false`) means no limits.
+
+**Model by type of business.** Types marked *deep* (real estate, B2B/SaaS) write the report with the provider's stronger report model; the others use the agent's own model, which costs less. The report models are in `config/ai.php` (`insight_models`) and can be changed in `.env`, e.g. `AI_INSIGHT_MODEL_OPENAI=gpt-4.1`, `AI_INSIGHT_MODEL_ANTHROPIC=claude-sonnet-5-5`, `AI_INSIGHT_MODEL_GROQ=openai/gpt-oss-120b`. Providers without an entry use the agent's model.
+
+**👍 / 👎 on AI answers.** In the chat, open the menu (▾) of any message written by an AI agent and choose *Good AI answer* or *Bad AI answer* (a note about what was wrong is optional; choose it again to remove). The Insights page counts the last 30 days and lists the latest bad answers with their notes: turn repeated problems into FAQs in *Business knowledge*.
+
+**Automatic report.** In the *Automatic report* box turn on *Send it to me by e-mail*, choose every Monday or the 1st of the month, the type of business and the period. At 07:30 the scheduler (`php artisan insights:send`, already in the scheduler) generates the report, saves it in the history, adds a notification and e-mails the summary, the key figures and the top actions to the account owner. If something fails (no agent, plan limit, provider down) the reason is shown in the box and the next date is tried normally. Needs the scheduler (`schedule:run` every minute) and working e-mail settings.
 
 ## 🏆 Win/loss analysis
 

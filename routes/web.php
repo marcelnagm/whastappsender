@@ -113,6 +113,7 @@ Route::middleware(['auth', 'subscription.writable', 'plan.feature:chat'])->prefi
 
         Route::post('/messages/{message}/retry', [$chat, 'retry'])->name('retry');
         Route::post('/messages/{message}/react', [$chat, 'react'])->name('react');
+        Route::post('/messages/{message}/ai-feedback', [$chat, 'aiFeedback'])->name('ai-feedback');
         Route::delete('/messages/{message}', [$chat, 'destroy'])->name('destroy');
     });
 });
@@ -409,6 +410,7 @@ Route::group(['namespace' => 'App\Http\Controllers', 'middleware' => ['auth', 's
         $ins = \App\Http\Controllers\InsightsController::class;
         Route::get('/insights', [$ins, 'index'])->name('insights.index');
         Route::post('/insights', [$ins, 'generate'])->name('insights.generate')->middleware('throttle:6,1');
+        Route::put('/insights/schedule', [$ins, 'schedule'])->name('insights.schedule');
         Route::delete('/insights/{report}', [$ins, 'destroy'])->whereNumber('report')->name('insights.destroy');
 
         $kn = \App\Http\Controllers\KnowledgeController::class;

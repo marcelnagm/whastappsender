@@ -7,7 +7,7 @@
     $__usage = $__ent->usageSummary($__u);
     $__labels = [
         'instances' => __('Connected numbers'), 'contacts' => __('Contacts'),
-        'messages_per_month' => __('Messages this month'), 'ai_replies_per_month' => __('AI replies this month'), 'team_members' => __('Team members'),
+        'messages_per_month' => __('Messages this month'), 'ai_replies_per_month' => __('AI replies this month'), 'insights_per_month' => __('AI reports this month'), 'knowledge_sources' => __('Business knowledge sources'), 'team_members' => __('Team members'),
     ];
     $__badge = ['free' => 'secondary', 'pending' => 'warning', 'trialing' => 'info', 'active' => 'success', 'past_due' => 'warning', 'suspended' => 'danger'];
     $__text = ['free' => __('Free'), 'pending' => __('Waiting for payment'), 'trialing' => __('Free trial'), 'active' => __('Active'), 'past_due' => __('Payment overdue'), 'suspended' => __('Blocked')];

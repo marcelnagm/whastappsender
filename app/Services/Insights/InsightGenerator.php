@@ -5,7 +5,9 @@ namespace App\Services\Insights;
 use App\Models\AiProfile;
 use App\Models\InsightReport;
 use App\Models\User;
+use App\Services\AI\AiUsageLog;
 use App\Services\AI\Llm\LlmClient;
+use App\Services\Billing\Entitlements;
 use App\Services\AI\Llm\LlmException;
 use App\Services\Rag\Retriever;
 
@@ -16,18 +18,26 @@ class InsightGenerator
     {
     }
 
-    /** Business types and what each one cares about: configuration, not code. */
+    /** Business types: [label, what to look at, depth]. 'deep' reports use the stronger report model of the provider. */
     public static function types(): array
     {
         return [
-            'general' => [__('General business'), 'Look at growth of customers and conversations, conversion of the funnel, lost reasons and what to fix first.'],
-            'retail' => [__('Retail / e-commerce'), 'Focus on best-selling products, average ticket, repeat purchases, price and stock questions, and abandoned or stalled deals.'],
-            'services' => [__('Clinic / services with appointments'), 'Focus on demand for services, scheduling flow, no-shows, follow-up speed and returning customers.'],
-            'realestate' => [__('Real estate'), 'Focus on lead sources, time to close, deals lost and why, and which source or person converts best.'],
-            'b2b' => [__('B2B / SaaS'), 'Focus on pipeline value, win rate, sales cycle, MRR/ARR, renewals and churn risk.'],
-            'education' => [__('Education / courses'), 'Focus on enquiries per course or origin, conversion to enrolment, follow-up and why people give up.'],
-            'food' => [__('Restaurant / delivery'), 'Focus on peak demand, best-selling items, answer speed and repeat customers.'],
+            'general' => [__('General business'), 'Look at growth of customers and conversations, conversion of the funnel, lost reasons and what to fix first.', 'light'],
+            'retail' => [__('Retail / e-commerce'), 'Focus on best-selling products, average ticket, repeat purchases, price and stock questions, and abandoned or stalled deals.', 'light'],
+            'services' => [__('Clinic / services with appointments'), 'Focus on demand for services, scheduling flow, no-shows, follow-up speed and returning customers.', 'light'],
+            'realestate' => [__('Real estate'), 'Focus on lead sources, time to close, deals lost and why, and which source or person converts best.', 'deep'],
+            'b2b' => [__('B2B / SaaS'), 'Focus on pipeline value, win rate, sales cycle, MRR/ARR, renewals and churn risk.', 'deep'],
+            'education' => [__('Education / courses'), 'Focus on enquiries per course or origin, conversion to enrolment, follow-up and why people give up.', 'light'],
+            'food' => [__('Restaurant / delivery'), 'Focus on peak demand, best-selling items, answer speed and repeat customers.', 'light'],
         ];
+    }
+
+    /** The model that writes the report: the provider's report model for 'deep' types, otherwise the agent's own. */
+    public static function modelFor(AiProfile $profile, string $depth): string
+    {
+        $deep = $depth === 'deep' ? config('ai.insight_models.' . $profile->provider) : null;
+
+        return $deep ?: (string) $profile->model;
     }
 
     /** The agent that writes the report: the first enabled agent of the account that can be used. */
@@ -52,13 +62,17 @@ class InsightGenerator
         $types = self::types();
         $businessType = isset($types[$businessType]) ? $businessType : 'general';
         $profile = $this->profileFor($owner) ?? throw new LlmException(__('Create and turn on an AI agent (with its API key) to generate insights.'));
+        app(Entitlements::class)->authorizeUsage($owner, 'insights_per_month');
         $data = $this->metrics->collect($owner, $days);
 
-        $result = $this->llm->chat($this->reportProfile($profile), $this->system($types[$businessType][1]), [['role' => 'user', 'content' => $this->user($owner, $data)]]);
+        $result = $this->llm->chat($this->reportProfile($profile, self::modelFor($profile, $types[$businessType][2])), $this->system($types[$businessType][1]), [['role' => 'user', 'content' => $this->user($owner, $data)]]);
         $parsed = InsightBlocks::parse($result['reply']);
+        $model = self::modelFor($profile, $types[$businessType][2]);
+        AiUsageLog::record($owner->id, 'insight', $profile, $profile->provider, $model, $result['tokens_in'] ?? null, $result['tokens_out'] ?? null);
+        app(Entitlements::class)->consume($owner, 'insights');
 
         return InsightReport::create([
-            'user_id' => $owner->id, 'business_type' => $businessType, 'period_days' => $days, 'model' => $profile->provider . '/' . $profile->model,
+            'user_id' => $owner->id, 'business_type' => $businessType, 'period_days' => $days, 'model' => $profile->provider . '/' . $model,
             'summary' => $parsed['summary'] ?? '',
             'blocks' => $parsed['blocks'] ?? [['type' => 'text', 'title' => __('Analysis'), 'body' => InsightBlocks::str($result['reply'], 1500)]],
             'data' => $data, 'status' => $parsed ? 'ok' : 'fallback', 'created_by' => $createdBy,
@@ -66,9 +80,10 @@ class InsightGenerator
     }
 
     /** A copy of the agent tuned for reports: more room to answer, little randomness. */
-    private function reportProfile(AiProfile $p): AiProfile
+    private function reportProfile(AiProfile $p, string $model): AiProfile
     {
         $c = $p->replicate();
+        $c->model = $model;
         $c->api_key = $p->api_key;
         $c->temperature = 0.3;
         $c->max_tokens = max((int) $p->max_tokens, 2500);

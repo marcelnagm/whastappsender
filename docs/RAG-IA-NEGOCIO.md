@@ -109,8 +109,8 @@ ai_usage            id, user_id, kind(embed|answer|insight), model, tokens_in, t
 
 - **Fases 1 e 2: feitas** (fontes FAQ/texto/arquivo/KB/site/produtos, reindexação semanal, perguntas sem resposta, agente usa o RAG). Vetores ficam no banco da aplicação (`knowledge_chunks`, cosseno em PHP, limite `RAG_MAX_CHUNKS`); embeddings hospedados (OpenAI/Mistral) quando a conta tem chave, senão embedder interno.
 - **Fase 3: feita** (tela *Insights*, métricas calculadas pelo código, blocos JSON validados, histórico).
-- **Fase 4: parcial** — perfis por tipo de negócio feitos (foco do relatório); roteamento de modelo e limites por plano/`ai_usage` pendentes.
-- **Fase 5: pendente** — driver pgvector/Qdrant, 👍/👎, insights agendados.
+- **Fase 4: feita** — perfis por tipo de negócio, roteamento de modelo (relatórios "deep" usam o modelo mais forte do provedor), limites por plano (`insights_per_month`, `knowledge_sources`) e log `ai_usage`.
+- **Fase 5: parcial** — 👍/👎 nas respostas e relatório agendado por e-mail feitos; driver pgvector/Qdrant e envio por WhatsApp pendentes.
 - Decisões 1 e 2 abaixo foram resolvidas: embeddings hospedados por padrão; blocos JSON (sem HTML livre).
 
 ## 10. Decisões em aberto (preciso da sua escolha)

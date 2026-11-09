@@ -30,6 +30,18 @@ return [
         'end' => (int) env('AI_BUSINESS_END', 19),
     ],
 
+    /*
+    | Models for reports (Insights). Reading a lot of numbers and reasoning about them needs a stronger model than
+    | answering a customer, so each provider can name one ('insight_model'); when it does not, the agent's own model
+    | is used. Business types marked 'deep' use it, the others ('light') use the agent's model and cost less.
+    | Override per provider with AI_INSIGHT_MODEL_<PROVIDER>, e.g. AI_INSIGHT_MODEL_OPENAI=gpt-4.1.
+    */
+    'insight_models' => [
+        'groq' => env('AI_INSIGHT_MODEL_GROQ', 'openai/gpt-oss-120b'),
+        'openai' => env('AI_INSIGHT_MODEL_OPENAI', 'gpt-4.1'),
+        'anthropic' => env('AI_INSIGHT_MODEL_ANTHROPIC', 'claude-sonnet-5-5'),
+    ],
+
     'providers' => [
         'groq' => [
             'label' => 'Groq',

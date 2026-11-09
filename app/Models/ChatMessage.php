@@ -29,6 +29,7 @@ class ChatMessage extends Model
         'message_timestamp',
         'sent_by',
         'source',
+        'ai_feedback', 'ai_feedback_note', 'ai_feedback_by',
     ];
 
     protected $casts = [
@@ -94,6 +95,8 @@ class ChatMessage extends Model
             'status' => $this->status,
             'error' => $this->error,
             'deleted' => $this->deleted,
+            'ai' => $this->source === 'ai',
+            'ai_feedback' => $this->ai_feedback,
             'ts' => optional($this->message_timestamp ?? $this->created_at)->toIso8601String(),
             'updated_at' => optional($this->updated_at)->toIso8601String(),
         ];

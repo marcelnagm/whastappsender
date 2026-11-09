@@ -61,6 +61,7 @@ class Kernel extends ConsoleKernel
         // Subscriptions renewing soon
         $schedule->command('deals:renewals')->dailyAt('09:30')->withoutOverlapping()->onOneServer();
         // Birthdays of the day fire the automation trigger
+        $schedule->command('insights:send')->dailyAt('07:30')->withoutOverlapping()->onOneServer();
         $schedule->command('contacts:birthdays')->dailyAt('08:00')->withoutOverlapping()->onOneServer();
         // Snoozed conversations whose time came
         $schedule->command('chat:wake')->everyMinute()->withoutOverlapping()->onOneServer();
