@@ -52,6 +52,7 @@
 | [Subscriptions and renewals](#-subscriptions-and-renewals) | Billing cycle on deals, MRR/ARR, renewal tasks and churn |
 | [Deal followers](#-deal-followers) | Follow a deal and get notified of stage changes, results and renewals |
 | [AI that learns the business (RAG) — plan](docs/RAG-IA-NEGOCIO.md) | Sketch only: knowledge base + insights, vector database, models per business type |
+| [Business knowledge for the AI (RAG)](#-business-knowledge-for-the-ai-rag) | FAQs, files and KB taught to the AI agents; unanswered-question loop |
 | [Win/loss analysis](#-winloss-analysis) | Why deals are lost, win rate by origin and by person, catalog of lost reasons |
 | [Typebot flows](#-typebot-flows) | Typebot conversation flows on every channel, with hand-over to a person |
 | [Data export](#-data-export) | CSV backup of contacts, companies, deals, tasks, messages and consent history |
@@ -1052,6 +1053,22 @@ Needs the scheduler (`deals:renewals`) and the migration (`deals.billing_cycle`,
 ## 🔔 Deal followers
 
 Open a deal and press **Follow** (the window lists who follows it). Followers get an in-app notification when the deal **changes stage**, is **won or lost**, its **proposal is accepted or declined** or a **renewal is coming up**; the person who made the change is not notified about their own action. Following needs no setup (table `deal_followers`) and works for owner and team members alike.
+
+## 🎓 Business knowledge for the AI (RAG)
+
+Menu **AI agents → Business knowledge** (`/ai/knowledge`, same permission as the AI agents). You teach the AI about your business and its agents answer customers with it instead of guessing. Design notes and next phases: [docs/RAG-IA-NEGOCIO.md](docs/RAG-IA-NEGOCIO.md).
+
+**How to use**
+1. **Add knowledge** — a **FAQ** (question + answer), a **file** (TXT, MD, CSV, JSON, HTML, DOCX, or PDF when `pdftotext`/poppler-utils is installed; up to 10 MB), a pasted **text**, or **Import knowledge base** to learn your *Knowledge base* articles (they then follow every edit, enable/disable and delete).
+2. **Check it** — *Test a question* shows the passages the agent would receive and their score; a message under the minimum score means the agent would say it will check with the team.
+3. **Turn it on per agent** — in **AI agents → edit agent → Business knowledge**, enable *Answer using what I taught the AI*. For each customer message the agent searches your knowledge, receives the best passages as reference material (never as instructions) and is told not to invent prices, hours or policies.
+4. **Close the gaps** — customer questions nothing matched are listed under *Questions the AI could not answer*; **Create FAQ** turns one into knowledge in a click.
+
+**Search model.** *Hosted* embeddings (the simple, accurate default): when the account has an **OpenAI** or **Mistral** key in one of its AI agents — or the platform sets `OPENAI_API_KEY` / `MISTRAL_API_KEY` in `.env` — the search understands meaning and synonyms (`text-embedding-3-small` / `mistral-embed`, changeable with `RAG_OPENAI_EMBEDDING_MODEL` / `RAG_MISTRAL_EMBEDDING_MODEL`). With no key the **basic built-in search** (matches the words of the question) works anyway. When the model changes (e.g. you add a key) old passages stay hidden until you press **Re-index all**; the page says how many need it.
+
+**Where it is stored.** In the application database (tables `knowledge_sources`, `knowledge_chunks`, `knowledge_questions`); every search is filtered by account. Vectors are compared in PHP, which is fine up to a few thousand passages per account (`RAG_MAX_CHUNKS`, default 5000). A dedicated vector database (pgvector/Qdrant) is the planned replacement for larger installs, behind the same store class.
+
+**Needs** the queue worker (indexing runs in the background), `php artisan migrate`, and optionally the `.env` options in `config/rag.php` (`RAG_CHUNK_CHARS`, `RAG_TOP_K`, `RAG_MIN_SCORE_BASIC`, `RAG_MIN_SCORE_HOSTED`, `RAG_MAX_UPLOAD_KB`). **Privacy:** text is sent to the embedding provider only when you use a hosted key; unanswered questions are stored as text without phone numbers.
 
 ## 🏆 Win/loss analysis
 

@@ -7,7 +7,8 @@
   <div class="row justify-content-center"><div class="col-lg-10">
     <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
       <h1 class="h3 mb-0 fw-bold"><i class="bi bi-robot text-primary me-2"></i>{{ __('AI agents') }}</h1>
-      <a href="{{ route('ai.create') }}" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>{{ __('New agent') }}</a>
+      <div class="d-flex gap-2"><a href="{{ route('ai.knowledge.index') }}" class="btn btn-outline-primary"><i class="bi bi-mortarboard me-1"></i>{{ __('Business knowledge') }}</a>
+      <a href="{{ route('ai.create') }}" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>{{ __('New agent') }}</a></div>
     </div>
 
     @if (session('success'))<div class="alert alert-success border-0">{{ session('success') }}</div>@endif

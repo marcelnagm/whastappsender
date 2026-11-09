@@ -405,6 +405,20 @@ Route::group(['namespace' => 'App\Http\Controllers', 'middleware' => ['auth', 's
         Route::get('/agents/{profile}/edit', [$ai, 'edit'])->name('edit');
         Route::put('/agents/{profile}', [$ai, 'update'])->name('update');
         Route::delete('/agents/{profile}', [$ai, 'destroy'])->name('destroy');
+
+        $kn = \App\Http\Controllers\KnowledgeController::class;
+        Route::prefix('knowledge')->name('knowledge.')->group(function () use ($kn) {
+            Route::get('/', [$kn, 'index'])->name('index');
+            Route::post('/faq', [$kn, 'storeFaq'])->name('faq');
+            Route::post('/text', [$kn, 'storeText'])->name('text');
+            Route::post('/file', [$kn, 'storeFile'])->name('file');
+            Route::post('/import-kb', [$kn, 'importKb'])->name('import-kb');
+            Route::post('/reindex', [$kn, 'reindexAll'])->name('reindex-all');
+            Route::post('/ask', [$kn, 'ask'])->name('ask')->middleware('throttle:30,1');
+            Route::post('/{source}/reindex', [$kn, 'reindex'])->whereNumber('source')->name('reindex');
+            Route::delete('/{source}', [$kn, 'destroy'])->whereNumber('source')->name('destroy');
+            Route::delete('/questions/{question}', [$kn, 'dismissQuestion'])->whereNumber('question')->name('question.dismiss');
+        });
     });
 
     Route::get('/me/profile', [UserController::class, 'editProfile'])->name('profile.edit');

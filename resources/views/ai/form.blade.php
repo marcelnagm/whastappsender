@@ -90,6 +90,15 @@
       <div class="form-text">{{ __('Instructions that define how this agent talks and behaves. Empty uses the default prompt.') }}</div>
     </div></div>
 
+    <div class="card shadow-sm mb-4"><div class="card-header fw-semibold">{{ __('Business knowledge') }}</div><div class="card-body">
+      <div class="form-check form-switch">
+        <input type="hidden" name="use_knowledge" value="0">
+        <input class="form-check-input" type="checkbox" role="switch" id="use_knowledge" name="use_knowledge" value="1" {{ old('_token') ? (old('use_knowledge') ? 'checked' : '') : ($profile->use_knowledge ? 'checked' : '') }}>
+        <label class="form-check-label" for="use_knowledge">{{ __('Answer using what I taught the AI about my business') }}</label>
+        <div class="form-text">{{ __('Before answering, the agent looks up your FAQs, files and knowledge base. If nothing matches it says it will check instead of guessing.') }} <a href="{{ route('ai.knowledge.index') }}">{{ __('Manage knowledge') }}</a></div>
+      </div>
+    </div></div>
+
     <div class="card shadow-sm mb-4"><div class="card-header fw-semibold">{{ __('Working hours') }}</div><div class="card-body row g-3">
       <div class="col-12 form-check form-switch ms-2">
         <input type="hidden" name="business_hours_only" value="0">

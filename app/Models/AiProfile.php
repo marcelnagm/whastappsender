@@ -9,7 +9,7 @@ class AiProfile extends Model
     protected $fillable = [
         'user_id', 'instance_id', 'name', 'enabled', 'provider', 'model', 'api_key', 'base_url',
         'temperature', 'max_tokens', 'system_prompt', 'business_hours_only',
-        'business_days', 'business_start', 'business_end', 'timezone',
+        'business_days', 'business_start', 'business_end', 'timezone', 'use_knowledge',
     ];
 
     protected $hidden = ['api_key'];
@@ -17,6 +17,7 @@ class AiProfile extends Model
     protected $casts = [
         'enabled' => 'boolean',
         'business_hours_only' => 'boolean',
+        'use_knowledge' => 'boolean',
         'temperature' => 'float',
         'max_tokens' => 'integer',
         'api_key' => 'encrypted',

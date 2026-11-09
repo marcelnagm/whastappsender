@@ -27,7 +27,11 @@ class AgentResponder
         $base = ['provider' => $profile->provider, 'model' => $profile->model];
 
         try {
-            $result = $this->llm->chat($profile, trim((string) $profile->system_prompt) ?: self::DEFAULT_PROMPT, $history);
+            $system = trim((string) $profile->system_prompt) ?: self::DEFAULT_PROMPT;
+            if ($profile->use_knowledge) {
+                $system .= app(\App\Services\Rag\KnowledgeContext::class)->forHistory($profile, $history);
+            }
+            $result = $this->llm->chat($profile, $system, $history);
 
             return $base + ['reply' => $result['reply'], 'error' => null, 'tokens_in' => $result['tokens_in'], 'tokens_out' => $result['tokens_out'], 'raw' => $result['raw']];
         } catch (LlmException $e) {

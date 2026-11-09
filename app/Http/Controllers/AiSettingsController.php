@@ -180,6 +180,7 @@ class AiSettingsController extends Controller
             'max_tokens' => isset($data['max_tokens']) ? (int) $data['max_tokens'] : 1024,
             'system_prompt' => trim((string) ($data['system_prompt'] ?? '')) ?: null,
             'business_hours_only' => $request->boolean('business_hours_only'),
+            'use_knowledge' => $request->boolean('use_knowledge'),
             'business_days' => !empty($data['business_days']) ? implode(',', collect($data['business_days'])->map('intval')->unique()->sort()->values()->all()) : null,
             'business_start' => $data['business_start'] ?? null,
             'business_end' => $data['business_end'] ?? null,
