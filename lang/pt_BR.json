@@ -1995,5 +1995,7 @@
     "Turn repeated problems into FAQs in Business knowledge.": "Transforme problemas repetidos em FAQs em Conhecimento do negócio.",
     "What was wrong with this answer? (optional)": "O que estava errado nesta resposta? (opcional)",
     "Your business report is ready": "Seu relatório do negócio está pronto",
-    "rate answers in the chat: open the message menu of an AI answer": "avalie respostas no chat: abra o menu da mensagem de uma resposta da IA"
+    "rate answers in the chat: open the message menu of an AI answer": "avalie respostas no chat: abra o menu da mensagem de uma resposta da IA",
+    "Also on WhatsApp: number with country code (optional)": "Também no WhatsApp: número com DDI (opcional)",
+    "Vector database error: :e": "Erro no banco vetorial: :e"
 }

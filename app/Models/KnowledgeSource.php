@@ -18,6 +18,6 @@ class KnowledgeSource extends Model
 
     protected static function booted(): void
     {
-        static::deleting(fn (KnowledgeSource $s) => KnowledgeChunk::where('source_id', $s->id)->delete());
+        static::deleting(fn (KnowledgeSource $s) => app(\App\Services\Rag\VectorStore::class)->forget($s->id));
     }
 }

@@ -48,9 +48,10 @@ class InsightsController extends Controller
     /** Turns the automatic report on/off and sets how often it goes out. */
     public function schedule(Request $request)
     {
-        $d = $request->validate(['enabled' => 'nullable|boolean', 'frequency' => 'required|in:weekly,monthly', 'business_type' => 'required|string|max:20', 'days' => 'required|integer|in:7,30,90,365']);
+        $d = $request->validate(['enabled' => 'nullable|boolean', 'frequency' => 'required|in:weekly,monthly', 'business_type' => 'required|string|max:20', 'days' => 'required|integer|in:7,30,90,365', 'whatsapp_number' => 'nullable|string|max:25']);
+        $number = preg_replace('/\D+/', '', (string) ($d['whatsapp_number'] ?? ''));
         InsightSchedule::updateOrCreate(['user_id' => $request->user()->id], ['enabled' => (bool) ($d['enabled'] ?? false), 'frequency' => $d['frequency'],
-            'business_type' => isset(InsightGenerator::types()[$d['business_type']]) ? $d['business_type'] : 'general', 'period_days' => $d['days'], 'last_error' => null]);
+            'business_type' => isset(InsightGenerator::types()[$d['business_type']]) ? $d['business_type'] : 'general', 'period_days' => $d['days'], 'last_error' => null, 'whatsapp_number' => strlen($number) >= 10 && strlen($number) <= 15 ? $number : null]);
 
         return redirect()->route('ai.insights.index')->with('success', __('Schedule saved.'));
     }

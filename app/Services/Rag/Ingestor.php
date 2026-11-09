@@ -7,7 +7,7 @@ use App\Models\KnowledgeSource;
 /** Turns a source into searchable passages: chunk, embed, store. Never throws: the outcome is on the source. */
 class Ingestor
 {
-    public function __construct(private Chunker $chunker, private EmbedderFactory $factory, private DatabaseVectorStore $store)
+    public function __construct(private Chunker $chunker, private EmbedderFactory $factory, private VectorStore $store)
     {
     }
 

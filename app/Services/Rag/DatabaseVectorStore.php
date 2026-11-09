@@ -10,7 +10,7 @@ use App\Models\KnowledgeSource;
  * of ONE account (hard filter on user_id). Fine up to a few thousand chunks per account (config rag.max_chunks);
  * a dedicated vector database (pgvector, Qdrant) can replace it behind the same two methods.
  */
-class DatabaseVectorStore
+class DatabaseVectorStore implements VectorStore
 {
     /** @param array<int,array{content:string,vector:float[]}> $items */
     public function replace(KnowledgeSource $source, string $embedderId, array $items): void
@@ -44,6 +44,11 @@ class DatabaseVectorStore
         $titles = KnowledgeSource::whereIn('id', array_column($top, 'source_id'))->pluck('title', 'id');
 
         return array_map(fn ($t) => ['content' => $t['content'], 'score' => round($t['score'], 4), 'source' => (string) ($titles[$t['source_id']] ?? ''), 'source_id' => $t['source_id']], $top);
+    }
+
+    public function forget(int $sourceId): void
+    {
+        KnowledgeChunk::where('source_id', $sourceId)->delete();
     }
 
     public function count(int $userId, ?string $embedderId = null): int

@@ -20,6 +20,14 @@ return [
         'mistral' => env('RAG_MISTRAL_EMBEDDING_MODEL', 'mistral-embed'),
     ],
 
+    // where vectors are kept: 'database' (default, no extra service) or 'qdrant' (dedicated vector database, see README)
+    'vector_store' => env('RAG_VECTOR_STORE', 'database'),
+    'qdrant' => [
+        'url' => env('QDRANT_URL', 'http://qdrant:6333'),
+        'api_key' => env('QDRANT_API_KEY'),
+        'collection' => env('QDRANT_COLLECTION', 'sama_knowledge'),
+    ],
+
     'chunk_chars' => (int) env('RAG_CHUNK_CHARS', 1500),
     'chunk_overlap' => (int) env('RAG_CHUNK_OVERLAP', 150),
     'top_k' => (int) env('RAG_TOP_K', 4),

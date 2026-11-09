@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class InsightSchedule extends Model
 {
-    protected $fillable = ['user_id', 'enabled', 'frequency', 'business_type', 'period_days', 'last_run_at', 'last_error'];
+    protected $fillable = ['user_id', 'enabled', 'frequency', 'business_type', 'period_days', 'last_run_at', 'last_error', 'whatsapp_number'];
     protected $casts = ['enabled' => 'boolean', 'last_run_at' => 'datetime'];
 
     /** Weekly reports go out on Mondays, monthly ones on the 1st; never twice on the same day. */

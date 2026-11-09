@@ -17,6 +17,11 @@ class AppServiceProvider extends ServiceProvider
         // who is really signed in (a team member works on the owner's account)
         $this->app->singleton(\App\Services\Team\TeamContext::class);
 
+        // business knowledge vectors: the app database (default) or a Qdrant server (RAG_VECTOR_STORE=qdrant)
+        $this->app->bind(\App\Services\Rag\VectorStore::class, fn () => config('rag.vector_store') === 'qdrant'
+            ? new \App\Services\Rag\QdrantVectorStore()
+            : new \App\Services\Rag\DatabaseVectorStore());
+
         if ($this->app->environment('local') && class_exists(\App\Providers\TelescopeServiceProvider::class)) {
             $this->app->register(\App\Providers\TelescopeServiceProvider::class);
         }

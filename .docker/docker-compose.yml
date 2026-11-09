@@ -216,6 +216,19 @@ services:
     networks:
       - evolution_network
 
+  # QDRANT (optional vector database for the AI business knowledge). Off by default; start it with
+  # `docker compose --profile qdrant up -d` and set RAG_VECTOR_STORE=qdrant in .env (see README, "AI usage, limits and quality").
+  qdrant:
+    image: qdrant/qdrant:v1.12.4
+    container_name: qdrant
+    restart: always
+    profiles: ["qdrant"]
+    environment:
+      QDRANT__SERVICE__API_KEY: ${QDRANT_API_KEY:-}
+    volumes:
+      - ./data/qdrant:/qdrant/storage
+    networks:
+      - evolution_network
 
 networks:
   evolution_network:

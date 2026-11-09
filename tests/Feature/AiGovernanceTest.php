@@ -142,4 +142,42 @@ class AiGovernanceTest extends TestCase
 
         $this->actingAs($this->owner)->get(route('ai.insights.index'))->assertOk()->assertSee('Automatic report')->assertSee('AI usage this month');
     }
+
+    public function test_scheduled_report_is_also_sent_on_whatsapp_when_a_number_is_set(): void
+    {
+        $this->agent();
+        Http::fake(['evo.test*' => Http::response(['key' => ['id' => 'x']]), '*' => Http::response(['choices' => [['message' => ['content' => json_encode(['summary' => 'Resumo', 'blocks' => [['type' => 'kpi', 'label' => 'A', 'value' => '1']]])]]]])]);
+        config(['services.whatsapp' => ['protocol' => 'http', 'url' => 'evo.test', 'port' => 8080, 'apikey' => 'k']]);
+        Instance::create(['user_id' => $this->owner->id, 'name' => 'n', 'instance_name' => '5595111', 'status' => 'connected']);
+        $this->actingAs($this->owner)->put(route('ai.insights.schedule'), ['enabled' => 1, 'frequency' => 'weekly', 'business_type' => 'general', 'days' => 30, 'whatsapp_number' => '+55 (95) 99999-0000'])->assertRedirect();
+        $this->assertSame('5595999990000', InsightSchedule::first()->whatsapp_number);
+
+        $this->assertSame(1, app(InsightScheduler::class)->run(Carbon::parse('2026-11-02 07:30')));
+        Http::assertSent(fn ($r) => str_contains($r->url(), '/message/sendText/5595111') && $r['number'] === '5595999990000' && str_contains($r['text'], 'Resumo'));
+    }
+
+    public function test_qdrant_store_filters_by_account_and_embedder_and_keeps_text_in_the_database(): void
+    {
+        config(['rag.vector_store' => 'qdrant', 'rag.qdrant.url' => 'http://qdrant.test:6333']);
+        Http::fake([
+            'qdrant.test*/collections/sama_knowledge_3' => Http::sequence()->push([], 404)->push(['result' => []], 200),
+            'qdrant.test*/index' => Http::response(['result' => true]),
+            'qdrant.test*/points/search' => Http::response(['result' => [['score' => 0.9, 'payload' => ['source_id' => 1, 'content' => 'trecho']]]]),
+            'qdrant.test*' => Http::response(['result' => true]),
+        ]);
+        $store = app(\App\Services\Rag\VectorStore::class);
+        $this->assertInstanceOf(\App\Services\Rag\QdrantVectorStore::class, $store);
+
+        $src = KnowledgeSource::create(['user_id' => $this->owner->id, 'type' => 'text', 'title' => 'Doc', 'content' => 'x', 'status' => 'ready']);
+        $store->replace($src, 'basic', [['content' => 'trecho', 'vector' => [0.1, 0.2, 0.3]]]);
+        $this->assertSame(1, $store->count($this->owner->id, 'basic'));
+        Http::assertSent(fn ($r) => $r->method() === 'PUT' && str_contains($r->url(), '/points') && $r['points'][0]['payload']['user_id'] === $this->owner->id);
+
+        $hits = $store->search($this->owner->id, 'basic', [0.1, 0.2, 0.3], 4);
+        $this->assertSame('trecho', $hits[0]['content']);
+        Http::assertSent(fn ($r) => str_ends_with($r->url(), '/points/search') && $r['filter']['must'][0]['match']['value'] === $this->owner->id && $r['filter']['must'][1]['match']['value'] === 'basic');
+
+        $src->delete();
+        $this->assertSame(0, $store->count($this->owner->id));
+    }
 }

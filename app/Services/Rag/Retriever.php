@@ -5,7 +5,7 @@ namespace App\Services\Rag;
 /** Finds the passages of one account that best answer a question. */
 class Retriever
 {
-    public function __construct(private EmbedderFactory $factory, private DatabaseVectorStore $store)
+    public function __construct(private EmbedderFactory $factory, private VectorStore $store)
     {
     }
 

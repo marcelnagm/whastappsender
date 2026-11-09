@@ -6,7 +6,7 @@ use App\Jobs\CrawlKnowledgeSiteJob;
 use App\Jobs\IngestKnowledgeSourceJob;
 use App\Models\KnowledgeQuestion;
 use App\Models\KnowledgeSource;
-use App\Services\Rag\DatabaseVectorStore;
+use App\Services\Rag\VectorStore;
 use App\Services\Rag\EmbedderFactory;
 use App\Services\Rag\KnowledgeSync;
 use App\Services\Rag\RagException;
@@ -17,7 +17,7 @@ use Illuminate\Http\Request;
 /** What the AI knows about the business: FAQs, texts, files and knowledge-base articles. */
 class KnowledgeController extends Controller
 {
-    public function index(Request $request, EmbedderFactory $factory, DatabaseVectorStore $store)
+    public function index(Request $request, EmbedderFactory $factory, VectorStore $store)
     {
         $uid = $request->user()->id;
         $embedder = $factory->for($uid);

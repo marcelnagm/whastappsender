@@ -63,6 +63,7 @@
                 <option value="monthly" @selected(($schedule->frequency ?? '') === 'monthly')>{{ __('1st of the month') }}</option></select></div>
             <div class="col-md-3"><select name="business_type" class="form-select form-select-sm">@foreach ($types as $k => $t)<option value="{{ $k }}" @selected(($schedule->business_type ?? $lastType) === $k)>{{ $t[0] }}</option>@endforeach</select></div>
             <div class="col-md-2"><select name="days" class="form-select form-select-sm">@foreach ([7 => __('Last 7 days'), 30 => __('Last 30 days'), 90 => __('Last 90 days'), 365 => __('Last 12 months')] as $d => $l)<option value="{{ $d }}" @selected(($schedule->period_days ?? 30) === $d)>{{ $l }}</option>@endforeach</select></div>
+            <div class="col-md-4"><input type="text" name="whatsapp_number" class="form-control form-control-sm" value="{{ $schedule->whatsapp_number ?? '' }}" placeholder="{{ __('Also on WhatsApp: number with country code (optional)') }}"></div>
             <div class="col-md-2 d-grid"><button class="btn btn-sm btn-outline-primary">{{ __('Save') }}</button></div>
         </div>
         @if ($schedule && $schedule->last_error)<div class="small text-danger mt-2">{{ __('Last attempt failed') }}: {{ $schedule->last_error }}</div>@endif
