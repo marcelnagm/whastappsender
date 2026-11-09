@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\CrawlKnowledgeSiteJob;
 use App\Jobs\IngestKnowledgeSourceJob;
 use App\Models\KnowledgeQuestion;
 use App\Models\KnowledgeSource;
@@ -27,6 +28,7 @@ class KnowledgeController extends Controller
             'embedder' => $embedder, 'chunks' => $store->count($uid, $embedder->id()), 'allChunks' => $store->count($uid),
             'max' => (int) config('rag.max_chunks'), 'extensions' => TextExtractor::EXTENSIONS,
             'kbCount' => \App\Models\KbArticle::where('user_id', $uid)->where('active', true)->count(),
+            'productCount' => \App\Models\Product::where('user_id', $uid)->where('active', true)->count(),
             'prefill' => (string) $request->query('q', ''),
         ]);
     }
@@ -64,6 +66,26 @@ class KnowledgeController extends Controller
         $this->queue(KnowledgeSource::create(['user_id' => $request->user()->id, 'type' => 'file', 'title' => $name, 'uri' => $name, 'content' => $text, 'status' => 'pending']));
 
         return redirect()->route('ai.knowledge.index')->with('success', __('File added. It will be searchable in a moment.'));
+    }
+
+    public function storeSite(Request $request)
+    {
+        $d = $request->validate(['url' => 'required|url|max:255']);
+        if (!\App\Services\Rag\PublicUrl::allowed($d['url'])) {
+            return back()->withErrors(['url' => __('This address cannot be read (only public websites are allowed).')])->withInput();
+        }
+        $uid = $request->user()->id;
+        $host = parse_url($d['url'], PHP_URL_HOST);
+        $this->queue(KnowledgeSource::create(['user_id' => $uid, 'type' => 'site', 'title' => $host, 'uri' => $d['url'], 'status' => 'pending']));
+
+        return redirect()->route('ai.knowledge.index')->with('success', __('Website added. Reading its pages can take a few minutes.'));
+    }
+
+    public function importProducts(Request $request, KnowledgeSync $sync)
+    {
+        $sync->products($request->user()->id, true);
+
+        return back()->with('success', __('Products sent to the AI. They will follow future changes.'));
     }
 
     public function importKb(Request $request, KnowledgeSync $sync)
@@ -118,6 +140,7 @@ class KnowledgeController extends Controller
     private function queue(KnowledgeSource $s): void
     {
         $s->forceFill(['status' => 'pending', 'error' => null])->save();
-        IngestKnowledgeSourceJob::dispatch($s->id);
+        // a website is read again from the web; everything else is indexed from the text already saved
+        $s->type === 'site' ? CrawlKnowledgeSiteJob::dispatch($s->id) : IngestKnowledgeSourceJob::dispatch($s->id);
     }
 }

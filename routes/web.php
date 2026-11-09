@@ -412,6 +412,8 @@ Route::group(['namespace' => 'App\Http\Controllers', 'middleware' => ['auth', 's
             Route::post('/faq', [$kn, 'storeFaq'])->name('faq');
             Route::post('/text', [$kn, 'storeText'])->name('text');
             Route::post('/file', [$kn, 'storeFile'])->name('file');
+            Route::post('/site', [$kn, 'storeSite'])->name('site');
+            Route::post('/import-products', [$kn, 'importProducts'])->name('import-products');
             Route::post('/import-kb', [$kn, 'importKb'])->name('import-kb');
             Route::post('/reindex', [$kn, 'reindexAll'])->name('reindex-all');
             Route::post('/ask', [$kn, 'ask'])->name('ask')->middleware('throttle:30,1');

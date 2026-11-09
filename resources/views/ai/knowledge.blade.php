@@ -47,6 +47,20 @@
     <form method="POST" action="{{ route('ai.knowledge.import-kb') }}">@csrf<button class="btn btn-sm btn-outline-primary" @disabled($kbCount === 0)><i class="bi bi-book"></i> {{ __('Import knowledge base') }}</button></form>
   </div></div>
 
+  <div class="card shadow-sm mb-4"><div class="card-body">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+      <div><div class="fw-semibold">{{ __('Products and prices') }}</div><div class="small text-muted">{{ __(':n active product(s) can be learned by the AI (names, SKU, prices) and follow future edits.', ['n' => $productCount]) }}</div></div>
+      <form method="POST" action="{{ route('ai.knowledge.import-products') }}">@csrf<button class="btn btn-sm btn-outline-primary" @disabled($productCount === 0)><i class="bi bi-box-seam"></i> {{ __('Import products') }}</button></form>
+    </div>
+    <div class="fw-semibold">{{ __('Your website') }}</div>
+    <div class="small text-muted mb-2">{{ __('The AI reads the public pages of your site (up to :n pages, obeying robots.txt) and learns from them. Re-index to read it again; it is also refreshed every week.', ['n' => config('rag.crawl_max_pages')]) }}</div>
+    <form method="POST" action="{{ route('ai.knowledge.site') }}" class="d-flex gap-2">@csrf
+      <input name="url" type="url" maxlength="255" required class="form-control form-control-sm" placeholder="https://www.yourcompany.com" value="{{ old('url') }}">
+      <button class="btn btn-sm btn-primary text-nowrap">{{ __('Read website') }}</button>
+    </form>
+    @error('url')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
+  </div></div>
+
   <div class="card shadow-sm mb-4"><div class="card-header fw-semibold">{{ __('Test a question') }}</div><div class="card-body">
     <form method="POST" action="{{ route('ai.knowledge.ask') }}" class="d-flex gap-2">@csrf
       <input name="question" maxlength="500" required class="form-control" placeholder="{{ __('What would a customer ask?') }}" value="{{ old('question') }}">

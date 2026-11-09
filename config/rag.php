@@ -30,5 +30,6 @@ return [
     // limits per account (a hosted multi-user install should keep them modest)
     'max_chunks' => (int) env('RAG_MAX_CHUNKS', 5000),
     'max_upload_kb' => (int) env('RAG_MAX_UPLOAD_KB', 10240),
+    'crawl_max_pages' => (int) env('RAG_CRAWL_MAX_PAGES', 30),
     'max_source_chars' => (int) env('RAG_MAX_SOURCE_CHARS', 400000),
 ];

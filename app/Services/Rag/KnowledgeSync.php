@@ -21,6 +21,22 @@ class KnowledgeSync
         return $n;
     }
 
+    /** The product catalogue as one source, rebuilt from the active products. Accounts follow product changes once it exists. */
+    public function products(int $userId, bool $force = false): ?KnowledgeSource
+    {
+        $source = KnowledgeSource::where('user_id', $userId)->where('type', 'products')->first();
+        if (!$source && !$force) {
+            return null;
+        }
+        $lines = \App\Models\Product::where('user_id', $userId)->where('active', true)->orderBy('name')->get()
+            ->map(fn ($p) => '- ' . $p->name . ($p->sku ? ' (' . $p->sku . ')' : '') . ': R$ ' . number_format((float) $p->price, 2, ',', '.') . ($p->unit ? ' / ' . $p->unit : ''));
+        $source = $source ?: new KnowledgeSource(['user_id' => $userId, 'type' => 'products', 'uri' => 'products']);
+        $source->fill(['title' => __('Products and prices'), 'content' => $lines->isEmpty() ? '' : __('Products and prices') . ":\n" . $lines->implode("\n"), 'status' => 'pending'])->save();
+        IngestKnowledgeSourceJob::dispatch($source->id)->delay(now()->addSeconds(20));   // many edits in a row index once
+
+        return $source;
+    }
+
     /** After an article changes: only accounts that already imported their knowledge base follow its changes. */
     public function article(KbArticle $a, bool $force = false): void
     {

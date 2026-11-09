@@ -1940,5 +1940,15 @@
     "ready": "pronto",
     "pending": "pendente",
     "indexing": "indexando",
-    "error": "erro"
+    "error": "erro",
+    ":n active product(s) can be learned by the AI (names, SKU, prices) and follow future edits.": ":n produto(s) ativo(s) podem ser aprendidos pela IA (nomes, SKU, preços) e acompanham as edições.",
+    "Import products": "Importar produtos",
+    "No readable text was found on this website.": "Nenhum texto legível foi encontrado neste site.",
+    "Products and prices": "Produtos e preços",
+    "Products sent to the AI. They will follow future changes.": "Produtos enviados à IA. Eles acompanharão as próximas mudanças.",
+    "Read website": "Ler site",
+    "The AI reads the public pages of your site (up to :n pages, obeying robots.txt) and learns from them. Re-index to read it again; it is also refreshed every week.": "A IA lê as páginas públicas do seu site (até :n páginas, respeitando o robots.txt) e aprende com elas. Reindexe para ler de novo; ele também é atualizado toda semana.",
+    "This address cannot be read (only public websites are allowed).": "Este endereço não pode ser lido (só sites públicos são permitidos).",
+    "Website added. Reading its pages can take a few minutes.": "Site adicionado. Ler as páginas pode levar alguns minutos.",
+    "Your website": "Seu site"
 }

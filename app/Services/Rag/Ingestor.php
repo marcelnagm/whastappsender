@@ -11,12 +11,29 @@ class Ingestor
     {
     }
 
+    /** A website is many pages: each page is chunked on its own and every chunk keeps the page title and address. @return string[] */
+    private function chunksFor(KnowledgeSource $source): array
+    {
+        if ($source->type !== 'site') {
+            return $this->chunker->split((string) $source->content);
+        }
+        $chunks = [];
+        foreach (array_filter(explode(SiteCrawler::PAGE_MARK, (string) $source->content), fn ($d) => trim($d) !== '') as $doc) {
+            [$head, $body] = array_pad(explode(" ===\n", $doc, 2), 2, '');
+            foreach ($this->chunker->split($body) as $c) {
+                $chunks[] = '[' . trim($head, "= \n") . "]\n" . $c;
+            }
+        }
+
+        return $chunks;
+    }
+
     public function ingest(KnowledgeSource $source): KnowledgeSource
     {
         KnowledgeSource::whereKey($source->id)->toBase()->update(['status' => 'indexing', 'error' => null]);
 
         try {
-            $chunks = $this->chunker->split((string) $source->content);
+            $chunks = $this->chunksFor($source);
             if (!$chunks) {
                 throw new RagException(__('There is no text to index.'));
             }
