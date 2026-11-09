@@ -53,6 +53,7 @@
 | [Deal followers](#-deal-followers) | Follow a deal and get notified of stage changes, results and renewals |
 | [AI that learns the business (RAG) — plan](docs/RAG-IA-NEGOCIO.md) | Sketch only: knowledge base + insights, vector database, models per business type |
 | [Business knowledge for the AI (RAG)](#-business-knowledge-for-the-ai-rag) | FAQs, files and KB taught to the AI agents; unanswered-question loop |
+| [Business insights (AI report)](#business-insights-ai-report) | AI-written report with your numbers, findings and recommended actions |
 | [Win/loss analysis](#-winloss-analysis) | Why deals are lost, win rate by origin and by person, catalog of lost reasons |
 | [Typebot flows](#-typebot-flows) | Typebot conversation flows on every channel, with hand-over to a person |
 | [Data export](#-data-export) | CSV backup of contacts, companies, deals, tasks, messages and consent history |
@@ -1069,6 +1070,20 @@ Menu **AI agents → Business knowledge** (`/ai/knowledge`, same permission as t
 **Where it is stored.** In the application database (tables `knowledge_sources`, `knowledge_chunks`, `knowledge_questions`); every search is filtered by account. Vectors are compared in PHP, which is fine up to a few thousand passages per account (`RAG_MAX_CHUNKS`, default 5000). A dedicated vector database (pgvector/Qdrant) is the planned replacement for larger installs, behind the same store class.
 
 **Needs** the queue worker (indexing runs in the background), `php artisan migrate`, and optionally the `.env` options in `config/rag.php` (`RAG_CHUNK_CHARS`, `RAG_TOP_K`, `RAG_MIN_SCORE_BASIC`, `RAG_MIN_SCORE_HOSTED`, `RAG_MAX_UPLOAD_KB`, `RAG_CRAWL_MAX_PAGES`). **Privacy:** text is sent to the embedding provider only when you use a hosted key; unanswered questions are stored as text without phone numbers.
+
+## 💡 Business insights (AI report)
+
+The AI reads the numbers of your business and writes a short report: key figures, tables, bars, findings and a ranked list of recommended actions.
+
+**How to use**
+1. Turn on at least one AI agent with an API key (*AI agents*). The report is written by the first enabled agent that has a key.
+2. Teach the AI about your business first (*Business knowledge*): the report uses it as context.
+3. Open **AI agents → Business insights**, pick the *type of business* (retail, services, real estate, B2B/SaaS, education, food or general — it changes what the AI pays attention to) and the period (7, 30, 90 days or 12 months) and click **Generate report**. Reports are kept in a history; up to 6 can be generated per minute.
+
+**How it stays trustworthy**
+- All figures (customers, conversations, deals, win rate, lost reasons, origins, people, top products, MRR/renewals, questions the AI could not answer) are **computed by the system from your own data**; the AI only interprets them and is told never to invent numbers. The *Numbers the AI received* box under each report shows exactly what it was given, so you can check it against the text.
+- The AI answers in a fixed format (key figures, table, bars, text, recommendation). The system keeps only these known blocks, strips any HTML and draws them with its own components, so nothing the AI writes is ever executed. If the AI ignores the format, the answer is shown as plain text.
+- Each account only sees its own reports; a report costs one call to the AI provider you configured.
 
 ## 🏆 Win/loss analysis
 

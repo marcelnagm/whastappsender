@@ -200,6 +200,7 @@ trait CreatesTestSchema
             '2026_11_10_240000_add_deal_renewals.php',
             '2026_11_10_260000_create_deal_followers.php',
             '2026_11_11_100000_create_knowledge_tables.php',
+            '2026_11_11_120000_create_insight_reports.php',
             '2026_11_05_160000_add_message_sender_and_team_goals.php',
         ] as $file) {
             (require database_path('migrations/' . $file))->up();

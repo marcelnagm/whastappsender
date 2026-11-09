@@ -406,6 +406,11 @@ Route::group(['namespace' => 'App\Http\Controllers', 'middleware' => ['auth', 's
         Route::put('/agents/{profile}', [$ai, 'update'])->name('update');
         Route::delete('/agents/{profile}', [$ai, 'destroy'])->name('destroy');
 
+        $ins = \App\Http\Controllers\InsightsController::class;
+        Route::get('/insights', [$ins, 'index'])->name('insights.index');
+        Route::post('/insights', [$ins, 'generate'])->name('insights.generate')->middleware('throttle:6,1');
+        Route::delete('/insights/{report}', [$ins, 'destroy'])->whereNumber('report')->name('insights.destroy');
+
         $kn = \App\Http\Controllers\KnowledgeController::class;
         Route::prefix('knowledge')->name('knowledge.')->group(function () use ($kn) {
             Route::get('/', [$kn, 'index'])->name('index');
