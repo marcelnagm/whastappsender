@@ -23,6 +23,22 @@ Real screens of the system running with **fictional demo data** (a plant shop). 
 | **Business insights** — numbers computed by the system + AI-written findings and actions<br>![Insights](docs/screenshots/insights.png) | **Business knowledge** — FAQs, files, site and products the AI learns from<br>![Knowledge](docs/screenshots/knowledge.png) |
 | **Website chat widget** — paste one script on your site<br>![Website chat](docs/screenshots/webchat.png) | |
 
+### More screens
+
+| | |
+|---|---|
+| **Control panel — mined contacts, instances, delivery and plan**<br>![dashboard](docs/screenshots/dashboard.png) | **Channel statistics — per-channel numbers and first-response time**<br>![stats](docs/screenshots/stats.png) |
+| **Follow-ups — tasks with due dates, today / overdue / done**<br>![tasks](docs/screenshots/tasks.png) | **Deal priorities — transparent estimate of what to work on first**<br>![priorities](docs/screenshots/priorities.png) |
+| **Funnel conversion — stage-to-stage conversion and velocity**<br>![funnel](docs/screenshots/funnel.png) | **Win/loss analysis — reasons, origins and people in charge**<br>![winloss](docs/screenshots/winloss.png) |
+| **Lead sources — where deals come from and how they convert**<br>![sources](docs/screenshots/sources.png) | **Response SLA — alerts, escalation and who is waiting**<br>![sla](docs/screenshots/sla.png) |
+| **Team — roles and permissions per member**<br>![team](docs/screenshots/team.png) | **Team performance — response time, deals won, goals**<br>![teamreport](docs/screenshots/teamreport.png) |
+| **AI agents — per-number agents, provider and model**<br>![agents](docs/screenshots/agents.png) | **My instances — WhatsApp connections and warm-up**<br>![instances](docs/screenshots/instances.png) |
+| **Automations — "when this happens, do that" rules**<br>![automations](docs/screenshots/automations.png) | **Segments — custom fields and saved audiences**<br>![segments](docs/screenshots/segments.png) |
+| **Consent register — opt-in/out evidence and proof export**<br>![consent](docs/screenshots/consent.png) | **Satisfaction survey — grade after closing a conversation**<br>![csat](docs/screenshots/csat.png) |
+| **Opening hours — away message and greeting**<br>![hours](docs/screenshots/hours.png) | **Typebot — conversation flows with human handover**<br>![typebot](docs/screenshots/typebot.png) |
+| **Telegram — connect a bot to the same inbox**<br>![telegram](docs/screenshots/telegram.png) | **Plan and billing — usage against plan limits**<br>![billing](docs/screenshots/billing.png) |
+| **Audit log — who changed what, and when**<br>![audit](docs/screenshots/audit.png) |  |
+
 **Documentation map**
 
 | Section | Topic |
