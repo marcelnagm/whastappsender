@@ -12,6 +12,37 @@
 
 **SAMA Envios** is a mission-critical communication infrastructure that merges the power of **Laravel** with the LLM of your choice (**Groq, OpenAI, Claude, Gemini, DeepSeek, Mistral, OpenRouter, Ollama or any OpenAI-compatible endpoint**). Designed for teams that demand stable bulk messaging and **Intelligent AI Customer Service** on WhatsApp, Telegram, Instagram, Facebook Messenger, TikTok and e-mail in one omnichannel inbox with per-channel statistics, answering through the very number, bot or account the customer wrote to. On top of the inbox sits a complete **sales CRM**: Kanban funnel, team inbox with assignment and labels, follow-up tasks, automations, custom fields and segments, consent register, team performance with goals and an AI-assisted deal forecast.
 
+## ⚡ Quick start
+
+Pick one path. Both end with the app on http://localhost:8000 and an administrator login.
+
+**1. Try it on your machine** (PHP 8.1+, Composer and Docker installed): Docker only runs MySQL, Evolution API (WhatsApp), MinIO and Mailpit.
+
+```bash
+git clone https://github.com/marcelnagm/whastappsender.git && cd whastappsender
+cp .env.example .env && php artisan key:generate
+composer install
+./start-local.sh --fix-env --admin-email you@example.com --php   # infra + migrations + admin (password is printed) + web, queue and scheduler
+# open http://localhost:8000 and log in
+```
+
+**2. Put it on a server** (fresh Debian/Ubuntu VPS, as root, DNS already pointing to it): Nginx, PHP-FPM, MySQL, workers, scheduler and HTTPS in one command.
+
+```bash
+sudo ./install.sh vps --domain sama.example.com --email you@example.com --admin-email you@example.com
+```
+
+**Your first 15 minutes**
+
+1. **Connect WhatsApp**: *Channels → My instances → New instance*, scan the QR code. (Telegram, Instagram, Facebook, TikTok, e-mail and the website chat are in the same *Channels* menu.)
+2. **Teach the AI**: *AI & automation → Business knowledge*: add a few FAQs, a price list or your site address. Then *AI agents → New agent*, pick a provider (Groq has a free tier), paste the API key and choose "Answer using what I taught the AI".
+3. **Answer customers**: open **Chat**. Conversations from every channel arrive in one inbox; assign, label and use `/` for quick replies.
+4. **Sell**: *Sales → Pipeline* turns conversations into deals; add products, a proposal and a follow-up task.
+5. **Get your first report**: *AI & automation → Business insights → Generate report* (optionally schedule it by e-mail or WhatsApp).
+6. **Invite the team**: *Settings → Team*, choose a role for each person.
+
+Something not working? Check that the **queue worker** and the **scheduler** are running (the `--php` flag and `install.sh vps` already start both), and see [Installation & Activation](#️-installation--activation) for every option, manual steps and production Docker.
+
 ## 📸 Screenshots
 
 Real screens of the system running with **fictional demo data** (a plant shop). Images live in [`docs/screenshots`](docs/screenshots).
@@ -43,6 +74,7 @@ Real screens of the system running with **fictional demo data** (a plant shop). 
 
 | Section | Topic |
 |---------|-------|
+| [Quick start](#-quick-start) | Running in minutes (local or VPS) and the first 15 minutes of use |
 | [AI Agents](#-ai-agents-multi-provider) | Providers, model choice, prompt, per-instance agents, working hours |
 | [Tool Call Chain API](#-tool-call-chain-api-ai-agents) | REST + AI agent tools |
 | [System Architecture](#-system-architecture-queues--warmup) | Queues, Warmup, production requirements |
