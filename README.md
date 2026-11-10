@@ -1713,6 +1713,7 @@ Gateway credentials (Asaas, Efí, AbacatePay, Stone, Stripe, PagBank, Mercado Pa
 * ✅ **Website chat widget:** one-line snippet, visitors join the omnichannel chat, the AI answers.
 * ✅ **Saved views:** named filters of contacts, follow-ups and funnel, private or shared.
 * ✅ **Shared mailbox:** e-mail as a team inbox with default assignee and signature per mailbox.
+* ✅ **Responsive menu grouped by theme:** Channels, Sales, Customers, Marketing, AI & automation, Reports and Settings (only what the person's role can open), plus the user menu; the public home page presents every feature with product previews, use cases, plans and FAQ (`resources/views/home/guest.blade.php`, texts in the language files).
 * ✅ **Audit Logs:** Full history of every AI interaction and every broadcast attempt.
 
 ---

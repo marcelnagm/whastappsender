@@ -1,184 +1,120 @@
 @auth
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
-  <div class="container">
-    <a class="navbar-brand d-flex align-items-center" href="/">
-      {{-- Company logo --}}
-      <img src="{{ asset('images/logo.jpg') }}" alt="{{ __('Logo') }}" width="55" height="55" class="me-2 d-inline-block align-text-top">
+@php
+    $ctx = app(\App\Services\Team\TeamContext::class);
+    // Menu grouped by theme: [icon, label, items]; an item is [permission|null, url, icon, label, active-pattern]. Groups with nothing the person may open are not drawn.
+    $menu = [
+        ['bi-chat-dots', __('Chat'), [['chat', route('chat.index'), 'bi-chat-dots', __('Chat'), 'chat*']], 'solo'],
+        ['bi-broadcast', __('Channels'), [
+            ['channels', url('/instances'), 'bi-whatsapp', __('Whatsapp'), 'instances*'],
+            ['channels', route('telegram.index'), 'bi-telegram', __('Telegram'), 'telegram*'],
+            ['channels', route('instagram.index'), 'bi-instagram', __('Instagram'), 'instagram*'],
+            ['channels', route('facebook.index'), 'bi-facebook', __('Facebook'), 'facebook*'],
+            ['channels', route('tiktok.index'), 'bi-tiktok', __('TikTok'), 'tiktok*'],
+            ['channels', route('email.index'), 'bi-envelope', __('Email'), 'email*'],
+            ['channels', route('webchat.index'), 'bi-window-stack', __('Website chat'), 'webchat*'],
+        ]],
+        ['bi-kanban', __('Sales'), [
+            ['deals', route('pipeline.index'), 'bi-kanban', __('Pipeline'), 'pipeline*'],
+            ['tasks', route('tasks.index'), 'bi-alarm', __('Follow-ups'), 'tasks*'],
+            ['automations', route('bookings.index'), 'bi-calendar-check', __('Bookings'), 'bookings*'],
+        ]],
+        ['bi-people', __('Customers'), [
+            ['contacts.view', url('/contacts'), 'bi-people', __('Contacts'), 'contacts*'],
+            ['contacts.manage', route('companies.index'), 'bi-building', __('Companies'), 'companies*'],
+            ['contacts.manage', route('audience.index'), 'bi-funnel', __('Segments'), 'audience*'],
+            ['forms', route('forms.index'), 'bi-ui-checks', __('Forms'), 'forms*'],
+            ['contacts.manage', route('consent.index'), 'bi-shield-check', __('Consent'), 'consent*'],
+        ]],
+        ['bi-megaphone', __('Marketing'), [
+            ['campaigns.view', url('/campaigns'), 'bi-megaphone', __('Campaign'), 'campaigns*'],
+            ['campaigns.view', route('campaign-items.index'), 'bi-list-check', __('Items'), 'campaign-items*'],
+            ['campaigns.approve', route('approvals.index'), 'bi-check2-square', __('Approvals'), 'approvals*'],
+            ['automations', route('sequences.index'), 'bi-arrow-repeat', __('Follow-up sequences'), 'sequences*'],
+        ]],
+        ['bi-robot', __('AI & automation'), [
+            ['ai', route('ai.index'), 'bi-robot', __('AI agents'), 'ai,ai/agents*,ai/toggle'],
+            ['ai', route('ai.knowledge.index'), 'bi-mortarboard', __('Business knowledge'), 'ai/knowledge*'],
+            ['ai', route('ai.insights.index'), 'bi-lightbulb', __('Business insights'), 'ai/insights*'],
+            ['automations', route('automations.index'), 'bi-diagram-3', __('Automations'), 'automations*'],
+            ['automations', route('typebot.index'), 'bi-signpost-split', 'Typebot', 'typebot*'],
+            ['automations', route('kb.index'), 'bi-book', __('Knowledge base'), 'kb*'],
+            ['chat', route('replies.index'), 'bi-lightning-charge', __('Quick replies'), 'replies*'],
+        ]],
+        ['bi-graph-up', __('Reports'), [
+            ['reports', route('stats.index'), 'bi-bar-chart-line', __('Statistics'), 'stats*'],
+            ['reports', route('team-report.index'), 'bi-trophy', __('Team performance'), 'team-report*'],
+        ]],
+        ['bi-sliders', __('Settings'), [
+            ['team', route('team.index'), 'bi-people-fill', __('Team'), 'team*'],
+            ['team', route('hours.edit'), 'bi-clock', __('Opening hours'), 'hours*'],
+            ['team', route('sla.index'), 'bi-stopwatch', __('Response SLA'), 'sla*'],
+            ['team', route('csat.index'), 'bi-emoji-smile', __('Satisfaction survey'), 'csat*'],
+            ['team', route('webhooks-out.index'), 'bi-plug', __('Outbound webhooks'), 'webhooks-out*'],
+            ['automations', route('audit.index'), 'bi-shield-lock', __('Audit log'), 'audit*'],
+            ['automations', route('exports.index'), 'bi-download', __('Data export'), 'exports*'],
+            ['owner', route('billing.index'), 'bi-credit-card', __('Plan'), 'billing*'],
+            ['owner', route('profile.edit'), 'bi-person-lines-fill', __('My Profile'), 'me/profile'],
+        ]],
+    ];
+    $menu = collect($menu)->map(function ($g) use ($ctx) {
+        $g['visible'] = collect($g[2])->filter(fn ($i) => $ctx->can($i[0]))->values();
+
+        return $g;
+    })->filter(fn ($g) => $g['visible']->isNotEmpty())->values();
+    $on = fn ($pattern) => request()->is(explode(',', $pattern));
+    $initial = mb_strtoupper(mb_substr(trim(auth()->user()->name) ?: '?', 0, 1));
+@endphp
+<style>
+  .app-nav { background: #111418; border-bottom: 1px solid rgba(255,255,255,.08); }
+  .app-nav .nav-link { font-weight: 500; font-size: .92rem; padding: .5rem .6rem; border-radius: .5rem; color: rgba(255,255,255,.78); white-space: nowrap; }
+  .app-nav .nav-link:hover, .app-nav .nav-link:focus { color: #fff; background: rgba(255,255,255,.06); }
+  .app-nav .nav-link.active, .app-nav .show > .nav-link { color: #ffc107; background: rgba(255,193,7,.10); }
+  .app-nav .dropdown-menu { border: 1px solid rgba(255,255,255,.1); border-radius: .75rem; padding: .4rem; min-width: 230px; box-shadow: 0 18px 40px rgba(0,0,0,.45); }
+  .app-nav .dropdown-item { border-radius: .5rem; padding: .5rem .75rem; font-size: .9rem; display: flex; align-items: center; gap: .6rem; }
+  .app-nav .dropdown-item i { width: 1.1rem; text-align: center; opacity: .85; }
+  .app-nav .dropdown-item.active, .app-nav .dropdown-item:active { background: rgba(255,193,7,.16); color: #ffc107; }
+  .app-nav .user-toggle::after { display: none; }
+  .app-nav .avatar { width: 32px; height: 32px; border-radius: 50%; background: #ffc107; color: #111; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; font-size: .9rem; }
+  @media (max-width: 991.98px) {
+    .app-nav .navbar-collapse { max-height: calc(100vh - 70px); overflow-y: auto; padding-bottom: .75rem; }
+    .app-nav .dropdown-menu { box-shadow: none; background: rgba(255,255,255,.04); margin: .1rem 0 .4rem .6rem; }
+    .app-nav .nav-link { padding: .7rem .8rem; }
+  }
+</style>
+<nav class="navbar navbar-expand-lg navbar-dark app-nav sticky-top">
+  <div class="container-fluid px-lg-4">
+    <a class="navbar-brand d-flex align-items-center me-3" href="/">
+      <img src="{{ asset('images/logo.jpg') }}" alt="{{ __('Logo') }}" width="36" height="36" class="me-2 rounded-2">
       <span class="fw-bold">{{ config('app.name', 'Sender') }}</span>
     </a>
 
-    <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navMain" aria-controls="navMain" aria-expanded="false" aria-label="{{ __('Toggle navigation') }}">
+    <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#navMain" aria-controls="navMain" aria-expanded="false" aria-label="{{ __('Toggle navigation') }}">
       <span class="navbar-toggler-icon"></span>
     </button>
 
     <div class="collapse navbar-collapse" id="navMain">
-      @auth
-      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0 gap-lg-1">
         <li class="nav-item">
-          <a href="/" class="nav-link {{ request()->is('/') ? 'active text-secondary' : '' }}">
-            <i class="bi bi-speedometer2 me-1"></i> {{ __('Dashboard') }}
-          </a>
+          <a href="/" class="nav-link {{ request()->is('/') ? 'active' : '' }}"><i class="bi bi-speedometer2 me-1"></i> {{ __('Dashboard') }}</a>
         </li>
-        @teamcan('channels')
-        <li class="nav-item">
-          <a href="/instances" class="nav-link text-white"><i class="bi bi-whatsapp me-1"></i> {{ __('Whatsapp') }}</a>
-        </li>
-        @endteamcan
-        @teamcan('channels')
-        <li class="nav-item">
-          <a href="{{ route('telegram.index') }}" class="nav-link {{ request()->is('telegram*') ? 'active text-secondary' : 'text-white' }}"><i class="bi bi-telegram me-1"></i> {{ __('Telegram') }}</a>
-        </li>
-        @endteamcan
-        @teamcan('channels')
-        <li class="nav-item">
-          <a href="{{ route('tiktok.index') }}" class="nav-link {{ request()->is('tiktok*') ? 'active text-secondary' : 'text-white' }}"><i class="bi bi-tiktok me-1"></i> {{ __('TikTok') }}</a>
-        </li>
-        @endteamcan
-        @teamcan('channels')
-        <li class="nav-item">
-          <a href="{{ route('instagram.index') }}" class="nav-link {{ request()->is('instagram*') ? 'active text-secondary' : 'text-white' }}"><i class="bi bi-instagram me-1"></i> {{ __('Instagram') }}</a>
-        </li>
-        @endteamcan
-        @teamcan('channels')
-        <li class="nav-item">
-          <a href="{{ route('facebook.index') }}" class="nav-link {{ request()->is('facebook*') ? 'active text-secondary' : 'text-white' }}"><i class="bi bi-facebook me-1"></i> {{ __('Facebook') }}</a>
-        </li>
-        @endteamcan
-        @teamcan('channels')
-        <li class="nav-item">
-          <a href="{{ route('email.index') }}" class="nav-link {{ request()->is('email*') ? 'active text-secondary' : 'text-white' }}"><i class="bi bi-envelope me-1"></i> {{ __('Email') }}</a>
-        </li>
-        <li class="nav-item">
-          <a href="{{ route('webchat.index') }}" class="nav-link {{ request()->is('webchat*') ? 'active text-secondary' : 'text-white' }}"><i class="bi bi-chat-dots me-1"></i> {{ __('Website chat') }}</a>
-        </li>
-        @endteamcan
-        @teamcan('chat')
-        <li class="nav-item">
-          <a href="{{ route('chat.index') }}" class="nav-link {{ request()->is('chat*') ? 'active text-secondary' : 'text-white' }}"><i class="bi bi-chat-dots me-1"></i> {{ __('Chat') }}</a>
-        </li>
-        @endteamcan
-        @teamcan('team')
-        <li class="nav-item">
-          <a href="{{ route('hours.edit') }}" class="nav-link {{ request()->is('hours*') ? 'active text-secondary' : 'text-white' }}"><i class="bi bi-clock me-1"></i> {{ __('Opening hours') }}</a>
-        </li>
-        <li class="nav-item">
-          <a href="{{ route('sla.index') }}" class="nav-link {{ request()->is('sla*') ? 'active text-secondary' : 'text-white' }}"><i class="bi bi-stopwatch me-1"></i> {{ __('Response SLA') }}</a>
-        </li>
-        <li class="nav-item">
-          <a href="{{ route('csat.index') }}" class="nav-link {{ request()->is('csat*') ? 'active text-secondary' : 'text-white' }}"><i class="bi bi-emoji-smile me-1"></i> {{ __('Satisfaction survey') }}</a>
-        </li>
-        <li class="nav-item">
-          <a href="{{ route('webhooks-out.index') }}" class="nav-link {{ request()->is('webhooks-out*') ? 'active text-secondary' : 'text-white' }}"><i class="bi bi-plug me-1"></i> {{ __('Outbound webhooks') }}</a>
-        </li>
-        @endteamcan
-        @teamcan('reports')
-        <li class="nav-item">
-          <a href="{{ route('stats.index') }}" class="nav-link {{ request()->is('stats*') ? 'active text-secondary' : 'text-white' }}"><i class="bi bi-bar-chart-line me-1"></i> {{ __('Statistics') }}</a>
-        </li>
-        @endteamcan
-        @teamcan('reports')
-        <li class="nav-item">
-          <a href="{{ route('team-report.index') }}" class="nav-link {{ request()->is('team-report*') ? 'active text-secondary' : 'text-white' }}"><i class="bi bi-trophy me-1"></i> {{ __('Team performance') }}</a>
-        </li>
-        @endteamcan
-        @teamcan('ai')
-        <li class="nav-item">
-          <a href="{{ route('ai.index') }}" class="nav-link {{ request()->is('ai*') ? 'active text-secondary' : 'text-white' }}"><i class="bi bi-robot me-1"></i> {{ __('AI') }}</a>
-        </li>
-        @endteamcan
-        @teamcan('campaigns.view')
-        <li class="nav-item">
-          <a href="/campaigns" class="nav-link text-white"><i class="bi bi-megaphone me-1"></i> {{ __('Campaign') }}</a>
-        </li>
-        @endteamcan
-        @teamcan('contacts.view')
-        <li class="nav-item">
-          <a href="/contacts" class="nav-link text-white"><i class="bi bi-people me-1"></i> {{ __('Contacts') }}</a>
-        </li>
-        @endteamcan
-        @teamcan('campaigns.view')
-        <li class="nav-item">
-          <a href="{{route('campaign-items.index')}}" class="nav-link text-white"><i class="bi bi-list-check me-1"></i> {{ __('Items') }}</a>
-        </li>
-        @endteamcan
-        @teamcan('campaigns.approve')
-        <li class="nav-item">
-          <a href="{{ route('approvals.index') }}" class="nav-link {{ request()->is('approvals*') ? 'active text-secondary' : 'text-white' }}"><i class="bi bi-check2-square me-1"></i> {{ __('Approvals') }}</a>
-        </li>
-        @endteamcan
-        @teamcan('deals')
-        <li class="nav-item">
-          <a href="{{ route('pipeline.index') }}" class="nav-link {{ request()->is('pipeline*') ? 'active text-secondary' : 'text-white' }}"><i class="bi bi-kanban me-1"></i> {{ __('Pipeline') }}</a>
-        </li>
-        @endteamcan
-        @teamcan('chat')
-        <li class="nav-item">
-          <a href="{{ route('replies.index') }}" class="nav-link {{ request()->is('replies*') ? 'active text-secondary' : 'text-white' }}"><i class="bi bi-lightning-charge me-1"></i> {{ __('Quick replies') }}</a>
-        </li>
-        @endteamcan
-        @teamcan('contacts.manage')
-        <li class="nav-item">
-          <a href="{{ route('audience.index') }}" class="nav-link {{ request()->is('audience*') ? 'active text-secondary' : 'text-white' }}"><i class="bi bi-funnel me-1"></i> {{ __('Segments') }}</a>
-        </li>
-        <li class="nav-item">
-          <a href="{{ route('companies.index') }}" class="nav-link {{ request()->is('companies*') ? 'active text-secondary' : 'text-white' }}"><i class="bi bi-building me-1"></i> {{ __('Companies') }}</a>
-        </li>
-        @endteamcan
-        @teamcan('contacts.manage')
-        <li class="nav-item">
-          <a href="{{ route('consent.index') }}" class="nav-link {{ request()->is('consent*') ? 'active text-secondary' : 'text-white' }}"><i class="bi bi-shield-check me-1"></i> {{ __('Consent') }}</a>
-        </li>
-        @endteamcan
-        @teamcan('automations')
-        <li class="nav-item">
-          <a href="{{ route('automations.index') }}" class="nav-link {{ request()->is('automations*') ? 'active text-secondary' : 'text-white' }}"><i class="bi bi-diagram-3 me-1"></i> {{ __('Automations') }}</a>
-        </li>
-        <li class="nav-item">
-          <a href="{{ route('kb.index') }}" class="nav-link {{ request()->is('kb*') ? 'active text-secondary' : 'text-white' }}"><i class="bi bi-book me-1"></i> {{ __('Knowledge base') }}</a>
-        </li>
-        <li class="nav-item">
-          <a href="{{ route('bookings.index') }}" class="nav-link {{ request()->is('bookings*') ? 'active text-secondary' : 'text-white' }}"><i class="bi bi-calendar-check me-1"></i> {{ __('Bookings') }}</a>
-        </li>
-        <li class="nav-item">
-          <a href="{{ route('audit.index') }}" class="nav-link {{ request()->is('audit*') ? 'active text-secondary' : 'text-white' }}"><i class="bi bi-shield-lock me-1"></i> {{ __('Audit log') }}</a>
-        </li>
-        <li class="nav-item">
-          <a href="{{ route('exports.index') }}" class="nav-link {{ request()->is('exports*') ? 'active text-secondary' : 'text-white' }}"><i class="bi bi-download me-1"></i> {{ __('Data export') }}</a>
-        </li>
-        <li class="nav-item">
-          <a href="{{ route('sequences.index') }}" class="nav-link {{ request()->is('sequences*') ? 'active text-secondary' : 'text-white' }}"><i class="bi bi-arrow-repeat me-1"></i> {{ __('Follow-up sequences') }}</a>
-        </li>
-        <li class="nav-item">
-          <a href="{{ route('typebot.index') }}" class="nav-link {{ request()->is('typebot*') ? 'active text-secondary' : 'text-white' }}"><i class="bi bi-robot me-1"></i> Typebot</a>
-        </li>
-        @endteamcan
-        @teamcan('tasks')
-        <li class="nav-item">
-          <a href="{{ route('tasks.index') }}" class="nav-link {{ request()->is('tasks*') ? 'active text-secondary' : 'text-white' }}"><i class="bi bi-alarm me-1"></i> {{ __('Follow-ups') }}</a>
-        </li>
-        @endteamcan
-        @teamcan('forms')
-        <li class="nav-item">
-          <a href="{{ route('forms.index') }}" class="nav-link {{ request()->is('forms*') ? 'active text-secondary' : 'text-white' }}"><i class="bi bi-ui-checks me-1"></i> {{ __('Forms') }}</a>
-        </li>
-        @endteamcan
-        @teamcan('team')
-        <li class="nav-item">
-          <a href="{{ route('team.index') }}" class="nav-link {{ request()->is('team*') ? 'active text-secondary' : 'text-white' }}"><i class="bi bi-people-fill me-1"></i> {{ __('Team') }}</a>
-        </li>
-        @endteamcan
-        @teamcan('owner')
-        <li class="nav-item">
-          <a href="{{ route('billing.index') }}" class="nav-link {{ request()->is('billing*') ? 'active text-secondary' : 'text-white' }}"><i class="bi bi-credit-card me-1"></i> {{ __('Plan') }}</a>
-        </li>
-        @endteamcan
-        @teamcan('owner')
-        <li class="nav-item">
-          <a href="{{ route('profile.edit') }}" class="nav-link {{ request()->is('me/profile') ? 'active text-secondary' : 'text-white' }}">
-            <i class="bi bi-person-lines-fill me-1"></i> {{ __('My Profile') }}
-          </a>
-        </li>
-        @endteamcan
+
+        @foreach ($menu as $g)
+          @php [$icon, $label] = $g; $items = $g['visible']; @endphp
+          @if (($g[3] ?? '') === 'solo' || $items->count() === 1)
+            @php $i = $items->first(); @endphp
+            <li class="nav-item"><a href="{{ $i[1] }}" class="nav-link {{ $on($i[4]) ? 'active' : '' }}"><i class="bi {{ $i[2] }} me-1"></i> {{ $i[3] }}</a></li>
+          @else
+            @php $open = $items->contains(fn ($i) => $on($i[4])); @endphp
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle {{ $open ? 'active' : '' }}" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi {{ $icon }} me-1"></i> {{ $label }}</a>
+              <ul class="dropdown-menu dropdown-menu-dark">
+                @foreach ($items as $i)
+                  <li><a class="dropdown-item {{ $on($i[4]) ? 'active' : '' }}" href="{{ $i[1] }}"><i class="bi {{ $i[2] }}"></i>{{ $i[3] }}</a></li>
+                @endforeach
+              </ul>
+            </li>
+          @endif
+        @endforeach
 
         @if(Auth::user()->role === 'admin')
         <li class="nav-item dropdown">
@@ -217,33 +153,24 @@
         @endif
       </ul>
 
-      <div class="d-flex align-items-center border-top border-secondary pt-3 pt-lg-0 border-lg-0">
-
-        {{-- Language selector --}}
-        <div class="me-3">
-          @include('layouts.partials.language-selector')
+      <div class="d-flex align-items-center gap-3 border-top border-secondary border-opacity-25 pt-3 pt-lg-0 mt-2 mt-lg-0">
+        <div style="max-width:140px">@include('layouts.partials.language-selector')</div>
+        <div>@include('layouts.partials.notifications')</div>
+        <div class="dropdown ms-auto ms-lg-0">
+          <a class="d-flex align-items-center text-decoration-none user-toggle text-white" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <span class="avatar me-2">{{ $initial }}</span><span class="d-none d-xxl-inline small">{{ auth()->user()->name }}</span>
+          </a>
+          <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end" style="min-width:210px">
+            <li class="px-3 py-2 small text-white-50">{{ auth()->user()->name }}</li>
+            @teamcan('owner')
+            <li><a class="dropdown-item" href="{{ route('profile.edit') }}"><i class="bi bi-person-lines-fill"></i>{{ __('My Profile') }}</a></li>
+            <li><a class="dropdown-item" href="{{ route('billing.index') }}"><i class="bi bi-credit-card"></i>{{ __('Plan') }}</a></li>
+            @endteamcan
+            <li><hr class="dropdown-divider border-secondary"></li>
+            <li><a class="dropdown-item text-danger" href="{{ route('logout.perform') }}"><i class="bi bi-box-arrow-right"></i>{{ __('Log out') }}</a></li>
+          </ul>
         </div>
-
-        {{-- Notifications partial --}}
-        <div class="me-3">
-          @include('layouts.partials.notifications')
-        </div>
-
-        <span class="text-white-50 me-3 d-none d-lg-inline small">
-          {{ auth()->user()->name }}
-        </span>
-        <a href="{{ route('logout.perform') }}" class="btn btn-sm btn-outline-danger w-100 w-lg-auto">
-          <i class="bi bi-box-arrow-right"></i> {{ __('Log out') }}
-        </a>
       </div>
-      @endauth
-
-      @guest
-      <div class="ms-auto pt-3 pt-lg-0">
-        <a href="{{ route('login.perform') }}" class="btn btn-sm btn-outline-light me-2">{{ __('Login') }}</a>
-        <a href="{{ route('register.perform') }}" class="btn btn-sm btn-warning">{{ __('Sign-up') }}</a>
-      </div>
-      @endguest
     </div>
   </div>
 </nav>

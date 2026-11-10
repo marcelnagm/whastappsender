@@ -36,9 +36,11 @@
     
     {{-- Guests have no navbar, so the language selector floats in the top-right corner --}}
     @guest
+      @unless (View::hasSection('own_header'))
         <div style="position: fixed; top: 1rem; right: 1rem; z-index: 1050; max-width: 200px;">
             @include('layouts.partials.language-selector', ['variant' => 'inline'])
         </div>
+      @endunless
     @endguest
 
     {{-- Navbar is included dynamically --}}
