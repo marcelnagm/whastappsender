@@ -86,6 +86,11 @@ class SendAiReplyJob implements ShouldQueue
 
             return;
         }
+        if ($instance->isWebchat()) {
+            $this->sendViaWebchat($aiMessage, $instance, $contact);
+
+            return;
+        }
 
         $config = config('services.whatsapp');
         $baseUrl = "{$config['protocol']}://{$config['url']}:{$config['port']}";
@@ -177,6 +182,25 @@ class SendAiReplyJob implements ShouldQueue
     }
 
     /** Answers by e-mail through the mailbox that received the message, in the same thread. Marked "auto-generated" so other robots do not answer back. */
+    /** The visitor reads answers from the conversation itself: saving the message is delivering it. */
+    private function sendViaWebchat(AiMessage $aiMessage, Instance $instance, Contact $contact): void
+    {
+        try {
+            $chat = \App\Models\Chat::where('instance_id', $instance->id)->where('remote_jid', $contact->contact)->firstOrFail();
+            $id = 'wc-' . \Illuminate\Support\Str::lower(\Illuminate\Support\Str::random(20));
+            $message = \App\Models\ChatMessage::create(['chat_id' => $chat->id, 'instance_id' => $instance->id, 'user_id' => $instance->user_id, 'message_id' => $id, 'from_me' => true,
+                'source' => $aiMessage->provider === 'auto' ? 'auto' : 'ai', 'type' => 'text', 'body' => $aiMessage->content, 'status' => 'sent', 'message_timestamp' => now()]);
+            app(\App\Services\Chat\ChatMessageRecorder::class)->touchChat($chat, $message, true);
+            $aiMessage->update(['status' => 'sent', 'channel_message_id' => $id]);
+            if ($aiMessage->session) {
+                $aiMessage->session->update(['last_outbound_at' => now()]);
+            }
+        } catch (\Throwable $e) {
+            Log::error('SendAiReplyJob (webchat) failed: ' . $e->getMessage());
+            $aiMessage->update(['status' => 'error', 'error' => mb_substr($e->getMessage(), 0, 600)]);
+        }
+    }
+
     private function sendViaEmail(AiMessage $aiMessage, Instance $instance, Contact $contact): void
     {
         try {

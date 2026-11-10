@@ -30,7 +30,17 @@ class ChatAssignment
 
     public function autoAssign(Chat $chat, User $owner): void
     {
-        if ($chat->assigned_to || $owner->chat_assign_mode !== 'balanced') {
+        if ($chat->assigned_to) {
+            return;
+        }
+        // shared inbox: a mailbox (or widget) can name the person who receives everything that arrives in it
+        $fixed = (int) \App\Models\Instance::whereKey($chat->instance_id)->value('default_assignee');
+        if ($fixed && $this->people($owner)->contains('id', $fixed)) {
+            $this->assign($chat, $fixed);
+
+            return;
+        }
+        if ($owner->chat_assign_mode !== 'balanced') {
             return;
         }
         $pool = $this->pool($owner);

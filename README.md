@@ -24,7 +24,7 @@
 | [Instagram](#-instagram-direct) | Instagram DMs in the same omnichannel chat; AI answers through the account that received the message |
 | [Facebook](#-facebook-messenger) | Facebook Page (Messenger) conversations in the same chat; replies go through the Page that received the message |
 | [TikTok](#-tiktok-business-messaging) | TikTok Business DMs in the same chat, step-by-step setup (developer app, approval, OAuth, webhook) |
-| [Email](#️-email-smtp--imap) | Connect a mailbox with SMTP/IMAP credentials: e-mail joins the chat, the AI answers by e-mail and the sender is unified with the same contact |
+| [Email](#️-email-smtp--imap) | Connect a mailbox with SMTP/IMAP credentials (shared inbox with default assignee and signature): e-mail joins the chat, the AI answers by e-mail and the sender is unified with the same contact |
 | [Channel statistics & linked contacts](#-channel-statistics--linked-contacts) | Per-channel numbers, and one person's WhatsApp / Telegram / Instagram / Facebook / TikTok / e-mail conversations tied together |
 | [Contact ranking & unresponsive contacts](#-contact-ranking--unresponsive-contacts) | Engagement score with tiers, and automatic deactivation of contacts whose WhatsApp messages are never delivered |
 | [Signup welcome](#signup-welcome-message) | Admin chooses the campaign message sent to people who register on the site |
@@ -55,6 +55,8 @@
 | [Business knowledge for the AI (RAG)](#-business-knowledge-for-the-ai-rag) | FAQs, files and KB taught to the AI agents; unanswered-question loop |
 | [Business insights (AI report)](#business-insights-ai-report) | AI-written report with your numbers, findings and recommended actions |
 | [AI usage, limits and quality](#ai-usage-limits-and-quality) | AI cost log, plan limits, report models, 👍/👎 on answers and scheduled reports |
+| [Website chat widget](#-website-chat-widget) | Chat bubble for your site: visitors join the omnichannel chat and the AI answers |
+| [Saved views](#-saved-views) | Named filters of contacts, follow-ups and funnel, private or shared |
 | [Win/loss analysis](#-winloss-analysis) | Why deals are lost, win rate by origin and by person, catalog of lost reasons |
 | [Typebot flows](#-typebot-flows) | Typebot conversation flows on every channel, with hand-over to a person |
 | [Data export](#-data-export) | CSV backup of contacts, companies, deals, tasks, messages and consent history |
@@ -850,6 +852,7 @@ Open **Email** in the menu and type the credentials of a mailbox (for example `v
 * **Quick setup buttons** fill the servers of Gmail, Outlook / Microsoft 365, Zoho and Yahoo. Gmail, Outlook and Yahoo require an **app password** (not the normal one).
 * **One person, one contact:** an e-mail conversation is the contact `em:<address>`. If a WhatsApp contact (CRM, import, form) has the same address in its *email* field, the two are linked automatically, in either order, so the chat shows the person's conversations in every channel. When two WhatsApp contacts share one address nothing is guessed, and a link made by a person is never overridden. The *Statistics* page and the contact ranking count e-mail like any other channel.
 * **The AI and e-mail:** the AI of that mailbox answers each message (working hours, plan quota, `#sair` opt-out and *human handoff* apply). Safety rules for mail: automatic messages (newsletters, `no-reply@`, out-of-office, `List-Unsubscribe`, `Auto-Submitted`) are shown in the chat but never answered; bounces are ignored; AI replies are marked `Auto-Submitted: auto-generated` so other robots do not answer back; and one sender gets at most `EMAIL_AI_MAX_REPLIES_PER_DAY` AI answers per day (anti mail-loop).
+* **Shared mailbox (team inbox):** every mailbox is a shared inbox: the team sees its conversations in the Chat, with assignment, labels, internal notes, deals and statistics like any channel. On the **Email** screen, each mailbox has *New conversations go to* (a team member who receives everything that arrives there; empty = distributed as configured in the inbox, balanced or manual) and a **signature** added after a `-- ` separator to every e-mail sent from it (by people and by the AI). Run `php artisan migrate`.
 * **Contact forms:** a form lead that only leaves an **e-mail** is answered through your mailbox (in the form's *channels the AI may use*, tick Email). If the lead also typed a WhatsApp number, WhatsApp is still used first.
 * **Safety of the server address:** the host and port come from the user, so SMTP/IMAP servers on localhost or private networks (and `169.254.*`) are refused unless `EMAIL_ALLOW_PRIVATE_HOSTS=true` (default only in `APP_ENV=local`), and only the usual ports are accepted (`EMAIL_SMTP_PORTS`, `EMAIL_IMAP_PORTS`). Server messages never echo the password.
 * **Limits:** attachments above `EMAIL_MAX_ATTACHMENT_BYTES` (10 MB) are not kept, `EMAIL_MAX_PER_POLL` messages are imported per check, plain text is used for the answer (HTML mail is converted to text, quoted history is trimmed). Mailboxes count as channel accounts in the plan limit. E-mail contacts have status `email`, so WhatsApp campaigns never pick them, and campaigns do not send by e-mail (no bulk mailing from here).
@@ -1101,6 +1104,29 @@ Controls for the AI: what it costs, what each plan allows, which model writes th
 **Automatic report.** In the *Automatic report* box turn on *Send it to me by e-mail*, choose every Monday or the 1st of the month, the type of business and the period. At 07:30 the scheduler (`php artisan insights:send`, already in the scheduler) generates the report, saves it in the history, adds a notification and e-mails the summary, the key figures and the top actions to the account owner. If something fails (no agent, plan limit, provider down) the reason is shown in the box and the next date is tried normally. If you fill in *Also on WhatsApp*, a short version (summary, key figures, top actions and the link) is also sent to that number from the account's first connected WhatsApp number. Needs the scheduler (`schedule:run` every minute) and working e-mail settings.
 
 **Vector database (Qdrant, optional).** By default the knowledge vectors live in the app database, which is enough for a few thousand passages per account. For more, run Qdrant: `docker compose --profile qdrant up -d qdrant` (in `.docker/`), then set `RAG_VECTOR_STORE=qdrant`, `QDRANT_URL=http://qdrant:6333` and, if you set one, `QDRANT_API_KEY` in `.env`, and click **Re-index all** in *Business knowledge* so the existing texts are loaded into it. Collections are created automatically (one per vector size), every search is filtered by account, and the passage texts stay in the app database. Switching back to `database` and re-indexing works the same way. Use a Qdrant API key when it is reachable from outside the Docker network.
+
+## 💬 Website chat widget
+
+A chat bubble for your site that works as one more channel: the visitor's messages arrive in the **Chat** next to WhatsApp, Telegram, Instagram, Facebook and e-mail, the **AI agent answers** and your team can take over.
+
+1. Open **Website chat** in the menu, fill the *window title*, *welcome message* and colour, choose whether to *ask name and e-mail*, and optionally the **sites allowed to show it** (empty = any site; otherwise only those domains and their subdomains). Click **Create chat widget**.
+2. Copy the one-line snippet (`<script src="https://YOUR-DOMAIN/w/KEY.js" async></script>`) and paste it before `</body>` on your site.
+3. For the AI to answer visitors, create an agent in **AI** and assign it to the widget (it appears in the list like any number). Without an agent the team answers from the Chat.
+
+**How it behaves**
+- A visitor is a contact `wc:<visitor id>` (name "Website visitor 1a2b" until they type their name; with an e-mail they are **unified with the same person** in the CRM, like e-mail). The conversation uses the same chat tables, so assignment, labels, notes, deals, automations, working hours and statistics (*Statistics* counts "webchat") work as in any channel.
+- The visitor's browser asks for new answers every few seconds (no sockets, works behind any proxy). The browser remembers the visitor (localStorage) so the conversation continues on the next visit.
+- Text only: attachments are refused in this channel. Messages are limited to 1000 characters.
+- **Safety:** the widget key is the public address, the allowed-sites list is checked on every call (`Origin`/`Referer`), a hidden honeypot field stops simple bots, calls are throttled (`webchat` limiter), a visitor can only read their own conversation (random 128-bit id) and everything a visitor types is stored as plain text and escaped when shown. Switch the widget off (*active*) and the script, settings and messages answer 404/403 at once.
+- A widget counts as a channel account in the plan limit. Run `php artisan migrate`.
+
+## 🔖 Saved views
+
+Keep the filters you use every day under a name and reopen them with one click. Available on **Contacts** (search, score tier, stage, sort), **Follow-ups** (tab and scope) and **Funnel** (which pipeline).
+
+- Apply the filters on the page, type a name in the *Views* box and click **Save view**. Choose **Only you** or **Share with the team**. Saving a view with the same name updates it (up to 50 views per account).
+- Click a view to open the page already filtered. Shared views are visible to the whole team; private ones only to their creator. Whoever created a view, the owner and administrators can delete it.
+- Only the known filter keys of each page are kept, so a view can never carry anything else into the address. Views are per account: nobody sees another account's. Run `php artisan migrate`.
 
 ## 🏆 Win/loss analysis
 
@@ -1684,6 +1710,9 @@ Gateway credentials (Asaas, Efí, AbacatePay, Stone, Stripe, PagBank, Mercado Pa
 * ✅ **Team performance & goals:** first-response time, answered conversations, deals and follow-ups per person, monthly goals.
 * ✅ **Deal forecast & priorities:** chance to close with its reasons, weighted forecast, next action and optional AI advice.
 * ✅ **E-mail channel on a ready-made library:** IMAP through `webklex/php-imap`, SMTP through Symfony Mailer (nothing reimplemented).
+* ✅ **Website chat widget:** one-line snippet, visitors join the omnichannel chat, the AI answers.
+* ✅ **Saved views:** named filters of contacts, follow-ups and funnel, private or shared.
+* ✅ **Shared mailbox:** e-mail as a team inbox with default assignee and signature per mailbox.
 * ✅ **Audit Logs:** Full history of every AI interaction and every broadcast attempt.
 
 ---

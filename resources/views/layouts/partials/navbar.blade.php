@@ -48,6 +48,9 @@
         <li class="nav-item">
           <a href="{{ route('email.index') }}" class="nav-link {{ request()->is('email*') ? 'active text-secondary' : 'text-white' }}"><i class="bi bi-envelope me-1"></i> {{ __('Email') }}</a>
         </li>
+        <li class="nav-item">
+          <a href="{{ route('webchat.index') }}" class="nav-link {{ request()->is('webchat*') ? 'active text-secondary' : 'text-white' }}"><i class="bi bi-chat-dots me-1"></i> {{ __('Website chat') }}</a>
+        </li>
         @endteamcan
         @teamcan('chat')
         <li class="nav-item">

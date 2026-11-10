@@ -185,7 +185,7 @@ class AiAutoReplyService
     {
         $remoteJid = (string) ($data['key']['remoteJid'] ?? '');
         // e-mail conversations: the whole address is the contact (it has an "@" like a JID, but is not one)
-        if (str_starts_with($remoteJid, 'em:')) {
+        if (preg_match('/^(em|wc):/', $remoteJid)) {
             return Contact::where('user_id', $userId)->where('contact', $remoteJid)->first();
         }
         $senderPn = $data['key']['senderPn'] ?? null;

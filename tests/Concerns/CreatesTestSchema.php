@@ -203,6 +203,8 @@ trait CreatesTestSchema
             '2026_11_11_120000_create_insight_reports.php',
             '2026_11_12_100000_create_ai_usage_feedback_schedules.php',
             '2026_11_12_200000_add_whatsapp_to_insight_schedules.php',
+            '2026_11_14_100000_add_shared_inbox_to_instances.php',
+            '2026_11_13_100000_add_webchat_and_saved_views.php',
             '2026_11_05_160000_add_message_sender_and_team_goals.php',
         ] as $file) {
             (require database_path('migrations/' . $file))->up();

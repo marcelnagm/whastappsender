@@ -45,6 +45,8 @@ Route::get('/language/{locale}', [\App\Http\Controllers\LanguageController::clas
 // Public JS import of an embeddable contact form (CORS open; the form itself checks allowed sites)
 Route::get('/f/{key}.js', [\App\Http\Controllers\PublicFormController::class, 'script'])->where('key', '[a-z0-9]+')->name('forms.script');
 
+Route::get('/w/{key}.js', [\App\Http\Controllers\PublicWebchatController::class, 'script'])->where('key', '[a-z0-9-]+')->name('webchat.script');
+
 // Public proposal (quote) page: the token is the access; answers are throttled
 Route::prefix('p')->name('proposals.public.')->group(function () {
     $pp = \App\Http\Controllers\PublicProposalController::class;
@@ -152,13 +154,27 @@ Route::group(['namespace' => 'App\Http\Controllers', 'middleware' => ['auth', 's
         Route::delete('/{instance}', [$tt, 'destroy'])->name('destroy');
     });
 
+    // Saved views: named filters of the contact, follow-up and funnel lists
+    Route::post('/saved-views', [\App\Http\Controllers\SavedViewsController::class, 'store'])->name('saved-views.store');
+    Route::delete('/saved-views/{view}', [\App\Http\Controllers\SavedViewsController::class, 'destroy'])->whereNumber('view')->name('saved-views.destroy');
+
     // E-mail mailboxes (channel = email instances): SMTP credentials to send, IMAP to receive
     Route::prefix('email')->name('email.')->group(function () {
         $em = \App\Http\Controllers\EmailController::class;
         Route::get('/', [$em, 'index'])->name('index');
         Route::post('/', [$em, 'store'])->name('store')->middleware('throttle:10,1');
         Route::post('/{instance}/refresh', [$em, 'refresh'])->name('refresh')->middleware('throttle:10,1');
+        Route::put('/{instance}/settings', [$em, 'settings'])->whereNumber('instance')->name('settings');
         Route::delete('/{instance}', [$em, 'destroy'])->name('destroy');
+    });
+
+    // Website chat widget (channel = webchat instances): settings and the one-line snippet for the site
+    Route::prefix('webchat')->name('webchat.')->group(function () {
+        $wc = \App\Http\Controllers\WebchatController::class;
+        Route::get('/', [$wc, 'index'])->name('index');
+        Route::post('/', [$wc, 'store'])->name('store')->middleware('throttle:10,1');
+        Route::put('/{instance}', [$wc, 'update'])->whereNumber('instance')->name('update');
+        Route::delete('/{instance}', [$wc, 'destroy'])->whereNumber('instance')->name('destroy');
     });
 
     // Facebook Pages (channel = facebook instances)

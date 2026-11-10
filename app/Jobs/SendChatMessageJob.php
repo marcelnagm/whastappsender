@@ -13,6 +13,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
 
 /**
@@ -63,6 +64,12 @@ class SendChatMessageJob implements ShouldQueue
         }
         if ($message->instance->isEmail()) {
             $this->sendViaEmail($message, $chat);
+
+            return;
+        }
+        if ($message->instance->isWebchat()) {
+            // the visitor's browser reads the conversation: nothing to push, the message is delivered once it is saved
+            $this->markSent($message, $chat, 'wc-' . Str::lower(Str::random(20)));
 
             return;
         }

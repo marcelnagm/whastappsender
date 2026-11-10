@@ -6,9 +6,12 @@
 <div class="container py-4">
   <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
     <h1 class="h3 fw-bold mb-0"><i class="bi bi-alarm me-2"></i>{{ __('Follow-ups') }}</h1>
+    <div class="d-flex gap-2 align-items-center">
+    @include('partials.saved-views', ['scope' => 'tasks'])
     <div class="btn-group btn-group-sm" role="group">
       <a href="{{ route('tasks.index', ['tab' => $tab, 'scope' => 'mine']) }}" class="btn btn-outline-secondary {{ $scope === 'mine' ? 'active' : '' }}">{{ __('Mine') }}</a>
       <a href="{{ route('tasks.index', ['tab' => $tab, 'scope' => 'all']) }}" class="btn btn-outline-secondary {{ $scope === 'all' ? 'active' : '' }}">{{ __('Everyone') }}</a>
+    </div>
     </div>
   </div>
 

@@ -70,6 +70,17 @@
                 </form>
               </td>
             </tr>
+            <tr><td colspan="4" class="bg-light border-top-0 pt-0">
+              <form method="POST" action="{{ route('email.settings', $acc) }}" class="row g-2 align-items-end small">
+                @csrf @method('PUT')
+                <div class="col-md-4"><label class="form-label mb-0">{{ __('New conversations go to') }}</label>
+                  <select name="default_assignee" class="form-select form-select-sm"><option value="">{{ __('Shared: distribute as set in the inbox') }}</option>
+                    @foreach ($people as $p)<option value="{{ $p->id }}" @selected((int) $acc->default_assignee === (int) $p->id)>{{ $p->name }}</option>@endforeach</select></div>
+                <div class="col-md-6"><label class="form-label mb-0">{{ __('Signature of the e-mails sent from this mailbox') }}</label>
+                  <textarea name="email_signature" rows="2" maxlength="600" class="form-control form-control-sm" placeholder="{{ __('Name, role, phone, site...') }}">{{ $acc->email_signature }}</textarea></div>
+                <div class="col-md-2 d-grid"><button class="btn btn-sm btn-outline-primary">{{ __('Save') }}</button></div>
+              </form>
+            </td></tr>
           @empty
             <tr><td colspan="4" class="text-center text-muted py-4">{{ __('No mailbox connected yet.') }}</td></tr>
           @endforelse

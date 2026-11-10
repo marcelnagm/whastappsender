@@ -259,7 +259,7 @@
   // ------------------------------------------------------------------
   // chat list
   // ------------------------------------------------------------------
-  var CHANNELS = { whatsapp: ['WhatsApp', 'bi-whatsapp'], telegram: ['Telegram', 'bi-telegram'], instagram: ['Instagram', 'bi-instagram'], facebook: ['Facebook', 'bi-facebook'], tiktok: ['TikTok', 'bi-tiktok'], email: ['Email', 'bi-envelope'] };
+  var CHANNELS = { whatsapp: ['WhatsApp', 'bi-whatsapp'], telegram: ['Telegram', 'bi-telegram'], instagram: ['Instagram', 'bi-instagram'], facebook: ['Facebook', 'bi-facebook'], tiktok: ['TikTok', 'bi-tiktok'], email: ['Email', 'bi-envelope'], webchat: ['Web chat', 'bi-chat-dots'] };
   function channelTag(chat) {
     var c = CHANNELS[chat.channel || 'whatsapp'] || CHANNELS.whatsapp;
     var tag = h('span', 'wa-ch wa-ch-' + (chat.channel || 'whatsapp'));

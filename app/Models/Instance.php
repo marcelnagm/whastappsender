@@ -28,7 +28,7 @@ class Instance extends Model
         'facebook_token', 'facebook_page_id', 'facebook_page_name',
         'email_address', 'email_from_name', 'smtp_host', 'smtp_port', 'smtp_encryption', 'smtp_username', 'smtp_password',
         'imap_host', 'imap_port', 'imap_encryption', 'imap_username', 'imap_password',
-        'email_last_uid', 'email_uidvalidity', 'email_checked_at', 'email_error',
+        'email_last_uid', 'email_uidvalidity', 'email_checked_at', 'email_error', 'webchat_config', 'default_assignee', 'email_signature',
     ];
 
     protected $hidden = ['telegram_token', 'telegram_secret', 'instagram_token', 'facebook_token', 'tiktok_token', 'tiktok_refresh_token', 'smtp_password', 'imap_password'];
@@ -40,6 +40,7 @@ class Instance extends Model
     protected $casts = [
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
+        'webchat_config' => 'array',
         'telegram_token' => 'encrypted',
         'instagram_token' => 'encrypted',
         'facebook_token' => 'encrypted',
@@ -111,15 +112,20 @@ class Instance extends Model
         return $this->channel === 'email';
     }
 
+    public function isWebchat(): bool
+    {
+        return $this->channel === 'webchat';
+    }
+
     public function channelLabel(): string
     {
-        return ['telegram' => 'Telegram', 'instagram' => 'Instagram', 'tiktok' => 'TikTok', 'facebook' => 'Facebook', 'email' => 'Email'][$this->channel] ?? 'WhatsApp';
+        return ['telegram' => 'Telegram', 'instagram' => 'Instagram', 'tiktok' => 'TikTok', 'facebook' => 'Facebook', 'email' => 'Email', 'webchat' => 'Web chat'][$this->channel] ?? 'WhatsApp';
     }
 
     /** True for numbers served by the Evolution API (the default channel). */
     public function isWhatsapp(): bool
     {
-        return !in_array($this->channel, ['telegram', 'instagram', 'tiktok', 'facebook', 'email'], true);
+        return !in_array($this->channel, ['telegram', 'instagram', 'tiktok', 'facebook', 'email', 'webchat'], true);
     }
 
     /** whatsapp | telegram | instagram */

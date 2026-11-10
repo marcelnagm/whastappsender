@@ -61,6 +61,14 @@ class EmailClient
      * @return string the Message-ID (without < >) given to the message
      * @throws EmailException
      */
+    /** The mailbox signature goes after a standard "-- " separator; none set = the text as it is. */
+    private function withSignature(string $text): string
+    {
+        $sig = trim((string) $this->instance->email_signature);
+
+        return $sig === '' ? $text : rtrim($text) . "\n\n-- \n" . $sig;
+    }
+
     public function send(string $to, string $subject, string $text, array $o = []): string
     {
         $i = $this->instance;
@@ -71,7 +79,7 @@ class EmailClient
             ->from(new Address((string) $i->email_address, (string) ($i->email_from_name ?: '')))
             ->to($to)
             ->subject($subject)
-            ->text($text);
+            ->text($this->withSignature($text));
 
         $h = $mail->getHeaders();
         $h->addIdHeader('Message-ID', $id);

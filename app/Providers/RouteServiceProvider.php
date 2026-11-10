@@ -55,6 +55,9 @@ class RouteServiceProvider extends ServiceProvider
     protected function configureRateLimiting()
     {
         // public contact-form submissions: per IP address, so one bot cannot flood the CRM
+        RateLimiter::for('webchat', function (Request $request) {
+            return [Limit::perMinute(30)->by($request->ip()), Limit::perMinute(20)->by((string) $request->input('visitor', $request->ip()))];
+        });
         RateLimiter::for('forms', function (Request $request) {
             return Limit::perMinute(max(1, (int) config('forms.throttle_per_minute', 10)))->by($request->ip());
         });

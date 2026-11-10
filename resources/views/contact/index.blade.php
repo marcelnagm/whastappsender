@@ -46,7 +46,8 @@
                 <h1 class="h3 mb-0 text-gray-800 fw-bold">
                     <i class="bi bi-people-fill text-primary me-2"></i>{{ __('Contacts') }}
                 </h1>
-                <div class="d-flex gap-2">
+                <div class="d-flex gap-2 align-items-center">
+                    @include('partials.saved-views', ['scope' => 'contacts'])
                     <form method="GET" action="{{ route('contacts.index') }}" class="d-flex gap-1 shadow-sm rounded bg-white">
                         <input type="text" name="search" class="form-control form-control-sm border-0 px-3 shadow-none"
                             placeholder="{{ __('Name, WhatsApp or email...') }}" value="{{ request('search') }}" style="min-width: 250px;">

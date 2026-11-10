@@ -287,6 +287,10 @@ class ChatController extends Controller
             return response()->json(['message' => __('TikTok only accepts text and one image per message.')], 422);
         }
 
+        if ($chat->instance->isWebchat() && $file) {
+            return response()->json(['message' => __('The website chat only accepts text.')], 422);
+        }
+
         if ($text === '' && !$file) {
             return response()->json(['message' => __('Type a message')], 422);
         }
@@ -667,10 +671,10 @@ class ChatController extends Controller
         $query = Contact::where('user_id', Auth::id())->where('id', '!=', $contact->id);
         if (\App\Services\Channels\ContactLinks::isChannelContact($contact)) {
             // looking for the WhatsApp contact of this person
-            $query->where(fn ($w) => $w->where('contact', 'not like', 'tg:%')->where('contact', 'not like', 'ig:%')->where('contact', 'not like', 'fb:%')->where('contact', 'not like', 'tt:%')->where('contact', 'not like', 'em:%'));
+            $query->where(fn ($w) => $w->where('contact', 'not like', 'tg:%')->where('contact', 'not like', 'ig:%')->where('contact', 'not like', 'fb:%')->where('contact', 'not like', 'tt:%')->where('contact', 'not like', 'em:%')->where('contact', 'not like', 'wc:%'));
         } else {
             // looking for the Telegram / Instagram / TikTok contact still unlinked
-            $query->whereNull('linked_contact_id')->where(fn ($w) => $w->where('contact', 'like', 'tg:%')->orWhere('contact', 'like', 'ig:%')->orWhere('contact', 'like', 'fb:%')->orWhere('contact', 'like', 'tt:%')->orWhere('contact', 'like', 'em:%'));
+            $query->whereNull('linked_contact_id')->where(fn ($w) => $w->where('contact', 'like', 'tg:%')->orWhere('contact', 'like', 'ig:%')->orWhere('contact', 'like', 'fb:%')->orWhere('contact', 'like', 'tt:%')->orWhere('contact', 'like', 'em:%')->orWhere('contact', 'like', 'wc:%'));
         }
         if ($q !== '') {
             $digits = preg_replace('/\D/', '', $q);

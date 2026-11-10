@@ -13,6 +13,7 @@ class EmailController extends Controller
     public function index(Request $request)
     {
         return view('email.index', [
+            'people' => app(\App\Services\Chat\ChatAssignment::class)->people($request->user()),
             'accounts' => $request->user()->instances()->where('channel', 'email')->latest()->get(),
             'fetchCron' => config('email.fetch_cron'),
         ]);
@@ -56,6 +57,20 @@ class EmailController extends Controller
         }
 
         return back()->with('success', __('Connection renewed.'));
+    }
+
+    /** Shared-mailbox settings: who receives the new conversations of this mailbox and the signature of the e-mails it sends. */
+    public function settings(Request $request, Instance $instance, \App\Services\Chat\ChatAssignment $assignment)
+    {
+        $this->own($request, $instance);
+        $d = $request->validate(['default_assignee' => 'nullable|integer', 'email_signature' => 'nullable|string|max:600']);
+        $who = $d['default_assignee'] ?? null;
+        if ($who && !$assignment->people($request->user())->contains('id', (int) $who)) {
+            return back()->withErrors(['email' => __('This person is not part of the team.')]);
+        }
+        $instance->update(['default_assignee' => $who ?: null, 'email_signature' => trim((string) ($d['email_signature'] ?? '')) ?: null]);
+
+        return back()->with('success', __('Mailbox settings saved.'));
     }
 
     public function destroy(Request $request, Instance $instance, ChannelAccounts $accounts)

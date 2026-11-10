@@ -530,4 +530,26 @@ class EmailChannelTest extends TestCase
         $this->assertSame('a.png', $img->file_name);
         \Illuminate\Support\Facades\Storage::assertExists($img->media_path);
     }
+
+    public function test_shared_mailbox_assigns_new_conversations_and_signs_what_it_sends(): void
+    {
+        $i = $this->box();
+        $agent = User::create(['name' => 'Bia', 'email' => 'b@t.dev', 'username' => 'bia', 'password' => 'x'])->fresh();
+        $agent->forceFill(['parent_user_id' => $this->user->id, 'team_role' => 'agent', 'active' => true])->save();
+        $stranger = User::create(['name' => 'Zed', 'email' => 'z@t.dev', 'username' => 'zed', 'password' => 'x'])->fresh();
+
+        $this->actingAs($this->user)->put(route('email.settings', $i), ['default_assignee' => $stranger->id, 'email_signature' => 'x'])->assertSessionHasErrors('email');
+        $this->actingAs($this->user)->put(route('email.settings', $i), ['default_assignee' => $agent->id, 'email_signature' => "Equipe Vendas\n(95) 3000-0000"])->assertRedirect();
+        $this->assertSame($agent->id, (int) $i->fresh()->default_assignee);
+
+        $this->imap->mailbox[2] = $this->mail('s1', 'Dúvida', 'ana@x.com');
+        app(EmailPoller::class)->poll($i->fresh());
+        $this->assertSame($agent->id, (int) Chat::first()->assigned_to);
+
+        $this->actingAs($this->user)->postJson(route('chat.api.send', Chat::first()), ['text' => 'Olá!'])->assertStatus(201);
+        $this->assertStringContainsString("-- \nEquipe Vendas", $this->smtp->sent[0]->getTextBody());
+
+        $other = User::create(['name' => 'O', 'email' => 'o@t.dev', 'username' => 'o', 'password' => 'x'])->fresh();
+        $this->actingAs($other)->put(route('email.settings', $i), ['email_signature' => 'hack'])->assertStatus(404);
+    }
 }

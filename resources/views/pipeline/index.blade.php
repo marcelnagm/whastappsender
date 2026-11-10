@@ -17,6 +17,7 @@
   <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
     <h1 class="h3 fw-bold mb-0"><i class="bi bi-kanban me-2"></i>{{ __('Sales pipeline') }}</h1>
     <div class="d-flex flex-wrap gap-2 align-items-center">
+      @include('partials.saved-views', ['scope' => 'pipeline'])
       <select class="form-select form-select-sm w-auto" onchange="location='{{ route('pipeline.index') }}?pipeline='+this.value">
         @foreach ($pipelines as $p)<option value="{{ $p->id }}" @selected($p->id === $pipeline->id)>{{ $p->name }}</option>@endforeach
       </select>

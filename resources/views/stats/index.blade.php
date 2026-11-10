@@ -11,6 +11,7 @@
     'facebook'  => ['Facebook',  'bi-facebook',  '#1877f2'],
     'tiktok'    => ['TikTok',    'bi-tiktok',    '#fe2c55'],
     'email'     => ['Email',     'bi-envelope',  '#6c757d'],
+    'webchat'   => ['Web chat', 'bi-chat-dots', '#6f42c1'],
   ];
   $fmt = function ($min) {
       if ($min === null) return '—';

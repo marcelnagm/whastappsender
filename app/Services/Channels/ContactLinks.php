@@ -12,7 +12,7 @@ use Illuminate\Support\Collection;
  */
 class ContactLinks
 {
-    public const PREFIXES = ['tg' => 'telegram', 'ig' => 'instagram', 'tt' => 'tiktok', 'fb' => 'facebook', 'em' => 'email'];
+    public const PREFIXES = ['tg' => 'telegram', 'ig' => 'instagram', 'tt' => 'tiktok', 'fb' => 'facebook', 'em' => 'email', 'wc' => 'webchat'];
 
     public static function channelOf(Contact $c): string
     {

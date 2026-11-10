@@ -48,6 +48,14 @@ Route::prefix('public/forms')->group(function () {
     Route::post('/{key}', [$pf, 'submit'])->where('key', '[a-z0-9]+')->middleware('throttle:forms');
 });
 
+// Website chat widget (the embeddable script on the owner's site talks to these; the widget key is the address)
+Route::prefix('public/webchat')->group(function () {
+    $pw = \App\Http\Controllers\PublicWebchatController::class;
+    Route::get('/{key}', [$pw, 'definition'])->where('key', '[a-z0-9-]+');
+    Route::get('/{key}/messages', [$pw, 'messages'])->where('key', '[a-z0-9-]+')->middleware('throttle:120,1');
+    Route::post('/{key}/messages', [$pw, 'send'])->where('key', '[a-z0-9-]+')->middleware('throttle:webchat');
+});
+
 // Typebot flows call this (HTTP Request block) to hand the conversation to a person; the signed address is the credential
 Route::post('/public/typebot/handoff/{chat}/{sig}', [\App\Http\Controllers\TypebotController::class, 'handoff'])->whereNumber('chat')->where('sig', '[a-f0-9]{32}')->middleware('throttle:30,1')->name('typebot.handoff');
 

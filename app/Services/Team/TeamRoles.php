@@ -86,7 +86,7 @@ final class TeamRoles
 
     /** Web route names, first match wins. A list = any of those permissions is enough. */
     private const WEB = [
-        ['any', ['logout.perform', 'notifications.clear', 'home.index', 'language.switch']],
+        ['any', ['logout.perform', 'notifications.clear', 'home.index', 'language.switch', 'saved-views.*']],
         ['chat', ['chat.*', 'replies.*', 'kb.search', 'kb.used']],
         ['automations', ['kb.*', 'typebot.*']],
         ['contacts.view', ['contacts.index', 'contacts.show', 'contacts.photo', 'companies.index', 'companies.show']],
@@ -102,7 +102,7 @@ final class TeamRoles
         ['deals', ['pipeline.*', 'proposals.*']],
         ['tasks', ['tasks.*']],
         ['automations', ['automations.*', 'sequences.*']],
-        ['channels', ['telegram.*', 'tiktok.*', 'facebook.*', 'email.*', 'instagram.*', 'instances.*', 'whatsapp.*']],
+        ['channels', ['telegram.*', 'tiktok.*', 'facebook.*', 'email.*', 'webchat.*', 'instagram.*', 'instances.*', 'whatsapp.*']],
         ['ai', ['ai.*']],
         ['team', ['team.*', 'team-report.*', 'hours.*', 'sla.*', 'csat.*', 'webhooks-out.*', 'bookings.*', 'audit.*', 'exports.*', 'export.*']],
     ];
