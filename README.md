@@ -12,6 +12,17 @@
 
 **SAMA Envios** is a mission-critical communication infrastructure that merges the power of **Laravel** with the LLM of your choice (**Groq, OpenAI, Claude, Gemini, DeepSeek, Mistral, OpenRouter, Ollama or any OpenAI-compatible endpoint**). Designed for teams that demand stable bulk messaging and **Intelligent AI Customer Service** on WhatsApp, Telegram, Instagram, Facebook Messenger, TikTok and e-mail in one omnichannel inbox with per-channel statistics, answering through the very number, bot or account the customer wrote to. On top of the inbox sits a complete **sales CRM**: Kanban funnel, team inbox with assignment and labels, follow-up tasks, automations, custom fields and segments, consent register, team performance with goals and an AI-assisted deal forecast.
 
+## 📸 Screenshots
+
+Real screens of the system running with **fictional demo data** (a plant shop). Images live in [`docs/screenshots`](docs/screenshots).
+
+| | |
+|---|---|
+| **Public home** — features, AI, plans, FAQ<br>![Home](docs/screenshots/home.png) | **Omnichannel chat** — WhatsApp, Telegram, Instagram, e-mail and website in one inbox, AI replies with 👍/👎<br>![Chat](docs/screenshots/chat.png) |
+| **Sales pipeline** — Kanban funnel with forecast, win rate and saved views<br>![Pipeline](docs/screenshots/pipeline.png) | **Menu grouped by theme** — responsive navbar<br>![Menu](docs/screenshots/menu.png) |
+| **Business insights** — numbers computed by the system + AI-written findings and actions<br>![Insights](docs/screenshots/insights.png) | **Business knowledge** — FAQs, files, site and products the AI learns from<br>![Knowledge](docs/screenshots/knowledge.png) |
+| **Website chat widget** — paste one script on your site<br>![Website chat](docs/screenshots/webchat.png) | |
+
 **Documentation map**
 
 | Section | Topic |

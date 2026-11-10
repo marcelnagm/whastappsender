@@ -38,7 +38,7 @@
     <div class="row g-3 mb-4">
         <div class="col-md-6"><div class="card h-100"><div class="card-body">
             <h2 class="h6">{{ __('AI usage this month') }}</h2>
-            <div class="small">{{ __('Reports') }}: <strong>{{ $quota['used'] }}</strong> {{ $quota['limit'] === null ? __('(no limit)') : '/ ' . $quota['limit'] }}</div>
+            <div class="small">{{ __('Plan limit') }}: <strong>{{ $quota['used'] }}</strong> {{ $quota['limit'] === null ? __('(no limit)') : '/ ' . $quota['limit'] }}</div>
             <div class="small">{{ __('Customer replies') }}: <strong>{{ $usage['by_kind']['reply']['calls'] ?? 0 }}</strong> · {{ number_format($usage['by_kind']['reply']['tokens'] ?? 0, 0, ',', '.') }} tokens</div>
             <div class="small">{{ __('Reports') }}: <strong>{{ $usage['by_kind']['insight']['calls'] ?? 0 }}</strong> · {{ number_format($usage['by_kind']['insight']['tokens'] ?? 0, 0, ',', '.') }} tokens</div>
             @foreach (array_slice($usage['by_model'], 0, 4) as $m)<div class="small text-muted">{{ $m['model'] }} · {{ $m['calls'] }} · {{ number_format($m['tokens'], 0, ',', '.') }} tokens</div>@endforeach
@@ -115,7 +115,7 @@
         @if ($recs->isNotEmpty())
             <h2 class="h6 mt-4">{{ __('Recommended actions') }}</h2>
             @foreach ($recs as $b)
-                <div class="card mb-2 border-start border-4 border-{{ ['high' => 'danger', 'medium' => 'warning', 'low' => 'secondary'][$b['priority']] }}"><div class="card-body py-2">
+                <div class="card mb-2" style="border-left:4px solid {{ ['high' => '#dc3545', 'medium' => '#ffc107', 'low' => '#6c757d'][$b['priority']] }}"><div class="card-body py-2">
                     <div class="fw-semibold">{{ $b['title'] }} <span class="badge text-bg-light">{{ __($b['priority']) }}</span></div>
                     <div class="small">{{ $b['body'] }}</div>
                 </div></div>

@@ -73,6 +73,8 @@
   .app-nav .dropdown-item { border-radius: .5rem; padding: .5rem .75rem; font-size: .9rem; display: flex; align-items: center; gap: .6rem; }
   .app-nav .dropdown-item i { width: 1.1rem; text-align: center; opacity: .85; }
   .app-nav .dropdown-item.active, .app-nav .dropdown-item:active { background: rgba(255,193,7,.16); color: #ffc107; }
+  .app-nav .nav-ico { display: none; }
+  @media (max-width: 991.98px), (min-width: 1650px) { .app-nav .nav-ico { display: inline; } }
   .app-nav .user-toggle::after { display: none; }
   .app-nav .avatar { width: 32px; height: 32px; border-radius: 50%; background: #ffc107; color: #111; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; font-size: .9rem; }
   @media (max-width: 991.98px) {
@@ -95,18 +97,18 @@
     <div class="collapse navbar-collapse" id="navMain">
       <ul class="navbar-nav me-auto mb-2 mb-lg-0 gap-lg-1">
         <li class="nav-item">
-          <a href="/" class="nav-link {{ request()->is('/') ? 'active' : '' }}"><i class="bi bi-speedometer2 me-1"></i> {{ __('Dashboard') }}</a>
+          <a href="/" class="nav-link {{ request()->is('/') ? 'active' : '' }}"><i class="bi bi-speedometer2 me-1 nav-ico"></i> {{ __('Dashboard') }}</a>
         </li>
 
         @foreach ($menu as $g)
           @php [$icon, $label] = $g; $items = $g['visible']; @endphp
           @if (($g[3] ?? '') === 'solo' || $items->count() === 1)
             @php $i = $items->first(); @endphp
-            <li class="nav-item"><a href="{{ $i[1] }}" class="nav-link {{ $on($i[4]) ? 'active' : '' }}"><i class="bi {{ $i[2] }} me-1"></i> {{ $i[3] }}</a></li>
+            <li class="nav-item"><a href="{{ $i[1] }}" class="nav-link {{ $on($i[4]) ? 'active' : '' }}"><i class="bi {{ $i[2] }} me-1 nav-ico"></i> {{ $i[3] }}</a></li>
           @else
             @php $open = $items->contains(fn ($i) => $on($i[4])); @endphp
             <li class="nav-item dropdown">
-              <a class="nav-link dropdown-toggle {{ $open ? 'active' : '' }}" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi {{ $icon }} me-1"></i> {{ $label }}</a>
+              <a class="nav-link dropdown-toggle {{ $open ? 'active' : '' }}" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi {{ $icon }} me-1 nav-ico"></i> {{ $label }}</a>
               <ul class="dropdown-menu dropdown-menu-dark">
                 @foreach ($items as $i)
                   <li><a class="dropdown-item {{ $on($i[4]) ? 'active' : '' }}" href="{{ $i[1] }}"><i class="bi {{ $i[2] }}"></i>{{ $i[3] }}</a></li>
@@ -154,7 +156,7 @@
       </ul>
 
       <div class="d-flex align-items-center gap-3 border-top border-secondary border-opacity-25 pt-3 pt-lg-0 mt-2 mt-lg-0">
-        <div style="max-width:140px">@include('layouts.partials.language-selector')</div>
+        <div style="max-width:128px">@include('layouts.partials.language-selector')</div>
         <div>@include('layouts.partials.notifications')</div>
         <div class="dropdown ms-auto ms-lg-0">
           <a class="d-flex align-items-center text-decoration-none user-toggle text-white" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
