@@ -1231,6 +1231,20 @@
       hw.appendChild(dis);
       host.appendChild(hw);
     }
+    // consent: the customer may ask to stop in their own words; the team records it (with proof) or undoes it
+    if (d.consent) {
+      var cw = h('div', 'mb-2');
+      if (d.consent.out) cw.appendChild(h('div', 'alert alert-secondary py-1 small mb-1', T.optedOut));
+      var ob = h('button', 'btn btn-sm ' + (d.consent.out ? 'btn-outline-success' : 'btn-outline-danger') + ' me-1', d.consent.out ? T.optInBtn : T.optOutBtn); ob.type = 'button';
+      ob.addEventListener('click', async function () { try { await api(cfg.chatBase + '/' + chat.id + '/optout', { method: 'POST', body: { in: !!d.consent.out } }); toast(T.saved); again(); } catch (e) { toast(e.message); } });
+      cw.appendChild(ob);
+      if (d.consent.url && navigator.clipboard) {
+        var cb = h('button', 'btn btn-sm btn-outline-secondary', T.copyOptOut); cb.type = 'button';
+        cb.addEventListener('click', function () { navigator.clipboard.writeText(d.consent.url).then(function () { toast(T.copied); }); });
+        cw.appendChild(cb);
+      }
+      host.appendChild(cw);
+    }
     // pending reply: the team owes the customer an answer (cleared when a person answers)
     var pendBtn = h('button', 'btn btn-sm ' + (d.pending ? 'btn-warning' : 'btn-outline-warning') + ' mb-2 ms-1', d.pending ? T.clearPending : T.markPending); pendBtn.type = 'button';
     pendBtn.addEventListener('click', async function () { try { await api(cfg.chatBase + '/' + chat.id + '/pending', { method: d.pending ? 'DELETE' : 'POST' }); toast(T.saved); loadChats(); again(); } catch (e) { toast(e.message); } });

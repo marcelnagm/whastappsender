@@ -159,6 +159,11 @@ class CampaignItem extends Model
         // $client_phone .= '@s.whatsapp.net';
 
         $kind = $this->imageType();
+        // every campaign message can carry "reply STOP / open this link" (account option, off by default)
+        $text = $this->text;
+        if ($contact && ($owner = \App\Models\User::find($this->user_id))) {
+            $text = app(\App\Services\Consent\OptOut::class)->append($text, $owner, $contact);
+        }
 
         // Unknown extension: plain text, as before (the media endpoints need a known type)
         if (isset($this->image) && URL::isValidUrl($this->image) && $kind !== 'text') {
@@ -177,7 +182,7 @@ class CampaignItem extends Model
                     'number' => $contact->contact,
                     'mediatype' => $kind,
                     'mimetype' => $mime,
-                    'caption' => $this->text,
+                    'caption' => $text,
                     'media' => $this->image,
                     'fileName' => $this->mediaFileName($kind, $ext),
                 ];
@@ -185,7 +190,7 @@ class CampaignItem extends Model
         } else
             $data = array(
                 'number' => $contact->contact,
-                'text' => $this->text
+                'text' => $text
             );
 
         return $data;

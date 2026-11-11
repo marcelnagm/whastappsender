@@ -27,6 +27,23 @@
     <div><button class="btn btn-primary btn-sm">{{ __('Save') }}</button></div>
   </form>
 
+  <form method="POST" action="{{ route('consent.optout') }}" class="card card-body border-0 shadow-sm mb-3" x-data>
+    @csrf
+    <div class="fw-semibold mb-1"><i class="bi bi-box-arrow-right me-1"></i>{{ __('Let customers stop by themselves') }}</div>
+    <div class="form-text mb-2">{{ __('Customers can always opt out by sending one of these words (:words) on any channel. Choose what every campaign message tells them:', ['words' => implode(', ', config('consent.optout_keywords'))]) }}</div>
+    @foreach (['off' => __('Nothing (they can still use the words)'), 'keyword' => __('Reply with the word (:word)', ['word' => $optoutWord]), 'link' => __('Link to a page where they confirm'), 'both' => __('Both: the word and the link')] as $m => $label)
+      <div class="form-check">
+        <input class="form-check-input" type="radio" name="optout_mode" id="oo-{{ $m }}" value="{{ $m }}" @checked($optoutMode === $m)>
+        <label class="form-check-label" for="oo-{{ $m }}">{{ $label }}</label>
+      </div>
+    @endforeach
+    <label class="form-label small mt-3 mb-1" for="oo-text">{{ __('Your own sentence (optional)') }}</label>
+    <textarea class="form-control form-control-sm" id="oo-text" name="optout_text" rows="2" maxlength="400" placeholder="{{ __('Use {word} for the word and {link} for the personal link') }}">{{ $optoutText }}</textarea>
+    <div class="form-text mb-2">{{ __('Default') }}: {{ $optoutDefaults['both'] }}</div>
+    <div class="form-text mb-2">{{ __('The link is personal for each contact and opens a page where the person confirms (opening it alone changes nothing). It applies to WhatsApp campaigns and to campaigns sent on other channels.') }}</div>
+    <div><button class="btn btn-primary btn-sm">{{ __('Save') }}</button></div>
+  </form>
+
   <div class="card border-0 shadow-sm">
     <div class="card-header bg-white fw-semibold">{{ __('Latest records') }}</div>
     <div class="table-responsive">

@@ -55,6 +55,14 @@ Route::prefix('p')->name('proposals.public.')->group(function () {
     Route::post('/{token}/decline', [$pp, 'decline'])->middleware('throttle:10,1')->name('decline');
 });
 
+// Public "stop receiving messages" page (signed per contact, no login; opening it changes nothing, the button does)
+Route::prefix('optout')->name('optout.')->group(function () {
+    $oo = \App\Http\Controllers\OptOutController::class;
+    Route::get('/{contact}/{signature}', [$oo, 'show'])->whereNumber('contact')->name('show');
+    Route::post('/{contact}/{signature}', [$oo, 'confirm'])->whereNumber('contact')->middleware('throttle:10,1')->name('confirm');
+    Route::post('/{contact}/{signature}/undo', [$oo, 'undo'])->whereNumber('contact')->middleware('throttle:10,1')->name('undo');
+});
+
 // Public meeting booking (no login)
 Route::prefix('b')->name('booking-public.')->group(function () {
     $bp = \App\Http\Controllers\PublicBookingController::class;
@@ -103,6 +111,7 @@ Route::middleware(['auth', 'subscription.writable', 'plan.feature:chat'])->prefi
         Route::delete('/chats/{chat}/sequences/{enrollment}', [\App\Http\Controllers\SequencesController::class, 'stop'])->whereNumber('enrollment')->name('sequence.stop');
         Route::post('/chats/{chat}/close', [$crm, 'close'])->name('close');
         Route::post('/chats/{chat}/reopen', [$crm, 'reopen'])->name('reopen');
+        Route::post('/chats/{chat}/optout', [$crm, 'optout'])->name('optout');
         Route::post('/chats/{chat}/pending', [$crm, 'pending'])->name('pending');
         Route::delete('/chats/{chat}/pending', [$crm, 'unpending'])->name('unpending');
         Route::delete('/chats/{chat}/human', [$crm, 'dismissHuman'])->name('human.dismiss');
@@ -302,6 +311,7 @@ Route::group(['namespace' => 'App\Http\Controllers', 'middleware' => ['auth', 's
         $cs = \App\Http\Controllers\ConsentController::class;
         Route::get('/', [$cs, 'index'])->name('index');
         Route::post('/settings', [$cs, 'settings'])->name('settings');
+        Route::post('/optout', [$cs, 'optout'])->name('optout');
         Route::get('/export', [$cs, 'export'])->name('export');
         Route::post('/contacts/{contact}', [$cs, 'contact'])->whereNumber('contact')->name('contact');
     });

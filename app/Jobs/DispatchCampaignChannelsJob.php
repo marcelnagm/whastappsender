@@ -74,7 +74,7 @@ class DispatchCampaignChannelsJob implements ShouldQueue
 
                     $message = ChatMessage::create([
                         'chat_id' => $chat->id, 'instance_id' => $chat->instance_id, 'user_id' => $owner->id,
-                        'from_me' => true, 'source' => 'campaign', 'type' => 'text', 'body' => $item->text, 'status' => 'pending',
+                        'from_me' => true, 'source' => 'campaign', 'type' => 'text', 'body' => app(\App\Services\Consent\OptOut::class)->append($item->text, $owner, $contact), 'status' => 'pending',
                         'message_timestamp' => now(),
                     ]);
                     $recorder->touchChat($chat, $message, true);

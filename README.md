@@ -117,6 +117,7 @@ Real screens of the system running with **fictional demo data** (a plant shop). 
 | [Website chat widget](#-website-chat-widget) | Chat bubble for your site: visitors join the omnichannel chat and the AI answers |
 | [Saved views](#-saved-views) | Named filters of contacts, follow-ups and funnel, private or shared |
 | [Mission control](#️-mission-control--pending-replies) | First screen after login: urgent queue, people requested, pending replies, channel health, today, workload, follow-ups, sales |
+| [Opt-out (chat or link)](#-opt-out-stop-messages-by-chat-or-by-link) | Customers stop by word, phrase or personal link; optional opt-out line in every campaign |
 | [Win/loss analysis](#-winloss-analysis) | Why deals are lost, win rate by origin and by person, catalog of lost reasons |
 | [Typebot flows](#-typebot-flows) | Typebot conversation flows on every channel, with hand-over to a person |
 | [Data export](#-data-export) | CSV backup of contacts, companies, deals, tasks, messages and consent history |
@@ -1218,6 +1219,36 @@ Open a conversation and press **Mark as pending reply** when you owe the custome
 Needs `php artisan migrate` (adds `pending_at`, `pending_by`, `needs_human_at`, `needs_human_reason` to `chats`).
 
 ![Needs a person](docs/screenshots/chat-needs-person.png)
+
+## 🚪 Opt-out: stop messages by chat or by link
+
+Customers can stop receiving your messages by themselves, and you decide whether every campaign tells them how. A person who opts out receives **no campaigns and no AI replies on any channel** (WhatsApp, Telegram, Instagram, e-mail, website chat), and the opt-out is recorded with source, date and evidence in the [consent register](#️-consent--opt-out) (exportable proof).
+
+**1. By chat (the customer writes)**
+
+* One of the configured words, alone in the message: `#sair`, `/stop`, `#parar`, `#stop`, `parar`, `stop` (change them with `CONSENT_OPTOUT_KEYWORDS`).
+* Or a plain phrase, alone in the message: *descadastrar, sair da lista, não quero mais receber, unsubscribe, remove me, darme de baja...* (add yours with `CONSENT_OPTOUT_PHRASES="quero cancelar os avisos,..."`). Case, accents and punctuation are ignored ("PARAR!" works); a sentence that merely contains the word ("posso parar na loja?") does **not**.
+* Only what the customer types counts: an attendant writing "stop" does not opt anyone out.
+* **By the team**: if the customer asks in their own words, open the conversation and press **Customer asked to stop (opt out)**; **Opt back in** reverts it. **Copy opt-out link** copies the customer's personal link to paste in the chat.
+
+**2. By link**
+
+Every contact has a personal, signed link (`/optout/<contact>/<signature>`, built on `APP_URL`, no login, it never expires). It opens a page in the visitor's language where the person **confirms with a button** (opening the link alone changes nothing, so chat and e-mail link previews cannot opt anyone out by accident), can say why, and can **undo it** ("I changed my mind").
+
+**3. The option: tell customers how to stop**
+
+*Consent register → Let customers stop by themselves* sets what **every campaign message** (WhatsApp and the other channels) says at the end:
+
+| Option | Added to the message |
+|---|---|
+| Nothing (default) | nothing, the words keep working |
+| Reply with the word | *To stop receiving our messages, reply STOP.* |
+| Link | *To stop receiving our messages: https://your-domain.com/optout/…* |
+| Both | the word and the link |
+
+You can write your own sentence, with `{word}` and `{link}` placeholders: `Chega de avisos? Responda {word} ou toque: {link}`. The text uses the language of the account (*Settings → language*); it is not added to voice notes, and chat replies by your team are never changed.
+
+Needs `php artisan migrate` (adds `optout_mode` and `optout_text` to `users`).
 
 ## 🏆 Win/loss analysis
 

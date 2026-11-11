@@ -9,17 +9,46 @@ use Illuminate\Support\Facades\DB;
 /** Records who agreed (or stopped agreeing) to receive messages, with the proof, and keeps the sending lists in line with it. */
 class Consent
 {
-    public const SOURCES = ['form', 'keyword', 'manual', 'import', 'api'];
+    public const SOURCES = ['form', 'keyword', 'link', 'manual', 'import', 'api'];
 
-    /** "optout" | "optin" | null for a message that is exactly one of the configured words. */
+    /** "optout" | "optin" | null for a message that is exactly one of the configured words or phrases (case, accents and punctuation ignored). */
     public static function keyword(?string $text): ?string
     {
-        $t = mb_strtolower(trim((string) $text));
-        if ($t === '') {
+        $raw = mb_strtolower(trim((string) $text));
+        if ($raw === '') {
             return null;
         }
+        $optout = (array) config('consent.optout_keywords');
+        $optin = (array) config('consent.optin_keywords');
+        if (in_array($raw, $optout, true)) {
+            return 'optout';
+        }
+        if (in_array($raw, $optin, true)) {
+            return 'optin';
+        }
 
-        return in_array($t, (array) config('consent.optout_keywords'), true) ? 'optout' : (in_array($t, (array) config('consent.optin_keywords'), true) ? 'optin' : null);
+        // "Parar!", "  STOP. ", "Quero sair da lista": same words with the noise removed
+        $n = self::normalize($raw);
+        if ($n === '') {
+            return null;
+        }
+        foreach (array_merge($optout, (array) config('consent.optout_phrases')) as $w) {
+            if (self::normalize($w) === $n) {
+                return 'optout';
+            }
+        }
+        foreach ($optin as $w) {
+            if (self::normalize($w) === $n) {
+                return 'optin';
+            }
+        }
+
+        return null;
+    }
+
+    private static function normalize(string $s): string
+    {
+        return trim(preg_replace('/\s+/', ' ', preg_replace('/[^a-z0-9\s]/', '', strtolower(\Illuminate\Support\Str::ascii($s)))));
     }
 
     /** Applies the keyword (if it is one) to the contact. @return string|null the action taken: "revoked" | "granted" */

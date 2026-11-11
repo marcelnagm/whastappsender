@@ -43,6 +43,7 @@ class ChatCrmController extends Controller
             'scheduled' => ScheduledMessagesController::list($chat),
             'closed' => (bool) $chat->closed_at,
             'pending' => (bool) $chat->pending_at,
+            'consent' => $chat->contact_id ? ['out' => optional($chat->contact)->consent_status === 'revoked' && (int) optional($chat->contact)->ignore_me === 1, 'url' => $chat->contact ? \App\Services\Consent\OptOut::url($chat->contact) : null] : null,
             'needs_human' => $chat->needs_human_at ? ['since' => $chat->needs_human_at->format('d/m H:i'), 'reason' => $chat->needs_human_reason] : null,
             'snoozed_until' => optional($chat->snoozed_until)->format('d/m H:i'),
             'snooze_presets' => \App\Services\Chat\Snooze::presets(),
@@ -77,6 +78,20 @@ class ChatCrmController extends Controller
         app(\App\Services\Chat\Csat::class)->reopen($chat);
 
         return response()->json(['closed' => false]);
+    }
+
+    /** The customer asked (in their own words) to stop: record it with the proof, or put them back when they change their mind. */
+    public function optout(Request $request, Chat $chat): JsonResponse
+    {
+        $this->authorizeChat($chat);
+        abort_unless($chat->contact, 422, __('This conversation is not in the CRM yet.'));
+        $actor = TeamContext::actor($request);
+        $svc = app(\App\Services\Consent\Consent::class);
+        $in = $request->boolean('in');
+        $note = __('Recorded by :name', ['name' => $actor->name]) . ' (' . __('chat') . ')';
+        $in ? $svc->grant($chat->contact, 'manual', $note, $request->ip(), $actor->id) : $svc->revoke($chat->contact, 'manual', $note, $request->ip(), $actor->id);
+
+        return response()->json(['out' => !$in]);
     }
 
     public function pending(Request $request, Chat $chat): JsonResponse

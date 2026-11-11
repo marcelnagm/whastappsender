@@ -23,12 +23,23 @@ class ConsentController extends Controller
             'required' => (bool) $owner->consent_required,
             'granted' => (int) ($status['granted'] ?? 0), 'revoked' => (int) ($status['revoked'] ?? 0), 'unknown' => (int) ($status['unknown'] ?? 0),
             'sources' => $sources, 'logs' => $logs,
+            'optoutMode' => in_array($owner->optout_mode, \App\Services\Consent\OptOut::MODES, true) ? $owner->optout_mode : 'off', 'optoutText' => (string) $owner->optout_text,
+            'optoutDefaults' => collect(['keyword', 'link', 'both'])->mapWithKeys(fn ($m) => [$m => \App\Services\Consent\OptOut::defaultText($m)])->all(), 'optoutWord' => \App\Services\Consent\OptOut::word(),
         ]);
     }
 
     public function settings(Request $request)
     {
         $request->user()->forceFill(['consent_required' => $request->boolean('consent_required')])->save();
+
+        return back()->with('success', __('Saved.'));
+    }
+
+    /** What every campaign message says about stopping (off / reply-word / link / both) and an optional own sentence. */
+    public function optout(Request $request)
+    {
+        $data = $request->validate(['optout_mode' => 'required|in:' . implode(',', \App\Services\Consent\OptOut::MODES), 'optout_text' => 'nullable|string|max:400']);
+        $request->user()->forceFill(['optout_mode' => $data['optout_mode'], 'optout_text' => trim((string) ($data['optout_text'] ?? '')) ?: null])->save();
 
         return back()->with('success', __('Saved.'));
     }
