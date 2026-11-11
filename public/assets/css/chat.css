@@ -329,3 +329,7 @@
 .wa-qr-item { padding: 8px 12px; cursor: pointer; font-size: .85rem; }
 .wa-qr-item.active, .wa-qr-item:hover { background: #f0f2f5; }
 .wa-qr-text { color: #667781; font-size: .75rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.wa-flag { display: inline-flex; align-items: center; margin-left: 4px; font-size: .72rem; padding: 0 5px; border-radius: 8px; line-height: 1.5; }
+.wa-flag-human { background: #fde8e8; color: #c0262d; }
+.wa-flag-pending { background: #fff3cd; color: #8a6100; }

@@ -38,6 +38,9 @@ class InboundHooks
                 app(ChatAssignment::class)->autoAssign($chat, $owner);
                 app(AutoMessages::class)->onInbound($chat, $owner, $m);
             }
+            if ($m->body && \App\Services\Chat\HumanRequests::detect((string) $m->body)) {
+                app(\App\Services\Chat\HumanRequests::class)->request($chat->fresh(), __('The customer asked for a person.'));
+            }
             $deals = app(LeadDeals::class);
             $deals->fromInbound($chat->fresh(), $owner, $m);
             if ($m->body) {

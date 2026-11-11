@@ -18,7 +18,7 @@ class Csat
         if ($chat->closed_at) {
             return null;
         }
-        $chat->forceFill(['closed_at' => now(), 'closed_by' => $by->id])->save();
+        $chat->forceFill(['closed_at' => now(), 'closed_by' => $by->id, 'pending_at' => null, 'pending_by' => null, 'needs_human_at' => null, 'needs_human_reason' => null])->save();
         app(\App\Services\Bots\TypebotBot::class)->reset($chat);
         app(\App\Services\Webhooks\OutboundWebhooks::class)->emit('conversation.closed', $chat->user_id, ['chat' => $chat]);
 

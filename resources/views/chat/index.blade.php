@@ -88,6 +88,9 @@
                 <option value="all">{{ __('All conversations') }}</option>
                 <option value="mine">{{ __('Assigned to me') }}</option>
                 <option value="unassigned">{{ __('Unassigned') }}</option>
+                <option value="human">{{ __('Needs a person') }}</option>
+                <option value="pending">{{ __('Pending reply') }}</option>
+                <option value="waiting">{{ __('Waiting for our answer') }}</option>
                 <option value="snoozed">{{ __('Snoozed') }}</option>
             </select>
         </div>
@@ -287,6 +290,11 @@
         seqStarted: @json(__('Sequence started.')),
         seqStop: @json(__('Stop this sequence')),
         seqNext: @json(__('next:')),
+        markPending: @json(__('Mark as pending reply')),
+        clearPending: @json(__('Remove pending mark')),
+        pendingTitle: @json(__('Pending reply')),
+        needsHuman: @json(__('A person was requested')),
+        dismissHuman: @json(__('Dismiss request')),
         snoozeTitle: @json(__('Snooze')),
         snoozedUntil: @json(__('Snoozed until')),
         unsnooze: @json(__('Bring back now')),

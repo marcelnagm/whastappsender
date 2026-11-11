@@ -102,6 +102,9 @@ class ChatController extends Controller
             ->when($only, fn ($query) => $query->where(fn ($w) => $w->whereNull('assigned_to')->orWhere('assigned_to', $only)))
             ->when($filter === 'mine', fn ($query) => $query->where('assigned_to', $me))
             ->when($filter === 'unassigned', fn ($query) => $query->whereNull('assigned_to'))
+            ->when($filter === 'pending', fn ($query) => $query->whereNotNull('pending_at'))
+            ->when($filter === 'human', fn ($query) => $query->whereNotNull('needs_human_at'))
+            ->when($filter === 'waiting', fn ($query) => $query->where('last_message_from_me', false)->whereNull('closed_at'))
             ->when($tagId > 0, fn ($query) => $query->whereHas('tags', fn ($t) => $t->where('chat_tags.id', $tagId)))
             ->where('instance_id', $instance->id)
             ->where('archived', false)
@@ -820,6 +823,8 @@ class ChatController extends Controller
             'avatar' => $chat->avatar(),
             'unread' => (int) $chat->unread_count,
             'snoozed' => (bool) ($chat->snoozed_until && $chat->snoozed_until->isFuture()),
+            'pending' => (bool) $chat->pending_at,
+            'needs_human' => (bool) $chat->needs_human_at,
             'in_crm' => (bool) $chat->contact_id,
             'assigned' => $chat->assigned_to ? ['id' => (int) $chat->assigned_to, 'name' => optional($chat->assignee)->name] : null,
             'tags' => $chat->tags->map(fn ($t) => ['id' => $t->id, 'name' => $t->name, 'color' => $t->color])->values(),

@@ -251,6 +251,14 @@ class ChatMessageRecorder
             }
         }
 
+        // a person answered (typed here or on the phone): nothing is waiting on the team any more
+        if ($isNew && $message->from_me && !$history && in_array($message->source, [null, 'human'], true) && ($chat->pending_at || $chat->needs_human_at)) {
+            $chat->pending_at = null;
+            $chat->pending_by = null;
+            $chat->needs_human_at = null;
+            $chat->needs_human_reason = null;
+        }
+
         if ($chat->isDirty()) {
             $chat->save();
         }

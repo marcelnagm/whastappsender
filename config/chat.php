@@ -21,6 +21,9 @@ return [
     // Folder (inside storage/app) where chat media is cached
     'media_path' => 'chat-media',
 
+    // Extra phrases (comma separated) that flag a conversation as "needs a person", on top of the built-in ones (pt/en/es)
+    'human_keywords' => env('CHAT_HUMAN_KEYWORDS', ''),
+
     // When an agent replies from the chat, pause the AI auto-reply for that contact
     'pause_ai_on_reply' => (bool) env('CHAT_PAUSE_AI_ON_REPLY', false),
 

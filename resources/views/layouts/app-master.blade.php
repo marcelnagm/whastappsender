@@ -10,6 +10,18 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
 
     <style>
+        /* Bootstrap 5.1 ships no "text-bg-*" helpers (added in 5.2): same look, so badges never turn invisible */
+        .text-bg-primary { color: #fff !important; background-color: #0d6efd !important; }
+        .text-bg-secondary { color: #fff !important; background-color: #6c757d !important; }
+        .text-bg-success { color: #fff !important; background-color: #198754 !important; }
+        .text-bg-danger { color: #fff !important; background-color: #dc3545 !important; }
+        .text-bg-warning { color: #000 !important; background-color: #ffc107 !important; }
+        .text-bg-info { color: #000 !important; background-color: #0dcaf0 !important; }
+        .text-bg-light { color: #000 !important; background-color: #f8f9fa !important; }
+        .text-bg-dark { color: #fff !important; background-color: #212529 !important; }
+    </style>
+
+    <style>
         :root {
             --primary-color: #0d6efd;
             --bg-body: #f8fafc;

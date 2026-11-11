@@ -32,6 +32,10 @@ class Chat extends Model
         'closed_at',
         'snoozed_until',
         'closed_by',
+        'pending_at',
+        'pending_by',
+        'needs_human_at',
+        'needs_human_reason',
     ];
 
     protected $casts = [
@@ -44,6 +48,8 @@ class Chat extends Model
         'assigned_at' => 'datetime',
         'closed_at' => 'datetime',
         'snoozed_until' => 'datetime',
+        'pending_at' => 'datetime',
+        'needs_human_at' => 'datetime',
         'greeted_at' => 'datetime',
         'away_sent_at' => 'datetime',
     ];

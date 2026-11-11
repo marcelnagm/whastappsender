@@ -42,6 +42,8 @@ class ChatCrmController extends Controller
             ])->values(),
             'scheduled' => ScheduledMessagesController::list($chat),
             'closed' => (bool) $chat->closed_at,
+            'pending' => (bool) $chat->pending_at,
+            'needs_human' => $chat->needs_human_at ? ['since' => $chat->needs_human_at->format('d/m H:i'), 'reason' => $chat->needs_human_reason] : null,
             'snoozed_until' => optional($chat->snoozed_until)->format('d/m H:i'),
             'snooze_presets' => \App\Services\Chat\Snooze::presets(),
             'sequences' => SequencesController::forChat($chat),
@@ -75,6 +77,30 @@ class ChatCrmController extends Controller
         app(\App\Services\Chat\Csat::class)->reopen($chat);
 
         return response()->json(['closed' => false]);
+    }
+
+    public function pending(Request $request, Chat $chat): JsonResponse
+    {
+        $this->authorizeChat($chat);
+        app(\App\Services\Chat\HumanRequests::class)->markPending($chat, TeamContext::actor($request));
+
+        return response()->json(['pending' => true]);
+    }
+
+    public function unpending(Request $request, Chat $chat): JsonResponse
+    {
+        $this->authorizeChat($chat);
+        app(\App\Services\Chat\HumanRequests::class)->clearPending($chat);
+
+        return response()->json(['pending' => false]);
+    }
+
+    public function dismissHuman(Request $request, Chat $chat): JsonResponse
+    {
+        $this->authorizeChat($chat);
+        app(\App\Services\Chat\HumanRequests::class)->clearHuman($chat);
+
+        return response()->json(['needs_human' => null]);
     }
 
     public function snooze(Request $request, Chat $chat): JsonResponse

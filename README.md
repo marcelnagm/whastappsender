@@ -58,7 +58,7 @@ Real screens of the system running with **fictional demo data** (a plant shop). 
 
 | | |
 |---|---|
-| **Control panel — mined contacts, instances, delivery and plan**<br>![dashboard](docs/screenshots/dashboard.png) | **Channel statistics — per-channel numbers and first-response time**<br>![stats](docs/screenshots/stats.png) |
+| **Mission control — who needs a person, who is waiting, channel health, today, team workload, follow-ups and sales**<br>![dashboard](docs/screenshots/dashboard.png) | **Channel statistics — per-channel numbers and first-response time**<br>![stats](docs/screenshots/stats.png) |
 | **Follow-ups — tasks with due dates, today / overdue / done**<br>![tasks](docs/screenshots/tasks.png) | **Deal priorities — transparent estimate of what to work on first**<br>![priorities](docs/screenshots/priorities.png) |
 | **Funnel conversion — stage-to-stage conversion and velocity**<br>![funnel](docs/screenshots/funnel.png) | **Win/loss analysis — reasons, origins and people in charge**<br>![winloss](docs/screenshots/winloss.png) |
 | **Lead sources — where deals come from and how they convert**<br>![sources](docs/screenshots/sources.png) | **Response SLA — alerts, escalation and who is waiting**<br>![sla](docs/screenshots/sla.png) |
@@ -116,6 +116,7 @@ Real screens of the system running with **fictional demo data** (a plant shop). 
 | [AI usage, limits and quality](#ai-usage-limits-and-quality) | AI cost log, plan limits, report models, 👍/👎 on answers and scheduled reports |
 | [Website chat widget](#-website-chat-widget) | Chat bubble for your site: visitors join the omnichannel chat and the AI answers |
 | [Saved views](#-saved-views) | Named filters of contacts, follow-ups and funnel, private or shared |
+| [Mission control](#️-mission-control--pending-replies) | First screen after login: urgent queue, people requested, pending replies, channel health, today, workload, follow-ups, sales |
 | [Win/loss analysis](#-winloss-analysis) | Why deals are lost, win rate by origin and by person, catalog of lost reasons |
 | [Typebot flows](#-typebot-flows) | Typebot conversation flows on every channel, with hand-over to a person |
 | [Data export](#-data-export) | CSV backup of contacts, companies, deals, tasks, messages and consent history |
@@ -1186,6 +1187,37 @@ Keep the filters you use every day under a name and reopen them with one click. 
 - Apply the filters on the page, type a name in the *Views* box and click **Save view**. Choose **Only you** or **Share with the team**. Saving a view with the same name updates it (up to 50 views per account).
 - Click a view to open the page already filtered. Shared views are visible to the whole team; private ones only to their creator. Whoever created a view, the owner and administrators can delete it.
 - Only the known filter keys of each page are kept, so a view can never carry anything else into the address. Views are per account: nobody sees another account's. Run `php artisan migrate`.
+
+## 🎛️ Mission control & pending replies
+
+The first screen after login is a **mission control**: what needs a person *right now*, how every channel is doing and what happened today. Everything is counted by the system (nothing is estimated) and the page refreshes itself every minute.
+
+![Mission control](docs/screenshots/dashboard.png)
+
+* **Alerts** at the top: a channel that is disconnected, customers who asked for a person, conversations waiting longer than your SLA time (*Response SLA*, default 15 min), campaign messages that failed in the last 24 h. Each alert is a link.
+* **Five counters**, each opening the chat already filtered: *Asked for a person*, *Waiting for our answer* (with the longest wait), *Pending reply*, *Unanswered and unassigned*, *Open conversations*.
+* **Needs attention now**: the 12 most urgent conversations, in this order: a person was requested, late, marked pending, longest waiting. Each row shows the channel, why it is listed, how long it has been waiting and who is in charge; a click opens the conversation.
+* **Today** (received, sent, new conversations, AI replies, compared with yesterday) and a 7-day message chart.
+* **Channels**: one tile per channel (WhatsApp, Telegram, Instagram, Facebook, TikTok, e-mail, website chat) with *Online / Disconnected*, conversations waiting, messages in/out today, average first reply and AI replies (7 days).
+* **Team workload** (open and waiting conversations per person, and the ones nobody owns), **Follow-ups** (overdue and due today), **Sales** (open deals, funnel value, won this month, deals due to close within 7 days), campaign delivery/failure rate and your plan.
+* Team members only see what their role allows: attendants restricted to "their own" conversations only see theirs (and unassigned ones); sales and follow-ups appear for roles with those permissions.
+
+### Needs a person
+
+A conversation is flagged **Needs a person** (red headset badge in the chat list, filter *Needs a person*, a red box in the conversation panel) when:
+
+* the customer writes a phrase such as *"quero falar com um atendente"*, *"talk to a human"*, *"hablar con una persona"* (built-in list in Portuguese, English and Spanish; add yours, comma separated, in `.env`: `CHAT_HUMAN_KEYWORDS="quero um gerente,supervisor"`), or
+* a Typebot flow hands over to a person (see *Typebot flows*).
+
+The person in charge (or the owner) is notified once. The flag clears by itself when **a person answers** (typed in the chat or on the phone; replies from the AI, the bot or campaigns do not count) or when the conversation is **closed**; **Dismiss request** in the conversation panel clears it by hand.
+
+### Pending reply
+
+Open a conversation and press **Mark as pending reply** when you owe the customer an answer (you are checking stock, waiting for the finance team...). The conversation gets an hourglass badge, appears in the filter *Pending reply* and on the dashboard until somebody answers or closes it (or you press **Remove pending mark**). The chat filter also has **Waiting for our answer** (the customer wrote last) and you can open the chat already filtered through a link: `/chat?filter=human`, `pending`, `waiting`, `unassigned`, `mine`, `snoozed`.
+
+Needs `php artisan migrate` (adds `pending_at`, `pending_by`, `needs_human_at`, `needs_human_reason` to `chats`).
+
+![Needs a person](docs/screenshots/chat-needs-person.png)
 
 ## 🏆 Win/loss analysis
 

@@ -216,6 +216,8 @@ class TypebotBot
         $body = '🤖 ' . __('Bot handoff') . ($reason !== '' ? ': ' . $reason : '') . ($note ? "\n" . mb_substr($note, 0, 500) : '');
         ChatNote::create(['user_id' => $owner->id, 'chat_id' => $chat->id, 'author_id' => $owner->id, 'body' => $body]);
 
+        app(\App\Services\Chat\HumanRequests::class)->request($chat, $reason !== '' ? $reason : __('Bot handoff'), false);
+
         $label = $chat->name ?: ($chat->phone ?: __('Conversation'));
         $to = ($chat->assigned_to ? User::find($chat->assigned_to) : null) ?: $owner;
         $to->notify(new AutomationNotice(__('A customer needs a person: :name', ['name' => $label]), route('chat.index', ['chat' => $chat->id])));

@@ -281,6 +281,8 @@
     var nm = h('div', 'wa-chat-name', chat.name);
     nm.appendChild(channelTag(chat));
     if (chat.in_crm) nm.appendChild(h('span', 'wa-crm-tag', 'CRM'));
+    if (chat.needs_human) { var hb = h('span', 'wa-flag wa-flag-human', ''); hb.title = T.needsHuman; hb.appendChild(h('i', 'bi bi-headset')); nm.appendChild(hb); }
+    if (chat.pending) { var pb = h('span', 'wa-flag wa-flag-pending', ''); pb.title = T.pendingTitle; pb.appendChild(h('i', 'bi bi-hourglass-split')); nm.appendChild(pb); }
     row1.appendChild(nm);
     row1.appendChild(h('div', 'wa-chat-time', fmtListTime(chat.last && chat.last.at)));
 
@@ -1219,6 +1221,21 @@
     });
     host.appendChild(closeBtn);
 
+    // a person was requested (customer or bot): shown until somebody answers, the chat is closed or it is dismissed
+    if (d.needs_human) {
+      var hw = h('div', 'alert alert-danger py-2 small mb-2');
+      hw.appendChild(h('strong', null, T.needsHuman));
+      hw.appendChild(document.createTextNode(' · ' + d.needs_human.since + (d.needs_human.reason ? ' · ' + d.needs_human.reason : '')));
+      var dis = h('button', 'btn btn-sm btn-outline-danger ms-2 py-0', T.dismissHuman); dis.type = 'button';
+      dis.addEventListener('click', async function () { try { await api(cfg.chatBase + '/' + chat.id + '/human', { method: 'DELETE' }); loadChats(); again(); } catch (e) { toast(e.message); } });
+      hw.appendChild(dis);
+      host.appendChild(hw);
+    }
+    // pending reply: the team owes the customer an answer (cleared when a person answers)
+    var pendBtn = h('button', 'btn btn-sm ' + (d.pending ? 'btn-warning' : 'btn-outline-warning') + ' mb-2 ms-1', d.pending ? T.clearPending : T.markPending); pendBtn.type = 'button';
+    pendBtn.addEventListener('click', async function () { try { await api(cfg.chatBase + '/' + chat.id + '/pending', { method: d.pending ? 'DELETE' : 'POST' }); toast(T.saved); loadChats(); again(); } catch (e) { toast(e.message); } });
+    host.appendChild(pendBtn);
+
     // snooze: leaves the inbox until the time comes or the customer writes again
     if (d.snoozed_until) {
       var wakeBtn = h('button', 'btn btn-sm btn-outline-warning mb-2 ms-1', T.unsnooze + ' (' + T.snoozedUntil + ' ' + d.snoozed_until + ')'); wakeBtn.type = 'button';
@@ -1790,6 +1807,8 @@
   // ------------------------------------------------------------------
   // boot
   // ------------------------------------------------------------------
+  var wantedFilter = new URLSearchParams(window.location.search).get('filter');   // e.g. from the dashboard: ?filter=human
+  if (wantedFilter && filterSel && Array.prototype.some.call(filterSel.options, function (o) { return o.value === wantedFilter; })) { S.filter = wantedFilter; filterSel.value = wantedFilter; }
   loadChats().then(function () {
     var wanted = parseInt(new URLSearchParams(window.location.search).get('chat'), 10);
     if (wanted) {

@@ -2,23 +2,23 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Contact;
-use App\Models\WhatsappJob;
-use Illuminate\Http\Request;
+use App\Services\Chat\ChatAssignment;
+use App\Services\Dashboard\MissionControl;
+use App\Services\Team\TeamContext;
 use Illuminate\Support\Facades\Auth;
 
 class HomeController extends Controller
 {
-    public function index() 
+    public function index(MissionControl $control)
     {
-        
-        if(Auth::user()){
-        $contact = Contact::where('user_id',Auth::user()->id)->count();
-        $read =  \App\Models\WhatsappJob::getDeliveryRate(Auth::user()->id);
-        $error =  \App\Models\WhatsappJob::getErrorRate(Auth::user()->id);
-        $instances =  \App\Models\Instance::where('user_id',Auth::user()->id)->where('status','connected')->count();
-        return view('home.index',compact('contact','read','error','instances'))    ;
-    }
+        if ($owner = Auth::user()) {
+            $team = app(TeamContext::class);
+            $mc = $control->build($owner, app(ChatAssignment::class)->restrictedTo($owner), [
+                'chat' => $team->can('chat'), 'deals' => $team->can('deals'), 'tasks' => $team->can('tasks'),
+            ]);
+
+            return view('home.index', compact('mc'));
+        }
 
         // Public pricing on the landing page (skipped until the billing migration has run)
         $plans = \Illuminate\Support\Facades\Schema::hasTable('plans')

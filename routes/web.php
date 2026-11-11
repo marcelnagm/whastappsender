@@ -103,6 +103,9 @@ Route::middleware(['auth', 'subscription.writable', 'plan.feature:chat'])->prefi
         Route::delete('/chats/{chat}/sequences/{enrollment}', [\App\Http\Controllers\SequencesController::class, 'stop'])->whereNumber('enrollment')->name('sequence.stop');
         Route::post('/chats/{chat}/close', [$crm, 'close'])->name('close');
         Route::post('/chats/{chat}/reopen', [$crm, 'reopen'])->name('reopen');
+        Route::post('/chats/{chat}/pending', [$crm, 'pending'])->name('pending');
+        Route::delete('/chats/{chat}/pending', [$crm, 'unpending'])->name('unpending');
+        Route::delete('/chats/{chat}/human', [$crm, 'dismissHuman'])->name('human.dismiss');
         Route::post('/chats/{chat}/snooze', [$crm, 'snooze'])->name('snooze');
         Route::delete('/chats/{chat}/snooze', [$crm, 'unsnooze'])->name('unsnooze');
         Route::put('/chats/{chat}/tags', [$crm, 'syncTags'])->name('tags.sync');
