@@ -288,7 +288,7 @@ Log::info(json_encode($data));
 
         $consent = app(\App\Services\Consent\Consent::class);
         foreach (Contact::where('user_id', $instance->user_id)->where('contact', $whatsappId)->get() as $contact) {
-            $action = $consent->handleKeyword($contact, $text);
+            $action = $consent->handleKeyword($contact, $text, $instance);
             try { // the database is the record; this set is only a fast copy for the send workers
                 $action === 'revoked'
                     ? Redis::sadd("blacklist:instance:{$instanceName}", $whatsappId)

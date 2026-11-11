@@ -347,7 +347,9 @@ class EmailChannelTest extends TestCase
         $this->imap->mailbox[2] = $this->mail('s1', 'Pare', 'ana@x.com', '#sair');
         app(EmailPoller::class)->poll($i->fresh());
         $this->assertSame(1, (int) Contact::where('contact', 'em:ana@x.com')->value('ignore_me'));
-        $this->assertCount(0, $this->smtp->sent);
+        // the AI stays silent; the only mail is the confirmation that the opt-out worked
+        $this->assertCount(1, $this->smtp->sent);
+        $this->assertStringContainsString('will not send you more messages', $this->smtp->sent[0]->toString());
     }
 
     // ---- unifying contacts -------------------------------------------------------------------------------------------

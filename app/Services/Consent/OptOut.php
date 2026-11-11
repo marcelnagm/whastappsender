@@ -2,7 +2,12 @@
 
 namespace App\Services\Consent;
 
+use App\Jobs\SendChatMessageJob;
+use App\Models\Chat;
+use App\Models\ChatMessage;
 use App\Models\Contact;
+use App\Models\Instance;
+use App\Services\Chat\ChatMessageRecorder;
 use App\Models\User;
 
 /**
@@ -78,5 +83,55 @@ class OptOut
         $footer = $this->footer($owner, $contact);
 
         return $footer === '' || str_contains($text, $footer) ? $text : rtrim($text) . "\n\n" . $footer;
+    }
+
+    /**
+     * "Done, you will not receive more messages": the answer to a customer who opted out (or back in) by writing, sent in the
+     * same conversation (WhatsApp, Telegram, Instagram, e-mail, website chat). It is a bot message, so it also counts as answered.
+     */
+    public function confirm(Contact $contact, ?Instance $instance, string $action): void
+    {
+        $owner = User::find($contact->user_id);
+        if (!$owner || !$owner->optout_confirm) {
+            return;
+        }
+        $chat = Chat::where('user_id', $owner->id)
+            ->when($instance, fn ($q) => $q->where('instance_id', $instance->id))
+            ->where(fn ($q) => $q->where('contact_id', $contact->id)->orWhere('remote_jid', $contact->contact . '@s.whatsapp.net')->orWhere('remote_jid', $contact->contact))
+            ->orderByDesc('last_message_at')->first();
+        if (!$chat) {
+            return;
+        }
+
+        $text = $this->confirmation($owner, $contact, $action);
+        $message = ChatMessage::create([
+            'chat_id' => $chat->id, 'instance_id' => $chat->instance_id, 'user_id' => $owner->id, 'from_me' => true,
+            'source' => 'bot', 'type' => 'text', 'body' => $text, 'status' => 'pending', 'message_timestamp' => now(),
+        ]);
+        app(ChatMessageRecorder::class)->touchChat($chat, $message, true);
+        SendChatMessageJob::dispatch($message->id)->onQueue('default')->delay(now()->addSeconds(2));
+    }
+
+    public function confirmation(User $owner, Contact $contact, string $action): string
+    {
+        $previous = app()->getLocale();
+        app()->setLocale($owner->locale ?: $previous);
+        try {
+            if ($action === 'granted') {
+                return __('Done! You will receive messages from :company again.', ['company' => $owner->name]);
+            }
+            $custom = trim((string) $owner->optout_confirm_text);
+            $text = $custom !== '' ? $custom : __('Done: :company will not send you more messages. To receive them again, send :optin or open: :link', ['company' => '{company}', 'optin' => '{optin}', 'link' => '{link}']);
+
+            return trim(strtr($text, ['{company}' => $owner->name, '{optin}' => self::optInWord(), '{link}' => self::url($contact)]));
+        } finally {
+            app()->setLocale($previous);
+        }
+    }
+
+    /** The word that brings the customer back (the first configured one). */
+    public static function optInWord(): string
+    {
+        return mb_strtoupper((string) (((array) config('consent.optin_keywords'))[0] ?? '#entrar'));
     }
 }

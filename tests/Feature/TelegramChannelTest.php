@@ -147,7 +147,9 @@ class TelegramChannelTest extends TestCase
         Http::fake();
         $this->postJson("/api/webhooks/telegram/{$bot->id}", $this->update('/stop'), ['X-Telegram-Bot-Api-Secret-Token' => 'sekret'])->assertOk();
         $this->assertSame(1, (int) Contact::first()->ignore_me);
-        Http::assertNothingSent();
+        // the AI stays silent; the only message is the confirmation that the opt-out worked
+        Http::assertSentCount(1);
+        Http::assertSent(fn (Request $r) => str_contains($r->url(), 'sendMessage') && str_contains((string) json_encode($r->data()), 'will not send you more messages'));
     }
 
     public function test_chat_ui_message_goes_out_through_the_bot(): void

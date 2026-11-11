@@ -116,4 +116,61 @@ class OptOutTest extends TestCase
         $this->assertStringContainsString('Para parar de receber nossas mensagens, responda PARAR', $f);
         $this->assertSame('en', app()->getLocale());   // the worker's own language is put back
     }
+
+    private function chatFor(): array
+    {
+        $inst = Instance::forceCreate(['user_id' => $this->owner->id, 'name' => 'i', 'instance_name' => 'i', 'status' => 'connected']);
+        $chat = Chat::forceCreate(['user_id' => $this->owner->id, 'instance_id' => $inst->id, 'remote_jid' => '5511999990001@s.whatsapp.net', 'phone' => '5511999990001', 'contact_id' => $this->contact->id, 'last_message_at' => now(), 'last_message_from_me' => false]);
+
+        return [$inst, $chat];
+    }
+
+    public function test_opting_out_by_writing_is_confirmed_once_in_the_same_conversation(): void
+    {
+        \Illuminate\Support\Facades\Queue::fake();
+        [$inst, $chat] = $this->chatFor();
+        $svc = app(Consent::class);
+
+        $this->assertSame('revoked', $svc->handleKeyword($this->contact, 'PARAR!', $inst));
+        $m = \App\Models\ChatMessage::where('chat_id', $chat->id)->where('from_me', true)->first();
+        $this->assertNotNull($m);
+        $this->assertSame('bot', $m->source);
+        $this->assertStringContainsString('Casa Verde', $m->body);
+        $this->assertStringContainsString(OptOut::url($this->contact), $m->body);
+        $this->assertStringContainsString('#ENTRAR', $m->body);
+        \Illuminate\Support\Facades\Queue::assertPushed(\App\Jobs\SendChatMessageJob::class, 1);
+        $this->assertTrue($chat->fresh()->last_message_from_me);
+
+        // writing it again changes nothing, so nothing is answered
+        $svc->handleKeyword($this->contact->fresh(), 'stop', $inst);
+        $this->assertSame(1, \App\Models\ChatMessage::where('chat_id', $chat->id)->where('from_me', true)->count());
+
+        // coming back is confirmed too
+        $svc->handleKeyword($this->contact->fresh(), '/start', $inst);
+        $last = \App\Models\ChatMessage::where('chat_id', $chat->id)->where('from_me', true)->orderByDesc('id')->first();
+        $this->assertStringContainsString('will receive messages from Casa Verde again', $last->body);
+    }
+
+    public function test_confirmation_can_be_turned_off_or_rewritten(): void
+    {
+        \Illuminate\Support\Facades\Queue::fake();
+        [$inst, $chat] = $this->chatFor();
+        $this->owner->forceFill(['optout_confirm' => false])->save();
+        app(Consent::class)->handleKeyword($this->contact, 'stop', $inst);
+        $this->assertSame(0, \App\Models\ChatMessage::where('chat_id', $chat->id)->where('from_me', true)->count());
+
+        app(Consent::class)->grant($this->contact->fresh(), 'manual');
+        $this->owner->forceFill(['optout_confirm' => true, 'optout_confirm_text' => 'Tchau de {company}! Volte com {optin}'])->save();
+        app(Consent::class)->handleKeyword($this->contact->fresh(), 'stop', $inst);
+        $this->assertSame('Tchau de Casa Verde! Volte com #ENTRAR', \App\Models\ChatMessage::where('chat_id', $chat->id)->where('from_me', true)->first()->body);
+    }
+
+    public function test_confirmation_settings_are_saved(): void
+    {
+        $this->actingAs($this->owner)->post(route('consent.optout'), ['optout_mode' => 'off', 'optout_confirm' => '1', 'optout_confirm_text' => 'Ok {company}'])->assertRedirect();
+        $this->assertTrue((bool) $this->owner->fresh()->optout_confirm);
+        $this->assertSame('Ok {company}', $this->owner->fresh()->optout_confirm_text);
+        $this->post(route('consent.optout'), ['optout_mode' => 'off'])->assertRedirect();
+        $this->assertFalse((bool) $this->owner->fresh()->optout_confirm);
+    }
 }

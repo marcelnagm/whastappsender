@@ -1229,6 +1229,7 @@ Customers can stop receiving your messages by themselves, and you decide whether
 * One of the configured words, alone in the message: `#sair`, `/stop`, `#parar`, `#stop`, `parar`, `stop` (change them with `CONSENT_OPTOUT_KEYWORDS`).
 * Or a plain phrase, alone in the message: *descadastrar, sair da lista, não quero mais receber, unsubscribe, remove me, darme de baja...* (add yours with `CONSENT_OPTOUT_PHRASES="quero cancelar os avisos,..."`). Case, accents and punctuation are ignored ("PARAR!" works); a sentence that merely contains the word ("posso parar na loja?") does **not**.
 * Only what the customer types counts: an attendant writing "stop" does not opt anyone out.
+* **The customer gets an answer**: on the same channel (WhatsApp, Telegram, Instagram, e-mail, website chat) a short bot message confirms it (*"Done: Casa Verde will not send you more messages. To receive them again, send #ENTRAR or open: <link>"*); opting back in is confirmed too. It is sent once (writing "stop" again changes nothing) and it counts as answered, so the conversation does not pile up as "waiting". Turn it off or write your own text, with `{company}`, `{optin}` and `{link}`, in *Consent register → Let customers stop by themselves*.
 * **By the team**: if the customer asks in their own words, open the conversation and press **Customer asked to stop (opt out)**; **Opt back in** reverts it. **Copy opt-out link** copies the customer's personal link to paste in the chat.
 
 **2. By link**
@@ -1248,7 +1249,7 @@ Every contact has a personal, signed link (`/optout/<contact>/<signature>`, buil
 
 You can write your own sentence, with `{word}` and `{link}` placeholders: `Chega de avisos? Responda {word} ou toque: {link}`. The text uses the language of the account (*Settings → language*); it is not added to voice notes, and chat replies by your team are never changed.
 
-Needs `php artisan migrate` (adds `optout_mode` and `optout_text` to `users`).
+Needs `php artisan migrate` (adds `optout_mode`, `optout_text`, `optout_confirm` and `optout_confirm_text` to `users`).
 
 ## 🏆 Win/loss analysis
 

@@ -2230,5 +2230,10 @@
     "You will no longer receive campaigns or automatic replies on any channel.": "Dejarás de recibir campañas y respuestas automáticas en cualquier canal.",
     "You will not receive more messages from :company.": "No recibirás más mensajes de :company.",
     "Your own sentence (optional)": "Tu propia frase (opcional)",
-    "chat": "chat"
+    "chat": "chat",
+    "Confirm in the conversation when a customer opts out by writing": "Confirmar en la conversación cuando el cliente se dé de baja escribiendo",
+    "Done! You will receive messages from :company again.": "¡Listo! Volverás a recibir mensajes de :company.",
+    "Done: :company will not send you more messages. To receive them again, send :optin or open: :link": "Listo: :company no te enviará más mensajes. Para volver a recibirlos, envía :optin o abre: :link",
+    "Sends one short answer (\"Done, you will not receive more messages...\") on the same channel, so the customer knows it worked and how to come back. Opting back in is confirmed too.": "Envía una respuesta corta (\"Listo, no recibirás más mensajes...\") por el mismo canal, para que el cliente sepa que funcionó y cómo volver. Volver a recibir también se confirma.",
+    "Your own confirmation (optional). Use {company}, {optin} and {link}": "Tu propia confirmación (opcional). Usa {company}, {optin} y {link}"
 }

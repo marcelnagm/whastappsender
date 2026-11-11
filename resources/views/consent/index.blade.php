@@ -40,6 +40,13 @@
     <label class="form-label small mt-3 mb-1" for="oo-text">{{ __('Your own sentence (optional)') }}</label>
     <textarea class="form-control form-control-sm" id="oo-text" name="optout_text" rows="2" maxlength="400" placeholder="{{ __('Use {word} for the word and {link} for the personal link') }}">{{ $optoutText }}</textarea>
     <div class="form-text mb-2">{{ __('Default') }}: {{ $optoutDefaults['both'] }}</div>
+    <hr>
+    <div class="form-check form-switch">
+      <input class="form-check-input" type="checkbox" role="switch" id="oo-confirm" name="optout_confirm" value="1" @checked($optoutConfirm)>
+      <label class="form-check-label fw-semibold" for="oo-confirm">{{ __('Confirm in the conversation when a customer opts out by writing') }}</label>
+    </div>
+    <div class="form-text mb-2">{{ __('Sends one short answer ("Done, you will not receive more messages...") on the same channel, so the customer knows it worked and how to come back. Opting back in is confirmed too.') }}</div>
+    <textarea class="form-control form-control-sm" name="optout_confirm_text" rows="2" maxlength="400" placeholder="{{ __('Your own confirmation (optional). Use {company}, {optin} and {link}') }}">{{ $optoutConfirmText }}</textarea>
     <div class="form-text mb-2">{{ __('The link is personal for each contact and opens a page where the person confirms (opening it alone changes nothing). It applies to WhatsApp campaigns and to campaigns sent on other channels.') }}</div>
     <div><button class="btn btn-primary btn-sm">{{ __('Save') }}</button></div>
   </form>

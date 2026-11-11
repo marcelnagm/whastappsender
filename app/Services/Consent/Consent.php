@@ -3,6 +3,7 @@
 namespace App\Services\Consent;
 
 use App\Models\Contact;
+use App\Models\Instance;
 use App\Services\Channels\ContactLinks;
 use Illuminate\Support\Facades\DB;
 
@@ -51,17 +52,25 @@ class Consent
         return trim(preg_replace('/\s+/', ' ', preg_replace('/[^a-z0-9\s]/', '', strtolower(\Illuminate\Support\Str::ascii($s)))));
     }
 
-    /** Applies the keyword (if it is one) to the contact. @return string|null the action taken: "revoked" | "granted" */
-    public function handleKeyword(Contact $contact, ?string $text): ?string
+    /**
+     * Applies the keyword (if it is one) to the contact and, when something changed, confirms it in the conversation it came from.
+     *
+     * @return string|null the action taken: "revoked" | "granted"
+     */
+    public function handleKeyword(Contact $contact, ?string $text, ?Instance $instance = null): ?string
     {
         $k = self::keyword($text);
         if ($k === 'optout') {
+            $changed = !($contact->consent_status === 'revoked' && (int) $contact->ignore_me === 1);
             $this->revoke($contact, 'keyword', trim((string) $text));
+            $changed && app(OptOut::class)->confirm($contact, $instance, 'revoked');
 
             return 'revoked';
         }
         if ($k === 'optin') {
+            $changed = !($contact->consent_status === 'granted' && (int) $contact->ignore_me !== 1);
             $this->grant($contact, 'keyword', trim((string) $text));
+            $changed && app(OptOut::class)->confirm($contact, $instance, 'granted');
 
             return 'granted';
         }
