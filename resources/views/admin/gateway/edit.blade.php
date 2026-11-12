@@ -3,7 +3,7 @@
 @section('content')
 @php
     $s = fn ($k) => old($k, $gateway->setting($k)); $chk = fn ($k) => old('_token') ? old($k) : $gateway->setting($k);
-    $isMp = $provider === 'mercadopago'; $isEfi = $provider === 'efi'; $isStripe = $provider === 'stripe'; $isKeyEnv = in_array($provider, ['stripe', 'pagarme']); $hasSecretQuery = in_array($provider, ['efi', 'abacatepay', 'pagarme', 'pagbank']); $label = $info['label'];
+    $isMp = $provider === 'mercadopago'; $isEfi = $provider === 'efi'; $isStripe = $provider === 'stripe'; $isPaypal = $provider === 'paypal'; $isKeyEnv = in_array($provider, ['stripe', 'pagarme']); $hasSecretQuery = in_array($provider, ['efi', 'abacatepay', 'pagarme', 'pagbank']); $label = $info['label'];
 @endphp
 <div class="container py-4" style="max-width: 860px;">
     @include('layouts.partials.messages')
@@ -39,14 +39,14 @@
             <h6 class="fw-bold">{{ __('Credentials') }}</h6>
             <div class="mb-3">
                 <label class="form-label small" for="access_token">
-                    @if($isEfi){{ __('Client secret') }}@elseif($isMp){{ __('Access token') }}@elseif($isStripe || $provider === 'pagarme'){{ __('Secret key') }}@elseif($provider === 'pagbank'){{ __('Token') }}@else{{ __('API key') }}@endif
+                    @if($isEfi){{ __('Client secret') }}@elseif($isMp){{ __('Access token') }}@elseif($isPaypal){{ __('Client secret') }}@elseif($isStripe || $provider === 'pagarme'){{ __('Secret key') }}@elseif($provider === 'pagbank'){{ __('Token') }}@else{{ __('API key') }}@endif
                 </label>
                 <input type="password" class="form-control" id="access_token" name="access_token" placeholder="{{ $maskedToken ?: ($isMp ? 'APP_USR-… / TEST-…' : '') }}" autocomplete="new-password">
                 <div class="form-text">{{ __('Stored encrypted. Leave blank to keep the current one.') }} <a href="{{ $info['keys'] }}" target="_blank" rel="noopener">{{ __('Where do I find it?') }}</a></div>
             </div>
-            @if($isMp || $isEfi)
+            @if($isMp || $isEfi || $isPaypal)
             <div class="mb-3">
-                <label class="form-label small" for="public_key">{{ $isEfi ? __('Client ID') : __('Public key') }}</label>
+                <label class="form-label small" for="public_key">{{ ($isEfi || $isPaypal) ? __('Client ID') : __('Public key') }}</label>
                 <input type="text" class="form-control" id="public_key" name="public_key" value="{{ old('public_key', $gateway->public_key) }}" placeholder="{{ $isMp ? 'APP_USR-… / TEST-…' : 'Client_Id_…' }}">
                 @if($isMp)<div class="form-text">{{ __('Used in the browser to turn the card data into a token. Required for card payments.') }}</div>@endif
             </div>
@@ -71,12 +71,12 @@
             </div>
             @endif
             <div class="mb-4">
-                <label class="form-label small" for="webhook_secret">{{ $isMp ? __('Webhook secret (signature)') : ($isStripe ? __('Signing secret (whsec_…)') : __('Webhook secret')) }}</label>
+                <label class="form-label small" for="webhook_secret">{{ $isMp ? __('Webhook secret (signature)') : ($isStripe ? __('Signing secret (whsec_…)') : ($isPaypal ? __('Webhook ID') : __('Webhook secret'))) }}</label>
                 <div class="input-group">
                     <input type="password" class="form-control" id="webhook_secret" name="webhook_secret" placeholder="{{ $maskedSecret }}" autocomplete="new-password">
-                    @if($hasSecretQuery || $provider === 'asaas')<button type="button" class="btn btn-outline-secondary" onclick="var i=document.getElementById('webhook_secret');i.value=Array.from(crypto.getRandomValues(new Uint8Array(24))).map(function(b){return b.toString(16).padStart(2,'0')}).join('');i.type='text';">{{ __('Generate') }}</button>@endif
+                    @if(($hasSecretQuery || $provider === 'asaas') && !$isPaypal)<button type="button" class="btn btn-outline-secondary" onclick="var i=document.getElementById('webhook_secret');i.value=Array.from(crypto.getRandomValues(new Uint8Array(24))).map(function(b){return b.toString(16).padStart(2,'0')}).join('');i.type='text';">{{ __('Generate') }}</button>@endif
                 </div>
-                @if($isStripe)<div class="form-text">{{ __('Stripe signs every notification: paste the signing secret of the webhook endpoint (Stripe → Developers → Webhooks). Without it all notifications are rejected.') }}</div>@elseif(!$isMp)<div class="form-text">{{ $provider === 'asaas' ? __('Asaas: paste this same value as the "Auth token" of the webhook in the Asaas panel (32+ characters).') : __('Sent back to us in the webhook URL (?secret=…) so only the provider can notify. Use Generate, then save.') }}</div>@endif
+                @if($isPaypal)<div class="form-text">{{ __('PayPal checks the signature of every notification: paste the Webhook ID of the webhook created in the PayPal developer dashboard. Without it all notifications are rejected.') }}</div>@elseif($isStripe)<div class="form-text">{{ __('Stripe signs every notification: paste the signing secret of the webhook endpoint (Stripe → Developers → Webhooks). Without it all notifications are rejected.') }}</div>@elseif(!$isMp)<div class="form-text">{{ $provider === 'asaas' ? __('Asaas: paste this same value as the "Auth token" of the webhook in the Asaas panel (32+ characters).') : __('Sent back to us in the webhook URL (?secret=…) so only the provider can notify. Use Generate, then save.') }}</div>@endif
                 <div class="form-check mt-1">
                     <input class="form-check-input" type="checkbox" id="clear_webhook_secret" name="clear_webhook_secret" value="1">
                     <label class="form-check-label small" for="clear_webhook_secret">{{ __('Remove the stored secret') }}</label>
@@ -88,12 +88,14 @@
                 <input class="form-check-input" type="checkbox" id="card_enabled" name="card_enabled" value="1" @checked($chk('card_enabled'))>
                 <label class="form-check-label" for="card_enabled"><i class="bi bi-credit-card me-1"></i>{{ __('Credit card') }}@unless($isMp) — {{ __('paid on the provider\'s secure page') }}@endunless</label>
             </div>
+            @unless($isPaypal)
             <div class="form-check mb-3">
                 <input class="form-check-input" type="checkbox" id="pix_enabled" name="pix_enabled" value="1" @checked($chk('pix_enabled'))>
                 <label class="form-check-label" for="pix_enabled"><i class="bi bi-qr-code me-1"></i>Pix</label>
             </div>
+            @endunless
             <div class="row g-3 mb-4">
-                <div class="col-md-6">
+                <div class="col-md-6" @if($isPaypal) style="display:none" @endif>
                     <label class="form-label small" for="pix_expiration_minutes">{{ __('Pix validity (minutes)') }}</label>
                     <input type="number" min="30" max="43200" class="form-control" id="pix_expiration_minutes" name="pix_expiration_minutes" value="{{ $s('pix_expiration_minutes') }}">
                 </div>
@@ -116,6 +118,7 @@
             </div>
             <div class="form-text mb-4">
                 @if($isMp){{ __('Card: the card is charged by Mercado Pago every cycle. Pix has no automatic debit: each renewal invoice gets a Pix code that is generated and emailed to the customer.') }}
+                @elseif($isPaypal){{ __('PayPal Subscriptions charge the customer every cycle and notify us (renewal, failure, cancelation). A price increase of more than about 20% may need the customer to approve it on PayPal.') }}
                 @elseif($isStripe){{ __('Card: Stripe Billing charges the card every cycle and notifies us (renewal, failure, cancelation). Pix is paid on Stripe\'s page and cannot be renewed automatically.') }}
                 @else{{ __('With this provider the card is paid once per invoice. Automatic renewal works with Pix: each renewal invoice gets a new Pix code that is generated and emailed to the customer.') }}@endif
             </div>
@@ -135,6 +138,8 @@
             <p class="small text-muted mb-2">{{ __('Pix: use the button below to register the URL at Efí. Card: the notification URL is sent with each charge automatically.') }}</p>
             @elseif($isStripe)
             <p class="small text-muted mb-2">{{ __('In Stripe → Developers → Webhooks add an endpoint with this URL and the events checkout.session.completed, checkout.session.async_payment_succeeded, invoice.paid, invoice.payment_failed, customer.subscription.deleted, charge.refunded and charge.dispute.created, then paste its signing secret above. For the "Manage card" button, activate the customer portal in Stripe → Settings → Billing → Customer portal.') }}</p>
+            @elseif($isPaypal)
+            <p class="small text-muted mb-2">{{ __('In the PayPal developer dashboard → your app → Webhooks add this URL with the events CHECKOUT.ORDER.APPROVED, PAYMENT.CAPTURE.COMPLETED, PAYMENT.CAPTURE.REFUNDED, PAYMENT.SALE.COMPLETED, PAYMENT.SALE.REFUNDED, BILLING.SUBSCRIPTION.CANCELLED, BILLING.SUBSCRIPTION.SUSPENDED, BILLING.SUBSCRIPTION.EXPIRED, BILLING.SUBSCRIPTION.PAYMENT.FAILED and CUSTOMER.DISPUTE.CREATED, then paste the Webhook ID above. Use the Test connection button to check the Client ID and secret.') }}</p>
             @elseif($provider === 'pagarme')
             <p class="small text-muted mb-2">{{ __('In Pagar.me → Settings → Webhooks add this URL with ?secret= followed by the webhook secret above, and the events order.paid and charge.paid.') }}</p>
             @elseif($provider === 'pagbank')

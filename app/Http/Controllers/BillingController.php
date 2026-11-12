@@ -75,6 +75,8 @@ class BillingController extends Controller
     {
         abort_unless((int) $invoice->user_id === (int) Auth::id(), 403);
 
+        $this->captureReturningPayPalOrder($request, $invoice);
+
         // Several providers can be active: the customer picks one (?gateway=asaas); default = first ready
         $gateway = $this->payments->gateway($request->query('gateway'));
         $available = collect($this->payments->available())->map(fn ($g) => config("payments.providers.{$g->name()}.label", $g->name()))->all();
@@ -156,6 +158,25 @@ class BillingController extends Controller
         }
 
         return redirect()->route('billing.invoice', $invoice)->with('success', $result->message ?: ($result->pix ? __('Pix generated. Pay with the QR code below.') : __('Payment being processed.')));
+    }
+
+    /**
+     * PayPal sends the customer back with ?token=<order id>: the order is captured now instead of waiting for the webhook.
+     * Only the order we created for this very invoice is accepted.
+     */
+    private function captureReturningPayPalOrder(Request $request, Invoice $invoice): void
+    {
+        $token = (string) $request->query('token', '');
+        if ($token === '' || !$invoice->isOpen() || $invoice->gateway !== 'paypal' || $invoice->gateway_invoice_id !== $token) {
+            return;
+        }
+
+        try {
+            app(\App\Services\Payments\GatewayWebhookHandler::class)->handle('paypal', 'CHECKOUT.ORDER.APPROVED', $token);
+            $invoice->refresh();
+        } catch (\Throwable $e) {
+            \Log::warning('PayPal capture on return failed: ' . $e->getMessage());   // the webhook will do it
+        }
     }
 
     /** Polled by the checkout page while it waits for a Pix / first recurring charge. */

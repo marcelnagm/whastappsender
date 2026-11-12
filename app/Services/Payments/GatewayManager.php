@@ -22,6 +22,7 @@ class GatewayManager
             GatewayConfig::ABACATEPAY => new AbacatePayGateway($config),
             GatewayConfig::PAGARME => new PagarMeGateway($config),
             GatewayConfig::STRIPE => new StripeGateway($config),
+            GatewayConfig::PAYPAL => new PayPalGateway($config),
             GatewayConfig::PAGBANK => new PagBankGateway($config),
             default => new MercadoPagoGateway($config),
         };

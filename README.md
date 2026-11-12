@@ -139,7 +139,7 @@ Real screens of the system running with **fictional demo data** (a plant shop). 
 | [Team & roles](#-team--roles-sub-users) | Sub-users working for the contract account (admin, approver, creator, sender, attendant, analyst) |
 | [Audience & approval](#-audience--approval-of-campaigns) | Choose the audience by score and channels; approval flow before sending |
 | [Fair Send Queue](#️-fair-send-queue) | Balanced batches across users and sessions, with plan priority |
-| [Plans & Billing](#-plans--billing) | Freemium + 3 plans, due dates, blocking, Asaas · Efí · AbacatePay · Stone (Pagar.me) · Stripe · PagBank · Mercado Pago (Pix / card, customer chooses) |
+| [Plans & Billing](#-plans--billing) | Freemium + 3 plans, due dates, blocking, Asaas · Efí · AbacatePay · Stone (Pagar.me) · Stripe · PayPal · PagBank · Mercado Pago (Pix / card, customer chooses) |
 | [Environment variables](#-environment-variables) | Every `.env` variable, grouped by area, with what it controls and its default |
 | [Tests](#-tests) | PHPUnit suite |
 | [Installation](#️-installation--activation) | `install.sh` (local / VPS / update), `start-local.sh` (Docker infra for local dev), manual steps, production Docker (`.docker/`) |
@@ -1557,6 +1557,7 @@ Seven providers are built in, picked for their low public fees or for being the 
 | **AbacatePay** | R$ 0,80 | 3,50% + R$ 0,60 | provider's hosted page | no (Pix renewal) |
 | **Stone (Pagar.me)** | under negotiation | ~3,19% (list) / negotiable | hosted checkout (order with `checkouts`) | no (Pix renewal) |
 | **Stripe** | 1,19% (invite only) | 3,99% + R$ 0,39 | Stripe Checkout page (card **and** Pix) | card (Stripe Billing) |
+| **PayPal** | — (no Pix) | ~4,79% + R$ 0,60 | PayPal page (balance or card) | card / PayPal (Subscriptions) |
 | **PagBank** | up to 1,89% | 4,99% + R$ 0,40 (14 days) · 3,99% + R$ 0,40 (30 days) | hosted Checkout | no (Pix renewal) |
 | **Mercado Pago** | 0,99% | 4,98% (immediate) · 3,98% (30 days) | card tokenised in the browser, paid here | yes (`/preapproval`) |
 
@@ -1574,6 +1575,10 @@ Common to all: `APP_URL` must be a public **https** address (providers only acce
   * **Automatic card renewal (Stripe Billing):** when the customer ticks "Renew automatically" and pays by card, Checkout opens in `subscription` mode with a recurring price (monthly or yearly). Stripe charges the card each cycle; `invoice.paid` settles the renewal invoice here (issued on the spot if `billing:run` has not yet), `invoice.payment_failed` emails the customer, and `customer.subscription.deleted` turns automatic renewal off. Plan price changes update the Stripe subscription (no proration). Stopping automatic renewal cancels the Stripe subscription.
   * **Manage card and renewal:** the billing screen shows a button to Stripe's customer portal (enable it in Stripe → Settings → Billing → Customer portal).
   * **Refunds and disputes** (`charge.refunded`, `charge.dispute.created`) are recorded on the subscription timeline and in the logs; access is not revoked automatically. Pix cannot be renewed automatically with Stripe (its QR code lives on Stripe's page).
+* **PayPal** — in the [PayPal developer dashboard](https://developer.paypal.com/dashboard/applications) create an app (Sandbox or Live), paste its **Client ID** and **Client secret** (tick *Test mode* for Sandbox) and click *Test connection*. Then, in the app's **Webhooks**, add the URL shown with the events `CHECKOUT.ORDER.APPROVED`, `PAYMENT.CAPTURE.COMPLETED`, `PAYMENT.CAPTURE.REFUNDED`, `PAYMENT.SALE.COMPLETED`, `PAYMENT.SALE.REFUNDED`, `BILLING.SUBSCRIPTION.CANCELLED`, `BILLING.SUBSCRIPTION.SUSPENDED`, `BILLING.SUBSCRIPTION.EXPIRED`, `BILLING.SUBSCRIPTION.PAYMENT.FAILED` and `CUSTOMER.DISPUTE.CREATED`, and paste the **Webhook ID** in the admin. Every notification is verified by PayPal itself (`verify-webhook-signature`); without the Webhook ID all are rejected.
+  * **One-time payment:** an Orders v2 checkout (PayPal balance or card on PayPal's page). When the customer comes back to the invoice the order is captured immediately (only the order created for that invoice is accepted); `CHECKOUT.ORDER.APPROVED` / `PAYMENT.CAPTURE.COMPLETED` do the same, idempotently, if the customer never returns. Amount and currency must cover the invoice.
+  * **Automatic renewal (PayPal Subscriptions):** with "Renew automatically" a billing plan (monthly or yearly, one per subscription) and a subscription are created; PayPal charges every cycle and `PAYMENT.SALE.COMPLETED` settles the renewal invoice (the first charge included). Payment failures email the customer, a canceled/suspended/expired subscription turns the renewal off, stopping automatic renewal cancels it at PayPal, and a plan price change updates the plan's price (an increase above about 20% may need the customer's approval on PayPal). No Pix: PayPal does not offer it.
+  * Refunds and disputes are recorded on the subscription timeline; access is not revoked automatically. Charges use the invoice currency (`BILLING_CURRENCY`); PayPal supports BRL for Brazilian accounts.
 * **PagBank** — paste the **token** (Bearer) and tick *Test mode* for the sandbox token. Generate a *Webhook secret* and save: the notification URL (with `?secret=`) is sent with every Pix order and card checkout. Pix uses `POST /orders` with a QR code; card uses the hosted Checkout. The payment-page link of the card checkout is read from the response `links` (`rel: PAY`), which was not confirmed in the docs I could read: test it in the sandbox.
 * **Mercado Pago** — see below.
 
@@ -1781,7 +1786,7 @@ Mailbox credentials are **not** in `.env`: each user types them in the **Email**
 | `BILLING_SUSPENSION_DAYS` | 30 | Days read-only before suspension |
 | `BILLING_PENDING_DAYS` | 3 | A paid plan without trial must be paid within N days or the request expires |
 
-Gateway credentials (Asaas, Efí, AbacatePay, Stone, Stripe, PagBank, Mercado Pago) are **not** in `.env`: they are entered in **Admin → Payment gateway** and stored encrypted.
+Gateway credentials (Asaas, Efí, AbacatePay, Stone, Stripe, PayPal, PagBank, Mercado Pago) are **not** in `.env`: they are entered in **Admin → Payment gateway** and stored encrypted.
 
 ### Alerts and monitoring
 
@@ -1802,7 +1807,7 @@ Gateway credentials (Asaas, Efí, AbacatePay, Stone, Stripe, PagBank, Mercado Pa
 
 ## 🧪 Tests
 
-`vendor/bin/phpunit` (in-memory SQLite, no external services): fair queue planner and command, chat backend, Telegram, Instagram and TikTok channels (webhook secret/signature, OAuth, token refresh, inbound, AI reply through the same bot/account, reply window, settings), channel statistics and cross-channel contact links, unresponsive-contact deactivation, contact score ranking, Facebook Messenger, team roles and approval, audience by score and channel, plan queue priority, quick replies, consent register (opt-in / opt-out proof, keywords, forms), custom contact fields and segments, automations (triggers, actions, loops), follow-up tasks and reminders, team inbox (balanced assignment, visibility, labels, internal notes) and deals opened from conversations and forms, sales pipeline, e-mail channel (SMTP send, IMAP mailbox through webklex/php-imap with a scripted server, message mapping, threading, AI reply, loop protection, contact unification), embeddable contact forms (public script/endpoint, spam protection, contact + chat creation, AI reply channel choice), the new channel / inbox / ranking API endpoints and MCP tools, avatar caching, billing lifecycle and plan enforcement, the Mercado Pago gateway (admin settings, Pix, card, recurrence, webhook) and the Asaas / Efí / AbacatePay / Stone (Pagar.me) / Stripe / PagBank gateways (HTTP faked), Stripe Billing (card renewal, renewal/failure/cancelation/refund/dispute events, portal).
+`vendor/bin/phpunit` (in-memory SQLite, no external services): fair queue planner and command, chat backend, Telegram, Instagram and TikTok channels (webhook secret/signature, OAuth, token refresh, inbound, AI reply through the same bot/account, reply window, settings), channel statistics and cross-channel contact links, unresponsive-contact deactivation, contact score ranking, Facebook Messenger, team roles and approval, audience by score and channel, plan queue priority, quick replies, consent register (opt-in / opt-out proof, keywords, forms), custom contact fields and segments, automations (triggers, actions, loops), follow-up tasks and reminders, team inbox (balanced assignment, visibility, labels, internal notes) and deals opened from conversations and forms, sales pipeline, e-mail channel (SMTP send, IMAP mailbox through webklex/php-imap with a scripted server, message mapping, threading, AI reply, loop protection, contact unification), embeddable contact forms (public script/endpoint, spam protection, contact + chat creation, AI reply channel choice), the new channel / inbox / ranking API endpoints and MCP tools, avatar caching, billing lifecycle and plan enforcement, the Mercado Pago gateway (admin settings, Pix, card, recurrence, webhook) and the Asaas / Efí / AbacatePay / Stone (Pagar.me) / Stripe / PayPal / PagBank gateways (HTTP faked), Stripe Billing (card renewal, renewal/failure/cancelation/refund/dispute events, portal).
 
 * * *
 
@@ -1818,7 +1823,7 @@ Gateway credentials (Asaas, Efí, AbacatePay, Stone, Stripe, PagBank, Mercado Pa
 * ✅ **Multi-language UI:** English, Portuguese (BR) and Spanish with a language selector (`config/languages.php`).
 * ✅ **Fair Send Queue:** every batch of 50 messages is balanced across users and sessions, so no campaign starves the others.
 * ✅ **Plans & Billing:** freemium + 3 plans, trial, due dates, grace period and read-only blocking for non-payment.
-* ✅ **Payments (Asaas, Efí, AbacatePay, Stone, Stripe, PagBank, Mercado Pago):** Pix and credit card, one-time or automatic renewal, several providers at once, configured from the admin area.
+* ✅ **Payments (Asaas, Efí, AbacatePay, Stone, Stripe, PayPal, PagBank, Mercado Pago):** Pix and credit card, one-time or automatic renewal, several providers at once, configured from the admin area.
 * ✅ **Omnichannel inbox:** WhatsApp, Telegram, Instagram, Facebook Messenger, TikTok and e-mail (your own SMTP/IMAP mailbox) in one chat, with per-channel statistics and linked contacts.
 * ✅ **Embeddable contact forms:** one `<script>` line on any site; leads become contacts and conversations in the CRM and the AI replies.
 * ✅ **Team & roles:** sub-users (admin, approver, creator, sender, attendant, analyst) working for the contract account.

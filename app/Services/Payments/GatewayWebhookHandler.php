@@ -53,7 +53,7 @@ class GatewayWebhookHandler
         // provider-driven recurrence (Stripe Billing): the provider charges, cancels or refunds on its own
         $event = $r['event'] ?? null;
         if (in_array($event, ['payment_failed', 'recurrence_canceled', 'refunded', 'dispute'], true)) {
-            return $this->applyEvent($event, $r);
+            return $this->applyEvent($provider, $event, $r);
         }
 
         if ($r['status'] !== 'paid') {
@@ -146,7 +146,7 @@ class GatewayWebhookHandler
         return "invoice {$invoice->number} paid (renewal)";
     }
 
-    private function applyEvent(string $event, array $r): string
+    private function applyEvent(string $provider, string $event, array $r): string
     {
         if ($event === 'payment_failed' || $event === 'recurrence_canceled') {
             $sub = $this->subscriptionOf($r);
@@ -173,7 +173,7 @@ class GatewayWebhookHandler
 
         // refund / dispute: access is not revoked automatically; it is recorded for the team to decide
         $invoice = (!empty($r['invoice_number']) ? Invoice::where('number', $r['invoice_number'])->first() : null)
-            ?? (!empty($r['stripe_invoice']) ? Invoice::where('gateway_invoice_id', $r['stripe_invoice'])->first() : null);
+            ?? (!empty($r['ref_id']) ? Invoice::where('gateway_invoice_id', $r['ref_id'])->first() : null);
         $sub = $invoice?->subscription;
 
         if ($sub) {
@@ -186,7 +186,7 @@ class GatewayWebhookHandler
             $payload['refunded_cents'] = $r['amount_cents'];
             $invoice->update(['gateway_payload' => $payload]);
         }
-        Log::warning("stripe {$event} {$r['gateway_id']} ({$r['amount_cents']} {$r['currency']})" . ($invoice ? " on invoice {$invoice->number}" : ' (invoice not identified)'));
+        Log::warning("{$provider} {$event} {$r['gateway_id']} ({$r['amount_cents']} {$r['currency']})" . ($invoice ? " on invoice {$invoice->number}" : ' (invoice not identified)'));
 
         return $event . ($invoice ? " on invoice {$invoice->number}" : ' (invoice not identified)');
     }

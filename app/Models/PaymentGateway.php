@@ -14,9 +14,10 @@ class PaymentGateway extends Model
     public const PAGARME = 'pagarme';     // Stone's online gateway
     public const STRIPE = 'stripe';
     public const PAGBANK = 'pagbank';
+    public const PAYPAL = 'paypal';
 
     /** Providers the customer can be offered, in the order shown to admins/customers (see config/payments.php) */
-    public const PROVIDERS = [self::ASAAS, self::EFI, self::ABACATEPAY, self::PAGARME, self::STRIPE, self::PAGBANK, self::MERCADOPAGO];
+    public const PROVIDERS = [self::ASAAS, self::EFI, self::ABACATEPAY, self::PAGARME, self::STRIPE, self::PAYPAL, self::PAGBANK, self::MERCADOPAGO];
 
     protected $fillable = ['provider', 'enabled', 'access_token', 'public_key', 'webhook_secret', 'settings'];
 
@@ -60,7 +61,7 @@ class PaymentGateway extends Model
 
     public function isConfigured(): bool
     {
-        if ($this->provider === self::EFI) {
+        if (in_array($this->provider, [self::EFI, self::PAYPAL], true)) {
             return filled($this->access_token) && filled($this->public_key); // client secret + client id
         }
 

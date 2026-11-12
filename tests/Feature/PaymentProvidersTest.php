@@ -496,7 +496,7 @@ class PaymentProvidersTest extends TestCase
         ])->assertSessionHas('warning');
         $this->assertSame(['card'], PaymentGateway::for('efi')->fresh()->methods());
 
-        $this->actingAs($admin)->get('/admin/payment-gateway?provider=paypal')->assertNotFound();
+        $this->actingAs($admin)->get('/admin/payment-gateway?provider=nopay')->assertNotFound();
         $this->actingAs($this->user('plain'))->post('/admin/payment-gateway', ['provider' => 'asaas'])->assertRedirect();
     }
 

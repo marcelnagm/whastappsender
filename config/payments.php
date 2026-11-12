@@ -37,6 +37,12 @@ return [
             'docs' => 'https://docs.stripe.com/billing/subscriptions/build-subscriptions?ui=stripe-hosted',
             'keys' => 'https://dashboard.stripe.com/apikeys',
         ],
+        'paypal' => [
+            'label' => 'PayPal',
+            'fees' => ['pix' => 'n/d (sem Pix)', 'card' => '~4,79% + R$ 0,60 (Brasil, tabela)', 'settlement' => 'saldo PayPal na hora'],
+            'docs' => 'https://developer.paypal.com/docs/api/overview/',
+            'keys' => 'https://developer.paypal.com/dashboard/applications',
+        ],
         'pagbank' => [
             'label' => 'PagBank',
             'fees' => ['pix' => 'até 1,89%', 'card' => '4,99% + R$ 0,40 (14 dias) · 3,99% + R$ 0,40 (30 dias)', 'settlement' => '14 ou 30 dias'],

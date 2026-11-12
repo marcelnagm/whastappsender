@@ -92,7 +92,7 @@
                             @endif
                             @if(in_array('card', $methods))
                                 <input type="radio" class="btn-check" name="method" id="mCard" value="card" autocomplete="off" @checked(old('method', $methods[0] ?? '') === 'card')>
-                                <label class="btn btn-outline-primary" for="mCard"><i class="bi bi-credit-card me-1"></i>{{ __('Credit card') }}</label>
+                                <label class="btn btn-outline-primary" for="mCard"><i class="bi bi-credit-card me-1"></i>{{ $selected === 'paypal' ? __('PayPal or card') : __('Credit card') }}</label>
                             @endif
                         </div>
 

@@ -377,7 +377,7 @@ class StripeGateway extends HostedGateway
             'invoice_number' => ($c['metadata']['invoice'] ?? null) ?: null,
             'amount_cents' => (int) ($c['amount_refunded'] ?? 0),
             'currency' => strtoupper((string) ($c['currency'] ?? '')),
-            'stripe_invoice' => ($c['invoice'] ?? null) ?: null,
+            'ref_id' => ($c['invoice'] ?? null) ?: ($c['payment_intent'] ?? null),
             'full' => (bool) ($c['refunded'] ?? false),
         ])];
     }
@@ -388,7 +388,7 @@ class StripeGateway extends HostedGateway
             'event' => 'dispute',
             'amount_cents' => (int) ($d['amount'] ?? 0),
             'currency' => strtoupper((string) ($d['currency'] ?? '')),
-            'stripe_charge' => ($d['charge'] ?? null) ?: null,
+            'ref_id' => ($d['charge'] ?? null) ?: null,
             'reason' => $d['reason'] ?? null,
         ])];
     }

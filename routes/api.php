@@ -39,7 +39,7 @@ Route::post('/webhooks/telegram/{instance}', [\App\Http\Controllers\TelegramWebh
 Route::post('/webhooks/mercadopago', [\App\Http\Controllers\MercadoPagoWebhookController::class, 'receive'])->name('webhooks.mercadopago');
 // Asaas / Efí (appends /pix to the registered URL) / AbacatePay
 Route::post('/webhooks/{provider}/{path?}', [\App\Http\Controllers\GatewayWebhookController::class, 'receive'])
-    ->where('provider', 'asaas|efi|abacatepay|pagarme|stripe|pagbank')->where('path', '.*')->name('webhooks.gateway');
+    ->where('provider', 'asaas|efi|abacatepay|pagarme|stripe|paypal|pagbank')->where('path', '.*')->name('webhooks.gateway');
 
 // Public contact form endpoints (used by the embeddable script on the owner's website; no login)
 Route::prefix('public/forms')->group(function () {
