@@ -116,6 +116,7 @@
             </div>
             <div class="form-text mb-4">
                 @if($isMp){{ __('Card: the card is charged by Mercado Pago every cycle. Pix has no automatic debit: each renewal invoice gets a Pix code that is generated and emailed to the customer.') }}
+                @elseif($isStripe){{ __('Card: Stripe Billing charges the card every cycle and notifies us (renewal, failure, cancelation). Pix is paid on Stripe\'s page and cannot be renewed automatically.') }}
                 @else{{ __('With this provider the card is paid once per invoice. Automatic renewal works with Pix: each renewal invoice gets a new Pix code that is generated and emailed to the customer.') }}@endif
             </div>
 
@@ -133,7 +134,7 @@
             @elseif($isEfi)
             <p class="small text-muted mb-2">{{ __('Pix: use the button below to register the URL at Efí. Card: the notification URL is sent with each charge automatically.') }}</p>
             @elseif($isStripe)
-            <p class="small text-muted mb-2">{{ __('In Stripe → Developers → Webhooks add an endpoint with this URL and the events checkout.session.completed and checkout.session.async_payment_succeeded, then paste its signing secret above.') }}</p>
+            <p class="small text-muted mb-2">{{ __('In Stripe → Developers → Webhooks add an endpoint with this URL and the events checkout.session.completed, checkout.session.async_payment_succeeded, invoice.paid, invoice.payment_failed, customer.subscription.deleted, charge.refunded and charge.dispute.created, then paste its signing secret above. For the "Manage card" button, activate the customer portal in Stripe → Settings → Billing → Customer portal.') }}</p>
             @elseif($provider === 'pagarme')
             <p class="small text-muted mb-2">{{ __('In Pagar.me → Settings → Webhooks add this URL with ?secret= followed by the webhook secret above, and the events order.paid and charge.paid.') }}</p>
             @elseif($provider === 'pagbank')

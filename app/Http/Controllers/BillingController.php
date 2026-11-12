@@ -36,6 +36,7 @@ class BillingController extends Controller
             'enabled' => $this->entitlements->enabled(),
             'unlimited' => $this->entitlements->isUnlimited($user),
             'blocked' => $this->entitlements->isBlocked($user),
+            'portal' => (bool) ($subscription && $subscription->gateway === 'stripe' && $subscription->gateway_customer_id && $subscription->auto_renew),
         ]);
     }
 
@@ -163,6 +164,17 @@ class BillingController extends Controller
         abort_unless((int) $invoice->user_id === (int) Auth::id(), 403);
 
         return response()->json(['status' => $invoice->fresh()->status, 'paid' => $invoice->fresh()->status === Invoice::PAID]);
+    }
+
+    /** Stripe's customer portal (change card, see Stripe's receipts, cancel the renewal). */
+    public function portal()
+    {
+        $sub = $this->subscriptions->current(Auth::user());
+        $gateway = $sub && $sub->gateway_customer_id && $sub->gateway === 'stripe' ? $this->payments->gateway('stripe') : null;
+        $url = $gateway instanceof \App\Services\Payments\StripeGateway ? $gateway->portalUrl($sub->gateway_customer_id, route('billing.index')) : null;
+
+        return $url ? redirect()->away($url)
+            : redirect()->route('billing.index')->withErrors(['portal' => __('Could not open the card management page right now. Try again in a moment.')]);
     }
 
     public function stopAutoRenew()

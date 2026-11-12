@@ -143,6 +143,7 @@ Route::group(['namespace' => 'App\Http\Controllers', 'middleware' => ['auth', 's
     Route::get('/billing/invoices/{invoice}', [BillingController::class, 'invoice'])->name('billing.invoice');
     Route::post('/billing/invoices/{invoice}/pay', [BillingController::class, 'pay'])->name('billing.pay');
     Route::get('/billing/invoices/{invoice}/status', [BillingController::class, 'status'])->name('billing.status');
+    Route::get('/billing/portal', [BillingController::class, 'portal'])->name('billing.portal');
     Route::post('/billing/auto-renew/stop', [BillingController::class, 'stopAutoRenew'])->name('billing.autorenew.stop');
 
     // Telegram bots (channel = telegram instances)

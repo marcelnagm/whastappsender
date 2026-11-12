@@ -599,7 +599,7 @@ class PaymentProvidersTest extends TestCase
             && str_contains($q->body(), 'client_reference_id=' . $invoice->number) && str_contains($q->body(), 'unit_amount%5D=' . $invoice->amount_cents));
         Http::assertSent(fn ($q) => str_contains($q->body(), 'payment_method_types%5B0%5D=card'));
         $this->assertTrue(app(GatewayManager::class)->driver('stripe')->config()->isSandbox());
-        $this->assertFalse(app(GatewayManager::class)->driver('stripe')->supportsRecurrence(), 'Pix is paid on Stripe\'s page: no automatic Pix renewal');
+        $this->assertFalse(app(GatewayManager::class)->driver('stripe')->supportsPixRecurrence(), 'Pix is paid on Stripe\'s page: no automatic Pix renewal');
     }
 
     public function test_stripe_webhook_requires_a_valid_fresh_signature_then_rereads_the_session(): void

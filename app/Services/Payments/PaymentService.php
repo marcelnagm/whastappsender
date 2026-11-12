@@ -59,6 +59,9 @@ class PaymentService
         if ($request->recurring && $request->method === 'card' && !$gateway->supportsCardRecurrence()) {
             $fail('recurring', __('Automatic card renewal is not available with this payment provider. Pay by Pix to renew automatically.'));
         }
+        if ($request->recurring && $request->method === 'pix' && method_exists($gateway, 'supportsPixRecurrence') && !$gateway->supportsPixRecurrence()) {
+            $fail('recurring', __('Automatic renewal with this payment provider is only available on the card.'));
+        }
         if ($request->method === 'card' && $gateway->cardMode() === 'token' && !$request->cardToken) {
             $fail('card', __('Enter the card data again.'));
         }
@@ -196,13 +199,15 @@ class PaymentService
         $invoice->update([
             'gateway' => $gateway->name(),
             'payment_method' => 'card',
-            'gateway_payload' => ['method' => 'card', 'recurring' => true] + ($invoice->gateway_payload ?? []),
+            'gateway_invoice_id' => $result->gatewayId ?: $invoice->gateway_invoice_id,
+            'gateway_payload' => ($result->redirectUrl ? ['redirect_url' => $result->redirectUrl, 'pending_card' => true] : [])
+                + ['method' => 'card', 'recurring' => true] + ($invoice->gateway_payload ?? []),
         ]);
 
         return new PaymentResult(
             PaymentResult::PENDING,
             __('Card authorized for automatic renewal. We are confirming the first charge; this page updates by itself.'),
-            null, null, $result->recurringId, 'credit_card'
+            null, null, $result->recurringId, 'credit_card', $result->redirectUrl
         );
     }
 

@@ -60,6 +60,10 @@
                             @endif
                         </dl>
 
+                        @if(!empty($portal))
+                            <a href="{{ route('billing.portal') }}" class="btn btn-outline-secondary btn-sm mb-2"><i class="bi bi-credit-card me-1"></i>{{ __('Manage card and renewal') }}</a>
+                        @endif
+
                         @if($subscription->cancel_at_period_end)
                             <div class="alert alert-secondary small py-2">{{ __('Cancellation scheduled. You keep your plan until the end of the paid period.') }}</div>
                             <form method="POST" action="{{ route('billing.resume') }}">@csrf

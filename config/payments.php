@@ -34,7 +34,7 @@ return [
         'stripe' => [
             'label' => 'Stripe',
             'fees' => ['pix' => '1,19% (sob convite)', 'card' => '3,99% + R$ 0,39', 'settlement' => 'conforme a conta'],
-            'docs' => 'https://docs.stripe.com/payments/pix',
+            'docs' => 'https://docs.stripe.com/billing/subscriptions/build-subscriptions?ui=stripe-hosted',
             'keys' => 'https://dashboard.stripe.com/apikeys',
         ],
         'pagbank' => [
