@@ -1,7 +1,7 @@
 @extends('layouts.app-master')
 
 @section('content')
-@php $money = fn ($cents, $cur = 'BRL') => ($cur === 'BRL' ? 'R$ ' : $cur . ' ') . number_format($cents / 100, 2, ',', '.'); @endphp
+@php $money = fn ($cents, $cur = 'BRL') => \App\Services\Billing\Currencies::format((int) $cents, $cur); @endphp
 <div class="container py-4" style="max-width: 760px;">
     <a href="{{ route('billing.index') }}" class="small text-decoration-none"><i class="bi bi-arrow-left me-1"></i>{{ __('Back to plan and billing') }}</a>
 
@@ -40,6 +40,7 @@
                 @if(!$gateway)
                     <div class="alert alert-info small mb-0">
                         <i class="bi bi-info-circle me-1"></i>
+                        @if($pixBlocked){{ __('No enabled payment provider charges in :currency right now.', ['currency' => $invoice->currency]) }} @endif
                         {{ __('Online payment is not available right now. Contact support to pay this invoice; access is restored as soon as the payment is confirmed.') }}
                     </div>
                 @else
@@ -64,6 +65,10 @@
                             <span><i class="bi bi-credit-card me-1"></i>{{ __('A card payment page was opened for this invoice. If you did not finish, you can go back to it.') }}</span>
                             <a href="{{ $cardUrl }}" class="btn btn-sm btn-outline-primary text-nowrap">{{ __('Open card page') }}</a>
                         </div>
+                    @endif
+
+                    @if($pixBlocked)
+                        <div class="alert alert-warning small"><i class="bi bi-exclamation-triangle me-1"></i>{{ __('Pix is only available for payments in BRL. This invoice is in :currency: pay by card or PayPal.', ['currency' => $invoice->currency]) }}</div>
                     @endif
 
                     @if(count($available) > 1)

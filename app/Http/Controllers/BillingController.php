@@ -6,6 +6,7 @@ use App\Models\Invoice;
 use App\Models\Plan;
 use App\Services\Billing\Entitlements;
 use App\Services\Billing\SubscriptionService;
+use App\Services\Billing\Currencies;
 use App\Services\Payments\PayRequest;
 use App\Services\Payments\PaymentResult;
 use App\Services\Payments\PaymentService;
@@ -37,7 +38,59 @@ class BillingController extends Controller
             'unlimited' => $this->entitlements->isUnlimited($user),
             'blocked' => $this->entitlements->isBlocked($user),
             'portal' => (bool) ($subscription && $subscription->gateway === 'stripe' && $subscription->gateway_customer_id && $subscription->auto_renew),
+            'currency' => Currencies::forUser($user),
+            'currencies' => $this->offeredCurrencies(),
         ]);
+    }
+
+    /** @return array<string,string> code => label of the currencies the customer can pay in now (BRL + those some ready gateway charges) */
+    private function offeredCurrencies(): array
+    {
+        $out = [];
+        foreach (Currencies::all() as $code => $def) {
+            if ($code === Currencies::base() || $this->payments->available($code)) {
+                $out[$code] = $def['symbol'] . ' · ' . $code;
+            }
+        }
+
+        return $out;
+    }
+
+    /** Per-customer payment currency. Invoices issued from now on use it; the open one is replaced unless a payment already started. */
+    public function setCurrency(Request $request)
+    {
+        $user = Auth::user();
+        $code = strtoupper((string) $request->validate(['currency' => 'required|string|size:3'])['currency']);
+
+        if (!array_key_exists($code, $this->offeredCurrencies())) {
+            return back()->withErrors(['currency' => __('This currency is not available.')]);
+        }
+        if ($code === Currencies::forUser($user)) {
+            return back();
+        }
+
+        $sub = $this->subscriptions->current($user);
+        if ($sub && ($open = $sub->openInvoice()) && $open->gateway_invoice_id && strtoupper((string) $open->currency) !== $code) {
+            return back()->withErrors(['currency' => __('A payment is in progress on the open invoice. Finish or wait for it before changing the currency.')]);
+        }
+
+        $user->forceFill(['billing_currency' => $code === Currencies::base() ? null : $code])->save();
+
+        $notes = [];
+        if ($sub && $sub->auto_renew && $sub->gateway_subscription_id) {
+            // the provider keeps charging in the currency it was set up with: automatic renewal starts over in the new one
+            $this->payments->disableRecurrence($sub);
+            $notes[] = __('Automatic renewal was turned off because the currency changed. Turn it on again when you pay the next invoice.');
+        }
+        if ($sub) {
+            $this->subscriptions->reissueOpenInvoice($sub->fresh());
+        }
+        if (!Currencies::pixAllowed($code)) {
+            $notes[] = __('Pix is only available for payments in BRL. In :currency you pay by card or PayPal.', ['currency' => $code]);
+        }
+
+        return redirect()->route('billing.index')->with('success', __('Payment currency updated to :currency.', ['currency' => $code]))
+            ->with($notes ? ['warning' => implode(' ', $notes)] : []);
     }
 
     public function subscribe(Request $request)
@@ -78,8 +131,8 @@ class BillingController extends Controller
         $this->captureReturningPayPalOrder($request, $invoice);
 
         // Several providers can be active: the customer picks one (?gateway=asaas); default = first ready
-        $gateway = $this->payments->gateway($request->query('gateway'));
-        $available = collect($this->payments->available())->map(fn ($g) => config("payments.providers.{$g->name()}.label", $g->name()))->all();
+        $gateway = $this->payments->gateway($request->query('gateway'), $invoice->currency);
+        $available = collect($this->payments->available($invoice->currency))->map(fn ($g) => config("payments.providers.{$g->name()}.label", $g->name()))->all();
         $subscription = $invoice->subscription;
 
         return view('billing.invoice', [
@@ -88,7 +141,8 @@ class BillingController extends Controller
             'available' => $available,
             'selected' => $gateway?->name(),
             'cardMode' => $gateway ? $gateway->cardMode() : 'token',
-            'methods' => $gateway ? $gateway->methods() : [],
+            'methods' => $gateway ? $this->payments->methodsFor($gateway, $invoice) : [],
+            'pixBlocked' => !Currencies::pixAllowed($invoice->currency),
             'recurrenceAllowed' => $gateway && $gateway->supportsRecurrence(),
             'recurrenceDefault' => $gateway ? (bool) $gateway->config()->setting('recurrence_default') : false,
             'recurringCardOk' => $gateway && $gateway->supportsCardRecurrence() && $this->recurringCardAllowed($invoice),
@@ -122,7 +176,7 @@ class BillingController extends Controller
         $user = Auth::user();
         $recurring = $request->boolean('recurring');
 
-        $chosen = $this->payments->gateway($data['gateway'] ?? null);
+        $chosen = $this->payments->gateway($data['gateway'] ?? null, $invoice->currency);
         if ($data['method'] === 'card' && $recurring && $chosen && !$chosen->supportsCardRecurrence()) {
             return $this->payResponse($request, $invoice, ['recurring' => __('Automatic card renewal is not available with this payment provider. Pay by Pix to renew automatically.')], 422);
         }

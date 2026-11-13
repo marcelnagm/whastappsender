@@ -6,6 +6,7 @@ use App\Models\Invoice;
 use App\Models\Subscription;
 use App\Models\User;
 use App\Notifications\BillingNotice;
+use App\Services\Billing\Currencies;
 use App\Services\Billing\SubscriptionService;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
@@ -20,16 +21,35 @@ class PaymentService
     {
     }
 
-    /** The provider asked for (when it is ready), else the first ready one. */
-    public function gateway(?string $provider = null): ?PaymentGateway
+    /** The provider asked for (when it is ready), else the first ready one; only providers that charge $currency when it is given. */
+    public function gateway(?string $provider = null, ?string $currency = null): ?PaymentGateway
     {
-        return $this->gateways->active($provider);
+        $ready = $this->available($currency);
+
+        if ($provider !== null && isset($ready[$provider])) {
+            return $ready[$provider];
+        }
+
+        return $ready ? reset($ready) : null;
     }
 
-    /** @return array<string, PaymentGateway> every provider the customer can choose from */
-    public function available(): array
+    /** @return array<string, PaymentGateway> every provider the customer can choose from (for $currency, when given) */
+    public function available(?string $currency = null): array
     {
-        return $this->gateways->ready();
+        return array_filter($this->gateways->ready(), fn (PaymentGateway $g) => $currency === null || $this->supportsCurrency($g, $currency));
+    }
+
+    public function supportsCurrency(PaymentGateway $gateway, string $currency): bool
+    {
+        return method_exists($gateway, 'supportsCurrency') ? $gateway->supportsCurrency($currency) : strtoupper($currency) === 'BRL';
+    }
+
+    /** Methods offered for this invoice: Pix only exists in BRL, so any other currency pays by card / PayPal. */
+    public function methodsFor(PaymentGateway $gateway, Invoice $invoice): array
+    {
+        $methods = $gateway->methods();
+
+        return Currencies::pixAllowed($invoice->currency) ? $methods : array_values(array_diff($methods, ['pix']));
     }
 
     /**
@@ -37,12 +57,14 @@ class PaymentService
      */
     public function pay(User $user, Invoice $invoice, PayRequest $request, ?string $provider = null): PaymentResult
     {
-        $gateway = $this->gateway($provider);
+        $gateway = $this->gateway($provider, $invoice->currency);
 
         $fail = fn (string $field, string $message) => throw ValidationException::withMessages([$field => $message]);
 
         if (!$gateway) {
-            $fail('method', __('Online payment is not available right now.'));
+            $fail('method', $invoice->currency && !Currencies::pixAllowed($invoice->currency) && $this->gateway($provider)
+                ? __('No enabled payment provider charges in :currency right now.', ['currency' => $invoice->currency])
+                : __('Online payment is not available right now.'));
         }
         if ((int) $invoice->user_id !== (int) $user->id) {
             abort(403);
@@ -50,7 +72,10 @@ class PaymentService
         if (!$invoice->isOpen()) {
             $fail('method', __('This invoice is not open for payment.'));
         }
-        if (!in_array($request->method, $gateway->methods(), true)) {
+        if ($request->method === 'pix' && !Currencies::pixAllowed($invoice->currency)) {
+            $fail('method', __('Pix is only available for payments in BRL. This invoice is in :currency: pay by card or PayPal.', ['currency' => $invoice->currency]));
+        }
+        if (!in_array($request->method, $this->methodsFor($gateway, $invoice), true)) {
             $fail('method', __('This payment method is not available.'));
         }
         if ($request->recurring && !$gateway->supportsRecurrence()) {
@@ -92,10 +117,10 @@ class PaymentService
     {
         $subscription = $invoice->subscription;
         // renewals go through the provider the customer used for the automatic Pix, when it is still ready
-        $gateway = $this->gateway($subscription?->gateway);
+        $gateway = $this->gateway($subscription?->gateway, $invoice->currency);
 
         if (!$gateway || !$subscription || !$subscription->auto_renew || $subscription->payment_method !== 'pix'
-            || !$invoice->isOpen() || !in_array('pix', $gateway->methods(), true)
+            || !$invoice->isOpen() || !in_array('pix', $this->methodsFor($gateway, $invoice), true)
             || !$subscription->payer_document || $this->validPix($invoice, $gateway->name())) {
             return null;
         }

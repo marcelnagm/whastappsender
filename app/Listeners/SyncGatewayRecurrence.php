@@ -56,7 +56,7 @@ class SyncGatewayRecurrence
         try {
             $next = $sub->pending_plan_id ? (Plan::find($sub->pending_plan_id) ?? $sub->plan) : $sub->plan;
             $cycle = $sub->pending_cycle ?: $sub->cycle;
-            $this->payments->syncRecurringAmount($sub, $next->priceFor($cycle));
+            $this->payments->syncRecurringAmount($sub, \App\Services\Billing\Currencies::fromBase($next->priceFor($cycle), \App\Services\Billing\Currencies::forUser(\App\Models\User::find($sub->user_id))));
         } catch (\Throwable $e) {
             Log::warning("Gateway amount sync after payment failed: " . $e->getMessage());
         }

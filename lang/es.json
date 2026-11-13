@@ -2246,5 +2246,14 @@
     "PayPal checks the signature of every notification: paste the Webhook ID of the webhook created in the PayPal developer dashboard. Without it all notifications are rejected.": "PayPal verifica la firma de cada notificación: pega el Webhook ID del webhook creado en el panel de desarrollador de PayPal. Sin él todas las notificaciones se rechazan.",
     "PayPal or card": "PayPal o tarjeta",
     "PayPal rejected the Client ID / secret.": "PayPal rechazó el Client ID / secreto.",
-    "Webhook ID": "Webhook ID"
+    "Webhook ID": "Webhook ID",
+    "A payment is in progress on the open invoice. Finish or wait for it before changing the currency.": "Hay un pago en curso en la factura abierta. Termínalo o espera antes de cambiar la moneda.",
+    "Automatic renewal was turned off because the currency changed. Turn it on again when you pay the next invoice.": "La renovación automática se desactivó porque cambió la moneda. Actívala de nuevo al pagar la próxima factura.",
+    "No enabled payment provider charges in :currency right now.": "Ningún proveedor de pago activo cobra en :currency por ahora.",
+    "Payment currency": "Moneda de pago",
+    "Payment currency updated to :currency.": "Moneda de pago cambiada a :currency.",
+    "Pix is only available for payments in BRL. In :currency you pay by card or PayPal.": "El Pix solo está disponible para pagos en BRL. En :currency pagas con tarjeta o PayPal.",
+    "Pix is only available for payments in BRL. This invoice is in :currency: pay by card or PayPal.": "El Pix solo está disponible para pagos en BRL. Esta factura está en :currency: paga con tarjeta o PayPal.",
+    "Prices are converted when each invoice is issued. Not every payment provider charges every currency.": "Los precios se convierten cuando se emite cada factura. No todos los proveedores de pago cobran todas las monedas.",
+    "This currency is not available.": "Esta moneda no está disponible."
 }

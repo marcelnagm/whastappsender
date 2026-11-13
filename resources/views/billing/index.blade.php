@@ -2,7 +2,8 @@
 
 @section('content')
 @php
-    $money = fn ($cents, $cur = 'BRL') => ($cur === 'BRL' ? 'R$ ' : $cur . ' ') . number_format($cents / 100, 2, ',', '.');
+    $money = fn ($cents, $cur = 'BRL') => \App\Services\Billing\Currencies::format((int) $cents, $cur);
+    $planPrice = fn ($cents) => \App\Services\Billing\Currencies::format(\App\Services\Billing\Currencies::fromBase((int) $cents, $currency), $currency);
     $featureLabels = \App\Models\Plan::featureLabels();
     $limitLabels = \App\Models\Plan::limitLabels();
     $usageLabels = ['instances' => __('Connected numbers'), 'contacts' => __('Contacts'), 'messages_per_month' => __('Messages this month'), 'ai_replies_per_month' => __('AI replies this month'), 'insights_per_month' => __('AI reports this month'), 'knowledge_sources' => __('Business knowledge sources'), 'team_members' => __('Team members')];
@@ -117,6 +118,25 @@
     </div>
 
     {{-- Plans --}}
+    @if(session('warning'))<div class="alert alert-warning">{{ session('warning') }}</div>@endif
+
+    @if(count($currencies) > 1)
+        <form method="POST" action="{{ route('billing.currency') }}" class="card border-0 shadow-sm mb-4" style="border-radius: 12px;">
+            @csrf
+            <div class="card-body p-3 d-flex flex-wrap align-items-center gap-2">
+                <label for="currency" class="fw-bold mb-0"><i class="bi bi-cash-coin me-1"></i>{{ __('Payment currency') }}</label>
+                <select name="currency" id="currency" class="form-select form-select-sm" style="max-width: 200px;" onchange="this.form.submit()">
+                    @foreach($currencies as $code => $label)<option value="{{ $code }}" @selected($code === $currency)>{{ $label }}</option>@endforeach
+                </select>
+                <noscript><button class="btn btn-sm btn-primary">{{ __('Save') }}</button></noscript>
+                <span class="small text-muted">{{ __('Prices are converted when each invoice is issued. Not every payment provider charges every currency.') }}</span>
+            </div>
+            @if(!\App\Services\Billing\Currencies::pixAllowed($currency))
+                <div class="alert alert-warning small mx-3 mb-3 py-2"><i class="bi bi-exclamation-triangle me-1"></i>{{ __('Pix is only available for payments in BRL. In :currency you pay by card or PayPal.', ['currency' => $currency]) }}</div>
+            @endif
+        </form>
+    @endif
+
     <h4 class="fw-bold mb-3">{{ __('Plans') }}</h4>
     <div class="row g-4 mb-5">
         @foreach($plans as $plan)
@@ -129,10 +149,10 @@
                             @if($isCurrent)<span class="badge bg-primary align-self-start">{{ __('Your plan') }}</span>@endif
                         </div>
                         <div class="my-2">
-                            <span class="fs-3 fw-bold">{{ $plan->isFree() ? __('Free') : $money($plan->price_cents, $plan->currency) }}</span>
+                            <span class="fs-3 fw-bold">{{ $plan->isFree() ? __('Free') : $planPrice($plan->price_cents) }}</span>
                             @unless($plan->isFree())<span class="text-muted small">/ {{ __('month') }}</span>@endunless
                             @unless($plan->isFree())
-                                <div class="small text-muted">{{ __('or :price per year', ['price' => $money($plan->priceFor('yearly'), $plan->currency)]) }}</div>
+                                <div class="small text-muted">{{ __('or :price per year', ['price' => $planPrice($plan->priceFor('yearly'))]) }}</div>
                             @endunless
                         </div>
 

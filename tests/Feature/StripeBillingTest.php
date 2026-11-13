@@ -249,16 +249,6 @@ class StripeBillingTest extends TestCase
         $this->assertSame(Invoice::PAID, $first->fresh()->status);
     }
 
-    public function test_pix_is_hidden_when_the_billing_currency_is_not_brl(): void
-    {
-        $gateway = app(GatewayManager::class)->driver('stripe');
-        $this->assertContains('pix', $gateway->methods());
-
-        config(['billing.currency' => 'USD']);
-        $this->assertNotContains('pix', app(GatewayManager::class)->driver('stripe')->methods());
-        $this->assertContains('card', app(GatewayManager::class)->driver('stripe')->methods());
-    }
-
     private function noticeType(BillingNotice $n): string
     {
         $r = new \ReflectionProperty($n, 'type');

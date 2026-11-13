@@ -44,12 +44,10 @@ class StripeGateway extends HostedGateway
         return false;
     }
 
-    /** Pix only exists in BRL. */
-    public function methods(): array
+    /** Any currency enabled on the Stripe account (invoices carry their own). */
+    public function supportsCurrency(string $currency): bool
     {
-        $methods = parent::methods();
-
-        return strtoupper((string) config('billing.currency', 'BRL')) === 'BRL' ? $methods : array_values(array_diff($methods, ['pix']));
+        return true;
     }
 
     private function currency(Invoice $invoice): string

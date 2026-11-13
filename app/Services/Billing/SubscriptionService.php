@@ -389,6 +389,8 @@ class SubscriptionService
         Subscription $sub, Plan $plan, string $cycle, Carbon $start, Carbon $end, Carbon $due,
         int $credit = 0, ?string $description = null
     ): Invoice {
+        // prices and credits are worked out in the plan (base) currency, then expressed in the currency the customer pays in
+        $currency = Currencies::forUser(User::find($sub->user_id));
         $price = $plan->priceFor($cycle);
         $invoice = Invoice::create([
             'user_id' => $sub->user_id,
@@ -397,9 +399,9 @@ class SubscriptionService
             'number' => Invoice::nextNumber(),
             'status' => Invoice::OPEN,
             'cycle' => $cycle,
-            'amount_cents' => max(0, $price - $credit),
-            'credit_cents' => $credit,
-            'currency' => $plan->currency,
+            'amount_cents' => Currencies::fromBase(max(0, $price - $credit), $currency),
+            'credit_cents' => $credit > 0 ? Currencies::fromBase($credit, $currency) : 0,
+            'currency' => $currency,
             'description' => $description ?? __(':plan plan (:cycle)', ['plan' => $plan->name, 'cycle' => __($cycle)]),
             'period_start' => $start,
             'period_end' => $end,
@@ -415,6 +417,30 @@ class SubscriptionService
         }
 
         return $invoice;
+    }
+
+    /**
+     * The customer changed the payment currency: the open invoice (if no payment started on it yet) is replaced by one in the new
+     * currency, same plan, cycle and period. Returns false when a payment is already in progress and the invoice must stay.
+     */
+    public function reissueOpenInvoice(Subscription $sub): bool
+    {
+        $open = $sub->openInvoice();
+        $currency = Currencies::forUser(User::find($sub->user_id));
+
+        if (!$open || strtoupper((string) $open->currency) === $currency) {
+            return true;
+        }
+        if ($open->gateway_invoice_id) {
+            return false;
+        }
+
+        $plan = $open->plan ?? $sub->plan;
+        $credit = Currencies::toBase((int) $open->credit_cents, $open->currency);
+        $this->voidOpenInvoices($sub);
+        $this->issueInvoice($sub, $plan, $open->cycle, $open->period_start, $open->period_end, $open->due_at, $credit, $open->description);
+
+        return true;
     }
 
     private function voidOpenInvoices(Subscription $sub): void
@@ -435,7 +461,8 @@ class SubscriptionService
         $total = max(1, $paid->period_end->diffInSeconds($paid->period_start));
         $left = max(0, $paid->period_end->diffInSeconds($now));
 
-        return (int) round($paid->amount_cents * min(1, $left / $total));
+        // an invoice paid in another currency gives credit in the base currency, like the plan prices
+        return Currencies::toBase((int) round($paid->amount_cents * min(1, $left / $total)), $paid->currency);
     }
 
     private function isUpgrade(Plan $from, string $fromCycle, Plan $to, string $toCycle): bool

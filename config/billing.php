@@ -13,7 +13,16 @@
 return [
     'enabled' => (bool) env('BILLING_ENABLED', false),
 
+    // Base currency: plans are priced in it (prices below are in its cents)
     'currency' => env('BILLING_CURRENCY', 'BRL'),
+
+    // Other currencies a customer may choose (Billing page). rate = units of that currency per 1 unit of the base currency,
+    // applied when each invoice is issued. A currency is offered only while an enabled payment gateway supports it
+    // (Stripe, PayPal). Pix is BRL only. Set a rate to 0 / remove the line to withdraw a currency.
+    'currencies' => [
+        'USD' => ['symbol' => 'US$', 'rate' => (float) env('BILLING_RATE_USD', 0.18)],
+        'EUR' => ['symbol' => '€', 'rate' => (float) env('BILLING_RATE_EUR', 0.16)],
+    ],
 
     // Free trial given on the FIRST paid subscription of a user (0 = none)
     'trial_days' => (int) env('BILLING_TRIAL_DAYS', 7),

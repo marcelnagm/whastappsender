@@ -39,6 +39,11 @@ class PayPalGateway extends HostedGateway
         return $this->config->setting('card_enabled') ? ['card'] : [];
     }
 
+    public function supportsCurrency(string $currency): bool
+    {
+        return true;   // the PayPal account decides which currencies it can receive
+    }
+
     public function supportsRecurrence(): bool
     {
         return $this->config->recurrenceAllowed() && $this->methods() !== [];

@@ -15,6 +15,12 @@ use Illuminate\Support\Facades\Log;
  */
 abstract class HostedGateway implements PaymentGateway, WebhookGateway
 {
+    /** Currencies the provider is wired for here. Brazilian providers charge BRL only; Stripe and PayPal override. */
+    public function supportsCurrency(string $currency): bool
+    {
+        return strtoupper($currency) === 'BRL';
+    }
+
     public function __construct(protected GatewayConfig $config)
     {
     }

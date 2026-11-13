@@ -207,6 +207,7 @@ trait CreatesTestSchema
             '2026_11_15_100000_add_pending_and_human_request_to_chats.php',
             '2026_11_16_100000_add_optout_footer_to_users.php',
             '2026_11_17_100000_add_optout_confirm_to_users.php',
+            '2026_11_18_100000_add_billing_currency_to_users.php',
             '2026_11_13_100000_add_webchat_and_saved_views.php',
             '2026_11_05_160000_add_message_sender_and_team_goals.php',
         ] as $file) {
