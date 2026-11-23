@@ -52,6 +52,13 @@ return [
             'html' => 'zh-CN',
             'carbon' => 'zh_CN',
         ],
+        'hi' => [
+            'name' => 'Hindi',
+            'native' => 'हिन्दी',
+            'flag' => '🇮🇳',
+            'html' => 'hi',
+            'carbon' => 'hi',
+        ],
     ],
 
     'session_key' => 'locale',
