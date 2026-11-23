@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="{{ config('languages.supported.' . app()->getLocale() . '.html', 'en') }}">
+<html lang="{{ config('languages.supported.' . app()->getLocale() . '.html', 'en') }}" dir="{{ config('languages.supported.' . app()->getLocale() . '.rtl') ? 'rtl' : 'ltr' }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">

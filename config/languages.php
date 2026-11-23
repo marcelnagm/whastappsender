@@ -14,6 +14,7 @@
 | flag   : emoji shown next to the name
 | html   : value for <html lang="..."> (BCP 47)
 | carbon : locale used by Carbon for dates (diffForHumans, translatedFormat...)
+| rtl    : true for right-to-left scripts (sets dir="rtl" on <html>)
 |
 */
 
