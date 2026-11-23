@@ -45,6 +45,13 @@ return [
             'html' => 'es',
             'carbon' => 'es',
         ],
+        'zh_CN' => [
+            'name' => 'Chinese (Simplified)',
+            'native' => '简体中文',
+            'flag' => '🇨🇳',
+            'html' => 'zh-CN',
+            'carbon' => 'zh_CN',
+        ],
     ],
 
     'session_key' => 'locale',
