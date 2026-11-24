@@ -59,6 +59,14 @@ return [
             'html' => 'hi',
             'carbon' => 'hi',
         ],
+        'ar' => [
+            'name' => 'Arabic',
+            'native' => 'العربية',
+            'flag' => '🇸🇦',
+            'html' => 'ar',
+            'carbon' => 'ar',
+            'rtl' => true,
+        ],
     ],
 
     'session_key' => 'locale',
