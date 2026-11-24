@@ -67,6 +67,13 @@ return [
             'carbon' => 'ar',
             'rtl' => true,
         ],
+        'fr' => [
+            'name' => 'French',
+            'native' => 'Français',
+            'flag' => '🇫🇷',
+            'html' => 'fr',
+            'carbon' => 'fr',
+        ],
     ],
 
     'session_key' => 'locale',
