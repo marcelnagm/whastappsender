@@ -81,6 +81,13 @@ return [
             'html' => 'bn',
             'carbon' => 'bn',
         ],
+        'ru' => [
+            'name' => 'Russian',
+            'native' => 'Русский',
+            'flag' => '🇷🇺',
+            'html' => 'ru',
+            'carbon' => 'ru',
+        ],
     ],
 
     'session_key' => 'locale',
