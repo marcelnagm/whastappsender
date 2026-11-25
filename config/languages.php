@@ -74,6 +74,13 @@ return [
             'html' => 'fr',
             'carbon' => 'fr',
         ],
+        'bn' => [
+            'name' => 'Bengali',
+            'native' => 'বাংলা',
+            'flag' => '🇧🇩',
+            'html' => 'bn',
+            'carbon' => 'bn',
+        ],
     ],
 
     'session_key' => 'locale',
