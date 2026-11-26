@@ -88,6 +88,14 @@ return [
             'html' => 'ru',
             'carbon' => 'ru',
         ],
+        'ur' => [
+            'name' => 'Urdu',
+            'native' => 'اردو',
+            'flag' => '🇵🇰',
+            'html' => 'ur',
+            'carbon' => 'ur',
+            'rtl' => true,
+        ],
     ],
 
     'session_key' => 'locale',
