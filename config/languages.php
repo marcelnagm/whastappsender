@@ -96,6 +96,13 @@ return [
             'carbon' => 'ur',
             'rtl' => true,
         ],
+        'id' => [
+            'name' => 'Indonesian',
+            'native' => 'Bahasa Indonesia',
+            'flag' => '🇮🇩',
+            'html' => 'id',
+            'carbon' => 'id',
+        ],
     ],
 
     'session_key' => 'locale',
