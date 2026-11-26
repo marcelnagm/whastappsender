@@ -103,6 +103,13 @@ return [
             'html' => 'id',
             'carbon' => 'id',
         ],
+        'de' => [
+            'name' => 'German',
+            'native' => 'Deutsch',
+            'flag' => '🇩🇪',
+            'html' => 'de',
+            'carbon' => 'de',
+        ],
     ],
 
     'session_key' => 'locale',
