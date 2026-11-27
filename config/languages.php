@@ -110,6 +110,13 @@ return [
             'html' => 'de',
             'carbon' => 'de',
         ],
+        'ja' => [
+            'name' => 'Japanese',
+            'native' => '日本語',
+            'flag' => '🇯🇵',
+            'html' => 'ja',
+            'carbon' => 'ja',
+        ],
     ],
 
     'session_key' => 'locale',
