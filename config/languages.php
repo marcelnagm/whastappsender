@@ -124,6 +124,13 @@ return [
             'html' => 'mr',
             'carbon' => 'mr',
         ],
+        'te' => [
+            'name' => 'Telugu',
+            'native' => 'తెలుగు',
+            'flag' => '🇮🇳',
+            'html' => 'te',
+            'carbon' => 'te',
+        ],
     ],
 
     'session_key' => 'locale',
