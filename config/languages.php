@@ -117,6 +117,13 @@ return [
             'html' => 'ja',
             'carbon' => 'ja',
         ],
+        'mr' => [
+            'name' => 'Marathi',
+            'native' => 'मराठी',
+            'flag' => '🇮🇳',
+            'html' => 'mr',
+            'carbon' => 'mr',
+        ],
     ],
 
     'session_key' => 'locale',
